@@ -29,7 +29,7 @@ const bamdy = {
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 | Category | Technologies |
 |----------|-------------|
@@ -41,7 +41,7 @@ const bamdy = {
 
 ---
 
-## 📊 GitHub Stats
+## GitHub Stats
 
 <div align="center">
 
@@ -55,7 +55,7 @@ const bamdy = {
 
 ---
 
-## 🚀 Featured Projects
+##  Featured Projects
 
 ### TAMS — Teachers Attendance Management System
 > A GPS-verified digital attendance platform built for Mikumbi Secondary School, Newala, Tanzania.
