@@ -6,7 +6,8 @@
 
 *Building reliable systems that solve real problems.*
 
-[![Live Project](https://img.shields.io/badge/Live-TAMS%20Project-0C4767?style=flat&logo=firefox)](https://attendance-mikumbi-production.up.railway.app)
+[![Live TAMS](https://img.shields.io/badge/Live-TAMS%20Project-0C4767?style=flat&logo=firefox)](https://attendance-mikumbi-production.up.railway.app)
+[![Live SMS](https://img.shields.io/badge/Live-SMS%20Platform-0C4767?style=flat&logo=firefox)](https://sms-mikumbi-production.up.railway.app)
 [![Open to Work](https://img.shields.io/badge/Open%20to-Remote%20Work-16a34a?style=flat)]()
 [![Location](https://img.shields.io/badge/Location-Kilimanjaro%2C%20Tanzania-f5a623?style=flat)]()
 
@@ -20,7 +21,7 @@
 const bamdy = {
   role      : "Backend Developer",
   study     : "CS Student @ Mwenge Catholic University (MWECAU)",
-  location  : "Kilimanjaro, Tanzania 🇹🇿",
+  location  : "Kilimanjaro-Moshi, Tanzania 🇹🇿",
   focus     : ["REST APIs", "Web Systems", "Database Design"],
   currently : "Building real systems for schools and businesses in Tanzania",
   mantra    : "Build something that solves a real problem."
@@ -29,7 +30,7 @@ const bamdy = {
 
 ---
 
-##  Tech Stack
+## 🛠 Tech Stack
 
 | Category | Technologies |
 |----------|-------------|
@@ -41,7 +42,7 @@ const bamdy = {
 
 ---
 
-## GitHub Stats
+## 📊 GitHub Stats
 
 <div align="center">
 
@@ -55,7 +56,7 @@ const bamdy = {
 
 ---
 
-##  Featured Projects
+## 🚀 Featured Projects
 
 ### TAMS — Teachers Attendance Management System
 > A GPS-verified digital attendance platform built for Mikumbi Secondary School, Newala, Tanzania.
