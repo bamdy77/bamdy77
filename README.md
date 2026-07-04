@@ -20,7 +20,7 @@
 const bamdy = {
   role      : "Backend Developer",
   study     : "CS Student @ Mwenge Catholic University (MWECAU)",
-  location  : "Kilimanjaro-Moshi, Tanzania 🇹🇿",
+  location  : "Kilimanjaro, Tanzania 🇹🇿",
   focus     : ["REST APIs", "Web Systems", "Database Design"],
   currently : "Building real systems for schools and businesses in Tanzania",
   mantra    : "Build something that solves a real problem."
@@ -29,18 +29,33 @@ const bamdy = {
 
 ---
 
-## Tech Stack
+## 🛠 Tech Stack
 
-| Layer | Technologies |
-|-------|-------------|
-| Languages | Python, JavaScript |
-| Backend | Node.js, Express.js |
-| Database | PostgreSQL |
-| Tools | Git, GitHub, Railway, PWA |
+| Category | Technologies |
+|----------|-------------|
+| Languages | Python · JavaScript · SQL |
+| Backend | Node.js · Express.js |
+| Database | PostgreSQL · MySQL · Redis · Supabase |
+| Security & OS | Kali Linux · Linux |
+| Tools | Git · GitHub · Railway · PWA |
 
 ---
 
-## Featured Projects
+## 📊 GitHub Stats
+
+<div align="center">
+
+[![GitHub Streak](https://streak-stats.demolab.com?user=bamdy77&theme=dark&hide_border=true&ring=0C4767&fire=0C4767&currStreakLabel=0C4767)](https://git.io/streak-stats)
+
+![Bamdy's GitHub Stats](https://github-readme-stats.vercel.app/api?username=bamdy77&show_icons=true&theme=dark&hide_border=true&title_color=0C4767&icon_color=0C4767)
+
+![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=bamdy77&layout=compact&theme=dark&hide_border=true&title_color=0C4767)
+
+</div>
+
+---
+
+## 🚀 Featured Projects
 
 ### TAMS — Teachers Attendance Management System
 > A GPS-verified digital attendance platform built for Mikumbi Secondary School, Newala, Tanzania.
@@ -72,18 +87,6 @@ const bamdy = {
 **Stack:** Node.js · NextSMS API · Railway
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-0C4767?style=flat&logo=firefox)](https://sms-mikumbi-production.up.railway.app)
-
----
-
-## GitHub Stats
-
-<div align="center">
-
-![Bamdy's GitHub Stats](https://github-readme-stats.vercel.app/api?username=bamdy77&show_icons=true&theme=dark&hide_border=true&title_color=0C4767&icon_color=0C4767)
-
-![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=bamdy77&layout=compact&theme=dark&hide_border=true&title_color=0C4767)
-
-</div>
 
 ---
 
