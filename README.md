@@ -20,7 +20,7 @@
 const bamdy = {
   role      : "Backend Developer",
   study     : "CS Student @ Mwenge Catholic University (MWECAU)",
-  location  : "Kilimanjaro, Tanzania 🇹🇿",
+  location  : "Kilimanjaro-Moshi, Tanzania 🇹🇿",
   focus     : ["REST APIs", "Web Systems", "Database Design"],
   currently : "Building real systems for schools and businesses in Tanzania",
   mantra    : "Build something that solves a real problem."
