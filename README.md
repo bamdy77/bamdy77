@@ -6,9 +6,7 @@
 
 *Building reliable systems that solve real problems.*
 
-[![Live TAMS](https://img.shields.io/badge/Live-TAMS%20Project-0C4767?style=flat&logo=firefox)](https://attendance-mikumbi-production.up.railway.app)
-[![Live SMS](https://img.shields.io/badge/Live-SMS%20Platform-0C4767?style=flat&logo=firefox)](https://sms-mikumbi-production.up.railway.app)
-[![Open to Work](https://img.shields.io/badge/Open%20to-Remote%20Work-16a34a?style=flat)]()
+[![School Management System](https://img.shields.io/badge/Live-SMS%20Platform-0C4767?style=flat&logo=firefox)](https://mikumbi-management.onrender.com)
 [![Location](https://img.shields.io/badge/Location-Kilimanjaro%2C%20Tanzania-f5a623?style=flat)]()
 
 </div>
