@@ -5,7 +5,7 @@
 *Building reliable systems that solve real problems.*
 
 [![Portfolio](https://img.shields.io/badge/Portfolio-Visit-0C4767?style=flat&logo=vercel)](https://bamdy-portfolio.vercel.app/)
-[![Location](https://img.shields.io/badge/Location-Mwanza%2C%20Tanzania-f5a623?style=flat)]()
+![Location](https://img.shields.io/badge/Location-Mwanza%2C%20Tanzania-f5a623?style=flat)
 
 </div>
 
@@ -17,9 +17,9 @@
 |----------|-------------|
 | Languages | Python · JavaScript · PHP · Go · Ruby · SQL |
 | Backend | Node.js · Express.js · FastAPI · Laravel · Gin · Ruby on Rails |
-| Database | PostgreSQL · MySQL · Redis · MongoDB|
+| Database | PostgreSQL · MySQL · Redis · Supabase |
 | Security & OS | Kali Linux · Linux |
-| Tools | Git · GitHub · Railway · Vercel · PWA . Render |
+| Tools | Git · GitHub · Railway · Vercel · PWA |
 
 ---
 
