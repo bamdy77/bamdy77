@@ -1,6 +1,6 @@
 <div align="center">
 
-[![Typing SVG](https://readme-typing-svg.demolab.com/?font=Fira+Code&pause=1000&color=0C4767&center=true&vCenter=true&width=520&lines=Helloaa!+I+am+Bamdy;I+am+a+Full+Stack+Developer+%26+AI+Engineer)](https://git.io/typing-svg)
+[![Typing SVG](https://readme-typing-svg.demolab.com/?font=Fira+Code&pause=1000&color=FFFFFF&center=true&vCenter=true&width=520&lines=Helloaa!+I+am+Bamdy;I+am+a+Full+Stack+Developer+%26+AI+Engineer)](https://git.io/typing-svg)
 
 *Building reliable systems that solve real problems.*
 
@@ -11,21 +11,15 @@
 
 ---
 
-
-
-```
-
----
-
 ## Tech Stack
 
 | Category | Technologies |
 |----------|-------------|
 | Languages | Python · JavaScript · PHP · Go · Ruby · SQL |
 | Backend | Node.js · Express.js · FastAPI · Laravel · Gin · Ruby on Rails |
-| Database | PostgreSQL · MySQL · Redis . MongoDB |
+| Database | PostgreSQL · MySQL · Redis · MongoDB|
 | Security & OS | Kali Linux · Linux |
-| Tools | Git · GitHub · Railway · Vercel · PWA |
+| Tools | Git · GitHub · Railway · Vercel · PWA . Render |
 
 ---
 
@@ -38,11 +32,6 @@
 ![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=bamdy77&layout=compact&theme=dark&hide_border=true&title_color=0C4767)
 
 </div>
-
-**Stack:** Node.js · PostgreSQL · JavaScript
-
-[![Live Demo](https://img.shields.io/badge/Live-Demo-0C4767?style=flat&logo=firefox)](https://attendance-mikumbi-production.up.railway.app)
-[![Source Code](https://img.shields.io/badge/Source-Code-333?style=flat&logo=github)](https://github.com/bamdy77/attendance-mikumbi)
 
 ---
 
