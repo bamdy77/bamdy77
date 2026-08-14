@@ -32,7 +32,7 @@ const bamdy = {
 |----------|-------------|
 | Languages | Python · JavaScript · PHP · Go · Ruby · SQL |
 | Backend | Node.js · Express.js · FastAPI · Laravel · Gin · Ruby on Rails |
-| Database | PostgreSQL · MySQL · Redis · Supabase |
+| Database | PostgreSQL · MySQL · Redis . MongoDB |
 | Security & OS | Kali Linux · Linux |
 | Tools | Git · GitHub · Railway · Vercel · PWA |
 
@@ -48,22 +48,7 @@ const bamdy = {
 
 </div>
 
----
-
-## Featured Projects
-
-### TAMS — Teachers Attendance Management System
-
-> A GPS-verified digital attendance platform built for Mikumbi Secondary School, Newala, Tanzania.
-> Replaces paper registers with a real-time, location-aware system that works on any smartphone.
-
-**Key features:**
-- GPS verification — teachers must be within 45m of school to sign in
-- Real-time admin dashboard with attendance reports and exports
-- Works as a PWA — installable on Android and iOS without an app store
-- Secure — JWT authentication, bcrypt password hashing, rate limiting
-
-**Stack:** Node.js · PostgreSQL · JavaScript · Railway
+**Stack:** Node.js · PostgreSQL · JavaScript
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-0C4767?style=flat&logo=firefox)](https://attendance-mikumbi-production.up.railway.app)
 [![Source Code](https://img.shields.io/badge/Source-Code-333?style=flat&logo=github)](https://github.com/bamdy77/attendance-mikumbi)
