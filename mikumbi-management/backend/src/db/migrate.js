@@ -1547,6 +1547,8 @@ async function migrate() {
   await query(`ALTER TABLE school_settings ADD COLUMN IF NOT EXISTS android_sms_gateway_url VARCHAR(255);`);
   await query(`ALTER TABLE school_settings ADD COLUMN IF NOT EXISTS android_sms_gateway_username VARCHAR(100);`);
   await query(`ALTER TABLE school_settings ADD COLUMN IF NOT EXISTS android_sms_gateway_password VARCHAR(255);`);
+  // Encrypted values are longer than the plain password - widen the column.
+  await query(`ALTER TABLE school_settings ALTER COLUMN android_sms_gateway_password TYPE TEXT;`);
 
   // One row per Form (I-IV) holding THAT class's Class Teacher's own
   // signature - deliberately separate from school_settings above, and with
@@ -1669,6 +1671,29 @@ async function migrate() {
     LEFT JOIN existing_max ON existing_max.yr = numbered.yr
     WHERE s.id = numbered.id;
   `);
+
+  // ── Security hardening ────────────────────────────────────────────────
+  // password_changed_at: tokens issued BEFORE a password change/reset are
+  // rejected (a stolen or old session dies the moment the password changes).
+  // failed_logins / locked_until: an account is locked for 15 minutes after
+  // 8 wrong passwords in a row, whatever IP the attempts come from.
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;`);
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_logins INTEGER NOT NULL DEFAULT 0;`);
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;`);
+  // Same protection for the parents' Results login: 8 wrong phone numbers
+  // for one student lock that student's online login for 30 minutes, so the
+  // phone number (the password) cannot be guessed from many IPs.
+  await query(`ALTER TABLE students ADD COLUMN IF NOT EXISTS results_failed_logins INTEGER NOT NULL DEFAULT 0;`);
+  await query(`ALTER TABLE students ADD COLUMN IF NOT EXISTS results_locked_until TIMESTAMPTZ;`);
+  // Encrypt any SMS gateway password still stored as plain text.
+  {
+    const { encryptSecret, isEncrypted } = require("../utils/secureBox");
+    const { rows } = await query(`SELECT android_sms_gateway_password AS p FROM school_settings WHERE id = 1`);
+    const p = rows[0] && rows[0].p;
+    if (p && !isEncrypted(p)) {
+      await query(`UPDATE school_settings SET android_sms_gateway_password = $1 WHERE id = 1`, [encryptSecret(p)]);
+    }
+  }
 
   // ── Results login number - backfill existing students ──────────────────
   // Every student without one gets "<admission year>-<5 random digits>".

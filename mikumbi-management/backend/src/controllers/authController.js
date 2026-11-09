@@ -1,6 +1,14 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { passwordProblem, BCRYPT_ROUNDS } = require("../utils/passwordPolicy");
+
+// Wrong passwords in a row before an account is locked for 15 minutes.
+const MAX_FAILED_LOGINS = 8;
+// A valid bcrypt hash of a random string - compared against when the
+// username doesn't exist, so a login for a real and a fake username take
+// the same time.
+const DUMMY_HASH = "$2a$12$xJ1yJPvObIn5xOqN1udLruyay6AbFkR2Kj9oTRjZhQw8GcYI9RxrW";
 const { query } = require("../db/db");
 const { sendPasswordResetEmail } = require("../utils/mailer");
 
@@ -21,13 +29,29 @@ const login = async (req, res, next) => {
       "SELECT * FROM users WHERE username = $1 AND is_active = true",
       [username]
     );
-    if (result.rows.length === 0)
+    if (result.rows.length === 0) {
+      // Spend the same time as a real check so response timing can't reveal
+      // which usernames exist.
+      await bcrypt.compare(String(password), DUMMY_HASH);
       return res.status(401).json({ success: false, message: "Invalid credentials." });
+    }
 
     const user = result.rows[0];
+    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      const mins = Math.max(1, Math.ceil((new Date(user.locked_until) - new Date()) / 60000));
+      return res.status(423).json({ success: false, message: `This account is temporarily locked after too many wrong passwords. Try again in ${mins} minute(s), or ask the Head Master to reset the password.` });
+    }
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid)
+    if (!valid) {
+      await query(
+        `UPDATE users SET failed_logins = failed_logins + 1,
+           locked_until = CASE WHEN failed_logins + 1 >= ${MAX_FAILED_LOGINS} THEN NOW() + INTERVAL '15 minutes' ELSE locked_until END
+         WHERE id = $1`, [user.id]);
       return res.status(401).json({ success: false, message: "Invalid credentials." });
+    }
+    if (user.failed_logins || user.locked_until) {
+      await query(`UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = $1`, [user.id]);
+    }
 
     // Combined role list: primary role + any extra roles (e.g. an Academic
     // Master who is ALSO the Matron) — everything in this app that checks
@@ -82,11 +106,20 @@ const changePassword = async (req, res, next) => {
     const valid = await bcrypt.compare(old_password, user.password);
     if (!valid)
       return res.status(401).json({ success: false, message: "Old password is incorrect." });
+    const pwErr = passwordProblem(new_password, user);
+    if (pwErr) return res.status(400).json({ success: false, message: pwErr });
 
-    const hashed = await bcrypt.hash(new_password, 10);
-    await query("UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2", [hashed, req.user.id]);
-
-    res.json({ success: true, message: "Password changed successfully." });
+    const hashed = await bcrypt.hash(new_password, BCRYPT_ROUNDS);
+    // password_changed_at logs out every OTHER session that used the old
+    // password; this browser gets a fresh token below so it stays signed in.
+    await query("UPDATE users SET password = $1, password_changed_at = NOW(), failed_logins = 0, locked_until = NULL, updated_at = NOW() WHERE id = $2", [hashed, req.user.id]);
+    const freshToken = jwt.sign(
+      { id: user.id, username: user.username, role: user.role, roles: Array.from(new Set([user.role, ...(user.extra_roles || [])])), full_name: user.full_name,
+        subject_ids: user.subject_ids || [], assigned_forms: user.assigned_forms || [], class_teacher_of: user.class_teacher_of || null },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+    );
+    return res.json({ success: true, message: "Password changed successfully.", token: freshToken });
   } catch (err) {
     next(err);
   }
@@ -137,8 +170,7 @@ const resetPassword = async (req, res, next) => {
     const { uid, token, new_password } = req.body;
     if (!uid || !token || !new_password)
       return res.status(400).json({ success: false, message: "Missing required fields." });
-    if (new_password.length < 6)
-      return res.status(400).json({ success: false, message: "Password must be at least 6 characters." });
+    { const pwErr = passwordProblem(new_password); if (pwErr) return res.status(400).json({ success: false, message: pwErr }); }
 
     const result = await query("SELECT * FROM users WHERE id = $1", [uid]);
     if (result.rows.length === 0)
@@ -152,9 +184,9 @@ const resetPassword = async (req, res, next) => {
     if (tokenHash !== user.reset_token_hash)
       return res.status(400).json({ success: false, message: "Invalid or expired reset link." });
 
-    const hashed = await bcrypt.hash(new_password, 10);
+    const hashed = await bcrypt.hash(new_password, BCRYPT_ROUNDS);
     await query(
-      "UPDATE users SET password = $1, reset_token_hash = NULL, reset_token_expires = NULL, updated_at = NOW() WHERE id = $2",
+      "UPDATE users SET password = $1, reset_token_hash = NULL, reset_token_expires = NULL, password_changed_at = NOW(), failed_logins = 0, locked_until = NULL, updated_at = NOW() WHERE id = $2",
       [hashed, uid]
     );
 

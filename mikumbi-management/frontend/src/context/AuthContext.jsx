@@ -51,6 +51,15 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  // After a password change the server issues a fresh token (every older
+  // token is rejected from then on) - swap it in so this browser stays
+  // signed in.
+  const replaceToken = useCallback((newToken) => {
+    if (!newToken) return;
+    setToken(newToken);
+    localStorage.setItem("mikumbi_token", newToken);
+  }, []);
+
   // Re-fetches this account's OWN profile from the server and replaces the
   // cached copy in both state and localStorage. Without this, a teacher's
   // `assigned_forms`/`subject_ids`/`class_teacher_of`/roles stay frozen at
@@ -90,7 +99,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, login, logout, updateUser, refreshUser }}>
+    <AuthContext.Provider value={{ token, user, loading, login, logout, updateUser, refreshUser, replaceToken }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { passwordProblem } from "../utils/passwordPolicy";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
@@ -21,7 +22,7 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
     if (password !== confirm) return setError("Passwords do not match.");
-    if (password.length < 6) return setError("Password must be at least 6 characters.");
+    { const pwErr = passwordProblem(password); if (pwErr) return setError(pwErr); }
     setBusy(true);
     try {
       await apiFetch("/auth/reset-password", { method: "POST", body: JSON.stringify({ uid, token, new_password: password }) });

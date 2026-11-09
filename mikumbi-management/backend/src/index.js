@@ -88,8 +88,30 @@ app.use(cors({
   allowedHeaders: ["Content-Type","Authorization"],
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Security headers on every response (what the 'helmet' package would set,
+// written out so there's no extra dependency): no MIME sniffing, no
+// framing (clickjacking), HTTPS-only once visited, no referrer leaks, no
+// camera/mic access, and - since this is a JSON/PDF API, not a website - a
+// locked-down Content-Security-Policy. The few HTML pages it serves (QR
+// verification) only use inline styles and the school logo.
+app.disable("x-powered-by");
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Content-Security-Policy", "default-src 'none'; img-src 'self' data: https:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
+  if (process.env.NODE_ENV === "production") {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+  next();
+});
+
+// 1MB: room for the full Joining Instruction text (up to 30 sections),
+// while still refusing oversized junk bodies.
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // Rate limiting
 // General API limit. Keyed per signed-in STAFF ACCOUNT when a valid token is

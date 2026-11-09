@@ -26,7 +26,7 @@ const auth = (roles = []) => {
       // effect on their very next request, not just at their next login.
       const result = await query(`
         SELECT u.is_active, u.role, u.extra_roles, u.subject_ids, u.assigned_forms, u.class_teacher_of, u.photo_url,
-               u.phone, u.email, u.employment_type,
+               u.phone, u.email, u.employment_type, u.password_changed_at,
                COALESCE((SELECT array_agg(s.name ORDER BY s.name) FROM subjects s WHERE s.id = ANY(u.subject_ids)), '{}') AS subject_names
         FROM users u WHERE u.id = $1
       `, [decoded.id]);
@@ -35,6 +35,12 @@ const auth = (roles = []) => {
       }
 
       const liveRow = result.rows[0];
+      // A token issued before the latest password change/reset is no longer
+      // valid - this is what actually signs out a stolen/old session.
+      if (liveRow.password_changed_at && decoded.iat &&
+          decoded.iat * 1000 < new Date(liveRow.password_changed_at).getTime() - 2000) {
+        return res.status(401).json({ success: false, message: "Your password was changed. Please sign in again." });
+      }
       const liveRoles = Array.from(new Set([liveRow.role, ...(liveRow.extra_roles || [])]));
       req.user = {
         ...decoded, role: liveRow.role, roles: liveRoles,

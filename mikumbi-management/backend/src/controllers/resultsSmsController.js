@@ -264,7 +264,9 @@ async function loadSmsProviderConfig() {
   const row = rows[0] || {};
   return {
     defaultProvider: row.sms_provider || "nextsms",
-    androidConfig: { url: row.android_sms_gateway_url, username: row.android_sms_gateway_username, password: row.android_sms_gateway_password },
+    // Stored encrypted at rest (utils/secureBox.js) - decrypted only here,
+    // in memory, at the moment an SMS is actually sent.
+    androidConfig: { url: row.android_sms_gateway_url, username: row.android_sms_gateway_username, password: require("../utils/secureBox").decryptSecret(row.android_sms_gateway_password) },
   };
 }
 

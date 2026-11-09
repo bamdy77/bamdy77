@@ -865,7 +865,7 @@ const publicResultsLogin = async (req, res, next) => {
       return res.status(400).json({ message: `Namba ya Kuingia si sahihi. ${USERNAME_HELP}` });
     }
     const { rows } = await query(
-      `SELECT id, first_name, middle_name, last_name, gender, form, parent_phone
+      `SELECT id, first_name, middle_name, last_name, gender, form, parent_phone, results_locked_until
        FROM students WHERE ${parsed.column} = $1`,
       [parsed.value]
     );
@@ -873,9 +873,20 @@ const publicResultsLogin = async (req, res, next) => {
       return res.status(404).json({ message: "Namba hii ya Kuingia haijasajiliwa." });
     }
     const student = rows[0];
+    if (student.results_locked_until && new Date(student.results_locked_until) > new Date()) {
+      const mins = Math.max(1, Math.ceil((new Date(student.results_locked_until) - new Date()) / 60000));
+      return res.status(423).json({ message: `Majaribio mengi yasiyo sahihi. Tafadhali subiri dakika ${mins} kisha ujaribu tena, au wasiliana na shule.` });
+    }
     if (!password || !student.parent_phone || normalizePhoneDigits(password) !== normalizePhoneDigits(student.parent_phone)) {
+      // 8 wrong phone numbers for this student (from ANY device/IP) lock
+      // its online login for 30 minutes - the password can't be guessed.
+      await query(
+        `UPDATE students SET results_failed_logins = results_failed_logins + 1,
+           results_locked_until = CASE WHEN results_failed_logins + 1 >= 8 THEN NOW() + INTERVAL '30 minutes' ELSE results_locked_until END
+         WHERE id = $1`, [student.id]);
       return res.status(401).json({ message: "Namba ya simu na Namba ya Kuingia hazilingani." });
     }
+    await query(`UPDATE students SET results_failed_logins = 0, results_locked_until = NULL WHERE id = $1 AND (results_failed_logins > 0 OR results_locked_until IS NOT NULL)`, [student.id]);
     const token = jwt.sign({ type: "public_result", student_id: student.id }, process.env.JWT_SECRET, { expiresIn: "45m" });
     res.json({
       token,

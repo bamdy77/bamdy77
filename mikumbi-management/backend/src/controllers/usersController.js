@@ -1,5 +1,6 @@
 // controllers/usersController.js — Head Master (and Second Master, who has
 // the same access) manages every login account in the system.
+const { passwordProblem, BCRYPT_ROUNDS } = require("../utils/passwordPolicy");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const { query } = require("../db/db");
@@ -44,7 +45,7 @@ const listUsers = async (_req, res, next) => {
 };
 
 function randomTempPassword() {
-  return crypto.randomBytes(6).toString("base64url"); // e.g. "aZ3xQ9kP"
+  return crypto.randomBytes(12).toString("base64url"); // 16 random characters
 }
 
 const ROLE_LABELS = {
@@ -128,8 +129,11 @@ const createUser = async (req, res, next) => {
     if ((role === "second_master" || extraRolesClean.includes("second_master")) && req.user.role !== "admin")
       return res.status(403).json({ success: false, message: "Only the Head Master can create a Second Master account." });
 
-    const tempPassword = password && password.length >= 6 ? password : randomTempPassword();
-    const hashed = await bcrypt.hash(tempPassword, 10);
+    if (password && passwordProblem(password)) {
+      return res.status(400).json({ success: false, message: passwordProblem(password) });
+    }
+    const tempPassword = password ? password : randomTempPassword();
+    const hashed = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS);
 
     // Trimmed + lowercased, same as username/full_name/phone right below -
     // email was the one field on this row that wasn't, so an account typed
@@ -356,8 +360,7 @@ const updateUser = async (req, res, next) => {
 const adminSetPassword = async (req, res, next) => {
   try {
     const { new_password } = req.body;
-    if (!new_password || new_password.length < 6)
-      return res.status(400).json({ success: false, message: "Password must be at least 6 characters." });
+    { const pwErr = passwordProblem(new_password); if (pwErr) return res.status(400).json({ success: false, message: pwErr }); }
 
     const target = await query(`SELECT role FROM users WHERE id = $1`, [req.params.id]);
     if (!target.rows.length) return res.status(404).json({ success: false, message: "User not found." });
@@ -367,8 +370,9 @@ const adminSetPassword = async (req, res, next) => {
     if (target.rows[0].role === "admin" && String(req.user.id) !== String(req.params.id))
       return res.status(403).json({ success: false, message: "Only the Head Master can reset their own password." });
 
-    const hashed = await bcrypt.hash(new_password, 10);
-    await query(`UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2`, [hashed, req.params.id]);
+    const hashed = await bcrypt.hash(new_password, BCRYPT_ROUNDS);
+    // Unlock the account and end every existing session of that user.
+    await query(`UPDATE users SET password = $1, password_changed_at = NOW(), failed_logins = 0, locked_until = NULL, updated_at = NOW() WHERE id = $2`, [hashed, req.params.id]);
     res.json({ success: true, message: "Password updated." });
   } catch (err) { next(err); }
 };

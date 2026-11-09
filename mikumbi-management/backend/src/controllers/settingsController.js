@@ -24,6 +24,7 @@
 // through this API) and stamps the right image into the right slot
 // automatically, for every role that can generate that report.
 const { query } = require("../db/db");
+const { encryptSecret } = require("../utils/secureBox");
 const { uploadBufferToCloudinary, deleteCloudinaryImage, publicIdFromBrandingUrl } = require("../middleware/upload");
 
 const VALID_FORMS = ["Form I", "Form II", "Form III", "Form IV"];
@@ -205,7 +206,8 @@ const updateSmsSettings = async (req, res, next) => {
          android_sms_gateway_password = CASE WHEN $4::text IS NOT NULL AND $4::text <> '' THEN $4::text ELSE android_sms_gateway_password END,
          updated_at = NOW(), updated_by = $5::integer
        WHERE id = 1`,
-      [sms_provider || null, android_sms_gateway_url ?? null, android_sms_gateway_username ?? null, android_sms_gateway_password ?? null, req.user.id]
+      [sms_provider || null, android_sms_gateway_url ?? null, android_sms_gateway_username ?? null,
+       android_sms_gateway_password ? encryptSecret(String(android_sms_gateway_password)) : null, req.user.id]
     );
     res.json({ success: true });
   } catch (err) { next(err); }

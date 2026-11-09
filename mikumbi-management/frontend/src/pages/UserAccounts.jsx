@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { passwordProblem } from "../utils/passwordPolicy";
 import { createPortal } from "react-dom";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
@@ -588,8 +589,9 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
   const submit = async (e) => {
     e.preventDefault();
     setError("");
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters.");
+    const pwErr = passwordProblem(newPassword);
+    if (pwErr) {
+      setError(pwErr);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -618,7 +620,7 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
         <div style={{ display: "grid", gap: 10 }}>
           <div>
             <label style={labelStyle}>New Password</label>
-            <PasswordInput value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="At least 6 characters" autoFocus />
+            <PasswordInput value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="At least 8 characters, letters and numbers" autoFocus />
           </div>
           <div>
             <label style={labelStyle}>Confirm New Password</label>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { passwordProblem } from "../utils/passwordPolicy";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
@@ -7,7 +8,7 @@ import { showSuccess } from "../components/SuccessModal";
 import { LockIcon, SpinnerIcon } from "../components/icons";
 
 export default function ChangePassword() {
-  const { token, user } = useAuth();
+  const { token, user, replaceToken } = useAuth();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,8 +27,9 @@ export default function ChangePassword() {
     e.preventDefault();
     setError("");
 
-    if (newPassword.length < 6) {
-      setError("New password must be at least 6 characters.");
+    const pwErr = passwordProblem(newPassword);
+    if (pwErr) {
+      setError(pwErr);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -41,11 +43,12 @@ export default function ChangePassword() {
 
     setBusy(true);
     try {
-      await apiFetch(
+      const r = await apiFetch(
         "/auth/change-password",
         { method: "POST", body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }) },
         token
       );
+      if (r && r.token) replaceToken(r.token);
       reset();
       showSuccess("Password Changed", "Your password has been changed successfully. Use it next time you log in.");
     } catch (err) {
@@ -76,7 +79,7 @@ export default function ChangePassword() {
           <PasswordInput
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="At least 6 characters"
+            placeholder="At least 8 characters, letters and numbers"
           />
         </Field>
 
