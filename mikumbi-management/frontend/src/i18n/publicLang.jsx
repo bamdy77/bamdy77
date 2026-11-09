@@ -137,8 +137,8 @@ const STRINGS = {
   "boarding.academics.text": { sw: "Mazingira mazuri ya kujifunzia yanayoongozwa na kauli mbiu yetu, “Elimu na Kazi”.", en: "A supportive learning environment guided by our motto, “Education with work”." },
   "boarding.girls.title": { sw: "Bweni la Wasichana", en: "Girls' Boarding" },
   "boarding.girls.text": { sw: "Huduma ya bweni inatolewa kwa wasichana wote.", en: "Boarding services are provided for all girls." },
-  "boarding.boys.title": { sw: "Hosteli ya Wavulana", en: "Boys' Hostel" },
-  "boarding.boys.text": { sw: "Huduma ya hosteli inapatikana kwa wavulana.", en: "Hostel facilities are available for boys." },
+  "boarding.ground.title": { sw: "Uwanja wa Shule", en: "School Grounds" },
+  "boarding.ground.text": { sw: "Uwanja wa michezo na shughuli za wanafunzi nje ya darasa.", en: "Sports field and outdoor student activities." },
   "boarding.life.title": { sw: "Maisha ya Mwanafunzi", en: "Student Life" },
   "boarding.life.text": { sw: "Kujifunza, nidhamu na maisha ya jamii nje ya darasa.", en: "Learning, discipline and community life beyond the classroom." },
 

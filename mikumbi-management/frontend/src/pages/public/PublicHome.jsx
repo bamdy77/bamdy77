@@ -10,7 +10,7 @@ import { API_BASE } from "../../utils/api";
 import { useLang } from "../../i18n/publicLang";
 import {
   CheckCircleIcon, GraduationCapIcon, MegaphoneIcon, MessageIcon, SchoolIcon, BedIcon, UsersIcon,
-  LocationPinIcon, ChevronRightIcon, CloseIcon, ChevronLeftIcon,
+  LocationPinIcon, ChevronRightIcon, CloseIcon, ChevronLeftIcon, TrophyIcon,
 } from "../../components/icons";
 
 const NAVY = "#0c426f";
@@ -163,7 +163,7 @@ function Boarding() {
   const cards = [
     { img: "/assets/classroom.jpg", icon: SchoolIcon, title: t("boarding.academics.title"), text: t("boarding.academics.text") },
     { img: "/assets/girls-hostel.jpg", icon: BedIcon, title: t("boarding.girls.title"), text: t("boarding.girls.text") },
-    { img: "/assets/boys-hostel.jpg", icon: BedIcon, title: t("boarding.boys.title"), text: t("boarding.boys.text") },
+    { img: "/assets/school-ground.jpg", icon: TrophyIcon, title: t("boarding.ground.title"), text: t("boarding.ground.text") },
     { img: "/assets/students.jpg", icon: UsersIcon, title: t("boarding.life.title"), text: t("boarding.life.text") },
   ];
   return (

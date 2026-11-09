@@ -22,6 +22,6 @@ Keep each file under ~300KB (hero ≈ 1600px wide, others ≈ 1000px wide).
 - head-master.jpg     — portrait of the Head Master (About section, optional).
 - classroom.jpg       — students in class        (Academics card).
 - girls-hostel.jpg    — girls' boarding          (Girls' Boarding card).
-- boys-hostel.jpg     — boys' hostel             (Boys' Hostel card).
+- school-ground.jpg   — school grounds / sports field (School Grounds card).
 - students.jpg        — students outdoors/events (Student Life card).
 - gallery-1.jpg … gallery-6.jpg — any other school photos (Photo Gallery).
