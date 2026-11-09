@@ -156,6 +156,25 @@ const getStats = async (req, res, next) => {
 
 // ── Admission - Girls (room-based) ───────────────────────────────────────────
 
+// A boy must never be admitted into the Girls Hostel (or a girl into the
+// Boys Hostel), and only a CURRENT student can be admitted - previously
+// neither was checked, so a wrong pick in the student search silently put a
+// boy into a girls' room.
+function hostelGenderError(student, requiredGender, hostelName) {
+  const g = String(student.gender || "").trim().toLowerCase();
+  const want = String(requiredGender || "").trim().toLowerCase();
+  const norm = (x) => (x.startsWith("f") ? "female" : x.startsWith("m") ? "male" : x);
+  if (student.status && String(student.status).toLowerCase() !== "active") {
+    return `This student is not an active student (status: ${student.status}) and cannot be admitted to a hostel.`;
+  }
+  if (g && want && norm(g) !== norm(want)) {
+    return norm(want) === "female"
+      ? `${hostelName} is for girls only - this student is registered as Male.`
+      : `${hostelName} is for boys only - this student is registered as Female.`;
+  }
+  return null;
+}
+
 // POST /api/hostel/rooms/:roomId/assign
 const assignStudent = async (req, res, next) => {
   try {
@@ -163,7 +182,7 @@ const assignStudent = async (req, res, next) => {
     if (!student_id)
       return res.status(400).json({ success: false, message: "Select an enrolled student to admit." });
 
-    const studentRes = await query(`SELECT first_name, middle_name, last_name, form FROM students WHERE id = $1`, [student_id]);
+    const studentRes = await query(`SELECT first_name, middle_name, last_name, form, gender, status FROM students WHERE id = $1`, [student_id]);
     if (!studentRes.rows.length)
       return res.status(404).json({ success: false, message: "That student was not found in Student Management." });
     const { first_name, middle_name, last_name, form } = studentRes.rows[0];
@@ -173,13 +192,15 @@ const assignStudent = async (req, res, next) => {
       return res.status(400).json({ success: false, message: `This student is already registered in ${already.rows[0].hostel_name}. A student can only be registered in one hostel.` });
 
     const cap = await query(`
-      SELECT r.capacity, r.hostel_name,
+      SELECT r.capacity, r.hostel_name, r.room_number, r.gender,
         (SELECT COUNT(*) FROM hostel_occupants o WHERE o.room_id = r.id AND o.is_active = true) AS occupied
       FROM hostel_rooms r WHERE r.id = $1
     `, [req.params.roomId]);
     if (!cap.rows.length) return res.status(404).json({ success: false, message: "Room not found." });
 
-    const { capacity, occupied, hostel_name } = cap.rows[0];
+    const { capacity, occupied, hostel_name, room_number, gender: roomGender } = cap.rows[0];
+    const genderErr = hostelGenderError(studentRes.rows[0], roomGender || "Female", hostel_name);
+    if (genderErr) return res.status(400).json({ success: false, message: genderErr });
     if (parseInt(occupied) >= parseInt(capacity))
       return res.status(400).json({ success: false, message: "Room is full." });
 
@@ -190,7 +211,7 @@ const assignStudent = async (req, res, next) => {
         admitted_date || null]);
 
     const occupant = result.rows[0];
-    await logHistory(occupant.id, "Admitted", `Admitted into ${hostel_name}, Room ${occupant.room_id}.`, req.user?.id);
+    await logHistory(occupant.id, "Admitted", `Admitted into ${hostel_name}, ${room_number || `Room ${occupant.room_id}`}.`, req.user?.id);
     res.status(201).json({ success: true, data: occupant });
   } catch (err) { next(err); }
 };
@@ -216,7 +237,7 @@ const admitBoysHall = async (req, res, next) => {
     if (!student_id)
       return res.status(400).json({ success: false, message: "Select an enrolled student to admit." });
 
-    const studentRes = await query(`SELECT first_name, middle_name, last_name, form FROM students WHERE id = $1`, [student_id]);
+    const studentRes = await query(`SELECT first_name, middle_name, last_name, form, gender, status FROM students WHERE id = $1`, [student_id]);
     if (!studentRes.rows.length)
       return res.status(404).json({ success: false, message: "That student was not found in Student Management." });
     const { first_name, middle_name, last_name, form } = studentRes.rows[0];
@@ -224,6 +245,9 @@ const admitBoysHall = async (req, res, next) => {
     const already = await query(`SELECT id, hostel_name FROM hostel_occupants WHERE student_id = $1 AND is_active = true`, [student_id]);
     if (already.rows.length)
       return res.status(400).json({ success: false, message: `This student is already registered in ${already.rows[0].hostel_name}. A student can only be registered in one hostel.` });
+
+    const genderErr = hostelGenderError(studentRes.rows[0], "Male", "Boys Hostel");
+    if (genderErr) return res.status(400).json({ success: false, message: genderErr });
 
     const result = await query(`
       INSERT INTO hostel_occupants (room_id, hostel_name, student_id, first_name, middle_name, last_name, form, admitted_date)
@@ -244,9 +268,9 @@ const removeOccupant = async (req, res, next) => {
     const result = await query(`
       UPDATE hostel_occupants
       SET is_active = false, departed_date = ((NOW() AT TIME ZONE 'Africa/Dar_es_Salaam')::date)
-      WHERE id = $1 RETURNING *
+      WHERE id = $1 AND is_active = true RETURNING *
     `, [req.params.occupantId]);
-    if (!result.rows.length) return res.status(404).json({ success: false, message: "Occupant not found." });
+    if (!result.rows.length) return res.status(404).json({ success: false, message: "Occupant not found, or already removed from the hostel." });
     await logHistory(result.rows[0].id, "Departed", "Left the hostel.", req.user?.id);
     res.json({ success: true, message: "Student removed from hostel." });
   } catch (err) { next(err); }
@@ -325,6 +349,24 @@ const addContribution = async (req, res, next) => {
       term, academic_year, maize_kg, vegetable_type, vegetables_kg,
       oil_litres, salt_kg, rice_kg, hostel_fee, owes, comment,
     } = req.body;
+    // Every quantity/amount must be a real number >= 0 (previously "-5" kg
+    // was stored as-is), and a contribution with nothing in it at all is
+    // refused instead of creating an empty record.
+    const amounts = { "Maize": maize_kg, "Vegetables": vegetables_kg, "Cooking Oil": oil_litres, "Salt": salt_kg, "Rice": rice_kg, "Hostel Fee": hostel_fee };
+    for (const [label, v] of Object.entries(amounts)) {
+      if (v === undefined || v === null || v === "") continue;
+      const n = Number(v);
+      if (!Number.isFinite(n) || n < 0) {
+        return res.status(400).json({ success: false, message: `${label} must be a number of 0 or more.` });
+      }
+    }
+    const anyAmount = Object.values(amounts).some((v) => Number(v) > 0);
+    if (!anyAmount && !owes && !(comment && String(comment).trim())) {
+      return res.status(400).json({ success: false, message: "Enter at least one item or amount for this contribution." });
+    }
+    const occ = await query(`SELECT id FROM hostel_occupants WHERE id = $1`, [req.params.id]);
+    if (!occ.rows.length) return res.status(404).json({ success: false, message: "Hostel student not found." });
+
     // NOTE: "Other Item" (e.g. Soap) has been removed from the form per request -
     // the column still exists in the database for old records, so it is left
     // out of every new INSERT instead of being dropped (no data loss, no logic broken).
