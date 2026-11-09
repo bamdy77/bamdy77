@@ -9,7 +9,7 @@ import { PasswordInput } from "../components/PasswordInput";
 
 const ADMIN_TIER = ["admin", "second_master", "academic"];
 
-const smsInputStyle = { width: "100%", padding: "9px 12px", borderRadius: 8, border: `1px solid ${THEME.border}`, fontSize: 13, boxSizing: "border-box" };
+const smsInputStyle = { width: "100%", padding: "9px 12px", borderRadius: 0, border: `1px solid ${THEME.border}`, fontSize: 13, boxSizing: "border-box" };
 const smsLabelStyle = { display: "block", fontSize: 12, fontWeight: 600, color: THEME.text, marginBottom: 5 };
 
 export default function SmsGatewaySettings() {
@@ -38,7 +38,7 @@ export default function SmsGatewaySettings() {
         Choose which provider Results → Send Results via SMS uses. NextSMS is the school's paid gateway (billed per SMS). Android SMS Gateway sends from a phone the school owns, using its own SIM.
       </p>
 
-      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 12, padding: "18px 18px 22px" }}>
+      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "18px 18px 22px" }}>
         <SmsGatewaySection token={token} confirm={confirm} />
       </div>
 
@@ -91,7 +91,7 @@ function SmsGatewaySection({ token, confirm }) {
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         {[["nextsms", "NEXTSMS"], ["android_gateway", "Android SMS Gateway"]].map(([val, label]) => (
           <label key={val} style={{
-            display: "flex", alignItems: "center", gap: 7, padding: "9px 14px", borderRadius: 8,
+            display: "flex", alignItems: "center", gap: 7, padding: "9px 14px", borderRadius: 0,
             border: `1.5px solid ${provider === val ? THEME.navy : THEME.border}`,
             background: provider === val ? `${THEME.navy}10` : "transparent", cursor: "pointer", fontSize: 13,
           }}>
@@ -116,7 +116,7 @@ function SmsGatewaySection({ token, confirm }) {
           </div>
           <div>
             <label style={smsLabelStyle}>Password {settings.android_sms_gateway_password_set && <span style={{ color: THEME.muted, fontWeight: 400 }}>(imeshawekwa — acha wazi kama hutaki kubadilisha)</span>}</label>
-            <PasswordInput value={gwPassword} onChange={(e) => setGwPassword(e.target.value)} placeholder="Password" required={false} style={{ border: `1px solid ${THEME.border}`, borderRadius: 8, fontSize: 13 }} />
+            <PasswordInput value={gwPassword} onChange={(e) => setGwPassword(e.target.value)} placeholder="Password" required={false} style={{ border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13 }} />
           </div>
         </div>
       )}
@@ -124,7 +124,7 @@ function SmsGatewaySection({ token, confirm }) {
       {error && <p style={{ color: THEME.danger, fontSize: 12.5, margin: "8px 0 0" }}>{error}</p>}
       {msg && <p style={{ color: THEME.success, fontSize: 12.5, margin: "8px 0 0" }}>{msg}</p>}
       <button onClick={save} disabled={busy} style={{
-        marginTop: 12, padding: "9px 18px", borderRadius: 8, border: "none",
+        marginTop: 12, padding: "9px 18px", borderRadius: 0, border: "none",
         background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer",
       }}>{busy ? "Inahifadhi..." : "Hifadhi"}</button>
     </div>

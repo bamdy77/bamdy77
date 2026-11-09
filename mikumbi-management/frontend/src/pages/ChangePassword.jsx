@@ -62,7 +62,7 @@ export default function ChangePassword() {
         Update the password for your account ({user.username || user.full_name}).
       </p>
 
-      <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 12, padding: 24 }}>
+      <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: 24 }}>
         <Field label="Current Password">
           <PasswordInput
             value={oldPassword}
@@ -89,14 +89,14 @@ export default function ChangePassword() {
         </Field>
 
         {error && (
-          <div style={{ color: THEME.danger, background: THEME.dangerLight, fontSize: 13, padding: "10px 12px", borderRadius: 8, marginBottom: 16 }}>
+          <div style={{ color: THEME.danger, background: THEME.dangerLight, fontSize: 13, padding: "10px 12px", borderRadius: 0, marginBottom: 16 }}>
             {error}
           </div>
         )}
 
         <button type="submit" disabled={busy} style={{
           width: "100%", padding: "12px 0", background: THEME.navy, color: "#fff",
-          border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer",
+          border: "none", borderRadius: 0, fontWeight: 700, fontSize: 14, cursor: "pointer",
           opacity: busy ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
         }}>{busy ? <SpinnerIcon size={15} /> : <LockIcon size={15} />}{busy ? "Saving..." : "Save New Password"}</button>
       </form>

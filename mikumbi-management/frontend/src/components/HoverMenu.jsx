@@ -38,8 +38,8 @@ export default function HoverMenu({ label, icon: LabelIcon, items, variant = "li
 
   const isNavy = variant === "navy";
   const panelStyle = isNavy
-    ? { background: "#0c426f", borderRadius: 6, boxShadow: "0 10px 30px rgba(0,0,0,0.25)", minWidth: 190 }
-    : { background: "#fff", borderRadius: 10, boxShadow: "0 12px 32px rgba(12,66,111,0.22)", minWidth: 230, border: "1px solid #e2e8f0" };
+    ? { background: "#0c426f", borderRadius: 0, boxShadow: "0 10px 30px rgba(0,0,0,0.25)", minWidth: 190 }
+    : { background: "#fff", borderRadius: 0, boxShadow: "0 12px 32px rgba(12,66,111,0.22)", minWidth: 230, border: "1px solid #e2e8f0" };
 
   const itemBase = isNavy
     ? { color: "#fff", fontSize: 12.5, fontWeight: 700, letterSpacing: "0.03em", textTransform: "uppercase", borderBottom: "1px solid rgba(255,255,255,0.08)" }

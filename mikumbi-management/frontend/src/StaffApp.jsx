@@ -29,7 +29,6 @@ import SignatureSettings from "./pages/SignatureSettings";
 import SmsGatewaySettings from "./pages/SmsGatewaySettings";
 import JoiningInstructions from "./pages/JoiningInstructions";
 import IdentityCards from "./pages/IdentityCards";
-import DocTools from "./pages/DocTools";
 
 export default function StaffApp() {
   return (
@@ -52,8 +51,6 @@ export default function StaffApp() {
           <Route path="/dashboard" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<DashboardHome />} />
             <Route path="change-password" element={<ChangePassword />} />
-            {/* Doc Tools: no role restriction, any logged-in staff. */}
-            <Route path="doc-tools" element={<DocTools />} />
             <Route path="signature-stamp" element={<ProtectedRoute roles={["admin", "second_master", "academic", "class_teacher"]}><SignatureSettings /></ProtectedRoute>} />
             <Route path="sms-gateway" element={<ProtectedRoute roles={["admin", "second_master", "academic"]}><SmsGatewaySettings /></ProtectedRoute>} />
             <Route path="students" element={<ProtectedRoute roles={["admin", "second_master"]}><StudentManagement /></ProtectedRoute>} />

@@ -151,11 +151,11 @@ export default function IdentityCards() {
             const fullName = [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ");
             return (
               <label key={s.id} style={{
-                display: "flex", alignItems: "center", gap: 10, padding: 10, borderRadius: 8, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 10, padding: 10, borderRadius: 0, cursor: "pointer",
                 border: `1.5px solid ${checked ? THEME.navy : THEME.border}`, background: checked ? `${THEME.navy}0d` : THEME.surface,
               }}>
                 <input type="checkbox" checked={checked} onChange={() => toggle(s.id)} />
-                <div style={{ width: 34, height: 34, borderRadius: 6, overflow: "hidden", background: "#EFF6FF", flexShrink: 0 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 0, overflow: "hidden", background: "#EFF6FF", flexShrink: 0 }}>
                   {s.photo_url && <img src={s.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                 </div>
                 <div style={{ minWidth: 0 }}>
@@ -173,7 +173,7 @@ export default function IdentityCards() {
         <div style={{ display: "flex", gap: 10 }}>
           {[["single", "One Per Page"], ["grid", "Multiple Per Page"]].map(([val, label]) => (
             <label key={val} style={{
-              display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 8,
+              display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 0,
               border: `1.5px solid ${layout === val ? THEME.navy : THEME.border}`,
               background: layout === val ? `${THEME.navy}10` : "transparent", cursor: "pointer", fontSize: 12.5,
             }}>
@@ -199,7 +199,7 @@ export default function IdentityCards() {
             // device's real PDF viewer can actually render it. This box is
             // just a clear confirmation + a manual retry, in case the
             // automatic open was blocked as a pop-up.
-            <div style={{ background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 8, padding: 18, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10 }}>
+            <div style={{ background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: 18, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10 }}>
               <p style={{ fontSize: 12.5, color: THEME.muted, margin: 0 }}>
                 The preview opened in a new tab — phones and tablets don't have a way to show a PDF inside this page directly. If nothing opened (some browsers block pop-ups), tap the button below.
               </p>
@@ -210,7 +210,7 @@ export default function IdentityCards() {
               <p style={{ fontSize: 11.5, color: THEME.muted, marginBottom: 8 }}>
                 To print, use the "Print" button above instead of the print icon inside this preview. If the box below looks empty, <a href={previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: THEME.navy, fontWeight: 600 }}>open the preview in a new tab</a> instead.
               </p>
-              <iframe title="Identity Card Preview" src={previewUrl} style={{ width: "100%", height: 700, border: `1px solid ${THEME.border}`, borderRadius: 8 }} />
+              <iframe title="Identity Card Preview" src={previewUrl} style={{ width: "100%", height: 700, border: `1px solid ${THEME.border}`, borderRadius: 0 }} />
             </>
           )}
         </div>
@@ -221,9 +221,9 @@ export default function IdentityCards() {
 
 const backBtn = {
   display: "inline-flex", alignItems: "center", gap: 6, background: THEME.surface,
-  border: `1.5px solid ${THEME.border}`, borderRadius: 8, color: THEME.heading,
+  border: `1.5px solid ${THEME.border}`, borderRadius: 0, color: THEME.heading,
   fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 14, padding: "8px 14px",
 };
-const selectStyle = { padding: "9px 12px", borderRadius: 8, border: `1px solid ${THEME.border}`, fontSize: 13, background: THEME.surface, color: THEME.text };
-const primaryBtn = { padding: "9px 18px", borderRadius: 8, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" };
-const secondaryBtn = { padding: "9px 18px", borderRadius: 8, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontWeight: 700, fontSize: 13, cursor: "pointer" };
+const selectStyle = { padding: "9px 12px", borderRadius: 0, border: `1px solid ${THEME.border}`, fontSize: 13, background: THEME.surface, color: THEME.text };
+const primaryBtn = { padding: "9px 18px", borderRadius: 0, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" };
+const secondaryBtn = { padding: "9px 18px", borderRadius: 0, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontWeight: 700, fontSize: 13, cursor: "pointer" };

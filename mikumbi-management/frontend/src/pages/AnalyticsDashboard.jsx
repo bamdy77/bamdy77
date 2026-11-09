@@ -240,7 +240,7 @@ function AttendanceTrendSection() {
           </ChartCard>
 
           <div style={{ overflowX: "auto" }}>
-            <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8, overflow: "hidden", minWidth: 640 }}>
+            <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden", minWidth: 640 }}>
               <div style={{ ...rowStyle, fontWeight: 700, background: THEME.bg }}>
                 <span style={{ flex: 1.2 }}>Month</span>
                 <span style={{ flex: 1 }}>Teachers</span>
@@ -350,7 +350,7 @@ function StudentTrendSection() {
         {matches.length > 0 && (
           <div style={{
             position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, zIndex: 5,
-            background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8,
+            background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0,
             maxHeight: 240, overflowY: "auto", boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
           }}>
             {matches.map((m) => (
@@ -420,7 +420,7 @@ function StudentTrendSection() {
           <GpaProjection projection={data.projection} />
 
           <div style={{ overflowX: "auto", marginBottom: 18 }}>
-            <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8, overflow: "hidden", minWidth: 520 }}>
+            <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden", minWidth: 520 }}>
               <div style={{ ...rowStyle, fontWeight: 700, background: THEME.bg }}>
                 <span style={{ flex: 1.3 }}>Period</span>
                 <span style={{ flex: 0.8 }}>Form</span>
@@ -489,7 +489,7 @@ function GpaProjection({ projection }) {
   }
   const pointsTowardImprovement = projection.slope < 0; // GPA: lower = better
   return (
-    <div style={{ background: THEME.surface, border: `1px dashed ${THEME.border}`, borderRadius: 8, padding: 14, marginBottom: 18 }}>
+    <div style={{ background: THEME.surface, border: `1px dashed ${THEME.border}`, borderRadius: 0, padding: 14, marginBottom: 18 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <InfoIcon size={14} />
         <span style={{ fontWeight: 700, fontSize: 13, color: THEME.heading }}>Estimated next-period GPA: {projection.predicted_gpa}</span>
@@ -504,7 +504,7 @@ function GpaProjection({ projection }) {
 // ══════════════════ shared bits ══════════════════
 function ChartCard({ title, sub, direction, directionGoodWhen = "improving", children }) {
   return (
-    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 10, padding: 16, marginBottom: 18 }}>
+    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: 16, marginBottom: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
         <div>
           <div style={{ fontSize: 13.5, fontWeight: 700, color: THEME.text }}>{title}</div>
@@ -542,10 +542,10 @@ function Field({ label, children }) {
   );
 }
 
-const selectStyle = { padding: "8px 10px", border: `1px solid ${THEME.border}`, borderRadius: 8, fontSize: 13, background: THEME.surface, color: THEME.text };
-const errorBox = { marginBottom: 18, padding: 12, borderRadius: 8, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger };
+const selectStyle = { padding: "8px 10px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13, background: THEME.surface, color: THEME.text };
+const errorBox = { marginBottom: 18, padding: 12, borderRadius: 0, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger };
 const loadingText = { fontSize: 13, color: THEME.muted, marginBottom: 16, display: "flex", alignItems: "center", gap: 7 };
 const rowStyle = { display: "flex", gap: 12, padding: "9px 14px", fontSize: 12.5 };
-const badge = { display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, fontSize: 11.5, fontWeight: 700 };
-const tabActive = { padding: "8px 16px", borderRadius: 8, border: "none", background: THEME.navy, color: "#fff", fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
+const badge = { display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 0, fontSize: 11.5, fontWeight: 700 };
+const tabActive = { padding: "8px 16px", borderRadius: 0, border: "none", background: THEME.navy, color: "#fff", fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
 const tabInactive = { ...tabActive, background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` };

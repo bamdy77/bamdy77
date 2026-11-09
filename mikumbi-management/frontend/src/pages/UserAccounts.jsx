@@ -177,13 +177,13 @@ export default function UserAccounts() {
     <div style={{ padding: isMobile ? "16px 12px" : isTablet ? "24px 20px" : 40 }}>
       <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : isTablet ? 18 : 20, marginBottom: 18 }}>User Accounts</h2>
       {loadError && (
-        <div style={{ marginBottom: 16, padding: 12, borderRadius: 8, fontSize: 13, background: THEME.dangerLight, color: THEME.danger, maxWidth: 480, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+        <div style={{ marginBottom: 16, padding: 12, borderRadius: 0, fontSize: 13, background: THEME.dangerLight, color: THEME.danger, maxWidth: 480, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
           <span>⚠ {loadError}</span>
-          <button onClick={() => { setLoadError(""); load(); }} style={{ background: "none", border: `1px solid ${THEME.danger}`, color: THEME.danger, borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 5 }}><RefreshIcon size={12} />Retry</button>
+          <button onClick={() => { setLoadError(""); load(); }} style={{ background: "none", border: `1px solid ${THEME.danger}`, color: THEME.danger, borderRadius: 0, padding: "4px 10px", fontSize: 12, cursor: "pointer", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 5 }}><RefreshIcon size={12} />Retry</button>
         </div>
       )}
 
-      <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 10, padding: isMobile ? 16 : 18, marginBottom: 28, maxWidth: isMobile ? "100%" : isTablet ? 560 : 480, display: "grid", gap: 10 }}>
+      <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: isMobile ? 16 : 18, marginBottom: 28, maxWidth: isMobile ? "100%" : isTablet ? 560 : 480, display: "grid", gap: 10 }}>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
           <input placeholder="Username" required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={inputStyle} />
           <input placeholder="Full Name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} style={inputStyle} />
@@ -220,7 +220,7 @@ export default function UserAccounts() {
               <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 6, marginTop: 8 }}>
                 <input placeholder="Subject missing? Type full name here" value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} style={{ ...inputStyle, flex: 2, fontSize: 12, width: isMobile ? "100%" : undefined }} />
                 <input placeholder="Abbreviation (e.g. B/MATH)" value={newSubjectCode} onChange={(e) => setNewSubjectCode(e.target.value)} style={{ ...inputStyle, flex: 1, fontSize: 12, width: isMobile ? "100%" : undefined }} />
-                <button type="button" onClick={addSubject} disabled={!newSubjectName.trim() || !newSubjectCode.trim()} style={{ padding: isMobile ? "9px 12px" : "0 12px", background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 8, fontSize: 12, cursor: "pointer", width: isMobile ? "100%" : undefined, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5 }}><PlusCircleIcon size={13} />Add</button>
+                <button type="button" onClick={addSubject} disabled={!newSubjectName.trim() || !newSubjectCode.trim()} style={{ padding: isMobile ? "9px 12px" : "0 12px", background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 12, cursor: "pointer", width: isMobile ? "100%" : undefined, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5 }}><PlusCircleIcon size={13} />Add</button>
               </div>
               <p style={{ fontSize: 10.5, color: THEME.muted, marginTop: 4 }}>Both the full subject name and its abbreviation are required - the abbreviation is what appears in Results Management.</p>
             </div>
@@ -243,7 +243,7 @@ export default function UserAccounts() {
             )}
           </>
         )}
-        <button disabled={busy} style={{ padding: "10px 0", background: THEME.navy, color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+        <button disabled={busy} style={{ padding: "10px 0", background: THEME.navy, color: "#fff", border: "none", borderRadius: 0, fontWeight: 600, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
           {busy ? <SpinnerIcon size={14} /> : <UserHistoryIcon size={14} />}{busy ? "Creating..." : "Create Account"}
         </button>
         {result && (
@@ -251,9 +251,9 @@ export default function UserAccounts() {
         )}
       </form>
 
-      <div style={isCompactList ? { display: "grid", gap: 10 } : { background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 10 }}>
+      <div style={isCompactList ? { display: "grid", gap: 10 } : { background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0 }}>
         {result && !result.ok && (
-          <p style={{ margin: isCompactList ? "0 0 4px" : 0, padding: "10px 16px", fontSize: 12.5, color: THEME.danger, background: THEME.dangerLight, borderRadius: isCompactList ? 8 : 0, borderBottom: isCompactList ? "none" : `1px solid ${THEME.border}` }}>{result.text}</p>
+          <p style={{ margin: isCompactList ? "0 0 4px" : 0, padding: "10px 16px", fontSize: 12.5, color: THEME.danger, background: THEME.dangerLight, borderRadius: 0, borderBottom: isCompactList ? "none" : `1px solid ${THEME.border}` }}>{result.text}</p>
         )}
         {users.map((u, i) => {
           const canManageThisTarget = u.role !== "second_master" || me.role === "admin";
@@ -270,18 +270,18 @@ export default function UserAccounts() {
             </ActionMenu>
           );
           const statusBadge = (
-            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 10, background: u.is_active ? THEME.successLight : THEME.dangerLight, color: u.is_active ? THEME.success : THEME.danger }}>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 0, background: u.is_active ? THEME.successLight : THEME.dangerLight, color: u.is_active ? THEME.success : THEME.danger }}>
               {u.is_active ? "Active" : "Inactive"}
             </span>
           );
           const rolePill = (
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: THEME.navy, padding: "3px 10px", borderRadius: 20, lineHeight: 1.4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: THEME.navy, padding: "3px 10px", borderRadius: 0, lineHeight: 1.4 }}>
               {allHeldRoles(u.role, u.extra_roles).map(roleLabel).join(" + ")}
             </span>
           );
           const employmentBadge = (
             <span style={{
-              display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "3px 9px 3px 7px", borderRadius: 20,
+              display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, padding: "3px 9px 3px 7px", borderRadius: 0,
               background: u.employment_type === "Temporary" ? THEME.warningLight : THEME.successLight,
               color: u.employment_type === "Temporary" ? THEME.warning : THEME.success,
             }}>
@@ -293,7 +293,7 @@ export default function UserAccounts() {
             // ── MOBILE / TABLET: a self-contained card per account, easier to
             // scan and tap than a dense multi-column row squeezed onto a
             // narrow screen. ──
-            <div key={u.id} className="account-card" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 12, padding: isMobile ? "12px 14px" : "14px 18px", boxShadow: "0 1px 3px rgba(15,23,42,0.06)" }}>
+            <div key={u.id} className="account-card" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: isMobile ? "12px 14px" : "14px 18px", boxShadow: "0 1px 3px rgba(15,23,42,0.06)" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
                   <AccountAvatar name={u.full_name} photoUrl={u.photo_url} size={38}
@@ -387,12 +387,12 @@ export default function UserAccounts() {
           onMouseDown={(e) => { if (e.target === e.currentTarget) setViewPhoto(null); }}
           style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9700, padding: 16 }}
         >
-          <div style={{ background: "#0E355C", borderRadius: 14, padding: 22, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)", maxWidth: "90vw" }}>
+          <div style={{ background: "#0E355C", borderRadius: 0, padding: 22, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)", maxWidth: "90vw" }}>
             <div style={{ width: 200, height: 200, maxWidth: "70vw", maxHeight: "70vw", borderRadius: "50%", overflow: "hidden", margin: "0 auto 14px", border: "2px solid rgba(255,255,255,0.2)" }}>
               <img src={viewPhoto.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
             <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>{viewPhoto.name}</div>
-            <button onClick={() => setViewPhoto(null)} style={{ marginTop: 14, padding: "9px 20px", background: THEME.gold, color: THEME.navyDark, border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
+            <button onClick={() => setViewPhoto(null)} style={{ marginTop: 14, padding: "9px 20px", background: THEME.gold, color: THEME.navyDark, border: "none", borderRadius: 0, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
               Close
             </button>
           </div>
@@ -452,13 +452,13 @@ function ActionMenu({ children }) {
   return (
     <div ref={wrapRef} style={{ position: "relative" }}>
       <button ref={btnRef} onClick={toggle} aria-label="Actions" title="Actions" style={{
-        width: 28, height: 28, borderRadius: 6, border: `1px solid ${THEME.border}`, background: THEME.surface,
+        width: 28, height: 28, borderRadius: 0, border: `1px solid ${THEME.border}`, background: THEME.surface,
         cursor: "pointer", color: THEME.text, display: "flex", alignItems: "center", justifyContent: "center",
       }}><DotsVerticalIcon size={16} /></button>
       {open && createPortal(
         <div data-usermenu-portal style={{
           position: "fixed", top: pos.top, left: pos.left, background: THEME.surface, border: `1px solid ${THEME.border}`,
-          borderRadius: 8, boxShadow: "0 6px 18px rgba(0,0,0,0.12)", zIndex: 9600, minWidth: 160, overflow: "hidden",
+          borderRadius: 0, boxShadow: "0 6px 18px rgba(0,0,0,0.12)", zIndex: 9600, minWidth: 160, overflow: "hidden",
         }} onClick={() => setOpen(false)}>
           {children}
         </div>,
@@ -505,7 +505,7 @@ function EditUserModal({ user, subjects, onClose, onSave, myRole }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
-      <div style={{ background: THEME.surface, borderRadius: 12, padding: 22, width: "100%", maxWidth: 460, maxHeight: "85vh", overflowY: "auto" }}>
+      <div style={{ background: THEME.surface, borderRadius: 0, padding: 22, width: "100%", maxWidth: 460, maxHeight: "85vh", overflowY: "auto" }}>
         <h3 style={{ marginTop: 0, marginBottom: 16, color: THEME.heading, fontSize: 16 }}>Edit - {user.username}</h3>
         <div style={{ display: "grid", gap: 10 }}>
           <div>
@@ -571,8 +571,8 @@ function EditUserModal({ user, subjects, onClose, onSave, myRole }) {
           )}
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
-          <button onClick={onClose} style={{ padding: "9px 16px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8, cursor: "pointer", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}><CloseIcon size={13} />Cancel</button>
-          <button onClick={() => onSave(isHeadMaster ? { ...f, role: undefined, extra_roles: undefined } : f)} style={{ padding: "9px 16px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}><CheckIcon size={13} />Save</button>
+          <button onClick={onClose} style={{ padding: "9px 16px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, cursor: "pointer", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}><CloseIcon size={13} />Cancel</button>
+          <button onClick={() => onSave(isHeadMaster ? { ...f, role: undefined, extra_roles: undefined } : f)} style={{ padding: "9px 16px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 0, cursor: "pointer", fontSize: 13, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}><CheckIcon size={13} />Save</button>
         </div>
       </div>
     </div>
@@ -610,7 +610,7 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
-      <form onSubmit={submit} style={{ background: THEME.surface, borderRadius: 12, padding: 22, width: 380, maxWidth: "100%" }}>
+      <form onSubmit={submit} style={{ background: THEME.surface, borderRadius: 0, padding: 22, width: 380, maxWidth: "100%" }}>
         <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>Reset Password</h3>
         <p style={{ margin: "0 0 16px", fontSize: 12.5, color: THEME.muted }}>
           Set a new password for <b>{user.full_name}</b> ({user.username}). They will need this new password next time they log in.
@@ -626,11 +626,11 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
           </div>
         </div>
         {error && (
-          <div style={{ marginTop: 12, color: THEME.danger, background: THEME.dangerLight, fontSize: 12.5, padding: "9px 12px", borderRadius: 8 }}>{error}</div>
+          <div style={{ marginTop: 12, color: THEME.danger, background: THEME.dangerLight, fontSize: 12.5, padding: "9px 12px", borderRadius: 0 }}>{error}</div>
         )}
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
-          <button type="button" onClick={onClose} style={{ padding: "9px 16px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8, cursor: "pointer", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}><CloseIcon size={13} />Cancel</button>
-          <button type="submit" disabled={busy} style={{ padding: "9px 16px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, opacity: busy ? 0.7 : 1, display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <button type="button" onClick={onClose} style={{ padding: "9px 16px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, cursor: "pointer", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}><CloseIcon size={13} />Cancel</button>
+          <button type="submit" disabled={busy} style={{ padding: "9px 16px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 0, cursor: "pointer", fontSize: 13, fontWeight: 600, opacity: busy ? 0.7 : 1, display: "inline-flex", alignItems: "center", gap: 6 }}>
             {busy ? <SpinnerIcon size={13} /> : <KeyIcon size={13} />}{busy ? "Saving..." : "Reset Password"}
           </button>
         </div>
@@ -648,7 +648,7 @@ function EmploymentTypeCheckbox({ value, onChange }) {
   return (
     <label style={{
       display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px",
-      background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 8, cursor: "pointer",
+      background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 0, cursor: "pointer",
     }}>
       <input
         type="checkbox"
@@ -672,7 +672,7 @@ function EmploymentTypeCheckbox({ value, onChange }) {
 function Chip({ active, onClick, children }) {
   return (
     <button type="button" onClick={onClick} style={{
-      padding: "5px 12px", borderRadius: 14, border: `1px solid ${active ? THEME.navy : THEME.border}`,
+      padding: "5px 12px", borderRadius: 0, border: `1px solid ${active ? THEME.navy : THEME.border}`,
       background: active ? THEME.navy : THEME.surface, color: active ? "#fff" : THEME.text,
       fontSize: 12, cursor: "pointer",
     }}>{children}</button>
@@ -687,6 +687,6 @@ function roleLabel(role) {
   }[role] || role;
 }
 
-const inputStyle = { padding: "9px 12px", border: `1px solid ${THEME.border}`, borderRadius: 8, fontSize: 13 };
+const inputStyle = { padding: "9px 12px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13 };
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6 };
 const chipsBox = { display: "flex", flexWrap: "wrap", gap: 6 };

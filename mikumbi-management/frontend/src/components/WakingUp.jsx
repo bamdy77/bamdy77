@@ -52,7 +52,7 @@ export default function WakingUp({ children }) {
         {failed && (
           <button onClick={() => window.location.reload()} style={{
             marginTop: 18, padding: "10px 24px", background: "#fff", color: THEME.navy,
-            border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
+            border: "none", borderRadius: 0, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
           }}>Refresh</button>
         )}
       </div>

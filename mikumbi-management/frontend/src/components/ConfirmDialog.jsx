@@ -33,16 +33,16 @@ function ConfirmDialog({ message, confirmLabel, cancelLabel, danger, onConfirm, 
       style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9500, padding: 16 }}
       onClick={(e) => e.target === e.currentTarget && onCancel()}
     >
-      <div style={{ background: THEME.surface, borderRadius: 12, width: "100%", maxWidth: 400, boxShadow: "0 20px 60px rgba(0,0,0,0.25)", padding: 24 }}>
+      <div style={{ background: THEME.surface, borderRadius: 0, width: "100%", maxWidth: 400, boxShadow: "0 20px 60px rgba(0,0,0,0.25)", padding: 24 }}>
         <p style={{ fontSize: 14, color: THEME.text, lineHeight: 1.5, margin: "0 0 20px" }}>{message}</p>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onCancel} style={{
             padding: "9px 18px", background: THEME.surface, color: THEME.danger, border: `1.5px solid ${THEME.danger}`,
-            borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
+            borderRadius: 0, fontWeight: 600, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
           }}><CloseIcon size={13} />{cancelLabel}</button>
           <button onClick={onConfirm} style={{
             padding: "9px 18px", background: danger ? THEME.danger : THEME.navy, color: "#fff", border: "none",
-            borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
+            borderRadius: 0, fontWeight: 600, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
           }}><CheckIcon size={13} />{confirmLabel}</button>
         </div>
       </div>

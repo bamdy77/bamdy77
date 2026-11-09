@@ -148,11 +148,11 @@ export default function Landing() {
                   { label: "Joining Instructions", icon: GraduationCapIcon, onClick: () => goToPublications("joining") },
                 ]}
               />
-              <Link to="/login" style={{ ...navLink, background: "#fff", color: THEME.navy, padding: "7px 18px", borderRadius: 6, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}><LoginIcon size={13} />Login</Link>
+              <Link to="/login" style={{ ...navLink, background: "#fff", color: THEME.navy, padding: "7px 18px", borderRadius: 0, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}><LoginIcon size={13} />Login</Link>
             </div>
           ) : (
             <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12, flexShrink: 0 }}>
-              <Link to="/login" style={{ ...navLink, background: "#fff", color: THEME.navy, padding: isMobile ? "6px 14px" : "7px 16px", borderRadius: 6, fontWeight: 700, fontSize: isMobile ? 12.5 : 13.5, display: "inline-flex", alignItems: "center", gap: 5 }}><LoginIcon size={12} />Login</Link>
+              <Link to="/login" style={{ ...navLink, background: "#fff", color: THEME.navy, padding: isMobile ? "6px 14px" : "7px 16px", borderRadius: 0, fontWeight: 700, fontSize: isMobile ? 12.5 : 13.5, display: "inline-flex", alignItems: "center", gap: 5 }}><LoginIcon size={12} />Login</Link>
               <button
                 onClick={() => setMenuOpen((o) => { const next = !o; if (!next) setPubOpen(false); return next; })}
                 aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -298,7 +298,7 @@ export default function Landing() {
             display: "grid",
             gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(auto-fit, minmax(160px, 1fr))",
             gap: isMobile ? 16 : 16,
-            background: "#2f4431", border: "1px solid #243826", borderRadius: 12,
+            background: "#2f4431", border: "1px solid #243826", borderRadius: 0,
             padding: isMobile ? "20px 14px" : 24,
           }}>
             <AboutFact label="Postal Address" value={SCHOOL.poBox} />

@@ -288,7 +288,7 @@ const apiFetch = async (path, options = {}, token) => {
 
 // ─── SHARED UI ────────────────────────────────────────────────────────────────
 const IS = {
-  border:`1px solid ${C.border}`, borderRadius:6, padding:"8px 12px",
+  border:`1px solid ${C.border}`, borderRadius:0, padding:"8px 12px",
   fontSize:14, color:C.text, background:C.surface, outline:"none",
   width:"100%", boxSizing:"border-box",
 };
@@ -301,11 +301,11 @@ const Badge = ({ color="default", children }) => {
     blue:{bg:C.boyLight,text:C.boy},
   };
   const s = m[color]||m.default;
-  return <span style={{background:s.bg,color:s.text,fontSize:11,fontWeight:600,letterSpacing:"0.04em",padding:"2px 8px",borderRadius:4,display:"inline-block",textTransform:"uppercase"}}>{children}</span>;
+  return <span style={{background:s.bg,color:s.text,fontSize:11,fontWeight:600,letterSpacing:"0.04em",padding:"2px 8px",borderRadius:0,display:"inline-block",textTransform:"uppercase"}}>{children}</span>;
 };
 
 const Btn = ({ variant="primary", size="md", onClick, children, style={}, disabled, loading }) => {
-  const base = { border:"none", borderRadius:6, cursor:disabled||loading?"not-allowed":"pointer", fontWeight:600, fontSize:size==="sm"?12:14, padding:size==="sm"?"5px 12px":"8px 18px", opacity:disabled?0.5:1, display:"inline-flex", alignItems:"center", gap:6 };
+  const base = { border:"none", borderRadius:0, cursor:disabled||loading?"not-allowed":"pointer", fontWeight:600, fontSize:size==="sm"?12:14, padding:size==="sm"?"5px 12px":"8px 18px", opacity:disabled?0.5:1, display:"inline-flex", alignItems:"center", gap:6 };
   const v = { primary:{background:C.accent,color:"#fff"}, secondary:{background:C.border,color:C.text}, danger:{background:C.danger,color:"#fff"}, ghost:{background:"transparent",color:C.accent,border:`1px solid ${C.accent}`}, success:{background:C.success,color:"#fff"}, warning:{background:C.warning,color:"#fff"}, cancel:{background:"#fff",color:C.danger,border:`1.5px solid ${C.danger}`} };
   // Custom `style` (e.g. the Enroll Student button's deep green) must win
   // over the variant's default color - it's applied LAST, not merged into
@@ -376,7 +376,7 @@ const LocationField = ({ label, value, onChange, options, required, isMobile, is
   );
 };
 
-const Card = ({ children, style={}, ...rest }) => <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:22,...style}} {...rest}>{children}</div>;
+const Card = ({ children, style={}, ...rest }) => <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:0,padding:22,...style}} {...rest}>{children}</div>;
 
 // ── Icon set (plain inline SVG - no emoji, no external icon package) ────────
 // Small (15px default) line icons used inside every dropdown/menu item across
@@ -455,12 +455,12 @@ const MoreMenu = ({ items, label="More" }) => {
     <div style={{position:"relative",display:"inline-block"}}>
       <button
         onClick={()=>setOpen(o=>!o)}
-        style={{display:"flex",alignItems:"center",gap:6,border:"none",borderRadius:6,background:C.accent,color:"#fff",fontWeight:700,fontSize:13,padding:"8px 14px",cursor:"pointer",width:"100%",justifyContent:"center"}}>
+        style={{display:"flex",alignItems:"center",gap:6,border:"none",borderRadius:0,background:C.accent,color:"#fff",fontWeight:700,fontSize:13,padding:"8px 14px",cursor:"pointer",width:"100%",justifyContent:"center"}}>
         {label} <span style={{display:"inline-flex",color:"#fff",opacity:0.85}}>{open?<Icon.ChevronUp size={13}/>:<Icon.ChevronDown size={13}/>}</span>
       </button>
       {open && <>
         <div onClick={()=>setOpen(false)} style={{position:"fixed",inset:0,zIndex:40}}/>
-        <div style={{position:"absolute",top:"calc(100% + 6px)",right:0,minWidth:210,background:C.surface,border:`1px solid ${C.border}`,borderRadius:8,boxShadow:"0 8px 24px rgba(15,23,42,0.14)",zIndex:41,overflow:"hidden"}}>
+        <div style={{position:"absolute",top:"calc(100% + 6px)",right:0,minWidth:210,background:C.surface,border:`1px solid ${C.border}`,borderRadius:0,boxShadow:"0 8px 24px rgba(15,23,42,0.14)",zIndex:41,overflow:"hidden"}}>
           {items.map((it,i)=>{
             const ItemIcon = it.icon || iconForLabel(it.label);
             const color = it.disabled?C.muted:(it.variant==="danger"?C.danger:C.text);
@@ -483,13 +483,13 @@ const SchoolLogo = ({ size = 56 }) => {
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
-      <div style={{width:size,height:size,background:C.accent,borderRadius:size*0.25,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",color:"#fff",fontWeight:800,fontSize:size*0.34,letterSpacing:"0.02em"}}>
+      <div style={{width:size,height:size,background:C.accent,borderRadius:0,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",color:"#fff",fontWeight:800,fontSize:size*0.34,letterSpacing:"0.02em"}}>
         MSS
       </div>
     );
   }
   return <img src="/logo.png" alt="School Logo" onError={()=>setFailed(true)}
-    style={{width:size,height:size,objectFit:"contain",borderRadius:size*0.2,margin:"0 auto 16px",display:"block"}}/>;
+    style={{width:size,height:size,objectFit:"contain",borderRadius:0,margin:"0 auto 16px",display:"block"}}/>;
 };
 
 const SLabel = ({ children, style={} }) => <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8,...style}}>{children}</div>;
@@ -554,11 +554,11 @@ const ActionsMenu = ({ items }) => {
 
   return (
     <div style={{ display: "inline-block" }}>
-      <button ref={btnRef} onClick={toggle} aria-label="More actions" style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:6,border:`1px solid ${C.border}`,background:C.bg,cursor:"pointer",color:C.muted}}>
+      <button ref={btnRef} onClick={toggle} aria-label="More actions" style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:0,border:`1px solid ${C.border}`,background:C.bg,cursor:"pointer",color:C.muted}}>
         <Icon.MoreVertical size={16}/>
       </button>
       {open && createPortal(
-        <div data-actionsmenu-portal style={{position:"fixed",top:pos.top,left:pos.left,zIndex:9600,background:C.surface,border:`1px solid ${C.border}`,borderRadius:8,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",minWidth:190,overflow:"hidden"}}>
+        <div data-actionsmenu-portal style={{position:"fixed",top:pos.top,left:pos.left,zIndex:9600,background:C.surface,border:`1px solid ${C.border}`,borderRadius:0,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",minWidth:190,overflow:"hidden"}}>
           {items.filter(Boolean).map((it,i)=>{
             const ItemIcon = it.icon || iconForLabel(it.label);
             return (
@@ -582,7 +582,7 @@ const ActionsMenu = ({ items }) => {
 // including the --mk-xxx CSS variables - meaning it repaints correctly on
 // every theme (System Default / Dark / Nocturne) with no extra logic here.
 const StatCard = ({ label, value, sub, color=C.accent }) => (
-  <div style={{background:`color-mix(in srgb, ${color} 16%, ${C.surface})`,border:`1px solid color-mix(in srgb, ${color} 38%, ${C.border})`,borderRadius:10,padding:18}}>
+  <div style={{background: C.surface,border: `1px solid ${C.border}`,borderRadius:0,padding:18}}>
     <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:5}}>{label}</div>
     <div style={{fontSize:26,fontWeight:800,color}}>{value}</div>
     {sub&&<div style={{fontSize:12,color:C.muted,marginTop:3}}>{sub}</div>}
@@ -609,7 +609,7 @@ const NECTA_PANEL_BG = "#ADD8E6";
 const Tbl = ({ columns, rows, emptyMsg="No records found.", loading, theme }) => {
   const necta = theme === "necta";
   return (
-  <div style={{overflowX:"auto", ...(necta ? {border:`1px solid ${NECTA_BORDER}`, borderRadius:4} : {})}}>
+  <div style={{overflowX:"auto", ...(necta ? {border:`1px solid ${NECTA_BORDER}`, borderRadius:0} : {})}}>
     {loading
       ? <div style={{padding:40,textAlign:"center",color:C.muted,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><SpinnerIcon size={16} />Loading…</div>
       : <table style={{width:"100%",borderCollapse:"collapse",fontSize:14,...(necta?{background:NECTA_BG}:{})}}>
@@ -637,7 +637,7 @@ const Tbl = ({ columns, rows, emptyMsg="No records found.", loading, theme }) =>
 const Modal = ({ title, onClose, children, wide }) => (
   <div style={{position:"fixed",inset:0,background:"rgba(15,23,42,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9000,padding:16}}
     onClick={e=>e.target===e.currentTarget&&onClose()}>
-    <div style={{background:C.surface,borderRadius:12,width:"100%",maxWidth:wide?760:580,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.2)"}}>
+    <div style={{background:C.surface,borderRadius:0,width:"100%",maxWidth:wide?760:580,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.2)"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"18px 24px",borderBottom:`1px solid ${C.border}`}}>
         <span style={{fontWeight:700,fontSize:16,color:C.text}}>{title}</span>
         <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,lineHeight:1,display:"flex",alignItems:"center"}}><CloseIcon size={18}/></button>
@@ -652,7 +652,7 @@ const Modal = ({ title, onClose, children, wide }) => (
 const ConfirmDialog = ({ message, confirmLabel="Yes", cancelLabel="No", danger=true, onConfirm, onCancel }) => (
   <div style={{position:"fixed",inset:0,background:"rgba(15,23,42,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9500,padding:16}}
     onClick={e=>e.target===e.currentTarget&&onCancel()}>
-    <div style={{background:C.surface,borderRadius:12,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,.25)",padding:24}}>
+    <div style={{background:C.surface,borderRadius:0,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,.25)",padding:24}}>
       <p style={{fontSize:14,color:C.text,lineHeight:1.5,margin:"0 0 20px"}}>{message}</p>
       <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
         <Btn variant="cancel" onClick={onCancel}>{cancelLabel}</Btn>
@@ -690,7 +690,7 @@ const Alert = ({ type="error", message, onClose }) => {
     ? {bg:C.successLight,text:C.success,border:C.success}
     : {bg:C.dangerLight,text:C.danger,border:C.danger};
   return (
-    <div style={{background:col.bg,border:`1px solid ${col.border}40`,borderRadius:8,padding:"10px 16px",fontSize:13,color:col.text,fontWeight:600,display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+    <div style={{background:col.bg,border:`1px solid ${col.border}40`,borderRadius:0,padding:"10px 16px",fontSize:13,color:col.text,fontWeight:600,display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
       <span>{message}</span>
       {onClose&&<button onClick={onClose} style={{background:"none",border:"none",color:col.text,cursor:"pointer",lineHeight:1,marginLeft:12,display:"flex",alignItems:"center"}}><CloseIcon size={15}/></button>}
     </div>
@@ -805,7 +805,7 @@ function StudentResultLookupModal({ token, student, onClose }) {
 function StudentResultCard({ result, isMobile, onPrint, onExport, busy }) {
   const { sheet, student } = result;
   return (
-    <div style={{ border: `1px solid ${NECTA_BORDER}`, borderRadius: 10, padding: isMobile ? 14 : 18, background: NECTA_PANEL_BG }}>
+    <div style={{ border: `1px solid ${NECTA_BORDER}`, borderRadius: 0, padding: isMobile ? 14 : 18, background: NECTA_PANEL_BG }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 14 }}>
         <div>
           <div style={{ fontWeight: 800, fontSize: 15, color: NECTA_TEXT }}>{student.full_name}</div>
@@ -816,7 +816,7 @@ function StudentResultCard({ result, isMobile, onPrint, onExport, busy }) {
           <Btn variant="secondary" size="sm" loading={busy} onClick={onExport}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><DownloadIcon size={13} />Export PDF</span></Btn>
         </div>
       </div>
-      <div style={{ overflowX: "auto", border: `1px solid ${NECTA_BORDER}`, borderRadius: 4 }}>
+      <div style={{ overflowX: "auto", border: `1px solid ${NECTA_BORDER}`, borderRadius: 0 }}>
         <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 13, background: NECTA_BG }}>
           <thead>
             <tr style={{ background: NECTA_HEAD_BG }}>
@@ -847,7 +847,7 @@ function StudentResultCard({ result, isMobile, onPrint, onExport, busy }) {
 const thS = { padding: "7px 10px", textAlign: "left", fontWeight: 700, fontSize: 11.5, color: NECTA_TEXT, border: `1px solid ${NECTA_BORDER}` };
 const tdS = { padding: "6px 10px", border: `1px solid ${NECTA_BORDER}`, color: NECTA_TEXT };
 const SummaryStat = ({ label, value }) => (
-  <div style={{ background: NECTA_BG, border: `1px solid ${NECTA_BORDER}`, borderRadius: 8, padding: "8px 12px" }}>
+  <div style={{ background: NECTA_BG, border: `1px solid ${NECTA_BORDER}`, borderRadius: 0, padding: "8px 12px" }}>
     <div style={{ fontSize: 10.5, fontWeight: 700, color: NECTA_TEXT, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
     <div style={{ fontSize: 16, fontWeight: 800, color: NECTA_TEXT }}>{value}</div>
   </div>
@@ -1307,7 +1307,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
 
           <SLabel>Photo (optional)</SLabel>
           <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:6}}>
-            <div style={{width:76,height:92,borderRadius:6,overflow:"hidden",background:C.bg,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            <div style={{width:76,height:92,borderRadius:0,overflow:"hidden",background:C.bg,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
               {form.photoPreview
                 ? <img src={form.photoPreview} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
                 : form.photo_url
@@ -1390,7 +1390,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
             <Inp label="Status" value={form.status||""} onChange={v=>setForm(p=>({...p,status:v}))} options={[{value:"Active",label:"Active"},{value:"Inactive",label:"Inactive"},{value:"Transferred",label:"Transferred"},...(form.status==="Graduated"?[{value:"Graduated",label:"Graduated"}]:[])]}/>
           </div>
           {form.status==="Transferred" && form.dest_school && (
-            <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,padding:14,marginBottom:18,fontSize:13}}>
+            <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:0,padding:14,marginBottom:18,fontSize:13}}>
               <div style={{fontWeight:700,marginBottom:6,color:C.muted,textTransform:"uppercase",fontSize:11,letterSpacing:"0.06em"}}>Transferred Out</div>
               <div>To: <strong>{form.dest_school}</strong>, {form.dest_district}, {form.dest_region}</div>
               <div>Date: {form.transfer_out_date?.slice?.(0,10) || form.transfer_out_date}</div>
@@ -1412,7 +1412,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
         <Modal wide title={`Contributions - ${[chargeModal.first_name, chargeModal.middle_name, chargeModal.last_name].filter(Boolean).join(" ")} (${chargeModal.reg_no})`} onClose={()=>{setChargeModal(null);setError("");}}>
           {error && <Alert type="error" message={error} onClose={()=>setError("")}/>}
 
-          <div style={{background:NECTA_PANEL_BG,borderRadius:8,padding:14,marginBottom:16}}>
+          <div style={{background:NECTA_PANEL_BG,borderRadius:0,padding:14,marginBottom:16}}>
           <SLabel>Part-Time Teachers / Ream / Other Expenses</SLabel>
           <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>Read-only summary - recorded through Contributions Management.</div>
           {(() => {
@@ -1465,7 +1465,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           })()}
           </div>
 
-          <div style={{marginTop:20,background:NECTA_PANEL_BG,borderRadius:8,padding:14}}>
+          <div style={{marginTop:20,background:NECTA_PANEL_BG,borderRadius:0,padding:14}}>
             <SLabel>Michango ya Chakula (Food Contributions)</SLabel>
             <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>Muhtasari tu - michango inasajiliwa kupitia Manage Foods.</div>
             <Tbl
@@ -1482,7 +1482,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
             />
           </div>
 
-          <div style={{marginTop:20,background:NECTA_PANEL_BG,borderRadius:8,padding:14}}>
+          <div style={{marginTop:20,background:NECTA_PANEL_BG,borderRadius:0,padding:14}}>
             <SLabel>Hostel Fee</SLabel>
             <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>Read-only summary - recorded through Hostel Management → Hostel Fees.</div>
             <Tbl
@@ -1594,7 +1594,7 @@ function PromoteStudentsModal({ token, onClose, onDone }) {
       </div>
       {error && <p style={{color:C.danger,fontSize:13,marginBottom:10}}>{error}</p>}
       {loading ? <p style={{color:C.muted,fontSize:13,display:"flex",alignItems:"center",gap:7}}><SpinnerIcon size={14} />Loading...</p> : (
-        <div style={{border:`1px solid ${C.border}`,borderRadius:8,maxHeight:360,overflowY:"auto"}}>
+        <div style={{border:`1px solid ${C.border}`,borderRadius:0,maxHeight:360,overflowY:"auto"}}>
           <div style={{display:"flex",alignItems:"center",gap:10,padding:"9px 14px",background:C.bg,borderBottom:`1px solid ${C.border}`,fontWeight:700,fontSize:12.5}}>
             <input type="checkbox" checked={roster.length>0 && checked.size===roster.length} onChange={toggleAll} />
             <span>{selForm} - {roster.length} student(s), {checked.size} will be promoted</span>
@@ -1733,7 +1733,7 @@ function ImportStudentsModal({ token, onClose, onDone }) {
             {rows.length - validCount > 0 && <> · <b style={{ color: C.danger }}>{rows.length - validCount}</b> need attention (unchecked below)</>}.
             Un-tick anything you don't want to import, then confirm.
           </p>
-          <div style={{ border: `1px solid ${C.border}`, borderRadius: 8, maxHeight: 380, overflowY: "auto" }}>
+          <div style={{ border: `1px solid ${C.border}`, borderRadius: 0, maxHeight: 380, overflowY: "auto" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", background: C.bg, borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 12.5, position: "sticky", top: 0, flexWrap: "wrap" }}>
               <input type="checkbox" checked={validCount > 0 && rows.every((r, i) => !r.valid || checked.has(i))} onChange={toggleAllValid} />
               <span>Select all valid rows</span>
@@ -1763,14 +1763,14 @@ function ImportStudentsModal({ token, onClose, onDone }) {
 
       {step === "done" && result && (
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 14, borderRadius: 8, background: C.successLight, color: C.success, marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 14, borderRadius: 0, background: C.successLight, color: C.success, marginBottom: 14 }}>
             <CheckIcon size={16} />
             <span style={{ fontSize: 14, fontWeight: 600 }}>{result.created} student(s) imported successfully.</span>
           </div>
           {result.failed.length > 0 && (
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>{result.failed.length} row(s) were skipped:</p>
-              <div style={{ border: `1px solid ${C.border}`, borderRadius: 8, maxHeight: 240, overflowY: "auto" }}>
+              <div style={{ border: `1px solid ${C.border}`, borderRadius: 0, maxHeight: 240, overflowY: "auto" }}>
                 {result.failed.map((f, i) => (
                   <div key={i} style={{ padding: "8px 14px", borderBottom: `1px solid ${C.border}`, fontSize: 12.5 }}>
                     <b>{f.name}</b> (row {f.row}) - <span style={{ color: C.danger }}>{f.reason}</span>
@@ -2199,18 +2199,18 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
     if (period.isBreak) return <div style={{textAlign:"center",color:C.muted,fontSize:compact?9:11,fontStyle:"italic",padding:"4px 0"}}>{period.label}</div>;
     const cell = ttMap[cls]?.[day]?.[period.label];
     if (!cell) return (
-      <div onClick={()=>openEditCell(cls,day,period)} style={{height:compact?28:40,display:"flex",alignItems:"center",justifyContent:"center",color:editMode?"#94A3B8":"#E2E8F0",fontSize:compact?9:18,cursor:editMode?"pointer":"default",borderRadius:4,border:editMode?"1px dashed #CBD5E1":"none"}}>
+      <div onClick={()=>openEditCell(cls,day,period)} style={{height:compact?28:40,display:"flex",alignItems:"center",justifyContent:"center",color:editMode?"#94A3B8":"#E2E8F0",fontSize:compact?9:18,cursor:editMode?"pointer":"default",borderRadius:0,border:editMode?"1px dashed #CBD5E1":"none"}}>
         {editMode?"+":"-"}
       </div>
     );
     if (cell.is_event) return (
-      <div onClick={()=>openEditCell(cls,day,period)} style={{background:"#FEF3C7",border:"1px solid #FCD34D",borderRadius:compact?4:6,padding:compact?"3px 5px":"6px 8px",cursor:editMode?"pointer":"default"}}>
+      <div onClick={()=>openEditCell(cls,day,period)} style={{background:"#FEF3C7",border:"1px solid #FCD34D",borderRadius:0,padding:compact?"3px 5px":"6px 8px",cursor:editMode?"pointer":"default"}}>
         <div style={{fontWeight:700,color:"#92400E",fontSize:compact?9:11,lineHeight:1.2}}>{cell.event_name}</div>
       </div>
     );
     const sc = SUBJ_COLORS[cell?.subject]||C.accent;
     return (
-      <div onClick={()=>openEditCell(cls,day,period)} style={{background:sc+"15",border:`1px solid ${sc}40`,borderRadius:compact?4:6,padding:compact?"3px 5px":"6px 8px",cursor:editMode?"pointer":"default"}}>
+      <div onClick={()=>openEditCell(cls,day,period)} style={{background:sc+"15",border:`1px solid ${sc}40`,borderRadius:0,padding:compact?"3px 5px":"6px 8px",cursor:editMode?"pointer":"default"}}>
         <div style={{fontWeight:700,color:sc,fontSize:compact?9:11,lineHeight:1.2}}>{cell.subject}</div>
         <div style={{fontSize:compact?8:10,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cell.teacher_name}</div>
       </div>
@@ -2340,9 +2340,9 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
   // View (canGenerate=false skips the "setup" branch below entirely,
   // since `view` starts at "result" and nothing here flips it back).
   const viewToggle = canGenerate && (
-    <div style={{display:"flex",gap:4,background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:4,width:isMobile?"100%":"fit-content"}}>
-      <button type="button" onClick={()=>setView("setup")} style={{flex:isMobile?1:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"8px 16px",border:"none",borderRadius:7,background:view==="setup"?C.accent:"transparent",fontWeight:700,color:view==="setup"?"#fff":C.muted,cursor:"pointer",fontSize:12.5,whiteSpace:"nowrap"}}><Icon.RefreshCw size={13}/>Generate Timetable</button>
-      <button type="button" onClick={()=>setView("result")} style={{flex:isMobile?1:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"8px 16px",border:"none",borderRadius:7,background:view==="result"?C.accent:"transparent",fontWeight:700,color:view==="result"?"#fff":C.muted,cursor:"pointer",fontSize:12.5,whiteSpace:"nowrap"}}><ClockIcon size={13}/>View Timetable</button>
+    <div style={{display:"flex",gap:4,background:C.bg,border:`1px solid ${C.border}`,borderRadius:0,padding:4,width:isMobile?"100%":"fit-content"}}>
+      <button type="button" onClick={()=>setView("setup")} style={{flex:isMobile?1:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"8px 16px",border:"none",borderRadius:0,background:view==="setup"?C.accent:"transparent",fontWeight:700,color:view==="setup"?"#fff":C.muted,cursor:"pointer",fontSize:12.5,whiteSpace:"nowrap"}}><Icon.RefreshCw size={13}/>Generate Timetable</button>
+      <button type="button" onClick={()=>setView("result")} style={{flex:isMobile?1:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"8px 16px",border:"none",borderRadius:0,background:view==="result"?C.accent:"transparent",fontWeight:700,color:view==="result"?"#fff":C.muted,cursor:"pointer",fontSize:12.5,whiteSpace:"nowrap"}}><ClockIcon size={13}/>View Timetable</button>
     </div>
   );
 
@@ -2422,7 +2422,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:14,marginBottom:20}}>
               <div>
                 <SLabel>Teacher (Username, from User Accounts)</SLabel>
-                <div style={{padding:"9px 12px",borderRadius:6,border:`1px solid ${C.border}`,background:C.bg,fontSize:13,color:C.text}}>
+                <div style={{padding:"9px 12px",borderRadius:0,border:`1px solid ${C.border}`,background:C.bg,fontSize:13,color:C.text}}>
                   {editTeacher.registered_username ? `@${editTeacher.registered_username}` : editTeacher.short_name}
                 </div>
               </div>
@@ -2448,8 +2448,8 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                     return (
                       <div key={cls} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:6}}>
                         <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <div onClick={()=>toggleClass(cls)} style={{flex:1,padding:"7px 10px",borderRadius:6,cursor:"pointer",border:`1px solid ${sel?C.accent:C.border}`,background:sel?C.accentLight:C.bg,color:sel?C.accent:C.muted,fontWeight:sel?700:400,fontSize:13,userSelect:"none"}}>{cls}</div>
-                          {sel && <input type="number" min={1} max={10} value={sel.periods_per_week} onChange={e=>setClassPeriods(cls,e.target.value)} onBlur={e=>clampClassPeriods(cls,e.target.value)} title="Periods per week" style={{width:44,padding:"6px 4px",borderRadius:6,border:`1px solid ${C.border}`,fontSize:12,textAlign:"center"}}/>}
+                          <div onClick={()=>toggleClass(cls)} style={{flex:1,padding:"7px 10px",borderRadius:0,cursor:"pointer",border:`1px solid ${sel?C.accent:C.border}`,background:sel?C.accentLight:C.bg,color:sel?C.accent:C.muted,fontWeight:sel?700:400,fontSize:13,userSelect:"none"}}>{cls}</div>
+                          {sel && <input type="number" min={1} max={10} value={sel.periods_per_week} onChange={e=>setClassPeriods(cls,e.target.value)} onBlur={e=>clampClassPeriods(cls,e.target.value)} title="Periods per week" style={{width:44,padding:"6px 4px",borderRadius:0,border:`1px solid ${C.border}`,fontSize:12,textAlign:"center"}}/>}
                         </div>
                         {sel && (
                           <select value={sel.subject||tForm.subject} onChange={e=>setClassSubject(cls,e.target.value)} style={{...IS,fontSize:11,padding:"4px 6px"}}>
@@ -2500,7 +2500,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
           <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
             {(assignedClassList.length ? assignedClassList : classList).map(cls=>{
               const sel = evForm.classes.includes(cls);
-              return <div key={cls} onClick={()=>toggleEvClass(cls)} style={{padding:"5px 10px",borderRadius:6,cursor:"pointer",border:`1px solid ${sel?C.accent:C.border}`,background:sel?C.accentLight:C.bg,color:sel?C.accent:C.muted,fontWeight:sel?700:400,fontSize:12}}>{cls}</div>;
+              return <div key={cls} onClick={()=>toggleEvClass(cls)} style={{padding:"5px 10px",borderRadius:0,cursor:"pointer",border:`1px solid ${sel?C.accent:C.border}`,background:sel?C.accentLight:C.bg,color:sel?C.accent:C.muted,fontWeight:sel?700:400,fontSize:12}}>{cls}</div>;
             })}
             {!assignedClassList.length && <span style={{fontSize:12,color:C.muted,fontStyle:"italic"}}>No classes have a teacher assignment yet - go to Step 1 first.</span>}
           </div>
@@ -2533,7 +2533,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                 <div style={{fontSize:11,fontWeight:700,color:C.muted,marginBottom:6}}>{form}</div>
                 {items.map(cls=>{
                   const sel=genClasses.includes(cls);
-                  return <div key={cls} onClick={()=>toggleGenClass(cls)} style={{padding:"7px 10px",borderRadius:6,marginBottom:5,cursor:"pointer",border:`1px solid ${sel?C.success:C.border}`,background:sel?C.successLight:C.bg,color:sel?C.success:C.muted,fontWeight:sel?700:400,fontSize:13,userSelect:"none"}}>{cls}</div>;
+                  return <div key={cls} onClick={()=>toggleGenClass(cls)} style={{padding:"7px 10px",borderRadius:0,marginBottom:5,cursor:"pointer",border:`1px solid ${sel?C.success:C.border}`,background:sel?C.successLight:C.bg,color:sel?C.success:C.muted,fontWeight:sel?700:400,fontSize:13,userSelect:"none"}}>{cls}</div>;
                 })}
                 {!items.length && <div style={{fontSize:11,color:C.muted,fontStyle:"italic"}}>No classes yet</div>}
               </div>
@@ -2603,7 +2603,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                   const cls = classes.find(c=>c.label===label);
                   if (!cls) return null;
                   return (
-                    <div key={label} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",borderRadius:6,border:`1px solid ${C.border}`,background:C.bg}}>
+                    <div key={label} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",borderRadius:0,border:`1px solid ${C.border}`,background:C.bg}}>
                       <span style={{fontSize:13,fontWeight:600}}>{label}</span>
                       <button onClick={()=>removeClass(cls.id)} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,lineHeight:1,display:"flex",alignItems:"center"}}><CloseIcon size={12}/></button>
                     </div>
@@ -2685,9 +2685,9 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
 
       {(canGenerate || sharedInfo?.shared) && (<>
       {(isMobile || isTablet) ? (
-        <div style={{display:"flex",gap:4,background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:4}}>
+        <div style={{display:"flex",gap:4,background:C.bg,border:`1px solid ${C.border}`,borderRadius:0,padding:4}}>
           {[["class","Per Class"],["master","General View"],["teacher","Per Teacher"]].map(([id,label])=>(
-            <button key={id} onClick={()=>setViewTab(id)} style={{flex:1,whiteSpace:"nowrap",padding:"9px 6px",border:"none",borderRadius:7,background:viewTab===id?C.accent:"transparent",fontWeight:viewTab===id?700:600,color:viewTab===id?"#fff":C.muted,cursor:"pointer",fontSize:12.5,transition:"background 0.15s,color 0.15s"}}>{label}</button>
+            <button key={id} onClick={()=>setViewTab(id)} style={{flex:1,whiteSpace:"nowrap",padding:"9px 6px",border:"none",borderRadius:0,background:viewTab===id?C.accent:"transparent",fontWeight:viewTab===id?700:600,color:viewTab===id?"#fff":C.muted,cursor:"pointer",fontSize:12.5,transition:"background 0.15s,color 0.15s"}}>{label}</button>
           ))}
         </div>
       ) : (
@@ -2789,7 +2789,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                 const sc=found?SUBJ_COLORS[found.subject]||C.accent:null;
                 const compact=isMobile||isTablet;
                 return found
-                  ?<div style={{background:sc+"15",border:`1px solid ${sc}40`,borderRadius:compact?4:6,padding:compact?"3px 5px":"6px 8px"}}><div style={{fontWeight:700,color:sc,fontSize:compact?9.5:11}}>{found.subject}</div><div style={{fontSize:compact?8.5:10,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{found.cls}</div></div>
+                  ?<div style={{background:sc+"15",border:`1px solid ${sc}40`,borderRadius:0,padding:compact?"3px 5px":"6px 8px"}}><div style={{fontWeight:700,color:sc,fontSize:compact?9.5:11}}>{found.subject}</div><div style={{fontSize:compact?8.5:10,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{found.cls}</div></div>
                   :<div style={{height:compact?28:38,display:"flex",alignItems:"center",justifyContent:"center",color:"#E2E8F0",fontSize:compact?9.5:11}}>-</div>;
               }}/>
             </Card>
@@ -2873,7 +2873,7 @@ function RoomCard({ room, occ, full, free, hc, hb, C, fullNameOf, onEditBeds, on
         <div style={{display:"grid",gridTemplateColumns:`repeat(${room.capacity},1fr)`,gap:5,marginBottom:12}}>
           {Array.from({length:room.capacity}).map((_,i)=>{
             const o=occ[i];
-            return <div key={i} title={o?fullNameOf(o):"Empty"} style={{height:28,borderRadius:5,background:o?hc+"18":C.bg,border:`1px solid ${o?hc+"50":C.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:o?hc:C.muted}}>
+            return <div key={i} title={o?fullNameOf(o):"Empty"} style={{height:28,borderRadius:0,background:o?hc+"18":C.bg,border:`1px solid ${o?hc+"50":C.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:o?hc:C.muted}}>
               {o?o.first_name.slice(0,3).toUpperCase():"-"}
             </div>;
           })}
@@ -3109,7 +3109,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
               return (
                 <button key={key} onClick={()=>setPageTab(key)} style={{
                   display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,
-                  padding:"12px 6px 10px",borderRadius:14,cursor:"pointer",textAlign:"center",
+                  padding:"12px 6px 10px",borderRadius:0,cursor:"pointer",textAlign:"center",
                   border:active?`1px solid ${C.accent}`:`1px solid ${C.border}`,
                   background:active?C.accent:"#fff",
                   boxShadow:active?"0 4px 14px rgba(15,23,42,0.18)":"0 1px 3px rgba(15,23,42,0.05)",
@@ -3126,7 +3126,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
               const active = pageTab===key;
               return (
                 <button key={key} onClick={()=>setPageTab(key)} style={{
-                  display:"inline-flex",alignItems:"center",gap:7,padding:"9px 18px",borderRadius:999,
+                  display:"inline-flex",alignItems:"center",gap:7,padding:"9px 18px",borderRadius:0,
                   border:active?"none":`1px solid ${C.border}`,background:active?C.accent:"#fff",
                   color:active?"#fff":C.text,fontWeight:600,fontSize:13,cursor:"pointer",
                 }}><Icon size={14}/>{label}</button>
@@ -3174,8 +3174,8 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
               <span>Girls Hostel Occupancy</span>
               <span style={{color:hc}}>{hStats.occupied||0}/{hStats.total_beds||0} ({pct}%)</span>
             </div>
-            <div style={{background:C.border,borderRadius:999,height:10}}>
-              <div style={{background:hc,width:`${pct}%`,height:"100%",borderRadius:999,transition:"width .4s"}}/>
+            <div style={{background:C.border,borderRadius:0,height:10}}>
+              <div style={{background:hc,width:`${pct}%`,height:"100%",borderRadius:0,transition:"width .4s"}}/>
             </div>
           </Card>
 
@@ -3257,7 +3257,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
         <Modal title={assignModal==="boys" ? "Admit - Boys Boarding Facility" : `Admit - ${assignModal.hostel_name} · ${assignModal.room_number}`} onClose={()=>{setAssignModal(null);setError("");}}>
           {error && <Alert type="error" message={error} onClose={()=>setError("")}/>}
           {assignModal!=="boys" && (
-            <div style={{background:C.girlLight,border:`1px solid ${hc}30`,borderRadius:6,padding:"8px 12px",marginBottom:14,fontSize:13,fontWeight:600,color:hc}}>
+            <div style={{background:C.girlLight,border:`1px solid ${hc}30`,borderRadius:0,padding:"8px 12px",marginBottom:14,fontSize:13,fontWeight:600,color:hc}}>
               {assignModal.room_number} · {assignModal.capacity-(assignModal.occupants||[]).length} bed(s) available
             </div>
           )}
@@ -3274,7 +3274,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
               style={{...IS,width:"100%"}}
             />
             {studentSearch && !af.student_id && (
-              <div style={{position:"absolute",top:40,left:0,right:0,zIndex:20,background:C.surface,border:`1px solid ${C.border}`,borderRadius:8,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",maxHeight:220,overflowY:"auto"}}>
+              <div style={{position:"absolute",top:40,left:0,right:0,zIndex:20,background:C.surface,border:`1px solid ${C.border}`,borderRadius:0,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",maxHeight:220,overflowY:"auto"}}>
                 {studentSearching
                   ? <div style={{padding:12,fontSize:13,color:C.muted}}>Searching…</div>
                   : studentResults.length
@@ -3295,7 +3295,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
           </div>
 
           {af.student_id && (
-            <div style={{background:C.successLight,border:`1px solid ${C.success}30`,borderRadius:6,padding:"8px 12px",marginBottom:14,fontSize:13,fontWeight:600,color:C.success}}>
+            <div style={{background:C.successLight,border:`1px solid ${C.success}30`,borderRadius:0,padding:"8px 12px",marginBottom:14,fontSize:13,fontWeight:600,color:C.success}}>
               Aliyechaguliwa: {af.studentLabel}
             </div>
           )}
@@ -3789,12 +3789,12 @@ function ContributionsModule({ token, role }) {
   };
 
   const TabBtn = ({active_, onClick, children}) => (
-    <button onClick={onClick} style={{padding:"8px 16px",borderRadius:7,border:"none",cursor:"pointer",fontWeight:700,fontSize:13,background:active_?C.accent:"transparent",color:active_?"#fff":C.muted}}>{children}</button>
+    <button onClick={onClick} style={{padding:"8px 16px",borderRadius:0,border:"none",cursor:"pointer",fontWeight:700,fontSize:13,background:active_?C.accent:"transparent",color:active_?"#fff":C.muted}}>{children}</button>
   );
 
   return (
     <div style={{display:"flex",flexDirection:"column",gap:16}}>
-      <div style={{display:"flex",flexWrap:"wrap",gap:8,background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:8}}>
+      <div style={{display:"flex",flexWrap:"wrap",gap:8,background:C.surface,border:`1px solid ${C.border}`,borderRadius:0,padding:8}}>
         <TabBtn active_={officeTab==="academic"} onClick={()=>setOfficeTab("academic")}>Academic Office</TabBtn>
         <TabBtn active_={officeTab==="hostel"}   onClick={()=>setOfficeTab("hostel")}>Hostel</TabBtn>
       </div>
@@ -3884,7 +3884,7 @@ function ContributionsModule({ token, role }) {
           <div style={{position:"relative",marginBottom:16,maxWidth:420}}>
             <input value={hOccSearch} onChange={e=>{setHOccSearch(e.target.value);searchOccupants(e.target.value);if(hOcc)setHOcc(null);}} placeholder="Type resident's name…" style={{...IS,width:"100%"}}/>
             {hOccSearch && !hOcc && hOccResults.length>0 && (
-              <div style={{position:"absolute",top:40,left:0,right:0,zIndex:20,background:C.surface,border:`1px solid ${C.border}`,borderRadius:8,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",maxHeight:220,overflowY:"auto"}}>
+              <div style={{position:"absolute",top:40,left:0,right:0,zIndex:20,background:C.surface,border:`1px solid ${C.border}`,borderRadius:0,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",maxHeight:220,overflowY:"auto"}}>
                 {hOccResults.map(o=>(
                   <button key={o.id} onClick={()=>pickOccupant(o)} style={{display:"block",width:"100%",textAlign:"left",padding:"9px 14px",border:"none",borderBottom:`1px solid ${C.border}`,background:"none",cursor:"pointer"}}>
                     <div style={{fontWeight:600,fontSize:13}}>{[o.first_name,o.middle_name,o.last_name].filter(Boolean).join(" ")}</div>
@@ -3960,7 +3960,7 @@ function ContributionsModule({ token, role }) {
           <div style={{position:"relative",marginBottom:14}}>
             <input value={studentSearch} onChange={e=>{setStudentSearch(e.target.value);searchStudents(e.target.value);if(pickedStudent)setPickedStudent(null);}} placeholder="Type name or Reg. No…" style={{...IS,width:"100%"}}/>
             {studentSearch && !pickedStudent && (
-              <div style={{position:"absolute",top:40,left:0,right:0,zIndex:20,background:C.surface,border:`1px solid ${C.border}`,borderRadius:8,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",maxHeight:220,overflowY:"auto"}}>
+              <div style={{position:"absolute",top:40,left:0,right:0,zIndex:20,background:C.surface,border:`1px solid ${C.border}`,borderRadius:0,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",maxHeight:220,overflowY:"auto"}}>
                 {studentSearching
                   ? <div style={{padding:12,fontSize:13,color:C.muted}}>Searching…</div>
                   : studentResults.length
@@ -3978,7 +3978,7 @@ function ContributionsModule({ token, role }) {
             )}
           </div>
           {pickedStudent && (
-            <div style={{background:C.successLight,border:`1px solid ${C.success}30`,borderRadius:6,padding:"8px 12px",marginBottom:14,fontSize:13,fontWeight:600,color:C.success}}>
+            <div style={{background:C.successLight,border:`1px solid ${C.success}30`,borderRadius:0,padding:"8px 12px",marginBottom:14,fontSize:13,fontWeight:600,color:C.success}}>
               Selected: {pickedStudent.label}
             </div>
           )}

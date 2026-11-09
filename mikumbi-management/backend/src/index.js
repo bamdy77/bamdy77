@@ -49,7 +49,6 @@ const joiningRoutes       = require("./routes/joining");
 const idCardsRoutes       = require("./routes/idCards");
 const chatbotRoutes       = require("./routes/chatbot");
 const publicRoutes        = require("./routes/public");
-const docToolsRoutes      = require("./routes/docTools");
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -163,7 +162,6 @@ app.use("/api/settings",      settingsRoutes);
 app.use("/api/joining",       joiningRoutes);
 app.use("/api/id-cards",      idCardsRoutes);
 app.use("/api/chatbot",       chatbotRoutes);
-app.use("/api/doctools",      docToolsRoutes);
 // Public (no login) — parent/student Results portal + Joining Instructions
 // public submit/download. Mounted last among API routes so nothing above
 // is ever shadowed by it.
@@ -246,9 +244,6 @@ const cleanupGraduatedStudents = async () => {
 };
 setTimeout(cleanupGraduatedStudents, 30 * 1000);
 setInterval(cleanupGraduatedStudents, 24 * 60 * 60 * 1000);
-
-// Doc Tools — logs at boot whether LibreOffice is reachable (see Logs tab).
-require("./utils/docConvert").checkSofficeAvailable();
 
 app.listen(PORT, () => {
   console.log("─────────────────────────────────────────────────");

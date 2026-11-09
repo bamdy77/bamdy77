@@ -1,7 +1,8 @@
 import { Routes, Route, Navigate, useSearchParams } from "react-router-dom";
-import { PrivacyPolicy, TermsOfService, SupportPage } from "./pages/LegalPages";
+import { PublicPrivacy, PublicTerms, PublicSupport } from "./pages/public/PublicLegal";
 import PublicHome from "./pages/public/PublicHome";
 import { PublicResultsPage, PublicJoiningPage } from "./pages/public/PublicPublications";
+import { LangProvider } from "./i18n/publicLang";
 
 // The PUBLIC website (parents / students / visitors).
 // Deliberately has NO staff login, dashboard or password-reset routes - those
@@ -15,15 +16,17 @@ function LegacyPublicationsRedirect() {
 
 export default function PublicApp() {
   return (
+    <LangProvider>
     <Routes>
       <Route path="/" element={<PublicHome />} />
       <Route path="/results" element={<PublicResultsPage />} />
       <Route path="/joining-instructions" element={<PublicJoiningPage />} />
       <Route path="/publications" element={<LegacyPublicationsRedirect />} />
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/terms" element={<TermsOfService />} />
-      <Route path="/support" element={<SupportPage />} />
+      <Route path="/privacy" element={<PublicPrivacy />} />
+      <Route path="/terms" element={<PublicTerms />} />
+      <Route path="/support" element={<PublicSupport />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </LangProvider>
   );
 }

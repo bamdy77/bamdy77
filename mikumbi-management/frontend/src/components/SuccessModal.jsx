@@ -97,7 +97,7 @@ export function SuccessModalHost() {
         style={{
           position: "relative",
           background: `linear-gradient(180deg, ${THEME.surface} 0%, ${THEME.surface} 60%, ${THEME.successLight} 180%)`,
-          borderRadius: 18,
+          borderRadius: 0,
           width: "100%", maxWidth: 380,
           padding: "40px 28px 30px",
           textAlign: "center",
@@ -162,7 +162,7 @@ export function SuccessModalHost() {
           className="mk-success-btn"
           style={{
             padding: "10px 36px", background: THEME.navy, color: "#fff", border: "none",
-            borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
+            borderRadius: 0, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
             boxShadow: "0 4px 10px -2px rgba(12,66,111,0.4)",
             animation: "mk-success-fade-up 0.4s ease 0.4s both",
           }}
@@ -173,7 +173,7 @@ export function SuccessModalHost() {
             card auto-dismisses instead of being a vague decoration. Clipped
             to its own small strip (not the whole card) so it never
             interferes with the card's box-shadow/confetti above. */}
-        <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 4, borderRadius: "0 0 18px 18px", overflow: "hidden", background: "rgba(15,23,42,0.08)" }}>
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 4, borderRadius: 0, overflow: "hidden", background: "rgba(15,23,42,0.08)" }}>
           <div className="mk-success-timer-bar" style={{ height: "100%", width: "100%", background: THEME.success, transformOrigin: "left" }} />
         </div>
       </div>

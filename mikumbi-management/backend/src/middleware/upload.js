@@ -81,21 +81,6 @@ const uploadStudentRoster = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB — a roster file is plain text/tabular, never this large legitimately.
 });
 
-// Doc Tools — PDF/Word + scanned image, one doc or multi-page image batch.
-const docToolsFileFilter = (req, file, cb) => {
-  const ext = path.extname(file.originalname || "").toLowerCase();
-  const allowedExt = [".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".webp"];
-  if (!allowedExt.includes(ext)) {
-    return cb(new Error("Only PDF, Word (.doc/.docx), or scanned images (JPG/PNG/WEBP) are allowed."));
-  }
-  cb(null, true);
-};
-const uploadDocToolsFiles = multer({
-  storage,
-  fileFilter: docToolsFileFilter,
-  limits: { fileSize: 20 * 1024 * 1024, files: 20 }, // 20MB/file
-});
-
 // Uploads a buffer (from multer's memoryStorage) to Cloudinary and resolves
 // with the result object (we only need result.secure_url and result.public_id).
 function uploadBufferToCloudinary(buffer, options = {}) {
@@ -166,4 +151,4 @@ function publicIdFromBrandingUrl(url) {
   return match ? `mikumbi/branding/${match[1]}` : null;
 }
 
-module.exports = { uploadStudentPhoto, uploadResultsPdf, uploadStudentRoster, uploadBrandingImage, uploadDocToolsFiles, uploadBufferToCloudinary, deleteCloudinaryImage, deleteCloudinaryAsset, publicIdFromUrl, publicIdFromUserPhotoUrl, publicIdFromBrandingUrl, cloudinaryResized };
+module.exports = { uploadStudentPhoto, uploadResultsPdf, uploadStudentRoster, uploadBrandingImage, uploadBufferToCloudinary, deleteCloudinaryImage, deleteCloudinaryAsset, publicIdFromUrl, publicIdFromUserPhotoUrl, publicIdFromBrandingUrl, cloudinaryResized };

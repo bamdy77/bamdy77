@@ -15,7 +15,7 @@ export function PasswordInput({ value, onChange, placeholder = "Password", style
         placeholder={placeholder}
         required={required}
         autoFocus={autoFocus}
-        style={{ width: "100%", padding: "10px 40px 10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 8, fontSize: 14, ...style }}
+        style={{ width: "100%", padding: "10px 40px 10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 14, ...style }}
       />
       <button
         type="button"

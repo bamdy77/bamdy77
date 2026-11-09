@@ -112,7 +112,7 @@ export default function NotificationBell({ dark }) {
         title="Notifications"
         style={{
           position: "relative", display: "flex", alignItems: "center", justifyContent: "center",
-          width: 34, height: 34, borderRadius: 8, border: "1px solid rgba(255,255,255,0.28)",
+          width: 34, height: 34, borderRadius: 0, border: "1px solid rgba(255,255,255,0.28)",
           background: open ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)",
           color: "#fff", cursor: "pointer",
         }}
@@ -121,7 +121,7 @@ export default function NotificationBell({ dark }) {
         {count > 0 && (
           <span style={{
             position: "absolute", top: -4, right: -4, minWidth: 16, height: 16, padding: "0 3px",
-            borderRadius: 8, background: THEME.danger, color: "#fff", fontSize: 10, fontWeight: 800,
+            borderRadius: 0, background: THEME.danger, color: "#fff", fontSize: 10, fontWeight: 800,
             display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
             border: "2px solid " + THEME.navy,
           }}>{count > 9 ? "9+" : count}</span>
@@ -132,7 +132,7 @@ export default function NotificationBell({ dark }) {
         <div style={{
           position: "absolute", top: 42, ...panelStyle, maxWidth: "calc(100vw - 16px)",
           background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}`,
-          borderRadius: 10, boxShadow: "0 12px 32px rgba(0,0,0,0.22)", zIndex: 200, overflow: "hidden",
+          borderRadius: 0, boxShadow: "0 12px 32px rgba(0,0,0,0.22)", zIndex: 200, overflow: "hidden",
         }}>
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",

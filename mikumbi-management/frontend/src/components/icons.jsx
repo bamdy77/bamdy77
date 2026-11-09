@@ -653,15 +653,3 @@ export function BellIcon({ size = 18 }) {
   );
 }
 
-// Doc Tools: document with convert/refresh arrow.
-export function FileConvertIcon({ size = 14 }) {
-  return (
-    <svg width={size} height={size} {...base}>
-      <path d="M13 3v4a1 1 0 0 0 1 1h4" />
-      <path d="M8 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v3.5" />
-      <path d="M13.5 14.5a3.2 3.2 0 0 1 5.2-1.1M20 12v2.2h-2.2" />
-      <path d="M19.5 18.5a3.2 3.2 0 0 1-5.2 1.1M13 21v-2.2h2.2" />
-    </svg>
-  );
-}
-

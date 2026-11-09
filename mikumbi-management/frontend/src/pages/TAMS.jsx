@@ -170,7 +170,7 @@ function TeacherCheckIn() {
       <div style={{ marginBottom: 14 }}>
         <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Your full name (as registered in User Accounts):</label>
         <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. John Peter Mwakasege" style={{
-          width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 8, fontSize: 13.5,
+          width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13.5,
         }} />
       </div>
 
@@ -179,7 +179,7 @@ function TeacherCheckIn() {
         <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} style={{ fontSize: 13.5 }} />
       </div>
 
-      <div style={{ marginBottom: 18, background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8, padding: "10px 14px" }}>
+      <div style={{ marginBottom: 18, background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "10px 14px" }}>
         <ChecklistItem ok={nameOk} label="Full name matches User Accounts" />
         <ChecklistItem ok={passwordOk} label="Password entered" />
         <ChecklistItem ok={gpsOk} label="GPS location enabled">
@@ -200,7 +200,7 @@ function TeacherCheckIn() {
         <div style={{ marginBottom: 14 }}>
           <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Reason for being late:</label>
           <input value={lateReason} onChange={(e) => setLateReason(e.target.value.slice(0, 75))} maxLength={75} style={{
-            width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 8, fontSize: 13.5,
+            width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13.5,
           }} />
           <div style={{ fontSize: 11, color: THEME.muted, textAlign: "right", marginTop: 4 }}>{lateReason.length}/75</div>
         </div>
@@ -208,7 +208,7 @@ function TeacherCheckIn() {
 
       <button onClick={doCheckIn} disabled={status === "locating" || status === "submitting"} style={{
         width: "100%", padding: "16px 0", background: THEME.navy, color: "#fff", border: "none",
-        borderRadius: 10, fontWeight: 700, fontSize: 15, cursor: "pointer",
+        borderRadius: 0, fontWeight: 700, fontSize: 15, cursor: "pointer",
         opacity: status === "locating" || status === "submitting" ? 0.7 : 1,
         display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
       }}>
@@ -218,7 +218,7 @@ function TeacherCheckIn() {
 
       {message && (
         <div style={{
-          marginTop: 16, padding: 12, borderRadius: 8, fontSize: 13.5,
+          marginTop: 16, padding: 12, borderRadius: 0, fontSize: 13.5,
           background: status === "done" ? THEME.successLight : THEME.dangerLight,
           color: status === "done" ? THEME.success : THEME.danger,
         }}>
@@ -236,7 +236,7 @@ function TeacherCheckIn() {
             {history.map((h, i) => (
               <div key={i} style={{
                 display: "flex", flexWrap: "wrap", gap: 6, rowGap: 4, alignItems: "center", padding: "9px 12px",
-                background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8, fontSize: 12.5,
+                background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 12.5,
               }}>
                 <span style={{ minWidth: 70 }}>{h.date}</span>
                 <span style={{ minWidth: 60 }}>{h.time_str}</span>
@@ -346,7 +346,7 @@ function AdminDashboard() {
 
       {loadError && (
         <div style={{
-          marginBottom: 20, padding: 12, borderRadius: 8, fontSize: 13.5,
+          marginBottom: 20, padding: 12, borderRadius: 0, fontSize: 13.5,
           background: THEME.dangerLight, color: THEME.danger,
         }}>⚠ {loadError}</div>
       )}
@@ -388,7 +388,7 @@ function AdminDashboard() {
             </div>
           ) : (
           <div style={{ overflowX: "auto", marginBottom: 24 }}>
-          <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
             <div style={{ ...rowStyle(-1), fontWeight: 700, background: THEME.bg }}>
               <span style={{ flex: 1 }}>Date</span>
               <span style={{ flex: 2 }}>Teacher</span>
@@ -425,7 +425,7 @@ function AdminDashboard() {
             </div>
           ) : (
           <div style={{ overflowX: "auto" }}>
-          <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
             {data.absent.length === 0 ? <Empty text="Everyone checked in." /> : data.absent.map((t, i) => (
               <div key={i} style={rowStyle(i)}>
                 <span style={{ flex: 2 }}>{t.full_name}</span>
@@ -463,7 +463,7 @@ function AdminDashboard() {
           </div>
         ) : (
         <div style={{ overflowX: "auto" }}>
-        <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8, overflow: "hidden" }}>
+        <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
           <div style={{ ...rowStyle(-1), fontWeight: 700, background: THEME.bg }}>
             <span style={{ flex: 1 }}>Date</span>
             <span style={{ flex: 2 }}>Teacher</span>
@@ -535,7 +535,7 @@ function TeacherMonthlyReport() {
       </div>
 
       {loadError && (
-        <div style={{ marginBottom: 20, padding: 12, borderRadius: 8, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger }}>⚠ {loadError}</div>
+        <div style={{ marginBottom: 20, padding: 12, borderRadius: 0, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger }}>⚠ {loadError}</div>
       )}
       {loading && <p style={{ fontSize: 13, color: THEME.muted, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={13} /> Loading…</p>}
 
@@ -556,7 +556,7 @@ function TeacherMonthlyReport() {
         </div>
       ) : (
         <div style={{ overflowX: "auto" }}>
-          <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 8, overflow: "hidden", minWidth: 920 }}>
+          <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden", minWidth: 920 }}>
             <div style={{ ...rowStyle(-1), fontWeight: 700, background: THEME.bg }}>
               <span style={{ flex: 2 }}>Teacher</span>
               <span style={{ flex: 1 }}>Working Days</span>
@@ -607,7 +607,7 @@ function ChecklistItem({ ok, label, children }) {
 // resolves to, so it repaints correctly on every theme automatically.
 function StatCard({ label, value, color = THEME.navy, sub }) {
   return (
-    <div style={{ background: `color-mix(in srgb, ${color} 16%, ${THEME.surface})`, border: `1px solid color-mix(in srgb, ${color} 38%, ${THEME.border})`, borderRadius: 10, padding: "16px 24px" }}>
+    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "16px 24px" }}>
       <div style={{ fontSize: 24, fontWeight: 800, color }}>{value}</div>
       <div style={{ fontSize: 12, color: THEME.muted }}>{label}</div>
       {sub != null && <div style={{ fontSize: 11.5, color: THEME.muted, marginTop: 2 }}>{sub}</div>}
@@ -623,8 +623,8 @@ function rowStyle(i) {
     borderTop: i > -1 && i > 0 ? `1px solid ${THEME.border}` : (i === 0 ? "none" : `1px solid ${THEME.border}`),
   };
 }
-const dateStyle = { padding: "8px 12px", border: `1px solid ${THEME.border}`, borderRadius: 8, fontSize: 13 };
-const tabActive = { padding: "8px 16px", borderRadius: 8, border: "none", background: THEME.navy, color: "#fff", fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
+const dateStyle = { padding: "8px 12px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13 };
+const tabActive = { padding: "8px 16px", borderRadius: 0, border: "none", background: THEME.navy, color: "#fff", fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
 const tabInactive = { ...tabActive, background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` };
 
 // Mobile/tablet "row card" - the responsive stand-in for the flex-row
@@ -632,7 +632,7 @@ const tabInactive = { ...tabActive, background: THEME.surface, color: THEME.text
 // horizontal scrolling) specifically on phones. Same convention as
 // Contributions.jsx / FoodContributions.jsx.
 const cardList = { display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" };
-const rowCard = { background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 10, padding: "12px 14px" };
+const rowCard = { background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "12px 14px" };
 const cardHeadRow = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8 };
 const cardTitle = { fontSize: 14, fontWeight: 700, color: THEME.text };
 const cardField = { display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12.5, padding: "3px 0" };

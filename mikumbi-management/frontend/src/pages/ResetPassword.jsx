@@ -44,10 +44,10 @@ export default function ResetPassword() {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: THEME.bg, padding: 20 }}>
-      <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 16, padding: 32, boxShadow: "0 10px 30px rgba(15,23,42,0.1)" }}>
+      <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 0, padding: 32, boxShadow: "0 10px 30px rgba(15,23,42,0.1)" }}>
         <h2 style={{ fontSize: 17, color: THEME.navy, marginBottom: 18 }}>Set a New Password</h2>
         {done ? (
-          <div style={{ color: THEME.success, background: THEME.successLight, padding: 12, borderRadius: 8, fontSize: 13.5 }}>
+          <div style={{ color: THEME.success, background: THEME.successLight, padding: 12, borderRadius: 0, fontSize: 13.5 }}>
             Password changed. Redirecting to Login...
           </div>
         ) : (
@@ -59,7 +59,7 @@ export default function ResetPassword() {
             {error && <div style={{ color: THEME.danger, fontSize: 13, marginTop: 8 }}>{error}</div>}
             <button type="submit" disabled={busy} style={{
               width: "100%", marginTop: 16, padding: "11px 0", background: THEME.navy, color: "#fff",
-              border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", opacity: busy ? 0.7 : 1,
+              border: "none", borderRadius: 0, fontWeight: 600, cursor: "pointer", opacity: busy ? 0.7 : 1,
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}>{busy ? <SpinnerIcon size={14} /> : <LockIcon size={14} />}{busy ? "Saving..." : "Save Password"}</button>
           </form>
