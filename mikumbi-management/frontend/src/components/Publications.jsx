@@ -41,7 +41,7 @@ export default function Publications({ forcedView = null }) {
             onClick={() => setTab("results")}
           />
           <PublicationCard
-            title="Joining Instructions" subtitle="Kwa wanafunzi wanaotarajia kujiunga na Kidato cha Kwanza"
+            title="Maelekezo ya Kujiunga" subtitle="Kwa wanafunzi wanaotarajia kujiunga na Kidato cha Kwanza"
             color="#B7791F" bg="#FFF6E5"
             icon={<JoiningIcon color="#B7791F" />}
             onClick={() => setTab("joining")}
@@ -49,14 +49,14 @@ export default function Publications({ forcedView = null }) {
         </div>
       ) : (
         <div>
-          <button onClick={() => setTab(null)} style={{
+          {!forcedView && <button onClick={() => setTab(null)} style={{
             display: "inline-flex", alignItems: "center", gap: 6,
             background: THEME.surface, border: `1.5px solid ${THEME.border}`, borderRadius: 0,
             color: THEME.heading, fontWeight: 600, fontSize: 13.5,
             cursor: "pointer", marginBottom: 20, padding: "9px 16px",
-          }}>← Rudi Nyuma</button>
+          }}>← Rudi Nyuma</button>}
           <h3 style={{ textAlign: "center", color: THEME.heading, fontSize: 16, fontWeight: 700, marginBottom: 22 }}>
-            {tab === "results" ? "Matokeo (Results)" : "Joining Instructions"}
+            {tab === "results" ? "Matokeo (Results)" : "Maelekezo ya Kujiunga (Joining Instructions)"}
           </h3>
           {tab === "results" ? <ErrorBoundary><ResultsPortal /></ErrorBoundary> : <ErrorBoundary><JoiningInstructionsPanel /></ErrorBoundary>}
         </div>
@@ -283,6 +283,9 @@ function JoiningInstructionsPanel() {
         <Muted>Fomu ya Maelekezo ya kujiunga na kidato cha kwanza bado haijachapishwa mtandaoni. Tafadhali wasiliana na shule kwa maelekezo zaidi.</Muted>
       ) : step === "form" ? (
         <form onSubmit={onSubmitClick} style={{ display: "grid", gap: 12 }}>
+          <p style={{ fontSize: 13, color: THEME.muted, margin: "0 0 4px", lineHeight: 1.6 }}>
+            Jaza taarifa za mwanafunzi aliyechaguliwa kujiunga na Kidato cha Kwanza. Utapakua barua ya Maelekezo ya Kujiunga pamoja na fomu za kujaza (Ahadi ya Mzazi, Ahadi ya Mwanafunzi, Maelezo Binafsi na Fomu ya Uchunguzi wa Afya). Zichapishe, zijaze na uzilete siku ya kuripoti.
+          </p>
           <Field label="Jina la Kwanza" value={fields.first_name} onChange={set("first_name")} required />
           <Field label="Jina la Kati" value={fields.middle_name} onChange={set("middle_name")} />
           <Field label="Jina la Ukoo" value={fields.last_name} onChange={set("last_name")} required />

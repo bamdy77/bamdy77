@@ -17,3 +17,12 @@ See `backend/.env.example`. New/changed: `FRONTEND_URL` (staff site URL) and `AL
 ## Before the domain exists
 Open `https://YOUR-PROJECT.vercel.app/?site=public` to preview the public site (this browser tab only).
 Open `?site=staff` to switch back. The plain `.vercel.app` address stays the STAFF site.
+
+## Joining Instructions (Form I)
+Edit the full letter in Staff site -> Student Management -> Joining Instructions -> **Edit & Publish**,
+press **Preview PDF**, then **Publish**. While published, editing is locked - press **Turn Off to Edit** first.
+The Head Master's signature uploaded in Settings -> Signature & Stamp is placed on every Joining
+Instruction automatically. The new `content` column on `joining_settings` is added automatically on start.
+
+## Backend Docker image
+Doc Tools has been removed, so the image no longer installs LibreOffice.

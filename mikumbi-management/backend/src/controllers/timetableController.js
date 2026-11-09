@@ -141,7 +141,7 @@ const addEventType = async (req, res, next) => {
 // GET /api/timetable/event-schedule?academic_year=&term=
 const getEventSchedule = async (req, res, next) => {
   try {
-    const { academic_year = "2025", term = "Term 1" } = req.query;
+    const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.query;
     const result = await query(`
       SELECT es.*, et.name AS event_name
       FROM timetable_event_schedule es
@@ -156,7 +156,7 @@ const getEventSchedule = async (req, res, next) => {
 // POST /api/timetable/event-schedule - add one scheduled event slot
 const addEventSchedule = async (req, res, next) => {
   try {
-    const { event_type_id, day, period_label, classes, academic_year = "2025", term = "Term 1" } = req.body;
+    const { event_type_id, day, period_label, classes, academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.body;
     if (!event_type_id || !day || !period_label || !classes?.length)
       return res.status(400).json({ success: false, message: "Event, day, time and at least one class are required." });
 
@@ -181,7 +181,7 @@ const deleteEventSchedule = async (req, res, next) => {
 // GET /api/timetable/generation-status?academic_year=&term=
 const getGenerationStatus = async (req, res, next) => {
   try {
-    const { academic_year = "2025", term = "Term 1" } = req.query;
+    const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.query;
     const result = await query(`
       SELECT COUNT(*) AS used FROM timetable_generations
       WHERE academic_year = $1 AND term = $2 AND generation_date = $3
@@ -221,7 +221,7 @@ const getPublishedGeneration = async (academic_year, term) => {
 // rendering any download links.
 const getPublicStatus = async (req, res, next) => {
   try {
-    const { academic_year = "2025", term = "Term 1" } = req.query;
+    const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.query;
     const published = await getPublishedGeneration(academic_year, term);
     res.json({ success: true, published: !!published, draft_label: published?.draft_label || null });
   } catch (err) { next(err); }
@@ -237,7 +237,7 @@ const getPublicStatus = async (req, res, next) => {
 // class and gets a blank/empty PDF.
 const getPublicClassesWithData = async (req, res, next) => {
   try {
-    const { academic_year = "2025", term = "Term 1", draft } = req.query;
+    const { academic_year = String(new Date().getFullYear()), term = "Term 1", draft } = req.query;
     const result = await query(
       `SELECT DISTINCT form, stream FROM timetable WHERE academic_year=$1 AND term=$2 AND draft_label=$3 ORDER BY form, stream`,
       [academic_year, term, draft]
@@ -251,7 +251,7 @@ const getPublicClassesWithData = async (req, res, next) => {
 // only. Marks ONE draft as the published/public one for that year+term
 // (unpublishing any previously-published draft for the same period first).
 const publishDraft = async (req, res, next) => {
-  const { academic_year = "2025", term = "Term 1", draft_label } = req.body;
+  const { academic_year = String(new Date().getFullYear()), term = "Term 1", draft_label } = req.body;
   if (!draft_label) return res.status(400).json({ success: false, message: "draft_label is required." });
   try {
     await query(`UPDATE timetable_generations SET is_published = false WHERE academic_year=$1 AND term=$2`, [academic_year, term]);
@@ -268,7 +268,7 @@ const publishDraft = async (req, res, next) => {
 // Removes the public timetable entirely (e.g. to fix something before
 // re-publishing) without deleting the underlying draft data.
 const unpublishDraft = async (req, res, next) => {
-  const { academic_year = "2025", term = "Term 1" } = req.body;
+  const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.body;
   try {
     await query(`UPDATE timetable_generations SET is_published = false WHERE academic_year=$1 AND term=$2`, [academic_year, term]);
     res.json({ success: true, message: "Timetable unpublished. It is no longer visible on the public Publications page." });
@@ -283,7 +283,7 @@ const unpublishDraft = async (req, res, next) => {
 // per-year+term pattern as publish/unpublish.
 const getSharedStatus = async (req, res, next) => {
   try {
-    const { academic_year = "2025", term = "Term 1" } = req.query;
+    const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.query;
     const { rows } = await query(
       `SELECT draft_label, shared_at FROM timetable_generations WHERE academic_year=$1 AND term=$2 AND shared_with_teachers=true ORDER BY shared_at DESC LIMIT 1`,
       [academic_year, term]
@@ -296,7 +296,7 @@ const getSharedStatus = async (req, res, next) => {
 // Second Master/Academic Master. Makes this draft visible to every other
 // teacher's own "View Timetable".
 const shareDraft = async (req, res, next) => {
-  const { academic_year = "2025", term = "Term 1", draft_label } = req.body;
+  const { academic_year = String(new Date().getFullYear()), term = "Term 1", draft_label } = req.body;
   if (!draft_label) return res.status(400).json({ success: false, message: "draft_label is required." });
   try {
     await query(`UPDATE timetable_generations SET shared_with_teachers = false, shared_at = NULL, shared_by = NULL WHERE academic_year=$1 AND term=$2`, [academic_year, term]);
@@ -312,7 +312,7 @@ const shareDraft = async (req, res, next) => {
 // POST /api/timetable/unshare  { academic_year, term } - Admin/Second
 // Master/Academic Master.
 const unshareDraft = async (req, res, next) => {
-  const { academic_year = "2025", term = "Term 1" } = req.body;
+  const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.body;
   try {
     await query(`UPDATE timetable_generations SET shared_with_teachers = false, shared_at = NULL, shared_by = NULL WHERE academic_year=$1 AND term=$2`, [academic_year, term]);
     res.json({ success: true, message: "Timetable haishirikiwi tena na walimu." });
@@ -324,7 +324,7 @@ const unshareDraft = async (req, res, next) => {
 // record). Blocked while that draft is the published one - unpublish first,
 // so the public Publications page can never be left pointing at nothing.
 const deleteDraft = async (req, res, next) => {
-  const { academic_year = "2025", term = "Term 1", draft_label } = req.body;
+  const { academic_year = String(new Date().getFullYear()), term = "Term 1", draft_label } = req.body;
   if (!draft_label) return res.status(400).json({ success: false, message: "draft_label is required." });
   try {
     const pub = await query(
@@ -344,7 +344,7 @@ const deleteDraft = async (req, res, next) => {
 // GET /api/timetable/drafts?academic_year=&term= - list all drafts generated so far (for the draft selector)
 const getDrafts = async (req, res, next) => {
   try {
-    const { academic_year = "2025", term = "Term 1" } = req.query;
+    const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.query;
     const r = await query(`
       SELECT DISTINCT draft_label, MIN(created_at) AS first_seen
       FROM timetable_generations WHERE academic_year = $1 AND term = $2
@@ -359,7 +359,7 @@ const getDrafts = async (req, res, next) => {
 // GET /api/timetable?form=&stream=&academic_year=&term=&masterOnly=true&draft=
 const getTimetable = async (req, res, next) => {
   try {
-    const { form, stream, academic_year = "2025", term = "Term 1", masterOnly } = req.query;
+    const { form, stream, academic_year = String(new Date().getFullYear()), term = "Term 1", masterOnly } = req.query;
     let allowedClasses = null;
 
     const latest = await getLatestGeneration(academic_year, term);
@@ -402,7 +402,7 @@ const getTimetable = async (req, res, next) => {
 // POST /api/timetable/generate   body: { academic_year, term, classes:[...] }
 const generateTimetable = async (req, res, next) => {
   try {
-    const { academic_year = "2025", term = "Term 1" } = req.body;
+    const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.body;
     const classes = (req.body.classes && req.body.classes.length) ? req.body.classes : ALL_CLASSES;
 
     // 1) Enforce max 4 generations per Tanzania calendar day (1st Draft .. 4th Draft) -
@@ -552,7 +552,7 @@ const generateTimetable = async (req, res, next) => {
 // PUT /api/timetable/cell - edit a single cell
 const updateCell = async (req, res, next) => {
   try {
-    const { form, stream, day, period, subject, teacher_id, academic_year = "2025", term = "Term 1" } = req.body;
+    const { form, stream, day, period, subject, teacher_id, academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.body;
     const latest = await getLatestGeneration(academic_year, term);
     const draftLabel = req.body.draft_label || (latest ? latest.draft_label : "1st Draft");
 
@@ -571,7 +571,7 @@ const updateCell = async (req, res, next) => {
 // DELETE /api/timetable/cell - clear a cell
 const clearCell = async (req, res, next) => {
   try {
-    const { form, stream, day, period, academic_year = "2025", term = "Term 1" } = req.body;
+    const { form, stream, day, period, academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.body;
     const latest = await getLatestGeneration(academic_year, term);
     const draftLabel = req.body.draft_label || (latest ? latest.draft_label : "1st Draft");
     await query(`
@@ -585,7 +585,7 @@ const clearCell = async (req, res, next) => {
 // GET /api/timetable/teacher/:teacherId?academic_year=&term=&draft=
 const getTeacherTimetable = async (req, res, next) => {
   try {
-    const { academic_year = "2025", term = "Term 1" } = req.query;
+    const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.query;
     const latest = await getLatestGeneration(academic_year, term);
     const draftLabel = req.query.draft || (latest ? latest.draft_label : "1st Draft");
     const result = await query(`
@@ -673,7 +673,7 @@ const periodHeaderText = (p) => `${p.label}\n${p.start_time}\u2013${p.end_time}`
 // GET /api/timetable/pdf/class?form=&stream=&academic_year=&term=
 const exportClassPdf = async (req, res, next) => {
   try {
-    const { form, academic_year = "2025", term = "Term 1" } = req.query;
+    const { form, academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.query;
     const stream = req.query.stream || ""; // "" is valid - means a stream-less class like "Form I"
     if (!form) return res.status(400).json({ success: false, message: "form is required." });
 
@@ -734,7 +734,7 @@ const exportClassPdf = async (req, res, next) => {
 // GET /api/timetable/pdf/teacher/:teacherId?academic_year=&term=
 const exportTeacherPdf = async (req, res, next) => {
   try {
-    const { academic_year = "2025", term = "Term 1" } = req.query;
+    const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.query;
     const tRes = await query(`SELECT t.*, u.username AS registered_username FROM teachers t LEFT JOIN users u ON u.id = t.user_id WHERE t.id=$1`, [req.params.teacherId]);
     if (!tRes.rows.length) return res.status(404).json({ success: false, message: "Teacher not found." });
     const teacher = tRes.rows[0];
@@ -799,7 +799,7 @@ const exportTeacherPdf = async (req, res, next) => {
 // GET /api/timetable/pdf/master?academic_year=&term=  - matches the day-by-day, class-rows layout
 const exportMasterPdf = async (req, res, next) => {
   try {
-    const { academic_year = "2025", term = "Term 1" } = req.query;
+    const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.query;
     const latest = await getLatestGeneration(academic_year, term);
     const draftLabel = req.query.draft || (latest ? latest.draft_label : "1st Draft");
     const forDraft = await query(`

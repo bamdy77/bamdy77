@@ -92,10 +92,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rate limiting
+// General API limit. Keyed per signed-in STAFF ACCOUNT when a valid token is
+// sent, and per IP otherwise: the whole school WiFi shares one public IP
+// (NAT), so an IP-only bucket of 300 requests made every teacher share one
+// small allowance and the dashboard started failing with "Too many
+// requests" on a busy morning.
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
-  max: 300,
+  max: (req) => (req.rateLimitUser ? 1500 : 600),
   message: { success: false, message: "Too many requests. Please slow down." },
+  keyGenerator: (req) => (req.rateLimitUser ? `u:${req.rateLimitUser}` : `ip:${req.ip || req.socket?.remoteAddress || "unknown"}`),
+});
+app.use("/api/", (req, _res, next) => {
+  const h = req.headers.authorization || "";
+  if (h.startsWith("Bearer ")) {
+    try {
+      const decoded = require("jsonwebtoken").verify(h.slice(7), process.env.JWT_SECRET);
+      if (decoded && decoded.id) req.rateLimitUser = decoded.id;
+    } catch { /* invalid/expired token - fall back to the IP bucket */ }
+  }
+  next();
 });
 app.use("/api/", limiter);
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { THEME, SCHOOL } from "../../styles/theme";
+import { SCHOOL } from "../../styles/theme";
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { siteConfig, toTelHref } from "../../config/siteConfig";
 import HoverMenu from "../HoverMenu";

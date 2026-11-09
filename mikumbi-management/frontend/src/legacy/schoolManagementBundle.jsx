@@ -192,7 +192,9 @@ const FORMS   = ["Form I","Form II","Form III","Form IV"];
 const STREAMS = ["A","B","C"];
 const DAYS    = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
 const MONTHS  = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const YEARS   = ["2024","2025","2026","2027","2028"];
+// Rolling year list (two back, two ahead) so pickers never go stale.
+const CURRENT_YEAR = String(new Date().getFullYear());
+const YEARS   = Array.from({ length: 5 }, (_, i) => String(Number(CURRENT_YEAR) - 2 + i));
 const SUBJECTS = ["AGRICULTURE","BIOLOGY","BOOKKEEPING","BUSINESS STUDY","CHEMISTRY","CIVICS","COMMERCE","COMPUTER SCIENCE","EDK","ENGLISH","GEOGRAPHY","H/T MAADILI","HISTORY","KISWAHILI","LT IN ENGLISH","MATHEMATICS","PHYSICS"]; // ascending (A→Z)
 const CHARGE_TYPES = ["Academics (Part-time Teachers)","Ream","Other"];
 const VEGETABLE_TYPES = ["Njugu","Maharagwe","Mbaazi","Kunde"];
@@ -1815,7 +1817,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
   const [viewClass, setViewClass]     = useState("Form I A");
   const [viewTeacher, setViewTeacher] = useState(myTeacherLabel || "");
   const [sharedInfo, setSharedInfo]   = useState(null); // { shared, draft_label } - Teachers/Patron/etc only
-  const [ttYear, setTTYear]           = useState("2025");
+  const [ttYear, setTTYear]           = useState(CURRENT_YEAR);
   const [ttTerm, setTTTerm]           = useState("Term 1");
   const [ttMonth, setTTMonth]         = useState(MONTHS[new Date().getMonth()]);
   const [editMode, setEditMode]       = useState(false);
@@ -2921,7 +2923,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
 
   const [contribModal, setContribModal] = useState(null); // occupant
   const [contribs, setContribs]         = useState([]);
-  const [cf, setCf] = useState({ term:"Term I", academic_year:"2025", maize_kg:"", vegetable_type:"", vegetables_kg:"", oil_litres:"", salt_kg:"", other_item:"", other_qty:"", hostel_fee:"", owes:false, comment:"" });
+  const [cf, setCf] = useState({ term:"Term I", academic_year:CURRENT_YEAR, maize_kg:"", vegetable_type:"", vegetables_kg:"", oil_litres:"", salt_kg:"", other_item:"", other_qty:"", hostel_fee:"", owes:false, comment:"" });
 
   const [historyModal, setHistoryModal] = useState(null); // occupant
   const [history, setHistory] = useState([]);
@@ -3032,7 +3034,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
     setSaving(true);
     try {
       await apiFetch(`/hostel/occupants/${contribModal.id}/contributions`, { method:"POST", body:cf }, token);
-      setCf({ term:"Term I", academic_year:"2025", maize_kg:"", vegetable_type:"", vegetables_kg:"", oil_litres:"", salt_kg:"", other_item:"", other_qty:"", hostel_fee:"", owes:false, comment:"" });
+      setCf({ term:"Term I", academic_year:CURRENT_YEAR, maize_kg:"", vegetable_type:"", vegetables_kg:"", oil_litres:"", salt_kg:"", other_item:"", other_qty:"", hostel_fee:"", owes:false, comment:"" });
       const r = await apiFetch(`/hostel/occupants/${contribModal.id}/contributions`, {}, token); setContribs(r.data);
       setSuccess("Contribution recorded.");
     } catch (err) { setError(err.message); }
@@ -3625,7 +3627,7 @@ function ContributionsModule({ token, role }) {
   const [saving, setSaving]   = useState(false);
 
   // ── Part-time Teachers ──
-  const [ptYear, setPtYear]   = useState(YEARS[1]||"2025");
+  const [ptYear, setPtYear]   = useState(CURRENT_YEAR);
   const [ptMonth, setPtMonth] = useState(String(new Date().getMonth()+1));
   const [ptRows, setPtRows]   = useState([]);
   const [ptLoading, setPtLoading] = useState(false);
