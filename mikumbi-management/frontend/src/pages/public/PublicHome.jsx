@@ -255,6 +255,7 @@ const lbBtn = (pos) => ({
 function Contact() {
   const { isMobile, isTablet } = useBreakpoint();
   const { t } = useLang();
+  const [mapActive, setMapActive] = useState(false);
   const box = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, padding: "22px 20px", textAlign: "center" };
   const label = { fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748B", marginBottom: 8 };
   const val = { color: NAVY, fontWeight: 700, fontSize: 15, lineHeight: 1.6, overflowWrap: "anywhere" };
@@ -301,14 +302,24 @@ function Contact() {
               <LocationPinIcon size={16} />{t("map.directions")}
             </a>
           </div>
-          <iframe
-            title={t("map.frame")}
-            src={siteConfig.location.embedUrl}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-            style={{ display: "block", width: "100%", height: isMobile ? 300 : 400, border: 0 }}
-          />
+          {/* The map stays "locked" until tapped, so scrolling the page with
+              a finger or mouse wheel never gets trapped inside the map. */}
+          <div style={{ position: "relative" }} onMouseLeave={() => setMapActive(false)}>
+            <iframe
+              title={t("map.frame")}
+              src={siteConfig.location.embedUrl}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              style={{ display: "block", width: "100%", height: isMobile ? 320 : 420, border: 0, pointerEvents: mapActive ? "auto" : "none" }}
+            />
+            {!mapActive && (
+              <button type="button" onClick={() => setMapActive(true)} aria-label={t("map.activate")}
+                style={{ position: "absolute", inset: 0, width: "100%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: 14 }}>
+                <span style={{ background: "rgba(12,66,111,0.88)", color: "#fff", fontWeight: 700, fontSize: 13, padding: "8px 14px", borderRadius: 4 }}>{t("map.activate")}</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </section>

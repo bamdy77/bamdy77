@@ -28,7 +28,8 @@ const lng = Number(env.VITE_SCHOOL_LNG) || 39.17856;
 export const siteConfig = {
   location: {
     lat, lng,
-    embedUrl: `https://maps.google.com/maps?q=${lat},${lng}&z=16&hl=sw&output=embed`,
+    // t=m: normal street map (names of roads, villages and places), not satellite.
+    embedUrl: `https://maps.google.com/maps?q=${lat},${lng}&t=m&z=17&hl=sw&output=embed`,
     directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
   },
   email: env.VITE_CONTACT_EMAIL || "info@your-domain.com",

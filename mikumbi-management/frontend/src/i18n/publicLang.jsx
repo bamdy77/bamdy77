@@ -162,6 +162,7 @@ const STRINGS = {
   "map.title": { sw: "Mahali Shule Ilipo", en: "Find the School" },
   "map.text": { sw: "Shule ya Sekondari Mikumbi - kijiji cha Mikumbi, kata ya Mikumbi, Newala.", en: "Mikumbi Secondary School - Mikumbi village, Mikumbi ward, Newala." },
   "map.directions": { sw: "Pata Maelekezo", en: "Get Directions" },
+  "map.activate": { sw: "Bonyeza kutumia ramani", en: "Tap to use the map" },
   "map.open": { sw: "Fungua kwenye Google Maps", en: "Open in Google Maps" },
   "map.frame": { sw: "Ramani ya mahali Shule ya Sekondari Mikumbi ilipo", en: "Map showing where Mikumbi Secondary School is" },
 
