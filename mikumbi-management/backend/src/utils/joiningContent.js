@@ -149,6 +149,8 @@ const DEFAULT_CONTENT = {
   head_name: "OCTAVIAN C. MILLANZI",
   head_title: "MKUU WA SHULE",
   include_forms: true,
+  // Page with photos of the allowed / not-allowed uniform (faces blurred)
+  include_uniform_page: true,
   // Background mark on every page: "text" | "logo" | "none"
   watermark: "text",
   // PDF font: "arimo" | "times" | "helvetica" | "courier"
@@ -177,6 +179,7 @@ function sanitizeContent(raw) {
     head_name: str(raw.head_name, 120).trim(),
     head_title: str(raw.head_title, 120).trim(),
     include_forms: raw.include_forms !== false,
+    include_uniform_page: raw.include_uniform_page !== false,
     watermark: ["text", "logo", "none"].includes(raw.watermark) ? raw.watermark : "text",
     font: ["arimo", "times", "helvetica", "courier"].includes(raw.font) ? raw.font : "arimo",
   };

@@ -369,6 +369,80 @@ function drawFooter(doc, generatedAt) {
   }
 }
 
+// ── Uniform guide page ("MUONEKANO WA SARE ZA SHULE") ─────────────────────
+// Photos showing the correct and the NOT-allowed uniform for boys and girls.
+// The students' faces are blurred in the image files themselves
+// (assets/uniforms/*.jpg) so no child can be identified from the document.
+const UNIFORM_DIR = path.join(__dirname, "..", "assets", "uniforms");
+const UNIFORM_BOYS = [
+  { file: "boy-allowed.jpg", ok: true, note: "Shati jeupe la mikono mifupi, suruali ya kaki isiyobana, mkanda mweusi na viatu vyeusi vya kamba." },
+  { file: "boy-not-allowed.jpg", ok: false, note: "Suruali ya kubana (modo) hairuhusiwi." },
+  { file: "boy-sagging-not-allowed.jpg", ok: false, note: "Suruali iliyoshushwa chini ya kiuno, mkanda unaoning'inia na shati nje hairuhusiwi." },
+];
+const UNIFORM_GIRLS = [
+  { file: "girl-allowed.jpg", ok: true, note: "Shati jeupe la mikono mifupi, sketi ndefu, soksi nyeupe na viatu vyeusi." },
+  { file: "girl-hijab-allowed.jpg", ok: true, note: "Kwa wanaovaa hijabu: hijabu ndefu nyeupe na sketi ndefu hadi kifundo cha mguu." },
+  { file: "girl-hijab-not-allowed.jpg", ok: false, note: "Hijabu fupi na sketi fupi hairuhusiwi." },
+  { file: "girl-not-allowed.jpg", ok: false, note: "Sketi fupi (juu ya magoti) hairuhusiwi." },
+];
+const OK_GREEN = "#15803D";
+const NO_RED = "#B91C1C";
+
+// Small vector tick / cross so the badge never depends on a font glyph.
+function drawMark(doc, x, y, size, ok) {
+  doc.save().lineWidth(1.8).strokeColor("#FFFFFF").lineCap("round");
+  if (ok) {
+    doc.moveTo(x, y + size * 0.55).lineTo(x + size * 0.38, y + size * 0.9).lineTo(x + size, y + size * 0.1).stroke();
+  } else {
+    doc.moveTo(x, y).lineTo(x + size, y + size).stroke();
+    doc.moveTo(x + size, y).lineTo(x, y + size).stroke();
+  }
+  doc.restore();
+}
+
+function drawUniformCard(doc, item, x, y, w, imgH) {
+  const color = item.ok ? OK_GREEN : NO_RED;
+  doc.rect(x, y, w, imgH).lineWidth(0.6).strokeColor("#CBD5E1").stroke();
+  safeImage(doc, path.join(UNIFORM_DIR, item.file), x + 2, y + 2, { fit: [w - 4, imgH - 4], align: "center", valign: "center" });
+  const barY = y + imgH;
+  const barH = 18;
+  doc.rect(x, barY, w, barH).fillColor(color).fill();
+  drawMark(doc, x + 7, barY + 4.5, 9, item.ok);
+  doc.font("JI_BOLD").fontSize(9).fillColor("#FFFFFF")
+    .text(item.ok ? "INARUHUSIWA" : "HAIRUHUSIWI", x + 20, barY + 4.5, { width: w - 24, align: "center", lineBreak: false });
+  doc.font("JI_REG").fontSize(8).fillColor(INK)
+    .text(item.note, x, barY + barH + 4, { width: w, align: "center", lineGap: 1 });
+}
+
+function drawUniformRow(doc, title, items, top, cardW, imgH) {
+  const left = doc.page.margins.left;
+  const width = doc.page.width - left - doc.page.margins.right;
+  doc.font("JI_BOLD").fontSize(12).fillColor(INK).text(title, left, top, { width });
+  const rowTop = top + 20;
+  const gap = 14;
+  const totalW = items.length * cardW + (items.length - 1) * gap;
+  let x = left + (width - totalW) / 2;
+  // Measure the tallest note so the next row never overlaps it.
+  doc.font("JI_REG").fontSize(8);
+  const noteH = Math.max(...items.map((it) => doc.heightOfString(it.note, { width: cardW, lineGap: 1 })));
+  items.forEach((it) => { drawUniformCard(doc, it, x, rowTop, cardW, imgH); x += cardW + gap; });
+  return rowTop + imgH + 18 + 4 + noteH + 14; // image + badge + note + spacing
+}
+
+function drawUniformPage(doc) {
+  doc.addPage();
+  const left = doc.page.margins.left;
+  const width = doc.page.width - left - doc.page.margins.right;
+  doc.font("JI_BOLD").fontSize(15).fillColor(INK).text("MUONEKANO WA SARE ZA SHULE", left, doc.page.margins.top, { width, align: "center" });
+  doc.font("JI_REG").fontSize(9.5).fillColor("#334155")
+    .text("Picha zifuatazo zinaonyesha sare inayoruhusiwa na isiyoruhusiwa. Mwanafunzi atakayekuja na sare isiyoruhusiwa hatapokelewa hadi arekebishe sare yake.",
+      left, doc.y + 4, { width, align: "center", lineGap: 1 });
+  let y = doc.y + 12;
+  y = drawUniformRow(doc, "WAVULANA", UNIFORM_BOYS, y, 128, 205);
+  drawUniformRow(doc, "WASICHANA", UNIFORM_GIRLS, y, 112, 195);
+  doc.x = left;
+}
+
 // Writes the whole Joining Instruction into `stream` (an Express res).
 // fullName: string for a real applicant, or null for the blank form.
 function renderJoiningPdf(stream, { content, fullName, year, signatureBuf, qrBuf, generatedAt }) {
@@ -383,6 +457,7 @@ function renderJoiningPdf(stream, { content, fullName, year, signatureBuf, qrBuf
 
   const y = Number(year) || new Date().getFullYear();
   drawLetter(doc, { content, fullName, year: y, signatureBuf, qrBuf });
+  if (content.include_uniform_page !== false) drawUniformPage(doc);
   if (content.include_forms !== false) {
     drawParentForm(doc, { year: y });
     drawStudentPledge(doc, { year: y, fullName });

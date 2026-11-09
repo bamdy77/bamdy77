@@ -438,6 +438,10 @@ function SettingsTab({ token }) {
           <input type="checkbox" checked={content.include_forms !== false} onChange={(e) => update({ include_forms: e.target.checked })} />
           Attach the forms (Fomu Na. 1 Ahadi ya Mzazi, Na. 2 Ahadi ya Mwanafunzi, Na. 3 Maelezo Binafsi, Na. 4 Medical Examination)
         </label>
+        <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, margin: "-8px 0 16px" }}>
+          <input type="checkbox" checked={content.include_uniform_page !== false} onChange={(e) => update({ include_uniform_page: e.target.checked })} />
+          Add the uniform guide page (photos of allowed / not-allowed uniform, faces hidden)
+        </label>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button onClick={save} disabled={busy || ro} style={primaryBtn}>{busy ? "Saving..." : dirty ? "Save Changes" : "Saved"}</button>
