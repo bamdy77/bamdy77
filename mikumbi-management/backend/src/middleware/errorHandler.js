@@ -26,6 +26,15 @@ const errorHandler = (err, req, res, next) => {
     return res.status(400).json({ success: false, message });
   }
 
+  // Postgres input errors are the CALLER's mistake (a letter where a number
+  // was expected, a value outside an allowed list, a duplicate) - answer
+  // with a clear 400/409 instead of a 500 that exposes raw SQL wording.
+  if (err.code === "22P02" || err.code === "22007" || err.code === "22008" || err.code === "22003") {
+    return res.status(400).json({ success: false, message: "One of the values entered is not valid. Please check the form and try again." });
+  }
+  if (err.code === "23514") {
+    return res.status(400).json({ success: false, message: "One of the values entered is not allowed. Please check the form and try again." });
+  }
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal server error.",

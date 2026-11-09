@@ -385,6 +385,39 @@ const getStudent = async (req, res, next) => {
 };
 
 // POST /api/students
+// Friendly validation for the student form. Previously an invalid gender or
+// form came back as a raw database error, a date of birth in the future and
+// a name made only of spaces were saved, and a mistyped parent phone was
+// stored - which silently locked that parent out of the Results portal
+// (the phone number is their password there). `partial` = update: only the
+// fields actually sent are checked.
+const VALID_GENDERS = ["Male", "Female"];
+const VALID_FORMS_S = ["Form I", "Form II", "Form III", "Form IV"];
+const VALID_STATUSES = ["Active", "Inactive", "Transferred", "Completed", "Graduated"];
+function studentFieldError(b, partial = false) {
+  const has = (k) => b[k] !== undefined && b[k] !== null;
+  const blank = (k) => !String(b[k] ?? "").trim();
+  if (!partial || has("first_name")) if (blank("first_name")) return "First name is required.";
+  if (!partial || has("last_name")) if (blank("last_name")) return "Last name is required.";
+  if (!partial || has("gender")) if (!VALID_GENDERS.includes(b.gender)) return "Gender must be Male or Female.";
+  if (!partial || has("form")) if (!VALID_FORMS_S.includes(b.form)) return "Form must be Form I, Form II, Form III or Form IV.";
+  if (has("status") && b.status !== "" && !VALID_STATUSES.includes(b.status)) return "Invalid student status.";
+  const today = new Date().toISOString().slice(0, 10);
+  for (const [k, label] of [["dob", "Date of birth"], ["admission_date", "Admission date"], ["transfer_in_date", "Transfer-in date"]]) {
+    if (!has(k) || b[k] === "") continue;
+    const d = String(b[k]).slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || Number.isNaN(Date.parse(d))) return `${label} is not a valid date.`;
+    if (k === "dob" && d > today) return "Date of birth cannot be in the future.";
+    if (k === "dob" && d < "1980-01-01") return "Date of birth looks wrong - please check the year.";
+  }
+  if (has("parent_phone") && String(b.parent_phone).trim()) {
+    const digits = String(b.parent_phone).replace(/\D/g, "");
+    const ok = /^0[67]\d{8}$/.test(digits) || /^255[67]\d{8}$/.test(digits) || /^[67]\d{8}$/.test(digits);
+    if (!ok) return "Parent phone must be a valid Tanzanian mobile number, e.g. 0712345678.";
+  }
+  return null;
+}
+
 const createStudent = async (req, res, next) => {
   try {
     const {
@@ -400,6 +433,8 @@ const createStudent = async (req, res, next) => {
     // schema note in migrate.js for why.)
     if (!first_name || !last_name || !gender || !form)
       return res.status(400).json({ success: false, message: "First name, last name, gender and form are required." });
+    const fieldErr = studentFieldError(req.body);
+    if (fieldErr) return res.status(400).json({ success: false, message: fieldErr });
 
     // ── Prevent registering the same student twice in the same class/form ──
     // Matches on full name (first + middle + last, case-insensitive, spacing
@@ -436,7 +471,7 @@ const createStudent = async (req, res, next) => {
          village, ward, is_transfer_in, origin_region, origin_district, origin_school, transfer_in_date)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
       RETURNING *
-    `, [prem_no || null, finalRegNo, first_name, middle_name || null, last_name, gender,
+    `, [prem_no || null, finalRegNo, String(first_name).trim(), (middle_name && String(middle_name).trim()) || null, String(last_name).trim(), gender,
         dob || null, form, district || null,
         admission_date || todayTZ(),
         status || "Active", parent_name || null, parent_phone || null,
@@ -470,6 +505,9 @@ const updateStudent = async (req, res, next) => {
       village, ward,
       is_transfer_in, origin_region, origin_district, origin_school, transfer_in_date,
     } = req.body;
+
+    const fieldErr = studentFieldError(req.body, true);
+    if (fieldErr) return res.status(400).json({ success: false, message: fieldErr });
 
     const before = await query("SELECT * FROM students WHERE id = $1", [req.params.id]);
     if (!before.rows.length)
@@ -509,8 +547,8 @@ const updateStudent = async (req, res, next) => {
         updated_at = NOW()
       WHERE id = $21
       RETURNING *
-    `, [prem_no ?? prev.prem_no, finalRegNo, first_name, middle_name ?? prev.middle_name,
-        last_name, gender, dob, form, district, admission_date,
+    `, [prem_no ?? prev.prem_no, finalRegNo, first_name === undefined ? first_name : String(first_name).trim(), middle_name === undefined || middle_name === null ? (middle_name ?? prev.middle_name) : String(middle_name).trim(),
+        last_name === undefined ? last_name : String(last_name).trim(), gender, dob, form, district, admission_date,
         status, parent_name, parent_phone,
         village, ward, is_transfer_in, origin_region, origin_district, origin_school, transfer_in_date,
         req.params.id]);
@@ -585,6 +623,13 @@ const markTransferredOut = async (req, res, next) => {
     const student = result.rows[0];
     await logHistory(student.id, "Transferred Out", "Active", "Transferred",
       `Transferred to ${dest_school}, ${dest_district}, ${dest_region} on ${transfer_out_date}.`, req.user?.id);
+    // A student who has left the school must also leave the hostel -
+    // otherwise they kept occupying a bed in Hostel Management.
+    await query(
+      `UPDATE hostel_occupants SET is_active = false, departed_date = COALESCE($2::date, (NOW() AT TIME ZONE 'Africa/Dar_es_Salaam')::date)
+       WHERE student_id = $1 AND is_active = true`,
+      [student.id, transfer_out_date || null]
+    );
     await syncParentContact(student);
 
     res.json({ success: true, data: student });
@@ -658,6 +703,8 @@ const getStats = async (req, res, next) => {
 const addCharge = async (req, res, next) => {
   try {
     const { charge_type, amount, note, charge_date } = req.body;
+    if (amount !== undefined && amount !== null && amount !== "" && (!Number.isFinite(Number(amount)) || Number(amount) < 0))
+      return res.status(400).json({ success: false, message: "Amount must be a number of 0 or more." });
     if (!charge_type)
       return res.status(400).json({ success: false, message: "Charge type is required." });
 
@@ -1218,9 +1265,12 @@ const promoteStudents = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "No matching students found." });
     }
 
-    let promotedCount = 0, graduatedCount = 0;
+    let promotedCount = 0, graduatedCount = 0, skippedCount = 0;
     const touchedForms = new Set();
     for (const s of rows) {
+      // Only CURRENT students move up. A Transferred/Inactive/Graduated
+      // student picked by mistake used to be moved into the next form too.
+      if (s.status !== "Active") { skippedCount++; continue; }
       const idx = FORM_ORDER.indexOf(s.form);
       if (idx === -1) continue; // unrecognized form value - skip rather than guess
       touchedForms.add(s.form);
@@ -1236,6 +1286,9 @@ const promoteStudents = async (req, res, next) => {
           // Record the graduation in history - without this, the Enrollment
           // History tab showed nothing at all for a graduated student.
           await logHistory(s.id, "Graduated", s.form, "Graduated", "Promoted from Form IV via bulk promotion.", req.user?.id, run);
+          await run(
+            `UPDATE hostel_occupants SET is_active = false, departed_date = (NOW() AT TIME ZONE 'Africa/Dar_es_Salaam')::date
+             WHERE student_id = $1 AND is_active = true`, [s.id]);
         }
         await syncParentContact({ ...s, status: "Graduated" }, run);
       } else {
@@ -1263,6 +1316,9 @@ const promoteStudents = async (req, res, next) => {
         // Record the promotion in history - same as a manual form edit does -
         // so "Form I → Form II" etc. shows up in the student's timeline.
         await logHistory(s.id, "Promoted", s.form, newForm, "Bulk end-of-year promotion.", req.user?.id, run);
+        // Keep the student's current hostel record on the new Form too, so
+        // hostel lists/reports don't keep showing last year's class.
+        await run(`UPDATE hostel_occupants SET form = $1 WHERE student_id = $2 AND is_active = true`, [newForm, s.id]);
         // Moved up a form - re-sync so the parent now appears under the new
         // class (promotion doesn't change status, so keep whatever it was).
         await syncParentContact({ ...s, form: newForm }, run);
@@ -1274,8 +1330,8 @@ const promoteStudents = async (req, res, next) => {
     await client.query("COMMIT");
     res.json({
       success: true,
-      message: `Promotion Successfully Completed - ${promotedCount} student(s) moved up a form${graduatedCount ? `, ${graduatedCount} graduated` : ""}.`,
-      promoted: promotedCount, graduated: graduatedCount,
+      message: `Promotion Successfully Completed - ${promotedCount} student(s) moved up a form${graduatedCount ? `, ${graduatedCount} graduated` : ""}${skippedCount ? `, ${skippedCount} skipped (not active)` : ""}.`,
+      promoted: promotedCount, graduated: graduatedCount, skipped: skippedCount,
     });
   } catch (err) {
     await client.query("ROLLBACK");
