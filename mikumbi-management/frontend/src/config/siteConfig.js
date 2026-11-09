@@ -20,7 +20,17 @@ const social = [
   { key: "youtube", label: "YouTube", url: env.VITE_SOCIAL_YOUTUBE },
 ].filter((s) => s.url);
 
+// School location for the map on the parents' site (same point TAMS uses).
+// Override with VITE_SCHOOL_LAT / VITE_SCHOOL_LNG if it ever needs adjusting.
+const lat = Number(env.VITE_SCHOOL_LAT) || -10.561915;
+const lng = Number(env.VITE_SCHOOL_LNG) || 39.17856;
+
 export const siteConfig = {
+  location: {
+    lat, lng,
+    embedUrl: `https://maps.google.com/maps?q=${lat},${lng}&z=16&hl=sw&output=embed`,
+    directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+  },
   email: env.VITE_CONTACT_EMAIL || "info@your-domain.com",
   phones,
   social, // empty => the "Follow Us" block is not rendered

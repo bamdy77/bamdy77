@@ -285,6 +285,31 @@ function Contact() {
             <div style={val}><a href={`mailto:${siteConfig.email}`} style={{ color: NAVY, textDecoration: "none" }}>{siteConfig.email}</a></div>
           </div>
         </div>
+
+        {/* School location - Google Maps embed (no API key needed) plus a
+            directions button that opens the Maps app on the parent's phone. */}
+        <div style={{ marginTop: 28, border: "1px solid #e2e8f0", borderRadius: 4, overflow: "hidden", background: "#fff" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, padding: isMobile ? "14px 16px" : "16px 20px" }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: NAVY, fontWeight: 800, fontSize: 16 }}>
+                <span style={{ color: ORANGE, display: "flex" }}><LocationPinIcon size={18} /></span>{t("map.title")}
+              </div>
+              <div style={{ color: "#64748B", fontSize: 13, marginTop: 4 }}>{t("map.text")}</div>
+            </div>
+            <a href={siteConfig.location.directionsUrl} target="_blank" rel="noopener noreferrer" className="pub-btn"
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: ORANGE, color: "#fff", textDecoration: "none", fontWeight: 800, fontSize: 14, padding: "11px 18px", borderRadius: 4, ...(isMobile ? { width: "100%", justifyContent: "center" } : {}) }}>
+              <LocationPinIcon size={16} />{t("map.directions")}
+            </a>
+          </div>
+          <iframe
+            title={t("map.frame")}
+            src={siteConfig.location.embedUrl}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+            style={{ display: "block", width: "100%", height: isMobile ? 300 : 400, border: 0 }}
+          />
+        </div>
       </div>
     </section>
   );

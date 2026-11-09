@@ -159,6 +159,11 @@ const STRINGS = {
   "contact.postal": { sw: "Anwani ya Posta", en: "Postal Address" },
   "contact.phone": { sw: "Simu", en: "Phone" },
   "contact.email": { sw: "Barua Pepe", en: "Email" },
+  "map.title": { sw: "Mahali Shule Ilipo", en: "Find the School" },
+  "map.text": { sw: "Shule ya Sekondari Mikumbi - kijiji cha Mikumbi, kata ya Mikumbi, Newala.", en: "Mikumbi Secondary School - Mikumbi village, Mikumbi ward, Newala." },
+  "map.directions": { sw: "Pata Maelekezo", en: "Get Directions" },
+  "map.open": { sw: "Fungua kwenye Google Maps", en: "Open in Google Maps" },
+  "map.frame": { sw: "Ramani ya mahali Shule ya Sekondari Mikumbi ilipo", en: "Map showing where Mikumbi Secondary School is" },
 
   // News
   "news.title": { sw: "Habari na Matangazo", en: "News & Announcements" },
