@@ -1167,7 +1167,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           : isTablet
             ? {display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}
             : {display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, reg. or prem. no…" style={{...IS,maxWidth:isMobile||isTablet?"none":300, gridColumn:isTablet?"1 / -1":"auto"}}/>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, reg., login or prem. no…" style={{...IS,maxWidth:isMobile||isTablet?"none":300, gridColumn:isTablet?"1 / -1":"auto"}}/>
           <select value={filterForm}   onChange={e=>setFilterForm(e.target.value)}   style={{...IS,width:isMobile||isTablet?"100%":140}}><option value="">All Forms</option>{FORMS.map(f=><option key={f}>{f}</option>)}<option value="GRADUATED">Graduated</option><option value="TRANSFERRED">Transferred</option></select>
           <select value={filterGender} onChange={e=>setFilterGender(e.target.value)} style={{...IS,width:isMobile||isTablet?"100%":130}}><option value="">All Genders</option><option>Male</option><option>Female</option></select>
           <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{...IS,width:isMobile||isTablet?"100%":140}}><option value="">All Statuses</option><option>Active</option><option>Inactive</option><option>Transferred</option><option>Graduated</option></select>
@@ -1189,6 +1189,8 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           )},
           {key:"prem_no",   label:"Prem No.",  render:r=>r.prem_no?digitsOnly(r.prem_no):<span style={{color:C.muted}}>-</span>},
           {key:"reg_no",    label:"Reg. No.", render:r=>r.reg_no||<span style={{color:C.muted}}>-</span>},
+          // Results portal username given to the parent - never changes.
+          {key:"results_login_no", label:"Login No.", render:r=>r.results_login_no?<span style={{fontFamily:"monospace",fontWeight:700,whiteSpace:"nowrap"}}>{r.results_login_no}</span>:<span style={{color:C.muted}}>-</span>},
           {key:"name",      label:"Full Name", render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
           filterForm==="GRADUATED"
             ? {key:"graduated_year", label:"Graduated Year", render:r=>r.graduated_at ? <Badge color="indigo">{new Date(r.graduated_at).getFullYear()}</Badge> : <span style={{color:C.muted}}>-</span>}

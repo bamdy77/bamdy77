@@ -114,15 +114,45 @@ const genRegNo = async (form) => {
 // through every promotion, edit, or roster change. Same advisory-lock
 // pattern as renumberAutoRegNos, to stay race-safe when several students
 // are registered for the same year at once.
+// ── Results Portal login number ("2026-48319") ─────────────────────────────
+// The ONLY username a parent/student uses on the public Results portal:
+// admission year + 5 random digits. Unique across the whole school, given
+// once at registration and never changed - promotion, transfers of other
+// students, edits and roster renumbering never touch it (unlike reg_no,
+// which is re-sequenced whenever a class list changes). Random rather than
+// sequential so it cannot simply be guessed by counting.
+const assignResultsLoginNo = async (studentId, admissionDate) => {
+  const d = admissionDate ? new Date(admissionDate) : new Date();
+  const year = Number.isNaN(d.getTime()) ? new Date().getFullYear() : d.getFullYear();
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const candidate = `${year}-${String(10000 + Math.floor(Math.random() * 90000))}`;
+    const r = await query(
+      `UPDATE students SET results_login_no = $1
+       WHERE id = $2 AND results_login_no IS NULL
+         AND NOT EXISTS (SELECT 1 FROM students WHERE results_login_no = $1)`,
+      [candidate, studentId]
+    ).catch((e) => { if (e.code === "23505") return { rowCount: 0 }; throw e; });
+    if (r.rowCount === 1) return candidate;
+    const has = await query(`SELECT results_login_no FROM students WHERE id = $1`, [studentId]);
+    if (has.rows[0]?.results_login_no) return has.rows[0].results_login_no;
+  }
+  throw new Error("Could not generate a unique Results login number - please try again.");
+};
+
 const assignAdmissionNo = async (studentId, admissionDate) => {
   const year = new Date(admissionDate).getFullYear();
   const client = await pool.connect();
   try {
     await client.query("SELECT pg_advisory_lock(hashtext($1))", [`admission_no_${year}`]);
     try {
+      // Continue from the HIGHEST number already used that year - counting
+      // rows (the old way) handed out an existing number again as soon as
+      // any student of that year had been deleted, the unique index then
+      // rejected it, and the new student was left with no number at all.
       const { rows } = await client.query(
-        `SELECT COUNT(*)::int AS n FROM students WHERE admission_no LIKE $1`,
-        [`S4005/%/${year}`]
+        `SELECT COALESCE(MAX(SPLIT_PART(admission_no, '/', 2)::int), 0) AS n
+         FROM students WHERE admission_no ~ $1`,
+        [`^S4005/[0-9]+/${year}$`]
       );
       const admissionNo = `S4005/${String(rows[0].n + 1).padStart(4, "0")}/${year}`;
       await client.query(`UPDATE students SET admission_no = $1 WHERE id = $2`, [admissionNo, studentId]);
@@ -270,7 +300,8 @@ const getStudents = async (req, res, next) => {
       sql += ` AND (
         LOWER(s.first_name || ' ' || COALESCE(s.middle_name,'') || ' ' || s.last_name) LIKE $${i} OR
         LOWER(COALESCE(s.reg_no,'')) LIKE $${i} OR
-        LOWER(COALESCE(s.prem_no,'')) LIKE $${i}
+        LOWER(COALESCE(s.prem_no,'')) LIKE $${i} OR
+        LOWER(COALESCE(s.results_login_no,'')) LIKE $${i}
       )`;
       params.push(`%${search.toLowerCase()}%`);
       i++;
@@ -484,6 +515,7 @@ const createStudent = async (req, res, next) => {
       await renumberAutoRegNos(form);
     }
     await assignAdmissionNo(student.id, student.admission_date);
+    await assignResultsLoginNo(student.id, student.admission_date);
     { const refreshed = await query("SELECT * FROM students WHERE id = $1", [student.id]); student = refreshed.rows[0]; }
 
     await logHistory(student.id, "Enrolled", null, student.status,
@@ -847,7 +879,7 @@ const exportStudentPdf = async (req, res, next) => {
     row("Full Name:", fullNameOf(s));
     row("Prem No.:", displayNo(s.prem_no));
     row("Reg. No.:", s.reg_no);
-    row("Admission No. (Results Portal login):", s.admission_no);
+    row("Namba ya Kuingia (Matokeo):", s.results_login_no);
     row("Gender:", s.gender);
     row("Date of Birth:", dateOnly(s.dob) || "-");
     row("Form:", s.form);
@@ -1454,6 +1486,7 @@ const commitStudentImport = async (req, res, next) => {
         const student = result.rows[0];
         touchedForms.add(student.form);
         await assignAdmissionNo(student.id, student.admission_date);
+        await assignResultsLoginNo(student.id, student.admission_date);
         await logHistory(student.id, "Enrolled", null, student.status, `Into ${student.form} (bulk import).`, req.user?.id);
         await syncParentContact(student);
         created.push(student);

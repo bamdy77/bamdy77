@@ -825,13 +825,20 @@ const toggleSheetOnlinePublish = async (req, res, next) => {
 // are ever returned.
 const normalizePhoneDigits = (p) => String(p || "").replace(/\D/g, "").slice(-9);
 
-// Accepts "S4005/0001/2025" or "0001/2025" (prefix optional).
+// The username is the student's Results login number, e.g. "2026-48319"
+// (spaces, dots or a missing dash are tolerated: "2026 48319", "202648319").
+// For parents who were already given an old Admission Number
+// ("S4005/0001/2025" or "0001/2025") that still works too, so nobody who
+// already logs in is locked out by the change.
 const parsePublicResultsUsername = (raw) => {
   const s = String(raw || "").trim();
-  const m = s.match(/^(?:S4005\/)?(\d{3,6})\/(\d{4})$/);
-  if (!m) return null;
-  return { admissionNo: `S4005/${m[1]}/${m[2]}` };
+  const login = s.replace(/[\s.]/g, "").match(/^(\d{4})-?(\d{5})$/);
+  if (login) return { column: "results_login_no", value: `${login[1]}-${login[2]}` };
+  const m = s.match(/^(?:S4005\/)?(\d{3,6})\/(\d{4})$/i);
+  if (m) return { column: "admission_no", value: `S4005/${m[1]}/${m[2]}` };
+  return null;
 };
+const USERNAME_HELP = "Andika Namba ya Kuingia iliyopo kwenye Ripoti ya Mzazi, mfano: 2026-48319.";
 
 // POST /api/public/results/check-username - lets the frontend validate the
 // Admission Number BEFORE ever showing the password field, per spec.
@@ -839,11 +846,11 @@ const publicResultsCheckUsername = async (req, res, next) => {
   try {
     const parsed = parsePublicResultsUsername(req.body && req.body.username);
     if (!parsed) {
-      return res.json({ valid: false, message: "Umeandika Namba ya Usajili isiyo sahihi. Tumia mfumo: S4005/0001/2025." });
+      return res.json({ valid: false, message: `Namba ya Kuingia si sahihi. ${USERNAME_HELP}` });
     }
-    const { rows } = await query(`SELECT id FROM students WHERE admission_no = $1`, [parsed.admissionNo]);
+    const { rows } = await query(`SELECT id FROM students WHERE ${parsed.column} = $1`, [parsed.value]);
     if (!rows.length) {
-      return res.json({ valid: false, message: "Umeingiza Namba ya Usajili ambayo haijasajiliwa." });
+      return res.json({ valid: false, message: "Namba hii ya Kuingia haijasajiliwa. Hakikisha umeiandika sawasawa na ilivyo kwenye Ripoti ya Mzazi." });
     }
     res.json({ valid: true });
   } catch (err) { next(err); }
@@ -855,19 +862,19 @@ const publicResultsLogin = async (req, res, next) => {
     const { username, password } = req.body || {};
     const parsed = parsePublicResultsUsername(username);
     if (!parsed) {
-      return res.status(400).json({ message: "Namba ya Usajili si sahihi. Tumia mfumo: S4005/0001/2025." });
+      return res.status(400).json({ message: `Namba ya Kuingia si sahihi. ${USERNAME_HELP}` });
     }
     const { rows } = await query(
       `SELECT id, first_name, middle_name, last_name, gender, form, parent_phone
-       FROM students WHERE admission_no = $1`,
-      [parsed.admissionNo]
+       FROM students WHERE ${parsed.column} = $1`,
+      [parsed.value]
     );
     if (!rows.length) {
-      return res.status(404).json({ message: "Umeingiza Namba ya Usajili ambayo haijasajiliwa." });
+      return res.status(404).json({ message: "Namba hii ya Kuingia haijasajiliwa." });
     }
     const student = rows[0];
     if (!password || !student.parent_phone || normalizePhoneDigits(password) !== normalizePhoneDigits(student.parent_phone)) {
-      return res.status(401).json({ message: "Namba ya simu na Namba ya Usajili hazilingani." });
+      return res.status(401).json({ message: "Namba ya simu na Namba ya Kuingia hazilingani." });
     }
     const token = jwt.sign({ type: "public_result", student_id: student.id }, process.env.JWT_SECRET, { expiresIn: "45m" });
     res.json({
@@ -3079,7 +3086,10 @@ async function drawParentReportPage(doc, { sheet, student, mhula, classTeacherNa
   let y = doc.y;
   doc.rect(left, y, idTableRight - left, idHeaderH).fillColor(NECTA_HEAD_BG).fill();
   doc.font("PR_BOLD").fontSize(8).fillColor(NECTA_TEXT);
-  ["JINSIA", "KIDATO", "NAMBA YA USAJILI"].forEach((h, i) => {
+  // The third box is the student's Results LOGIN number (never changes),
+  // not the class reg_no (re-sequenced whenever a class list changes) -
+  // parents only ever see this one number.
+  ["JINSIA", "KIDATO", "NAMBA YA KUINGIA (MATOKEO)"].forEach((h, i) => {
     doc.text(h, idColX[i] + 4, y + 3, { width: idColW - 8, align: "center" });
   });
   const idHLines = [y];
@@ -3087,9 +3097,8 @@ async function drawParentReportPage(doc, { sheet, student, mhula, classTeacherNa
   idHLines.push(y);
   doc.rect(left, y, idTableRight - left, idRowH).fillColor(NECTA_BG).fill();
   doc.font("PR_REG").fontSize(9).fillColor(NECTA_TEXT);
-  const rawRegNo = String(student.reg_no || student.entry_no || student.student_id || "");
-  const regNoDisplay = rawRegNo.startsWith("S4005/") ? rawRegNo : `S4005/${rawRegNo}`;
-  [sexLabel(student.gender), sheet.form.replace("Form ", "Kidato "), regNoDisplay].forEach((v, i) => {
+  const loginNoDisplay = student.results_login_no || student.admission_no || "-";
+  [sexLabel(student.gender), sheet.form.replace("Form ", "Kidato "), loginNoDisplay].forEach((v, i) => {
     doc.text(v, idColX[i] + 4, y + 3.5, { width: idColW - 8, align: "center" });
   });
   y += idRowH;
@@ -3098,13 +3107,10 @@ async function drawParentReportPage(doc, { sheet, student, mhula, classTeacherNa
   flushHLinesGroove(doc, idHLines, left, idTableRight);
   doc.y = y + 4;
 
-  // Permanent Admission Number - this is the credential parents use to log
-  // into the online Results portal (Publications → "Results"), so it's
-  // printed here every time, in plain sight, rather than being something
-  // only visible inside the system.
-  if (student.admission_no) {
+  // How to use the number above on the parents' Results portal.
+  if (student.results_login_no || student.admission_no) {
     doc.font("PR_REG").fontSize(7.5).fillColor(NECTA_TEXT)
-      .text(`Namba ya Kuingia Mtandaoni (Results): ${student.admission_no}`, left, doc.y, { lineGap: 0 });
+      .text("Kuangalia matokeo mtandaoni: tumia Namba ya Kuingia hapo juu, na namba ya simu ya mzazi/mlezi kama password.", left, doc.y, { lineGap: 0 });
     doc.moveDown(0.25);
   }
 
@@ -3371,7 +3377,7 @@ async function loadParentReportContext(sheet_id) {
   const classTeacherName = await getClassTeacherName(sheet.form);
 
   const studentsRes = await query(
-    `SELECT sr.*, st.photo_url FROM student_results sr JOIN students st ON st.id = sr.student_id
+    `SELECT sr.*, st.photo_url, st.results_login_no FROM student_results sr JOIN students st ON st.id = sr.student_id
      WHERE sr.sheet_id = $1 ORDER BY sr.gender ASC, sr.reg_no ASC NULLS LAST, sr.student_id ASC`,
     [sheet_id]
   );

@@ -875,8 +875,8 @@ const DEFAULT_RESULTS_SMS_TEMPLATE_ANDROID =
   "SHULE YA SEKONDARI MIKUMBI\n" +
   "RIPOTI YA MAENDELEO YA MWANAFUNZI KATIKA {exam_type_sw} {month_sw} MWAKA {year}\n" +
   "KWA MZAZI/MLEZI WA: {student_name}\n" +
-  "JINSIA KIDATO NAMBA YA USAJILI\n" +
-  "{gender_letter} {form_sw} {reg_no}\n" +
+  "JINSIA KIDATO NAMBA YA KUINGIA\n" +
+  "{gender_letter} {form_sw} {login_no}\n" +
   "A: TAARIFA YA MAENDELEO YA KITAALUMA\n" +
   "SOMO ALAMA ZA MTIHANI DARAJA MAONI\n" +
   "{subjects_breakdown_long}\n" +
@@ -892,6 +892,7 @@ const RESULTS_SMS_PLACEHOLDERS = [
   { token: "{student_name}", label: "Student Name" },
   { token: "{parent_name}", label: "Parent/Guardian" },
   { token: "{reg_no}", label: "Reg No" },
+  { token: "{login_no}", label: "Results Login No" },
   { token: "{form}", label: "Form" },
   { token: "{form_sw}", label: "Form (Kidato...)" },
   { token: "{gender_letter}", label: "Gender (F/M)" },
@@ -2062,7 +2063,7 @@ function PublishedResults({ period }) {
   }, [period, token]);
 
   // This is the ONLY way results ever reach the public Publications page -
-  // each parent/student logs in with THEIR OWN Admission No + phone and
+  // each parent/student logs in with THEIR OWN Results Login No + phone and
   // sees only THEIR OWN compiled result (see ResultsPortal in
   // components/Publications.jsx and publicResultsMe() in
   // resultsController.js) - never the whole class combined into one
@@ -2095,7 +2096,7 @@ function PublishedResults({ period }) {
         }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 12.5, color: THEME.heading }}>Results Portal (Parents/Students)</div>
-            <div style={{ fontSize: 11.5, color: THEME.muted, marginTop: 2 }}>Lets parents/students view THEIR OWN result online after logging in with Admission No + phone. View only, no download, one student at a time.</div>
+            <div style={{ fontSize: 11.5, color: THEME.muted, marginTop: 2 }}>Lets parents/students view THEIR OWN result online after logging in with their Results Login No (e.g. 2026-48319) + parent phone. View only, no download, one student at a time.</div>
           </div>
           <StatusPill ok={onlinePublished}>{onlinePublished ? "Live" : "Hidden"}</StatusPill>
           <button onClick={toggleOnlinePublish} disabled={onlineBusy} style={onlinePublished ? btnSecondary : btnPrimary}>

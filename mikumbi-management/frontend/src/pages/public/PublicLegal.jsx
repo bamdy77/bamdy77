@@ -29,7 +29,7 @@ export function PublicPrivacy() {
       <Shell title="Privacy Policy">
         <p>This website lets parents and guardians check their child's published results and download Form One Joining Instructions.</p>
         <h2 style={h2}>What we collect</h2>
-        <p>When you request a Joining Instruction we record the student's names, district, ward, village, Standard Seven exam number and year. When you check results you enter the student's registration number and the guardian's phone number.</p>
+        <p>When you request a Joining Instruction we record the student's names, district, ward, village, Standard Seven exam number and year. When you check results you enter the student's Results Login Number and the guardian's phone number.</p>
         <h2 style={h2}>How we use it</h2>
         <p>Only to issue the Joining Instruction, prepare for the new intake and show you your own child's results. We never sell or share this information.</p>
         <h2 style={h2}>Contact</h2>
@@ -41,7 +41,7 @@ export function PublicPrivacy() {
     <Shell title="Sera ya Faragha">
       <p>Tovuti hii inawawezesha wazazi na walezi kuangalia matokeo ya mwanafunzi yaliyochapishwa na kupakua Maelekezo ya Kujiunga na Kidato cha Kwanza.</p>
       <h2 style={h2}>Taarifa tunazokusanya</h2>
-      <p>Unapoomba Maelekezo ya Kujiunga tunahifadhi majina ya mwanafunzi, wilaya, kata, kijiji/mtaa, namba ya mtihani wa Darasa la Saba na mwaka aliomaliza. Unapoangalia matokeo unaandika namba ya usajili ya mwanafunzi na namba ya simu ya mzazi/mlezi.</p>
+      <p>Unapoomba Maelekezo ya Kujiunga tunahifadhi majina ya mwanafunzi, wilaya, kata, kijiji/mtaa, namba ya mtihani wa Darasa la Saba na mwaka aliomaliza. Unapoangalia matokeo unaandika Namba ya Kuingia ya mwanafunzi na namba ya simu ya mzazi/mlezi.</p>
       <h2 style={h2}>Tunavyozitumia</h2>
       <p>Kwa ajili ya kutoa Maelekezo ya Kujiunga, kujiandaa kupokea wanafunzi wapya na kukuonyesha matokeo ya mwanao pekee. Hatuuzi wala hatushirikishi taarifa hizi kwa mtu mwingine.</p>
       <h2 style={h2}>Mawasiliano</h2>
@@ -55,7 +55,7 @@ export function PublicTerms() {
   if (lang === "en") {
     return (
       <Shell title="Terms of Service">
-        <p>By using this website you agree to enter true information about the student. Results are shown only to the parent/guardian who knows the student's registration number and the guardian phone number registered at the school.</p>
+        <p>By using this website you agree to enter true information about the student. Results are shown only to the parent/guardian who knows the student's Results Login Number and the guardian phone number registered at the school.</p>
         <h2 style={h2}>Joining Instructions</h2>
         <p>Each student may download a Joining Instruction a limited number of times. The school may refuse a student whose details are false.</p>
         <h2 style={h2}>Changes</h2>
@@ -65,7 +65,7 @@ export function PublicTerms() {
   }
   return (
     <Shell title="Masharti ya Matumizi">
-      <p>Kwa kutumia tovuti hii unakubali kuandika taarifa za kweli kuhusu mwanafunzi. Matokeo yanaonyeshwa kwa mzazi/mlezi anayefahamu namba ya usajili ya mwanafunzi na namba ya simu ya mzazi iliyosajiliwa shuleni.</p>
+      <p>Kwa kutumia tovuti hii unakubali kuandika taarifa za kweli kuhusu mwanafunzi. Matokeo yanaonyeshwa kwa mzazi/mlezi anayefahamu Namba ya Kuingia ya mwanafunzi na namba ya simu ya mzazi iliyosajiliwa shuleni.</p>
       <h2 style={h2}>Maelekezo ya Kujiunga</h2>
       <p>Kila mwanafunzi anaweza kupakua Maelekezo ya Kujiunga kwa idadi maalum ya mara. Shule inaweza kumkataa mwanafunzi ambaye taarifa zake si za kweli.</p>
       <h2 style={h2}>Mabadiliko</h2>
@@ -80,7 +80,7 @@ export function PublicSupport() {
     return (
       <Shell title="Support">
         <ul style={{ paddingLeft: 20 }}>
-          <li style={{ marginBottom: 8 }}>Can't log in to Results? Use the registration number printed on the Parent Report, and the guardian phone number given when the student was registered.</li>
+          <li style={{ marginBottom: 8 }}>Can't log in to Results? Use the Results Login Number (e.g. 2026-48319) printed on the Parent Report, and the guardian phone number given when the student was registered.</li>
           <li style={{ marginBottom: 8 }}>The Joining Instruction form says it is not published yet? The school will open it when admissions start - please check again later.</li>
           <li style={{ marginBottom: 8 }}>Still need help? Call the school: {phones()}.</li>
         </ul>
@@ -90,7 +90,7 @@ export function PublicSupport() {
   return (
     <Shell title="Msaada">
       <ul style={{ paddingLeft: 20 }}>
-        <li style={{ marginBottom: 8 }}>Huwezi kuingia kwenye Matokeo? Tumia namba ya usajili iliyopo kwenye Ripoti ya Mzazi, na namba ya simu ya mzazi/mlezi iliyotolewa wakati mwanafunzi anasajiliwa.</li>
+        <li style={{ marginBottom: 8 }}>Huwezi kuingia kwenye Matokeo? Tumia Namba ya Kuingia (mfano 2026-48319) iliyopo kwenye Ripoti ya Mzazi, na namba ya simu ya mzazi/mlezi iliyotolewa wakati mwanafunzi anasajiliwa.</li>
         <li style={{ marginBottom: 8 }}>Fomu ya Maelekezo ya Kujiunga inasema bado haijachapishwa? Shule itaifungua muda wa usajili ukifika - tafadhali angalia tena baadaye.</li>
         <li style={{ marginBottom: 8 }}>Bado unahitaji msaada? Piga simu shuleni: {phones()}.</li>
       </ul>

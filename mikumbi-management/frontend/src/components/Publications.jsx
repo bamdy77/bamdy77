@@ -125,7 +125,7 @@ function ResultsPortal() {
     try {
       const r = await apiFetch("/public/results/check-username", { method: "POST", body: JSON.stringify({ username }) });
       if (r.valid) setStep("password");
-      else setError(r.message || "Namba ya Usajili si sahihi.");
+      else setError(r.message || "Namba ya Kuingia si sahihi.");
     } catch {
       setError("Hitilafu imetokea. Tafadhali jaribu tena.");
     } finally { setBusy(false); }
@@ -138,7 +138,7 @@ function ResultsPortal() {
       const r = await apiFetch("/public/results/login", { method: "POST", body: JSON.stringify({ username, password }) });
       setToken(r.token); setStudent(r.student); setStep("results");
     } catch (err) {
-      setError((err && err.message) || "Namba ya simu na Namba ya Usajili hazilingani.");
+      setError((err && err.message) || "Namba ya simu na Namba ya Kuingia hazilingani.");
     } finally { setBusy(false); }
   };
 
@@ -179,16 +179,16 @@ function ResultsPortal() {
     <div style={{ maxWidth: 380, margin: "0 auto" }}>
       {step === "username" && (
         <form onSubmit={checkUsername} style={{ display: "grid", gap: 12 }}>
-          <label style={formLabel}>Namba ya Usajili (Registration Number)</label>
-          <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Mfano: S4005/0001/2025" style={formInput} autoFocus />
-          <p style={{ fontSize: 11.5, color: THEME.muted, margin: 0 }}>Namba hii inapatikana kwenye Ripoti ya Mzazi (Parent Report) ya mwanafunzi — "Namba ya Kuingia Mtandaoni (Results)".</p>
+          <label style={formLabel}>Namba ya Kuingia (Results Login Number)</label>
+          <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Mfano: 2026-48319" inputMode="text" autoComplete="username" style={formInput} autoFocus />
+          <p style={{ fontSize: 11.5, color: THEME.muted, margin: 0 }}>Namba hii imeandikwa kwenye Ripoti ya Mzazi kama "NAMBA YA KUINGIA (MATOKEO)". Kama huna, wasiliana na shule.</p>
           {error && <ErrorMsg>{error}</ErrorMsg>}
           <button type="submit" disabled={busy || !username.trim()} style={primaryBtn}>{busy ? "Inaangalia..." : "Endelea"}</button>
         </form>
       )}
       {step === "password" && (
         <form onSubmit={login} style={{ display: "grid", gap: 12 }}>
-          <div style={{ fontSize: 13, color: THEME.text }}>Namba ya Usajili: <b>{username}</b> <button type="button" onClick={() => { setStep("username"); setError(""); }} style={{ ...smallLinkBtn, marginLeft: 8 }}>Badilisha</button></div>
+          <div style={{ fontSize: 13, color: THEME.text }}>Namba ya Kuingia: <b>{username}</b> <button type="button" onClick={() => { setStep("username"); setError(""); }} style={{ ...smallLinkBtn, marginLeft: 8 }}>Badilisha</button></div>
           <label style={formLabel}>Password</label>
           <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mfano: 0712345678" style={formInput} autoFocus />
           <p style={{ fontSize: 11.5, color: THEME.muted, margin: 0 }}>Andika namba ya simu ya mzazi/mlezi iliyoandikwa wakati mwanafunzi anasajiliwa shuleni.</p>

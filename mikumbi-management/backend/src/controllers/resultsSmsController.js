@@ -97,6 +97,7 @@ const PLACEHOLDER_DEFS = [
   { token: "{student_name}", label: "Student Name" },
   { token: "{parent_name}", label: "Parent / Guardian Name" },
   { token: "{reg_no}", label: "Registration Number" },
+  { token: "{login_no}", label: "Results Login Number (Namba ya Kuingia)" },
   { token: "{form}", label: "Form / Class" },
   { token: "{exam_type}", label: "Exam Type" },
   { token: "{exam_type_sw}", label: "Exam Type (Kiswahili)" },
@@ -138,8 +139,8 @@ const DEFAULT_TEMPLATE_ANDROID =
   "SHULE YA SEKONDARI MIKUMBI\n" +
   "RIPOTI YA MAENDELEO YA MWANAFUNZI KATIKA {exam_type_sw} {month_sw} MWAKA {year}\n" +
   "KWA MZAZI/MLEZI WA: {student_name}\n" +
-  "JINSIA KIDATO NAMBA YA USAJILI\n" +
-  "{gender_letter} {form_sw} {reg_no}\n" +
+  "JINSIA KIDATO NAMBA YA KUINGIA\n" +
+  "{gender_letter} {form_sw} {login_no}\n" +
   "A: TAARIFA YA MAENDELEO YA KITAALUMA\n" +
   "SOMO ALAMA ZA MTIHANI DARAJA MAONI\n" +
   "{subjects_breakdown_long}\n" +
@@ -189,6 +190,7 @@ function buildVars(sheet, student, totalStudents, subjectScores) {
     student_name: student.full_name,
     parent_name: student.parent_name || "Mzazi/Mlezi",
     reg_no: student.reg_no || student.entry_no || "-",
+    login_no: student.results_login_no || student.admission_no || "-",
     form: student.form,
     form_sw: formSw(student.form),
     gender_letter: genderLetter(student.gender),
@@ -228,8 +230,9 @@ async function loadResultsSmsContext(sheet_id) {
   if (!sheet) return null;
 
   const studentsRes = await query(
-    `SELECT sr.*, spc.phone AS parent_phone, spc.parent_name AS parent_name
+    `SELECT sr.*, st.results_login_no, spc.phone AS parent_phone, spc.parent_name AS parent_name
      FROM student_results sr
+     JOIN students st ON st.id = sr.student_id
      LEFT JOIN sms_parent_contacts spc ON spc.student_id = sr.student_id AND spc.is_active = TRUE
      WHERE sr.sheet_id = $1
      ORDER BY sr.gender ASC, sr.reg_no ASC NULLS LAST, sr.student_id ASC`,
