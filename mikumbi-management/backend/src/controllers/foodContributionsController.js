@@ -97,24 +97,44 @@ const addEntry = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "category, contribution_type, quantity and year are required." });
     if (!TYPE_KEYS.includes(contribution_type))
       return res.status(400).json({ success: false, message: "Invalid contribution_type." });
-    if (!(Number(quantity) > 0))
+    if (!["boarding", "day"].includes(category))
+      return res.status(400).json({ success: false, message: "Category must be Boarding or Day." });
+    const qty = Number(quantity);
+    if (!Number.isFinite(qty) || qty <= 0)
       return res.status(400).json({ success: false, message: "Quantity must be greater than zero." });
+    // One delivery by one student - anything above this is a typing slip
+    // (e.g. 5000000 instead of 5), which used to be saved and wreck totals.
+    if (qty > 1000)
+      return res.status(400).json({ success: false, message: "Quantity looks too large for one contribution (maximum 1000). Please check the number." });
+    const yearNum = Number(year);
+    const nowYear = new Date().getFullYear();
+    if (!Number.isInteger(yearNum) || yearNum < 2000 || yearNum > nowYear + 1)
+      return res.status(400).json({ success: false, message: "Invalid year." });
 
-    const studentRes = await query("SELECT * FROM students WHERE id = $1", [studentId]);
+    const studentRes = await query(
+      `SELECT s.*, EXISTS (SELECT 1 FROM hostel_occupants o WHERE o.student_id = s.id AND o.is_active = true) AS in_hostel
+       FROM students s WHERE s.id = $1`, [studentId]);
     if (!studentRes.rows.length) return res.status(404).json({ success: false, message: "Student not found." });
     const student = studentRes.rows[0];
+    // Only current students, and in the list they actually belong to:
+    // Boarding = has an active hostel place, Day = doesn't. A wrong pick
+    // used to file a day student's food under Boarding (and vice versa).
+    if (student.status !== "Active")
+      return res.status(400).json({ success: false, message: `${fullNameOf(student)} is not an active student (status: ${student.status}).` });
+    if ((category === "boarding") !== !!student.in_hostel)
+      return res.status(400).json({ success: false, message: `${fullNameOf(student)} is a ${student.in_hostel ? "Boarding" : "Day"} student - record this under ${student.in_hostel ? "Boarding" : "Day"}.` });
 
     const result = await query(`
       INSERT INTO food_contribution_entries (student_id, category, contribution_type, quantity, year, recorded_by)
       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *
-    `, [studentId, category, contribution_type, Number(quantity), year, req.user?.id || null]);
+    `, [studentId, category, contribution_type, qty, String(yearNum), req.user?.id || null]);
 
     const typeInfo = TYPES.find((t) => t.key === contribution_type);
     res.status(201).json({
       success: true,
       data: result.rows[0],
       student: { id: student.id, name: fullNameOf(student) },
-      message: `Submitted successfully - ${Number(quantity)} ${typeInfo.unit} of ${typeInfo.label} recorded for ${fullNameOf(student)}.`,
+      message: `Submitted successfully - ${qty} ${typeInfo.unit} of ${typeInfo.label} recorded for ${fullNameOf(student)}.`,
     });
   } catch (err) { next(err); }
 };

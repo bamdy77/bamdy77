@@ -99,6 +99,10 @@ const payPartTime = async (req, res, next) => {
     const studentRes = await query("SELECT * FROM students WHERE id = $1", [studentId]);
     if (!studentRes.rows.length) return res.status(404).json({ success: false, message: "Student not found." });
     const student = studentRes.rows[0];
+    // Contributions are only collected from CURRENT students - a transferred
+    // or graduated student used to be accepted here (Ream already refused).
+    if (student.status !== "Active")
+      return res.status(400).json({ success: false, message: `${fullNameOf(student)} is not an active student (status: ${student.status}) - contributions can't be recorded.` });
 
     const scope = classScopeFor(req);
     if (scope && !scope.includes(student.form))
@@ -116,6 +120,12 @@ const payPartTime = async (req, res, next) => {
       return res.status(400).json({ success: false, message: `Maximum of ${MAX_INSTALLMENTS} installments already reached for this month.` });
 
     const currentPaid = row ? Number(row.amount_paid) : 0;
+    // "Mark Paid (Full)" deliberately sends the full monthly fee and is
+    // capped to the balance below; any OTHER amount above the balance is a
+    // typing slip (e.g. 5000 for 500) that used to be silently trimmed.
+    const balance = PARTTIME_MONTHLY_FEE - currentPaid;
+    if (Number(amount) > balance && Number(amount) !== PARTTIME_MONTHLY_FEE)
+      return res.status(400).json({ success: false, message: `Amount is more than the balance for this month (TZS ${balance.toLocaleString("en-US")}).` });
     const newPaid = Math.min(currentPaid + Number(amount), PARTTIME_MONTHLY_FEE);
     const newInstallments = (row ? row.installments : 0) + 1;
     const completed = newPaid >= PARTTIME_MONTHLY_FEE;
@@ -179,6 +189,10 @@ const payPartTimeAdvance = async (req, res, next) => {
     const studentRes = await query("SELECT * FROM students WHERE id = $1", [studentId]);
     if (!studentRes.rows.length) return res.status(404).json({ success: false, message: "Student not found." });
     const student = studentRes.rows[0];
+    // Contributions are only collected from CURRENT students - a transferred
+    // or graduated student used to be accepted here (Ream already refused).
+    if (student.status !== "Active")
+      return res.status(400).json({ success: false, message: `${fullNameOf(student)} is not an active student (status: ${student.status}) - contributions can't be recorded.` });
 
     const scope = classScopeFor(req);
     if (scope && !scope.includes(student.form))
@@ -731,8 +745,10 @@ const markReam = async (req, res, next) => {
     if (!year) return res.status(400).json({ success: false, message: "Invalid year." });
     const scope = classScopeFor(req);
 
-    const studentRes = await query(`SELECT * FROM students WHERE id = $1 AND status = 'Active'`, [studentId]);
+    const studentRes = await query(`SELECT * FROM students WHERE id = $1`, [studentId]);
     if (!studentRes.rows.length) return res.status(404).json({ success: false, message: "Student not found." });
+    if (studentRes.rows[0].status !== "Active")
+      return res.status(400).json({ success: false, message: `${fullNameOf(studentRes.rows[0])} is not an active student (status: ${studentRes.rows[0].status}).` });
     const student = studentRes.rows[0];
     if (scope && !scope.includes(student.form))
       return res.status(403).json({ success: false, message: "You can only record Ream for your own assigned class." });
