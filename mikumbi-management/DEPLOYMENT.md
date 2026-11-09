@@ -26,3 +26,13 @@ Instruction automatically. The new `content` column on `joining_settings` is add
 
 ## Backend Docker image
 Doc Tools has been removed, so the image no longer installs LibreOffice.
+
+## Security notes
+- Staff passwords: at least 8 characters with letters and numbers. 8 wrong passwords lock an
+  account for 15 minutes (Head Master "Reset Password" in User Accounts unlocks it).
+- Parents' Results login: 8 wrong phone numbers lock that student's online login for 30 minutes.
+- Changing/resetting a password signs that person out everywhere else.
+- Optional `DATA_ENCRYPTION_KEY` on Render (see backend/.env.example) encrypts stored secrets;
+  without it JWT_SECRET is used. Never change it after setting it.
+- IMPORTANT: if the default seed accounts (admin/admin123, academic/academic123) still exist,
+  change their passwords immediately.
