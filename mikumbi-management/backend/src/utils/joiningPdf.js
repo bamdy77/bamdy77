@@ -355,15 +355,15 @@ function drawMedicalForm(doc, { year, fullName }) {
   doc.text("2. The duly filled form must be handed to the Head of the School during registration week, under No circumstances should a student be registered without certification of his/her physical fitness.", left, doc.y, { width });
 }
 
-function drawFooter(doc, generatedAt) {
+function drawFooter(doc) {
   const range = doc.bufferedPageRange();
   for (let i = range.start; i < range.start + range.count; i++) {
     doc.switchToPage(i);
     const savedBottom = doc.page.margins.bottom;
     doc.page.margins.bottom = 0;
     const y = doc.page.height - 28;
+    // Page number only - no generation date/time on the document.
     doc.font("JI_REG").fontSize(8).fillColor("#94A3B8")
-      .text(generatedAt, doc.page.margins.left, y, { width: 250, lineBreak: false })
       .text(`Ukurasa ${i - range.start + 1} kati ya ${range.count}`, doc.page.width - doc.page.margins.right - 150, y, { width: 150, align: "right", lineBreak: false });
     doc.page.margins.bottom = savedBottom;
   }
@@ -445,7 +445,7 @@ function drawUniformPage(doc) {
 
 // Writes the whole Joining Instruction into `stream` (an Express res).
 // fullName: string for a real applicant, or null for the blank form.
-function renderJoiningPdf(stream, { content, fullName, year, signatureBuf, qrBuf, generatedAt }) {
+function renderJoiningPdf(stream, { content, fullName, year, signatureBuf, qrBuf }) {
   const doc = new PDFDocument({ size: "A4", margins: { top: 40, bottom: 44, left: 50, right: 50 }, bufferPages: true });
   doc.pipe(stream);
   const font = FONT_CHOICES[content.font] || FONT_CHOICES.arimo;
@@ -464,7 +464,7 @@ function renderJoiningPdf(stream, { content, fullName, year, signatureBuf, qrBuf
     drawPersonalDetails(doc, { year: y, fullName });
     drawMedicalForm(doc, { year: y, fullName });
   }
-  drawFooter(doc, generatedAt || "");
+  drawFooter(doc);
   doc.end();
 }
 

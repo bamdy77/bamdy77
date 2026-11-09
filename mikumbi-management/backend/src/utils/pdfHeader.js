@@ -158,8 +158,9 @@ function drawFooter(doc, formatTZ) {
     const savedBottom = doc.page.margins.bottom;
     doc.page.margins.bottom = 0;
     const bottom = doc.page.height - savedBottom + 10;
+    // Page number only - the generation date/time is deliberately NOT
+    // printed on any document (school request).
     doc.fontSize(8).font("Helvetica").fillColor("#94A3B8")
-      .text(`Generated: ${formatTZ(new Date())}`, doc.page.margins.left, bottom, { width: 250, align: "left", lineBreak: false })
       .text(`Page ${i - range.start + 1} of ${total}`, doc.page.width - doc.page.margins.right - 150, bottom, { width: 150, align: "right", lineBreak: false });
 
     // Only draws the QR if there's genuinely enough of the (already-

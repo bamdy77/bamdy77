@@ -15,7 +15,6 @@
 // of creating duplicate rows, capped at 5 (per spec).
 const jwt = require("jsonwebtoken");
 const { query } = require("../db/db");
-const { formatTZ } = require("../utils/tz");
 const { generateQrPngBuffer, requestBaseUrl } = require("../utils/pdfHeader");
 const { recordAudit } = require("../utils/auditLogger");
 const { cloudinaryResized } = require("../middleware/upload");
@@ -95,7 +94,6 @@ async function streamJoiningPdf(req, res, { fullName, verifyRef, filename, conte
     fullName,
     signatureBuf,
     qrBuf,
-    generatedAt: formatTZ(new Date()),
   });
 }
 
