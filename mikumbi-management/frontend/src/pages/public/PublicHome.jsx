@@ -45,9 +45,13 @@ function Hero() {
       // Layers (top to bottom): dark-blue overlay, hero photo, the existing
       // banner photo as a fallback, and a plain navy gradient. A missing
       // /assets/hero.jpg simply falls through to the next layer.
-      backgroundImage: "linear-gradient(105deg, rgba(7,44,75,0.92) 0%, rgba(12,66,111,0.80) 55%, rgba(12,66,111,0.58) 100%), url(/assets/hero.jpg), url(/assets/picha.png), linear-gradient(160deg, #0c426f 0%, #072C4B 100%)",
-      backgroundSize: "cover", backgroundPosition: "center",
-      padding: isMobile ? "54px 20px 84px" : isTablet ? "76px 28px 100px" : "100px 28px 120px",
+      // A light, bottom-weighted shade keeps the school photo clearly
+      // visible (it used to sit under a ~90% navy wash) while the text on
+      // top stays readable.
+      backgroundImage: "linear-gradient(180deg, rgba(7,44,75,0.35) 0%, rgba(7,44,75,0.55) 55%, rgba(7,44,75,0.85) 100%), url(/assets/hero.jpg), url(/assets/picha.png), linear-gradient(160deg, #0c426f 0%, #072C4B 100%)",
+      backgroundSize: "cover", backgroundPosition: isMobile ? "center 25%" : "center 30%",
+      textShadow: "0 2px 12px rgba(0,0,0,0.45)",
+      padding: isMobile ? "70px 20px 96px" : isTablet ? "110px 28px 120px" : "150px 28px 150px",
     }}>
       <div style={{ maxWidth: 820, margin: "0 auto" }}>
         <div style={{ display: "inline-block", fontSize: isMobile ? 11 : 12.5, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.28)", borderRadius: 4, padding: "6px 16px", marginBottom: 18 }}>
@@ -119,7 +123,7 @@ function About() {
             <img
               src="/assets/head-master.jpg" alt={t("about.headAlt")} width="220" height="260" loading="lazy"
               onError={() => setHeadPhotoFailed(true)}
-              style={{ width: isMobile ? 150 : 220, height: isMobile ? 176 : 260, objectFit: "cover", borderRadius: 4, margin: "0 auto", display: "block" }}
+              style={{ width: isMobile ? 160 : 230, height: isMobile ? 190 : 270, objectFit: "cover", objectPosition: "50% 20%", borderRadius: 4, margin: "0 auto", display: "block", boxShadow: "0 10px 26px rgba(0,0,0,0.25)" }}
             />
           )}
           <div>
@@ -171,7 +175,7 @@ function Boarding() {
             <article key={title} className="pub-lift" style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, overflow: "hidden" }}>
               <SmartImage
                 src={img} alt={title} width="400" height="260"
-                wrapStyle={{ height: 170, background: `linear-gradient(150deg, ${NAVY}, #165D99)` }}
+                wrapStyle={{ height: 190, background: `linear-gradient(150deg, ${NAVY}, #165D99)` }}
                 fallback={<div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.85)" }}><Icon size={48} /></div>}
               />
               <div style={{ padding: "16px 18px 20px" }}>
@@ -218,7 +222,7 @@ function Gallery() {
           {loaded.map((src, i) => (
             <button key={src} type="button" className="pub-lift" onClick={() => setOpen(i)} aria-label={t("gallery.open", { n: i + 1 })}
               style={{ padding: 0, border: "none", borderRadius: 4, overflow: "hidden", cursor: "zoom-in", background: "#dbe4ee", aspectRatio: "4 / 3" }}>
-              <img src={src} alt={t("gallery.photo", { n: i + 1 })} loading="lazy" decoding="async" width="400" height="300" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <img src={src} alt={t("gallery.photo", { n: i + 1 })} loading="lazy" decoding="async" width="400" height="300" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 25%", display: "block" }} />
             </button>
           ))}
         </div>

@@ -57,12 +57,9 @@ function IdentityBanner() {
   const { isMobile, isTablet } = useBreakpoint();
   const { t } = useLang();
   return (
-    <header style={{ position: "relative", overflow: "hidden", background: "#eef1f6" }}>
-      <div aria-hidden="true" style={{
-        position: "absolute", inset: 0, backgroundImage: "url(/assets/picha.png)", backgroundSize: "cover",
-        backgroundPosition: isMobile ? "center 18%" : isTablet ? "center 15%" : "center 12%", opacity: 0.5,
-      }} />
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.45))" }} />
+    // Clean white identity strip - the school photo now appears clearly in
+    // the hero below instead of washed out behind this text.
+    <header style={{ position: "relative", overflow: "hidden", background: "#fff", borderBottom: "1px solid #e2e8f0" }}>
       <div style={{
         position: "relative", maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center",
         gap: isMobile ? 12 : isTablet ? 26 : 46, padding: isMobile ? "16px 12px" : isTablet ? "24px 22px" : "32px 24px", textAlign: "center",
