@@ -1,0 +1,388 @@
+/* Global responsive base — works alongside the useBreakpoint() JS hook.
+   Most of this app uses inline React styles (no className system), so this
+   file focuses on things CSS handles better than JS: box-sizing, safe
+   scrolling on small screens, and text/tap sizing that mobile browsers need. */
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Used by the "Uploading..." spinner shown on the account avatar / toast
+   while a profile photo upload or removal is in flight (Layout.jsx). */
+@keyframes mikumbi-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Shared by the branded MIKUMBI loader — MikumbiLoader.jsx (big, with the
+   wordmark) and SpinnerIcon (small, icon-sized, used inline in buttons and
+   "Loading..." labels everywhere). Two rings spin in opposite directions. */
+@keyframes mikumbi-loader-cw {
+  to { transform: rotate(360deg); }
+}
+@keyframes mikumbi-loader-ccw {
+  to { transform: rotate(-360deg); }
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; /* stop the whole page shifting sideways on small screens */
+}
+
+/* Any row-based "table" built from flex divs (this app's convention) gets
+   this class where horizontal squeezing would break it on a phone — it
+   becomes a horizontally-scrollable strip instead of wrapping/crushing. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Generic mobile/tablet "row card" — used wherever a flex-row table would
+   otherwise force horizontal scrolling on a phone (Contributions, Food
+   Contributions, and similar list views). Each row becomes a self-contained
+   bordered card with label/value pairs instead of columns. */
+.mk-row-card {
+  transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.mk-row-card:hover,
+.mk-row-card:focus-within {
+  border-color: var(--mk-navy-light, #165D99);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.10);
+}
+
+/* Tab bar (segmented-pill nav) — used by Contributions Management and any
+   page switching between sub-sections. On mobile/tablet it becomes a
+   horizontally scrollable, snap-aligned strip so every tab stays reachable
+   and never gets crushed/clipped, with a soft fade on the trailing edge as
+   a visual hint that there's more to scroll to. */
+.mk-tabbar-wrap {
+  position: relative;
+}
+.mk-tabbar {
+  display: flex;
+  gap: 8px;
+}
+.mk-tabbar-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  flex-wrap: nowrap !important;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+.mk-tabbar-scroll::-webkit-scrollbar {
+  display: none;
+}
+.mk-tabbar-scroll > button {
+  scroll-snap-align: start;
+}
+.mk-tabbar-fade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 4px;
+  width: 30px;
+  background: linear-gradient(90deg, transparent, var(--mk-bg, #F8FAFC) 78%);
+  pointer-events: none;
+}
+
+/* User Accounts — mobile/tablet card list (one card per teacher account).
+   A subtle hover/tap highlight makes each account visually distinct from
+   its neighbours, since on a narrow screen the cards otherwise sit close
+   together with only a thin border between them. */
+.account-card {
+  transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.account-card:hover,
+.account-card:focus-within {
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10);
+}
+
+/* Inputs/buttons should never be smaller than 16px on iOS, or Safari
+   auto-zooms the page when the field is focused — very disruptive on mobile. */
+@media (max-width: 639px) {
+  input, select, textarea, button {
+    font-size: max(16px, 1em);
+  }
+}
+
+img, svg {
+  max-width: 100%;
+}
+
+/* ── Theming ──────────────────────────────────────────────────────────
+   THEME.xxx tokens (styles/theme.js) resolve through these custom
+   properties. The default look needs no override — it's baked in as
+   each var()'s fallback — so only Dark and Nocturne are defined here.
+   ThemeContext.jsx sets data-theme on <html>.
+
+   Brand rule: --mk-navy (and its -dark/-light shades) is the school's
+   fixed brand color and stays IDENTICAL across every theme, always. A
+   theme switch only ever changes the background/surface/text tokens
+   below it — never navy. */
+[data-theme="dark"] {
+  --mk-navy: #0c426f;
+  --mk-navy-dark: #072C4B;
+  --mk-navy-light: #165D99;
+  --mk-heading: #7FB2DE;
+  --mk-gold: #E3B23C;
+  --mk-bg: #0B1220;
+  --mk-surface: #141B2D;
+  --mk-border: #263349;
+  --mk-text: #E7ECF4;
+  --mk-muted: #93A0B8;
+  --mk-danger: #F87171;
+  --mk-danger-light: rgba(248, 113, 113, 0.14);
+  --mk-success: #4ADE80;
+  --mk-success-light: rgba(74, 222, 128, 0.14);
+  --mk-warning: #FBBF24;
+  --mk-warning-light: rgba(251, 191, 36, 0.14);
+  --mk-accent-light: rgba(61, 81, 160, 0.18);
+  --mk-girl: #C084FC;
+  --mk-girl-light: rgba(192, 132, 252, 0.14);
+  --mk-boy: #38BDF8;
+  --mk-boy-light: rgba(56, 189, 248, 0.14);
+}
+
+/* Nocturne (previously "Slate", then "Onyx") — deep navy with the same
+   soft diagonal-stripe texture used behind the Profile / Profile Photo
+   views, same brand navy sidebar/accents as every other theme.
+   Text/surface tokens are tuned for contrast against that dark backdrop. */
+[data-theme="nocturne"] {
+  --mk-navy: #0c426f;
+  --mk-navy-dark: #072C4B;
+  --mk-navy-light: #165D99;
+  --mk-heading: #7FB2DE;
+  --mk-gold: #D9A82C;
+  --mk-bg: #0A1A2E;
+  --mk-surface: #122845;
+  --mk-border: #24405F;
+  --mk-text: #ECEDEE;
+  --mk-muted: #9FB0C4;
+  --mk-danger: #F87171;
+  --mk-danger-light: rgba(248, 113, 113, 0.14);
+  --mk-success: #4ADE80;
+  --mk-success-light: rgba(74, 222, 128, 0.14);
+  --mk-warning: #FBBF24;
+  --mk-warning-light: rgba(251, 191, 36, 0.14);
+}
+
+/* The diagonal-stripe texture itself — only the page background gets
+   it; cards/surfaces stay a plain solid dark navy so text on top of
+   them is never fighting a busy pattern. */
+html[data-theme="nocturne"], html[data-theme="nocturne"] body {
+  background-color: var(--mk-bg);
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 2px,
+    transparent 2px,
+    transparent 26px
+  );
+  background-attachment: fixed;
+}
+
+html, body {
+  background: var(--mk-bg, #F8FAFC);
+}
+
+body, button, input, select, textarea {
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+/* ── Landing hero — dark tech backdrop with a tiled "S4005" texture ──── */
+.mk-hero-techbg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-repeat: repeat, repeat, no-repeat;
+  background-size: auto, 220px 150px, 100% 100%;
+  background-position: 0 0, 0 0, center;
+}
+
+.mk-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(5, 10, 26, 0.12) 0%, rgba(5, 10, 26, 0.2) 45%, rgba(5, 10, 26, 0.42) 100%);
+  pointer-events: none;
+}
+
+.mk-hero-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: radial-gradient(ellipse 55% 60% at center, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.12) 45%, transparent 75%);
+  pointer-events: none;
+}
+
+/* Title - plain solid blue, no glow/shadow of any kind. */
+.mk-hero-title {
+  position: relative;
+  z-index: 3;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  color: #bfdbfe;
+}
+/* Row of five module icon "badges" - cream circle, navy ring, navy glyph -
+   same treatment as the reference design's globe/search/gear row. */
+.mk-hero-icons {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mk-hero-icon-circle {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #fbf8f0 0%, #e9e2d2 100%);
+  border: 5px solid #103a70;
+  color: #103a70;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.7);
+}
+
+.mk-hero-live {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.24em;
+  color: #8ec5ff;
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(96, 165, 250, 0.6), 0 2px 5px rgba(0, 0, 0, 0.55);
+}
+
+/* LIVE badge keeps its original red treatment, unchanged, regardless of
+   the rest of the hero's color scheme. */
+.mk-live-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32em;
+  padding: 0.32em 0.7em 0.32em 0.6em;
+  border-radius: 10px;
+  background: #D32F2F;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.mk-live-icon {
+  animation: mk-live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes mk-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ── Hero CTA button — Navy ────────────────────────────────────────── */
+.mk-hero-cta {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 26px;
+  border-radius: 999px;
+  background: #0c426f;
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.mk-hero-cta:hover {
+  background: #072C4B;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ── Feature cards: consistent card look + hover feedback (fix #7, #9) ─ */
+.mk-feature-card {
+  background: var(--mk-surface, #FFFFFF);
+  border: 1px solid var(--mk-border, #E2E8F0);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.mk-feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.14);
+  border-color: var(--mk-navy-light, #165D99);
+}
+
+/* ── Account Profile / Profile Photo backdrop ───────────────────────────
+   Used behind the "Profile" modal and the "View Profile Photo" viewer
+   (Layout.jsx) — a deep navy backdrop with a faint diagonal texture,
+   consistent every time either of those two views opens. */
+.mk-profile-backdrop {
+  background-color: #0A1A2E;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 2px,
+    transparent 2px,
+    transparent 26px
+  );
+}
+
+/* ── ActionMenu (the "⋮" trigger + its Hide/Delete/etc dropdown) ────────
+   Used by Results Management's History-style lists (Teacher Status and
+   Published Results). Kept as global classes (rather than inline styles)
+   because inline styles can't express :hover/:focus-visible/animation —
+   see .mk-feature-card above for the same pattern. Purely visual: no
+   change to markup structure, positioning logic, or click behaviour. */
+.mk-actionmenu-btn {
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.mk-actionmenu-btn:hover {
+  background: var(--mk-bg, #F8FAFC);
+  border-color: var(--mk-navy-light, #165D99);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+}
+.mk-actionmenu-btn:active {
+  transform: scale(0.94);
+}
+.mk-actionmenu-btn[data-open="true"] {
+  background: var(--mk-navy, #0c426f);
+  border-color: var(--mk-navy, #0c426f);
+  color: #fff;
+}
+.mk-actionmenu-panel {
+  animation: mk-actionmenu-in 0.12s ease-out;
+  transform-origin: top right;
+}
+@keyframes mk-actionmenu-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.mk-actionmenu-item {
+  transition: background-color 0.12s ease;
+}
+.mk-actionmenu-item:hover {
+  background: var(--mk-bg, #F8FAFC) !important;
+}
+.mk-actionmenu-item:active {
+  background: var(--mk-border, #E2E8F0) !important;
+}
