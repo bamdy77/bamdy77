@@ -1665,6 +1665,31 @@ async function migrate() {
     WHERE s.id = numbered.id;
   `);
 
+  // ── Repair Part-Time contribution months corrupted to NaN ──────────────
+  // A non-numeric amount used to be accepted and stored as NaN, after which
+  // every later installment for that month also became NaN. Drop the bad
+  // payment-log rows and rebuild each affected month's total from the valid
+  // payments that remain (capped at the TZS 2,000 monthly fee). Safe to
+  // re-run - a no-op once no NaN rows are left.
+  await query(`DELETE FROM contribution_parttime_payments WHERE amount = 'NaN'::numeric;`);
+  await query(`
+    UPDATE contribution_parttime cp
+    SET amount_paid = LEAST(COALESCE((
+          SELECT SUM(p.amount) FROM contribution_parttime_payments p
+          WHERE p.student_id = cp.student_id AND p.year = cp.year AND p.month = cp.month
+        ), 0), 2000),
+        completed = COALESCE((
+          SELECT SUM(p.amount) FROM contribution_parttime_payments p
+          WHERE p.student_id = cp.student_id AND p.year = cp.year AND p.month = cp.month
+        ), 0) >= 2000,
+        installments = (
+          SELECT COUNT(*) FROM contribution_parttime_payments p
+          WHERE p.student_id = cp.student_id AND p.year = cp.year AND p.month = cp.month
+        ),
+        updated_at = NOW()
+    WHERE cp.amount_paid = 'NaN'::numeric;
+  `);
+
   // ── One-time rename: "Limu" -> "Ream" (student_charges.charge_type) ──────
   // The contribution used to be called "Limu" everywhere (code, labels, and
   // the stored value itself); it's now "Ream" throughout. Every place that

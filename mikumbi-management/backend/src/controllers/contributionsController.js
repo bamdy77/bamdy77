@@ -64,13 +64,33 @@ const getPartTime = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// Shared input checks for Part-Time payments. Previously a non-numeric
+// amount ("abc") was stored as NaN - permanently corrupting that month,
+// since every later installment was added onto NaN - a year like "x" was
+// accepted, and month 13 surfaced as a raw database error.
+function validYear(y) {
+  const n = Number(y);
+  const now = new Date().getFullYear();
+  return Number.isInteger(n) && n >= 2000 && n <= now + 2 ? n : null;
+}
+function validMonth(m) {
+  const n = Number(m);
+  return Number.isInteger(n) && n >= 1 && n <= 12 ? n : null;
+}
+
 // POST /api/contributions/parttime/:studentId  { year, month, amount }
 const payPartTime = async (req, res, next) => {
   try {
-    const { year, month, amount } = req.body;
+    const { amount } = req.body;
     const studentId = req.params.studentId;
-    if (!year || !month || amount === undefined)
+    if (req.body.year === undefined || req.body.month === undefined || amount === undefined || amount === "")
       return res.status(400).json({ success: false, message: "year, month and amount are required." });
+    const year = validYear(req.body.year);
+    const month = validMonth(req.body.month);
+    if (!year) return res.status(400).json({ success: false, message: "Invalid year." });
+    if (!month) return res.status(400).json({ success: false, message: "Invalid month (must be 1-12)." });
+    if (!Number.isFinite(Number(amount)))
+      return res.status(400).json({ success: false, message: "Amount must be a number." });
     if (HOLIDAY_MONTHS.includes(Number(month)))
       return res.status(400).json({ success: false, message: "June and December are school holiday months - no contribution is billed." });
     if (Number(amount) <= 0)
@@ -143,10 +163,18 @@ const payPartTime = async (req, res, next) => {
 // full advance payment, not partial installments spread across months.
 const payPartTimeAdvance = async (req, res, next) => {
   try {
-    const { year, months } = req.body;
     const studentId = req.params.studentId;
-    if (!year || !Array.isArray(months) || !months.length)
+    if (!Array.isArray(req.body.months) || !req.body.months.length)
       return res.status(400).json({ success: false, message: "year and a non-empty months array are required." });
+    const year = validYear(req.body.year);
+    if (!year) return res.status(400).json({ success: false, message: "Invalid year." });
+    // Validate EVERY month before writing anything - an invalid month in the
+    // middle used to fail after the earlier months were already saved -
+    // and drop duplicates so one month is never processed twice.
+    const parsed = req.body.months.map(validMonth);
+    if (parsed.some((m) => m === null))
+      return res.status(400).json({ success: false, message: "Invalid month in the list (each must be 1-12)." });
+    const months = [...new Set(parsed)].sort((x, y) => x - y);
 
     const studentRes = await query("SELECT * FROM students WHERE id = $1", [studentId]);
     if (!studentRes.rows.length) return res.status(404).json({ success: false, message: "Student not found." });
@@ -605,6 +633,8 @@ const getOtherExpenses = async (req, res, next) => {
 const updateChargeAmount = async (req, res, next) => {
   try {
     const { amount, note } = req.body;
+    if (amount !== undefined && amount !== null && amount !== "" && (!Number.isFinite(Number(amount)) || Number(amount) < 0))
+      return res.status(400).json({ success: false, message: "Amount must be a number of 0 or more." });
     const existing = await query(`SELECT locked FROM student_charges WHERE id = $1`, [req.params.chargeId]);
     if (!existing.rows.length) return res.status(404).json({ success: false, message: "Record not found." });
     if (existing.rows[0].locked)
@@ -613,7 +643,7 @@ const updateChargeAmount = async (req, res, next) => {
     const result = await query(`
       UPDATE student_charges SET amount = COALESCE($1, amount), note = COALESCE($2, note)
       WHERE id = $3 RETURNING *
-    `, [amount, note, req.params.chargeId]);
+    `, [amount === "" ? null : amount, note, req.params.chargeId]);
     res.json({ success: true, data: result.rows[0] });
   } catch (err) { next(err); }
 };
@@ -697,7 +727,8 @@ const getReamMyClass = async (req, res, next) => {
 const markReam = async (req, res, next) => {
   try {
     const { studentId } = req.params;
-    const { year = new Date().getFullYear().toString() } = req.body;
+    const year = req.body.year === undefined ? new Date().getFullYear() : validYear(req.body.year);
+    if (!year) return res.status(400).json({ success: false, message: "Invalid year." });
     const scope = classScopeFor(req);
 
     const studentRes = await query(`SELECT * FROM students WHERE id = $1 AND status = 'Active'`, [studentId]);
