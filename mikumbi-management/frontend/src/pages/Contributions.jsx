@@ -821,7 +821,7 @@ function DailyCollections({ showClassFilter }) {
       </div>
 
       {error && <ErrorBox msg={error} />}
-      {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class in User Accounts." />}
+      {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class." />}
 
       {isCompact ? (
         <div style={cardList}>
@@ -924,7 +924,7 @@ function ClassTeacherPartTime() {
       </div>
 
       {error && <ErrorBox msg={error} />}
-      {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class in User Accounts." />}
+      {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class." />}
       {isHoliday && <p style={{ fontSize: 13.5, color: THEME.muted, marginBottom: 12 }}>No contribution is billed in {MONTHS[month - 1]} (school holiday).</p>}
 
       {!isHoliday && (
@@ -1096,7 +1096,7 @@ function ClassTeacherReam() {
       </div>
 
       {error && <ErrorBox msg={error} />}
-      {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class in User Accounts." />}
+      {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class." />}
 
       {isCompact ? (
         <div style={cardList}>

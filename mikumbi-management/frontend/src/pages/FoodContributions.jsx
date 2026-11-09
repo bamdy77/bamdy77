@@ -157,7 +157,7 @@ function FoodDailyCollections({ showClassFilter }) {
       </div>
 
       {error && <ErrorBox msg={error} />}
-      {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class in User Accounts." />}
+      {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class." />}
 
       {isCompact ? (
         <div style={cardList}>
@@ -449,7 +449,7 @@ function FoodHistory({ showClassFilter = true }) {
         </select>
       </div>
       {error && <ErrorBox msg={error} />}
-      {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class in User Accounts." />}
+      {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class." />}
       {isCompact ? (
         <div style={cardList}>
           {rows.map((s) => (

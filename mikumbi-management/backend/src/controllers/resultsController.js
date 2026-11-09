@@ -294,7 +294,7 @@ const saveScores = async (req, res, next) => {
       const sheetForm = sheetRes.rows[0].form;
       if (!(req.user.assigned_forms || []).includes(sheetForm)) {
         await client.query("ROLLBACK");
-        return res.status(403).json({ error: `You are not assigned to teach ${sheetForm}. Ask the Head Master to update your classes in User Accounts.` });
+        return res.status(403).json({ error: `You are not assigned to teach ${sheetForm}. Ask the Head Master to update your classes.` });
       }
       const st = await client.query(`SELECT id FROM students WHERE form = $1`, [sheetForm]);
       sheetStudentIds = new Set(st.rows.map((r) => r.id));
@@ -322,7 +322,7 @@ const saveScores = async (req, res, next) => {
     // teacher clearly instead of silently reporting success with 0 changes.
     if (!rows.length && outOfScope && !blockedByLock) {
       await client.query("ROLLBACK");
-      return res.status(403).json({ error: "These marks are for a subject or class you are not assigned to. Ask the Head Master to update your subjects/classes in User Accounts." });
+      return res.status(403).json({ error: "These marks are for a subject or class you are not assigned to. Ask the Head Master to update your subjects/classes." });
     }
     if (!rows.length && blockedByLock) {
       await client.query("ROLLBACK");

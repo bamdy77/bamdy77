@@ -55,7 +55,7 @@ const getStudents = async (req, res, next) => {
 
     const scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.json({ success: true, data: [], category, types: TYPES, message: "You have no class assigned yet - ask the Head Master to assign your class in User Accounts." });
+      return res.json({ success: true, data: [], category, types: TYPES, message: "You have no class assigned yet - ask the Head Master to assign your class." });
 
     const params = [year];
     let scopeFilter = "";
@@ -171,7 +171,7 @@ const getHistory = async (req, res, next) => {
     const params = [year];
     const scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.json({ success: true, data: [], types: TYPES, message: "You have no class assigned yet - ask the Head Master to assign your class in User Accounts." });
+      return res.json({ success: true, data: [], types: TYPES, message: "You have no class assigned yet - ask the Head Master to assign your class." });
     if (scope) { params.push(scope); conditions.push(`s.form = ANY($${params.length}::text[])`); }
     else if (form) { params.push(form); conditions.push(`s.form = $${params.length}`); }
     if (category) { params.push(category); conditions.push(`fe.category = $${params.length}`); }
@@ -204,7 +204,7 @@ const getHistoryStudents = async (req, res, next) => {
     const params = [year];
     const scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.json({ success: true, data: [], message: "You have no class assigned yet - ask the Head Master to assign your class in User Accounts." });
+      return res.json({ success: true, data: [], message: "You have no class assigned yet - ask the Head Master to assign your class." });
     if (scope) { params.push(scope); conditions.push(`s.form = ANY($${params.length}::text[])`); }
     else if (form) { params.push(form); conditions.push(`s.form = $${params.length}`); }
     if (category) {
@@ -240,7 +240,7 @@ const getFoodDaily = async (req, res, next) => {
 
     let scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.json({ success: true, data: [], students_contributed: 0, message: "You have no class assigned yet - ask the Head Master to assign your class in User Accounts." });
+      return res.json({ success: true, data: [], students_contributed: 0, message: "You have no class assigned yet - ask the Head Master to assign your class." });
     if (!scope && form) scope = [form];
 
     const params = [date];
@@ -281,7 +281,7 @@ const exportStudentsPdf = async (req, res, next) => {
 
     const scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.status(400).json({ success: false, message: "You have no class assigned yet - ask the Head Master to assign your class in User Accounts." });
+      return res.status(400).json({ success: false, message: "You have no class assigned yet - ask the Head Master to assign your class." });
 
     const params = [year];
     let scopeFilter = "";

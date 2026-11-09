@@ -168,7 +168,7 @@ function TeacherCheckIn() {
       </p>
 
       <div style={{ marginBottom: 14 }}>
-        <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Your full name (as registered in User Accounts):</label>
+        <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Your full name (as registered):</label>
         <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. John Peter Mwakasege" style={{
           width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13.5,
         }} />

@@ -81,7 +81,7 @@ const checkin = async (req, res, next) => {
   try {
     const { deviceFingerprint, lateReason, fullName, password } = req.body;
     if (!fullName || !fullName.trim())
-      return res.status(400).json({ success: false, message: "Please type your full name as registered in User Accounts." });
+      return res.status(400).json({ success: false, message: "Please type your full name as registered." });
     if (!password)
       return res.status(400).json({ success: false, message: "Please enter your password to confirm it is really you." });
     // Validate lat/lng as real, finite numbers rather than just checking
@@ -106,7 +106,7 @@ const checkin = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Account not found." });
     const normalize = (s) => s.trim().replace(/\s+/g, " ").toLowerCase();
     if (normalize(fullName) !== normalize(account.full_name))
-      return res.status(400).json({ success: false, message: "The name you typed does not match your registered name in User Accounts." });
+      return res.status(400).json({ success: false, message: "The name you typed does not match your registered name." });
     const passOk = await bcrypt.compare(password, account.password);
     if (!passOk)
       return res.status(401).json({ success: false, message: "Incorrect password." });

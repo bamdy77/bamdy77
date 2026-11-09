@@ -43,7 +43,7 @@ const getPartTime = async (req, res, next) => {
 
     let scope = classScopeFor(req); // null = see all classes; [] / [...] = restricted
     if (scope && scope.length === 0)
-      return res.json({ success: true, data: [], message: "You have no class assigned yet - ask the Head Master to assign your class in User Accounts." });
+      return res.json({ success: true, data: [], message: "You have no class assigned yet - ask the Head Master to assign your class." });
     // An overseer (admin/second_master/academic) may optionally narrow to one class.
     if (!scope && form) scope = [form];
 
@@ -251,7 +251,7 @@ const getPartTimeDaily = async (req, res, next) => {
 
     let scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.json({ success: true, data: [], total_collected: 0, students_paid: 0, message: "You have no class assigned yet - ask the Head Master to assign your class in User Accounts." });
+      return res.json({ success: true, data: [], total_collected: 0, students_paid: 0, message: "You have no class assigned yet - ask the Head Master to assign your class." });
     if (!scope && form) scope = [form];
 
     const result = await query(`
@@ -372,7 +372,7 @@ const getPartTimeStudents = async (req, res, next) => {
     // every class, unrestricted.
     const scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.json({ success: true, data: [], grand_total: 0, student_count: 0, message: "You have no class assigned yet - ask the Head Master to assign your class in User Accounts." });
+      return res.json({ success: true, data: [], grand_total: 0, student_count: 0, message: "You have no class assigned yet - ask the Head Master to assign your class." });
 
     const result = await query(`
       WITH combined AS (
@@ -503,7 +503,7 @@ const exportPartTimeStudentsPdf = async (req, res, next) => {
     const { year = new Date().getFullYear().toString(), month, from_month, to_month } = req.query;
     const scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.status(400).json({ success: false, message: "You have no class assigned yet - ask the Head Master to assign your class in User Accounts." });
+      return res.status(400).json({ success: false, message: "You have no class assigned yet - ask the Head Master to assign your class." });
 
     let monthFrom = null, monthTo = null;
     if (month && Number(month) >= 1 && Number(month) <= 12) {
@@ -705,7 +705,7 @@ const getReamMyClass = async (req, res, next) => {
     const { year = new Date().getFullYear().toString() } = req.query;
     const scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.json({ success: true, data: [], message: "You have no class assigned yet - ask the Head Master to assign your class in User Accounts." });
+      return res.json({ success: true, data: [], message: "You have no class assigned yet - ask the Head Master to assign your class." });
 
     const result = await query(`
       SELECT s.id AS student_id, s.reg_no, s.first_name, s.middle_name, s.last_name, s.form,
