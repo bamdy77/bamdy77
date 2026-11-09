@@ -389,16 +389,12 @@ function SettingsTab({ token }) {
         <div style={{ ...sectionCard, marginBottom: 16 }}>
           <div style={{ fontWeight: 800, fontSize: 13.5, color: THEME.heading, marginBottom: 10 }}>PDF appearance (choose before publishing)</div>
           <label style={labelStyle}>Watermark</label>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-            {WATERMARK_OPTIONS.map((o) => (
-              <button key={o.id} type="button" onClick={() => update({ watermark: o.id })}
-                aria-pressed={(content.watermark || "text") === o.id}
-                style={(content.watermark || "text") === o.id ? choiceActive : choiceBtn}>
-                <div style={{ fontWeight: 700, fontSize: 12.5 }}>{o.label}</div>
-                <div style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>{o.hint}</div>
-              </button>
-            ))}
-          </div>
+          <select value={content.watermark || "text"} onChange={(e) => update({ watermark: e.target.value })} style={{ ...inputStyle, maxWidth: 320, marginBottom: 4 }}>
+            {WATERMARK_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+          </select>
+          <p style={{ fontSize: 11.5, color: THEME.muted, margin: "0 0 14px" }}>
+            {(WATERMARK_OPTIONS.find((o) => o.id === (content.watermark || "text")) || WATERMARK_OPTIONS[0]).hint}
+          </p>
           <label style={labelStyle}>Font</label>
           <select value={content.font || "arimo"} onChange={(e) => update({ font: e.target.value })} style={{ ...inputStyle, maxWidth: 320 }}>
             {FONT_OPTIONS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
@@ -481,8 +477,6 @@ const FONT_OPTIONS = [
   { id: "helvetica", label: "Helvetica" },
   { id: "courier", label: "Courier (typewriter)" },
 ];
-const choiceBtn = { textAlign: "left", padding: "10px 14px", minWidth: 180, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, cursor: "pointer" };
-const choiceActive = { ...choiceBtn, border: `1px solid ${THEME.navy}`, background: THEME.navy, color: "#fff" };
 const labelStyle = { display: "block", fontSize: 12.5, fontWeight: 600, color: THEME.text, marginBottom: 5 };
 const grid2 = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 };
 const noteBox = { border: `1px solid ${THEME.border}`, background: THEME.surface, padding: "10px 14px", fontSize: 12.5, color: THEME.text, marginBottom: 14, lineHeight: 1.6 };
