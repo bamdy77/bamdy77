@@ -279,7 +279,7 @@ body, button, input, select, textarea {
   align-items: center;
   gap: 0.32em;
   padding: 0.32em 0.7em 0.32em 0.6em;
-  border-radius: 0;
+  border-radius: 4px;
   background: #D32F2F;
   box-shadow: 0 4px 12px rgba(211, 47, 47, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   color: #fff;
@@ -303,7 +303,7 @@ body, button, input, select, textarea {
   align-items: center;
   gap: 8px;
   padding: 11px 26px;
-  border-radius: 0;
+  border-radius: 4px;
   background: #0c426f;
   color: #fff;
   font-weight: 800;
@@ -321,7 +321,7 @@ body, button, input, select, textarea {
 .mk-feature-card {
   background: var(--mk-surface, #FFFFFF);
   border: 1px solid var(--mk-border, #E2E8F0);
-  border-radius: 0;
+  border-radius: 4px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }

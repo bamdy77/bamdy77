@@ -54,7 +54,7 @@ export default function NewsSection() {
           </p>
         )}
         {!loading && !error && items.length === 0 && (
-          <div style={{ textAlign: "center", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 0, padding: "36px 20px", color: "#64748B", fontSize: 14.5 }}>
+          <div style={{ textAlign: "center", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, padding: "36px 20px", color: "#64748B", fontSize: 14.5 }}>
             {t("news.empty")}
           </div>
         )}
@@ -62,7 +62,7 @@ export default function NewsSection() {
         {featured && (
           <article className="pub-lift" style={{
             display: "grid", gridTemplateColumns: isMobile || isTablet ? "1fr" : "260px 1fr", background: "#fff",
-            borderRadius: 0, overflow: "hidden", border: "1px solid #e2e8f0", marginBottom: rest.length ? 24 : 0,
+            borderRadius: 4, overflow: "hidden", border: "1px solid #e2e8f0", marginBottom: rest.length ? 24 : 0,
           }}>
             <div style={{
               background: `linear-gradient(150deg, ${NAVY}, #165D99)`, color: "#fff", padding: isMobile ? "20px" : "28px 24px",
@@ -86,7 +86,7 @@ export default function NewsSection() {
         {rest.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 20 }}>
             {rest.slice(0, 6).map((a) => (
-              <article key={a.id} className="pub-lift" style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 0, padding: 20, display: "flex", flexDirection: "column" }}>
+              <article key={a.id} className="pub-lift" style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, padding: 20, display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "#64748B" }}><CalendarIcon size={14} />{fmtDate(a.created_at, lang)}</span>
                   {isNew(a.created_at) && <NewTag label={t("news.new")} />}
@@ -113,14 +113,14 @@ export function SectionTitle({ icon, title, subtitle, light = false }) {
       <h2 style={{ color: light ? "#fff" : NAVY, fontSize: isMobile ? 22 : 28, fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 10, justifyContent: "center" }}>
         {icon}{title}
       </h2>
-      <div aria-hidden="true" style={{ width: 64, height: 4, background: ORANGE, borderRadius: 0, margin: "10px auto 10px" }} />
+      <div aria-hidden="true" style={{ width: 64, height: 4, background: ORANGE, borderRadius: 4, margin: "10px auto 10px" }} />
       {subtitle && <p style={{ color: light ? "rgba(255,255,255,0.85)" : "#64748B", fontSize: 14.5 }}>{subtitle}</p>}
     </div>
   );
 }
 
 function NewTag({ label = "NEW" }) {
-  return <span style={{ background: ORANGE, color: "#fff", fontSize: 10.5, fontWeight: 800, letterSpacing: "0.08em", padding: "3px 9px", borderRadius: 0 }}>{label}</span>;
+  return <span style={{ background: ORANGE, color: "#fff", fontSize: 10.5, fontWeight: 800, letterSpacing: "0.08em", padding: "3px 9px", borderRadius: 4 }}>{label}</span>;
 }
 
 function ReadMore({ onClick, label = "Read more" }) {
@@ -150,13 +150,13 @@ function AnnouncementModal({ item, onClose }) {
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}
     >
-      <div style={{ background: "#fff", borderRadius: 0, width: "100%", maxWidth: 640, maxHeight: "86vh", overflowY: "auto" }}>
+      <div style={{ background: "#fff", borderRadius: 4, width: "100%", maxWidth: 640, maxHeight: "86vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, padding: "20px 22px 0" }}>
           <div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "#64748B", marginBottom: 6 }}><CalendarIcon size={14} />{fmtDate(item.created_at, lang)}</div>
             <h3 style={{ color: NAVY, fontSize: 21, fontWeight: 800, lineHeight: 1.3, overflowWrap: "anywhere" }}>{item.title}</h3>
           </div>
-          <button ref={closeRef} type="button" onClick={onClose} aria-label={t("common.close")} style={{ background: "#f1f5f9", border: "none", borderRadius: 0, width: 34, height: 34, cursor: "pointer", color: "#475569", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><CloseIcon size={18} /></button>
+          <button ref={closeRef} type="button" onClick={onClose} aria-label={t("common.close")} style={{ background: "#f1f5f9", border: "none", borderRadius: 4, width: 34, height: 34, cursor: "pointer", color: "#475569", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><CloseIcon size={18} /></button>
         </div>
         <p style={{ padding: "16px 22px 24px", color: "#334155", fontSize: 15, lineHeight: 1.75, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{item.message}</p>
       </div>

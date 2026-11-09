@@ -47,7 +47,7 @@ export default function AnnouncementsBanner({ endpoint = "/communications/announ
       }}>
         <span style={{
           flexShrink: 0, display: "flex", alignItems: "center", gap: 5, background: THEME.danger, color: "#fff",
-          fontSize: isMobile ? 9.5 : 10, fontWeight: 700, letterSpacing: "0.05em", padding: isMobile ? "2.5px 7px" : "3px 8px", borderRadius: 0,
+          fontSize: isMobile ? 9.5 : 10, fontWeight: 700, letterSpacing: "0.05em", padding: isMobile ? "2.5px 7px" : "3px 8px", borderRadius: 4,
           animation: "mikumbi-notice-pulse 1.6s ease-in-out infinite",
         }}>
           <MegaphoneIcon color="#fff" /> {isMobile ? "" : "NOTICE"}
@@ -61,7 +61,7 @@ export default function AnnouncementsBanner({ endpoint = "/communications/announ
         </div>
 
         <button onClick={() => setOpen(true)} style={{
-          flexShrink: 0, background: "rgba(255,255,255,0.92)", color: "#F54927", border: "none", borderRadius: 0,
+          flexShrink: 0, background: "rgba(255,255,255,0.92)", color: "#F54927", border: "none", borderRadius: 4,
           padding: isMobile ? "4px 10px" : "5px 12px", fontSize: isMobile ? 10.5 : 11.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
         }}>Read More</button>
       </div>
@@ -77,14 +77,14 @@ function AnnouncementsModal({ announcements, onClose }) {
       style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background: THEME.surface, borderRadius: 0, width: "100%", maxWidth: 560, maxHeight: "80vh", overflowY: "auto", padding: 22 }}>
+      <div style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 560, maxHeight: "80vh", overflowY: "auto", padding: 22 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading }}>Announcements</h3>
           <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: THEME.muted, lineHeight: 1, display: "flex", alignItems: "center" }}><CloseIcon size={18} /></button>
         </div>
         <div style={{ display: "grid", gap: 12 }}>
           {announcements.map((a) => (
-            <div key={a.id} style={{ border: `1px solid ${THEME.border}`, borderRadius: 0, padding: 14 }}>
+            <div key={a.id} style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 14 }}>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 6 }}>
                 <MegaphoneIcon color={THEME.warning} />
                 <b style={{ fontSize: 14, color: THEME.text }}>{a.title}</b>

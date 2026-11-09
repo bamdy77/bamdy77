@@ -149,7 +149,7 @@ function Avatar({ name, size = 40, photoUrl, onLogout, onPickPhoto, onRemovePhot
       {menuOpen && (
         <div style={{
           position: "absolute", top: "100%", left: 0, marginTop: 8,
-          background: "#fff", borderRadius: 0, boxShadow: "0 10px 30px rgba(0,0,0,0.22)",
+          background: "#fff", borderRadius: 4, boxShadow: "0 10px 30px rgba(0,0,0,0.22)",
           minWidth: 200, overflow: "hidden", zIndex: 95,
         }}>
           <MenuRow icon={<UserCircleIcon size={15} />} label="Profile"
@@ -208,7 +208,7 @@ function ProfileModal({ user, displayName, roleText, onClose, onViewPhoto }) {
       style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000, padding: 16 }}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background: CARD_BG, borderRadius: 0, width: "100%", maxWidth: 360, maxHeight: "88vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)", padding: "28px 24px 20px", textAlign: "center" }}>
+      <div style={{ background: CARD_BG, borderRadius: 4, width: "100%", maxWidth: 360, maxHeight: "88vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)", padding: "28px 24px 20px", textAlign: "center" }}>
         <div style={{
           width: 72, height: 72, borderRadius: "50%", margin: "0 auto 14px", overflow: "hidden",
           background: THEME.gold, color: THEME.navyDark, display: "flex", alignItems: "center", justifyContent: "center",
@@ -224,7 +224,7 @@ function ProfileModal({ user, displayName, roleText, onClose, onViewPhoto }) {
           onClick={onViewPhoto}
           style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginTop: 8,
-            padding: "6px 14px", borderRadius: 0, border: "1px solid rgba(255,255,255,0.28)",
+            padding: "6px 14px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.28)",
             background: "rgba(255,255,255,0.1)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer",
           }}
         >
@@ -243,7 +243,7 @@ function ProfileModal({ user, displayName, roleText, onClose, onViewPhoto }) {
         </div>
         <button
           type="button" onClick={onClose}
-          style={{ marginTop: 18, width: "100%", padding: "10px 0", borderRadius: 0, border: "none", background: THEME.gold, color: THEME.navyDark, fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}
+          style={{ marginTop: 18, width: "100%", padding: "10px 0", borderRadius: 4, border: "none", background: THEME.gold, color: THEME.navyDark, fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}
         >
           Close
         </button>
@@ -498,7 +498,7 @@ export default function Layout() {
       {uploading && (
         <div style={{
           position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 10050,
-          background: THEME.navyDark, color: "#fff", padding: "14px 26px", borderRadius: 0,
+          background: THEME.navyDark, color: "#fff", padding: "14px 26px", borderRadius: 4,
           display: "flex", alignItems: "center", gap: 10, boxShadow: "0 10px 28px rgba(0,0,0,0.28)",
           fontSize: 13.5, fontWeight: 600,
         }}>
@@ -513,7 +513,7 @@ export default function Layout() {
           onMouseDown={(e) => { if (e.target === e.currentTarget) setPhotoViewOpen(false); }}
           style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10100, padding: 16 }}
         >
-          <div style={{ background: "#0E355C", borderRadius: 0, padding: 22, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)", maxWidth: "90vw" }}>
+          <div style={{ background: "#0E355C", borderRadius: 4, padding: 22, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)", maxWidth: "90vw" }}>
             <div style={{
               width: 220, height: 220, maxWidth: "72vw", maxHeight: "72vw", borderRadius: "50%", overflow: "hidden", margin: "0 auto 14px",
               background: THEME.gold, color: THEME.navyDark, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 48,
@@ -525,7 +525,7 @@ export default function Layout() {
             </div>
             <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>{displayName}</div>
             {!user.photo_url && <div style={{ fontSize: 12.5, fontStyle: "italic", color: "rgba(255,255,255,0.55)", marginTop: 4 }}>No profile photo uploaded yet</div>}
-            <button onClick={() => setPhotoViewOpen(false)} style={{ marginTop: 14, padding: "9px 22px", background: THEME.gold, color: THEME.navyDark, border: "none", borderRadius: 0, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
+            <button onClick={() => setPhotoViewOpen(false)} style={{ marginTop: 14, padding: "9px 22px", background: THEME.gold, color: THEME.navyDark, border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
               Close
             </button>
           </div>
@@ -572,7 +572,7 @@ function SettingsMenu({ navigate, user }) {
         title="Settings"
         style={{
           display: "flex", alignItems: "center", justifyContent: "center",
-          width: 34, height: 34, borderRadius: 0, border: "1px solid rgba(255,255,255,0.28)",
+          width: 34, height: 34, borderRadius: 4, border: "1px solid rgba(255,255,255,0.28)",
           background: open ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)",
           color: "#fff", cursor: "pointer",
         }}
@@ -582,7 +582,7 @@ function SettingsMenu({ navigate, user }) {
         <div style={{
           position: "absolute", right: 0, top: 42, minWidth: 226,
           background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}`,
-          borderRadius: 0, boxShadow: "0 12px 32px rgba(0,0,0,0.22)", zIndex: 100, overflow: "hidden",
+          borderRadius: 4, boxShadow: "0 12px 32px rgba(0,0,0,0.22)", zIndex: 100, overflow: "hidden",
         }}>
           <SettingsItem icon={<LockIcon />} onClick={() => { setOpen(false); navigate("/dashboard/change-password"); }}>
             Change Password
@@ -624,7 +624,7 @@ function SettingsMenu({ navigate, user }) {
                     style={{
                       display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
                       padding: "8px 10px", background: theme === opt.value ? THEME.bg : "none",
-                      border: "none", borderRadius: 0, cursor: "pointer", fontSize: 12.5, color: THEME.text,
+                      border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12.5, color: THEME.text,
                     }}
                   >
                     <span style={{ width: 14, height: 14, borderRadius: "50%", background: opt.swatch, border: `1px solid ${THEME.border}`, flexShrink: 0 }} />

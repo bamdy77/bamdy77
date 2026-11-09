@@ -51,7 +51,7 @@ export default function Publications({ forcedView = null }) {
         <div>
           {!forcedView && <button onClick={() => setTab(null)} style={{
             display: "inline-flex", alignItems: "center", gap: 6,
-            background: THEME.surface, border: `1.5px solid ${THEME.border}`, borderRadius: 0,
+            background: THEME.surface, border: `1.5px solid ${THEME.border}`, borderRadius: 4,
             color: THEME.heading, fontWeight: 600, fontSize: 13.5,
             cursor: "pointer", marginBottom: 20, padding: "9px 16px",
           }}>← Rudi Nyuma</button>}
@@ -68,7 +68,7 @@ export default function Publications({ forcedView = null }) {
 function PublicationCard({ title, subtitle, color, bg, icon, onClick }) {
   return (
     <button onClick={onClick} style={{
-      width: 230, maxWidth: "100%", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 0,
+      width: 230, maxWidth: "100%", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4,
       padding: "28px 20px", cursor: "pointer", textAlign: "center", transition: "transform 0.15s",
     }}
       onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-3px)")}
@@ -206,12 +206,12 @@ function ResultsPortal() {
 function ResultCard({ r, student }) {
   const s = r.student || {};
   return (
-    <div style={{ background: "#ADD8E6", borderRadius: 0, padding: 14, border: "1px solid #7C93B8" }}>
+    <div style={{ background: "#ADD8E6", borderRadius: 4, padding: 14, border: "1px solid #7C93B8" }}>
       <div style={{ textAlign: "center", marginBottom: 10 }}>
         <div style={{ fontWeight: 800, color: "#0A1F5C", fontSize: 15 }}>{student.full_name}</div>
         <div style={{ fontSize: 12, color: "#0A1F5C" }}>{r.form} — {r.exam_type} {r.month ? `(${r.month})` : ""} {r.year}</div>
       </div>
-      <div style={{ background: "#FFFEEA", border: "1px solid #7C93B8", borderRadius: 0, overflow: "hidden" }}>
+      <div style={{ background: "#FFFEEA", border: "1px solid #7C93B8", borderRadius: 4, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
           <thead>
             <tr style={{ background: "#FCF3C0" }}>
@@ -332,10 +332,10 @@ const ErrorMsg = ({ children }) => <p style={{ color: "#B91C1C", fontSize: 12.5,
 
 const pdfButton = {
   display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 22px", background: THEME.navy,
-  color: "#fff", borderRadius: 0, textDecoration: "none", fontWeight: 600, fontSize: 13.5,
+  color: "#fff", borderRadius: 4, textDecoration: "none", fontWeight: 600, fontSize: 13.5,
 };
 const formLabel = { display: "block", fontSize: 12.5, fontWeight: 600, color: THEME.text, marginBottom: 4 };
-const formInput = { width: "100%", padding: "10px 12px", borderRadius: 0, border: `1px solid ${THEME.border}`, fontSize: 13.5, boxSizing: "border-box" };
-const primaryBtn = { padding: "11px 20px", borderRadius: 0, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: "pointer" };
-const secondaryBtn = { padding: "11px 20px", borderRadius: 0, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontWeight: 700, fontSize: 13.5, cursor: "pointer" };
+const formInput = { width: "100%", padding: "10px 12px", borderRadius: 4, border: `1px solid ${THEME.border}`, fontSize: 13.5, boxSizing: "border-box" };
+const primaryBtn = { padding: "11px 20px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: "pointer" };
+const secondaryBtn = { padding: "11px 20px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontWeight: 700, fontSize: 13.5, cursor: "pointer" };
 const smallLinkBtn = { background: "none", border: "none", color: THEME.navy, fontWeight: 600, fontSize: 12, cursor: "pointer", padding: 0, textDecoration: "underline" };

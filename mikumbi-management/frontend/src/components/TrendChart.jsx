@@ -16,7 +16,7 @@ export default function TrendChart({
     return (
       <div style={{
         height, display: "flex", alignItems: "center", justifyContent: "center",
-        color: THEME.muted, fontSize: 13, background: THEME.bg, borderRadius: 0, border: `1px dashed ${THEME.border}`,
+        color: THEME.muted, fontSize: 13, background: THEME.bg, borderRadius: 4, border: `1px dashed ${THEME.border}`,
       }}>
         {emptyText}
       </div>

@@ -134,13 +134,13 @@ export default function ImageCropModal({ file, onCancel, onConfirm }) {
         ...style,
       }}
     >
-      <div style={{ width: 14, height: 14, borderRadius: 0, background: "#fff", border: `2px solid ${THEME.navy}`, boxShadow: "0 1px 3px rgba(0,0,0,0.4)" }} />
+      <div style={{ width: 14, height: 14, borderRadius: 4, background: "#fff", border: `2px solid ${THEME.navy}`, boxShadow: "0 1px 3px rgba(0,0,0,0.4)" }} />
     </div>
   );
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.82)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div style={{ background: THEME.surface, borderRadius: 0, padding: 16, maxWidth: 520, width: "100%", maxHeight: "92vh", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ background: THEME.surface, borderRadius: 4, padding: 16, maxWidth: 520, width: "100%", maxHeight: "92vh", display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
           <h3 style={{ margin: 0, fontSize: 15, color: THEME.heading, fontWeight: 700 }}>Crop the photo</h3>
           <p style={{ margin: "4px 0 0", fontSize: 12, color: THEME.muted }}>Drag the corners to fit tightly around just the signature/stamp ink, then confirm.</p>
@@ -148,7 +148,7 @@ export default function ImageCropModal({ file, onCancel, onConfirm }) {
 
         <div
           ref={stageRef}
-          style={{ position: "relative", width: "100%", maxHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0F172A", borderRadius: 0, overflow: "hidden", userSelect: "none" }}
+          style={{ position: "relative", width: "100%", maxHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0F172A", borderRadius: 4, overflow: "hidden", userSelect: "none" }}
         >
           {imgUrl && (
             <img
@@ -182,14 +182,14 @@ export default function ImageCropModal({ file, onCancel, onConfirm }) {
           <button
             onClick={onCancel}
             disabled={busy}
-            style={{ padding: "9px 16px", borderRadius: 0, border: `1px solid ${THEME.border}`, background: THEME.bg, color: THEME.text, fontSize: 13, fontWeight: 600, cursor: busy ? "default" : "pointer" }}
+            style={{ padding: "9px 16px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.bg, color: THEME.text, fontSize: 13, fontWeight: 600, cursor: busy ? "default" : "pointer" }}
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={busy || !box}
-            style={{ padding: "9px 18px", borderRadius: 0, border: `1px solid ${THEME.navy}`, background: THEME.navy, color: "#fff", fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 }}
+            style={{ padding: "9px 18px", borderRadius: 4, border: `1px solid ${THEME.navy}`, background: THEME.navy, color: "#fff", fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 }}
           >
             {busy ? "Cropping…" : "Use this crop"}
           </button>

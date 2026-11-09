@@ -85,7 +85,7 @@ export default function AuditLog() {
         </p>
       </div>
 
-      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: 14, marginBottom: 18 }}>
+      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 14, marginBottom: 18 }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
           <Field label="From">
             <input type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} style={inputStyle} />
@@ -117,7 +117,7 @@ export default function AuditLog() {
           {isCompact ? (
             <div style={{ display: "grid", gap: 10 }}>
               {rows.length === 0 ? <Empty /> : rows.map((r) => (
-                <div key={r.id} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: 12 }}>
+                <div key={r.id} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 12 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: ACTION_COLOR(r.action) }}>{actionLabel(r.action)}</span>
                     <span style={{ fontSize: 11, color: THEME.muted }}>{formatDate(r.created_at)}</span>
@@ -137,7 +137,7 @@ export default function AuditLog() {
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden", minWidth: 900 }}>
+              <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden", minWidth: 900 }}>
                 <div style={{ ...rowStyle, fontWeight: 700, background: THEME.bg }}>
                   <span style={{ flex: 1.3 }}><CalendarIcon size={12} /> Date/Time</span>
                   <span style={{ flex: 1.4 }}>Action</span>
@@ -206,11 +206,11 @@ function Empty() {
   return <div style={{ padding: 20, fontSize: 13, color: THEME.muted, textAlign: "center" }}>No matching audit entries.</div>;
 }
 
-const inputStyle = { padding: "8px 10px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13, background: THEME.surface, color: THEME.text };
-const btnPrimary = { padding: "8px 16px", borderRadius: 0, border: "none", background: THEME.navy, color: "#fff", fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
+const inputStyle = { padding: "8px 10px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13, background: THEME.surface, color: THEME.text };
+const btnPrimary = { padding: "8px 16px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
 const btnSecondary = { ...btnPrimary, background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` };
 const linkBtn = { background: "none", border: "none", color: THEME.navy, fontSize: 11.5, fontWeight: 600, cursor: "pointer", padding: 0, textDecoration: "underline" };
-const errorBox = { marginBottom: 18, padding: 12, borderRadius: 0, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger };
+const errorBox = { marginBottom: 18, padding: 12, borderRadius: 4, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger };
 const loadingText = { fontSize: 13, color: THEME.muted, marginBottom: 16, display: "flex", alignItems: "center", gap: 7 };
 const rowStyle = { display: "flex", gap: 12, padding: "10px 14px", fontSize: 12.5, alignItems: "center" };
-const metaBox = { background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: 10, fontSize: 11, color: THEME.text, overflowX: "auto", margin: "0 14px 0 0" };
+const metaBox = { background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 10, fontSize: 11, color: THEME.text, overflowX: "auto", margin: "0 14px 0 0" };

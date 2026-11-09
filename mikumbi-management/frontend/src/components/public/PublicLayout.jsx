@@ -203,7 +203,7 @@ function Footer() {
           </div>
           <div style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{t("footer.tagline")}</div>
           <div style={{ color: "#F5B041", fontSize: 13.5, fontStyle: "italic", marginBottom: 16 }}>{t("school.motto")}</div>
-          <div style={{ background: "#0a3556", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 0, padding: "14px 16px", maxWidth: 260 }}>
+          <div style={{ background: "#0a3556", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 4, padding: "14px 16px", maxWidth: 260 }}>
             <div style={{ fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9fc0d9", marginBottom: 6 }}>{t("footer.identity")}</div>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{t("footer.regNo")} {SCHOOL.regNo}</div>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginTop: 2 }}>{t("footer.centreNo")} {SCHOOL.centreNo}</div>

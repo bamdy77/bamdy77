@@ -30,7 +30,7 @@ export default function Communications() {
 function TabBtn({ active, onClick, children, isMobile }) {
   return (
     <button onClick={onClick} style={{
-      padding: isMobile ? "8px 14px" : "8px 20px", borderRadius: 0, border: `1px solid ${THEME.border}`,
+      padding: isMobile ? "8px 14px" : "8px 20px", borderRadius: 4, border: `1px solid ${THEME.border}`,
       background: active ? THEME.navy : THEME.surface, color: active ? "#fff" : THEME.text,
       fontWeight: 600, fontSize: isMobile ? 12.5 : 13, cursor: "pointer", whiteSpace: "nowrap",
       display: "inline-flex", alignItems: "center", gap: 7,
@@ -88,7 +88,7 @@ function AnnouncementsTab({ isMobile }) {
 
   return (
     <div>
-      <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: isMobile ? 14 : 18, marginBottom: 24, maxWidth: isMobile ? "100%" : 520 }}>
+      <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 14 : 18, marginBottom: 24, maxWidth: isMobile ? "100%" : 520 }}>
         <input placeholder="Announcement title" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} />
         <textarea placeholder="Message..." value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} style={{ ...inputStyle, marginTop: 10, resize: "vertical" }} />
 
@@ -97,7 +97,7 @@ function AnnouncementsTab({ isMobile }) {
           <div style={{ display: "grid", gap: 8 }}>
             {AUDIENCE_OPTIONS.map((o) => (
               <label key={o.value} style={{
-                display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 12px", cursor: "pointer", borderRadius: 0,
+                display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 12px", cursor: "pointer", borderRadius: 4,
                 border: `1.5px solid ${audience === o.value ? THEME.navy : THEME.border}`,
                 background: audience === o.value ? "rgba(12,66,111,0.06)" : "transparent",
               }}>
@@ -134,11 +134,11 @@ function AnnouncementsTab({ isMobile }) {
 
       <div style={{ display: "grid", gap: 10, maxWidth: isMobile ? "100%" : 640 }}>
         {loadError && (
-          <div style={{ padding: 12, borderRadius: 0, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger }}>⚠ {loadError}</div>
+          <div style={{ padding: 12, borderRadius: 4, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger }}>⚠ {loadError}</div>
         )}
         {list.map((a) => (
           <div key={a.id} style={{
-            background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: 14,
+            background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 14,
             opacity: isLive(a) ? 1 : 0.55,
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
@@ -196,7 +196,7 @@ const AUDIENCE_BADGE = {
 function AudienceBadge({ audience }) {
   const b = AUDIENCE_BADGE[audience];
   if (!b) return null;
-  return <span style={{ background: b.bg, color: b.color, fontSize: 10.5, fontWeight: 800, padding: "2px 9px", borderRadius: 0, whiteSpace: "nowrap" }}>{b.text}</span>;
+  return <span style={{ background: b.bg, color: b.color, fontSize: 10.5, fontWeight: 800, padding: "2px 9px", borderRadius: 4, whiteSpace: "nowrap" }}>{b.text}</span>;
 }
 
 // ══════════════════ SMS SERVICE (Admin / Second Master only) ══════════════════
@@ -254,7 +254,7 @@ function RecipientSelect({ value, onChange, isMobile }) {
       {open && (
         <div style={{
           position: "absolute", left: 0, right: 0, top: "calc(100% + 4px)", background: THEME.surface,
-          border: `1px solid ${THEME.border}`, borderRadius: 0, boxShadow: "0 10px 26px rgba(0,0,0,0.16)",
+          border: `1px solid ${THEME.border}`, borderRadius: 4, boxShadow: "0 10px 26px rgba(0,0,0,0.16)",
           zIndex: 30, maxHeight: 320, overflowY: "auto",
         }}>
           {RECIPIENT_GROUPS.map((g, gi) => (
@@ -368,7 +368,7 @@ function SmsTab({ isMobile, isTablet }) {
 
   return (
     <div>
-      <form onSubmit={send} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: isMobile ? 14 : 18, marginBottom: 24, maxWidth: isMobile ? "100%" : 560 }}>
+      <form onSubmit={send} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 14 : 18, marginBottom: 24, maxWidth: isMobile ? "100%" : 560 }}>
         <label style={labelStyle}>Recipients</label>
         <RecipientSelect value={category} onChange={setCategory} isMobile={isMobile} />
 
@@ -448,11 +448,11 @@ function SmsTab({ isMobile, isTablet }) {
         )}
       </div>
       {historyError && (
-        <div style={{ marginBottom: 10, padding: 12, borderRadius: 0, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger, maxWidth: isMobile ? "100%" : 640 }}>⚠ {historyError}</div>
+        <div style={{ marginBottom: 10, padding: 12, borderRadius: 4, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger, maxWidth: isMobile ? "100%" : 640 }}>⚠ {historyError}</div>
       )}
       <div style={{ display: "grid", gap: 6, maxWidth: isMobile ? "100%" : 640 }}>
         {history.map((h) => (
-          <div key={h.id} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "10px 14px", fontSize: 12.5 }}>
+          <div key={h.id} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "10px 14px", fontSize: 12.5 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
               <b>{h.recipients}</b>
               <span style={{ color: h.status === "sent" ? THEME.success : h.status === "partial" ? THEME.warning : THEME.danger, fontWeight: 600 }}>{h.status}</span>
@@ -487,7 +487,7 @@ function ContactPicker({ contacts, selectedIds, onToggle, onSelectAll, onClear, 
         </div>
       </div>
       {error && <div style={{ fontSize: 12, color: THEME.danger, marginBottom: 6 }}>⚠ {error}</div>}
-      <div style={{ maxHeight: 220, overflowY: "auto", border: `1px solid ${THEME.border}`, borderRadius: 0 }}>
+      <div style={{ maxHeight: 220, overflowY: "auto", border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
         {contacts.length === 0 && !error && (
           <div style={{ padding: 14, fontSize: 12, color: THEME.muted }}>{emptyText}</div>
         )}
@@ -541,7 +541,7 @@ function IndividualContactForm({ token, onAdded, isMobile }) {
   };
 
   return (
-    <div style={{ marginTop: 10, padding: isMobile ? 10 : 12, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 0 }}>
+    <div style={{ marginTop: 10, padding: isMobile ? 10 : 12, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
       <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 8 }}>Register a new individual contact</div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} style={{ ...inputStyle, flex: "1 1 160px" }} />
@@ -575,7 +575,7 @@ function ContactsDirectory({ staffContacts, parentContacts, error, isMobile }) {
           : "Synced automatically from Student Management - register or edit the student there to change this list."}
       </p>
       {error && <div style={{ fontSize: 12, color: THEME.danger, marginBottom: 8 }}>⚠ {error}</div>}
-      <div style={{ maxHeight: 260, overflowY: "auto", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0 }}>
+      <div style={{ maxHeight: 260, overflowY: "auto", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
         {list.length === 0 && <div style={{ padding: 14, fontSize: 12.5, color: THEME.muted }}>No contacts yet.</div>}
         {list.map((c, i) => (
           <div key={c.id} style={{
@@ -592,7 +592,7 @@ function ContactsDirectory({ staffContacts, parentContacts, error, isMobile }) {
   );
 }
 
-const inputStyle = { width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13.5 };
+const inputStyle = { width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13.5 };
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6, marginTop: 10 };
-const btnStyle = { marginTop: 14, padding: "10px 22px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 0, fontWeight: 600, fontSize: 13, cursor: "pointer" };
+const btnStyle = { marginTop: 14, padding: "10px 22px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 4, fontWeight: 600, fontSize: 13, cursor: "pointer" };
 const linkBtnStyle = { background: "none", border: "none", color: THEME.heading, fontSize: 11.5, fontWeight: 600, cursor: "pointer", padding: 0 };

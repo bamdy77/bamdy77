@@ -70,7 +70,7 @@ export default function SignatureSettings() {
         Take a clear photo of the signature or stamp on a plain sheet of paper. The white paper background is removed automatically, so it prints as if signed directly on the report.
       </p>
 
-      {error && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "10px 14px", borderRadius: 0, fontSize: 13, marginBottom: 18 }}>{error}</div>}
+      {error && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "10px 14px", borderRadius: 4, fontSize: 13, marginBottom: 18 }}>{error}</div>}
       {loading ? (
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: THEME.muted, fontSize: 13.5 }}><SpinnerIcon size={16} /> Loading…</div>
       ) : (
@@ -128,7 +128,7 @@ export default function SignatureSettings() {
 
 function Section({ title, subtitle, children }) {
   return (
-    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "18px 18px 22px", marginBottom: 20 }}>
+    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "18px 18px 22px", marginBottom: 20 }}>
       <h3 style={{ fontSize: 14.5, color: THEME.heading, margin: "0 0 4px", fontWeight: 700 }} dangerouslySetInnerHTML={{ __html: title }} />
       {subtitle && <p style={{ fontSize: 12.5, color: THEME.muted, margin: "0 0 16px", maxWidth: 560 }} dangerouslySetInnerHTML={{ __html: subtitle }} />}
       {children}
@@ -147,7 +147,7 @@ function ClassTeacherSection({ isAdminTier, user, ctSigs, token, onDone, confirm
           <select
             value={selectedForm}
             onChange={(e) => setSelectedForm(e.target.value)}
-            style={{ padding: "8px 12px", borderRadius: 0, border: `1px solid ${THEME.border}`, fontSize: 13.5, background: THEME.surface, color: THEME.text, minWidth: 160 }}
+            style={{ padding: "8px 12px", borderRadius: 4, border: `1px solid ${THEME.border}`, fontSize: 13.5, background: THEME.surface, color: THEME.text, minWidth: 160 }}
           >
             {FORMS.map((f) => <option key={f} value={f}>{f}</option>)}
           </select>
@@ -280,7 +280,7 @@ function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormFi
   };
 
   return (
-    <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 0, padding: 12, background: THEME.bg }}>
+    <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 12, background: THEME.bg }}>
       {pendingFile && (
         <ImageCropModal
           file={pendingFile}
@@ -289,9 +289,9 @@ function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormFi
         />
       )}
       <p style={{ fontSize: 12.5, fontWeight: 600, color: THEME.text, margin: "0 0 8px" }}>{label}</p>
-      <div style={{ ...CHECKER_BG, borderRadius: 0, border: `1px solid ${THEME.border}`, height: 100, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10, overflow: "hidden" }}>
+      <div style={{ ...CHECKER_BG, borderRadius: 4, border: `1px solid ${THEME.border}`, height: 100, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10, overflow: "hidden" }}>
         {busy ? (
-          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: THEME.muted, background: THEME.surface, padding: "4px 10px", borderRadius: 0 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: THEME.muted, background: THEME.surface, padding: "4px 10px", borderRadius: 4 }}>
             <SpinnerIcon size={14} /> {busyLabel}
           </span>
         ) : imageUrl ? (
@@ -306,14 +306,14 @@ function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormFi
         <button
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 0, border: `1px solid ${THEME.navy}`, background: THEME.navy, color: "#fff", fontSize: 12, fontWeight: 600, cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1 }}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 4, border: `1px solid ${THEME.navy}`, background: THEME.navy, color: "#fff", fontSize: 12, fontWeight: 600, cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1 }}
         >
           <ArrowUpCircleIcon size={13} /> {imageUrl ? "Replace" : "Upload"}
         </button>
         {imageUrl && !busy && (
           <button
             onClick={handleRemove}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 0, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.danger, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.danger, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
           >
             <TrashIcon size={13} /> Remove
           </button>
@@ -328,13 +328,13 @@ function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormFi
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <div>
               <p style={{ fontSize: 10, color: THEME.muted, margin: "0 0 4px" }}>Before ({checkResult.beforeSize})</p>
-              <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 0, height: 70, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", overflow: "hidden" }}>
+              <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, height: 70, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", overflow: "hidden" }}>
                 <img src={checkResult.beforeUrl} alt="before" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
               </div>
             </div>
             <div>
               <p style={{ fontSize: 10, color: THEME.muted, margin: "0 0 4px" }}>After ({checkResult.afterSize})</p>
-              <div style={{ ...CHECKER_BG, border: `1px solid ${THEME.border}`, borderRadius: 0, height: 70, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              <div style={{ ...CHECKER_BG, border: `1px solid ${THEME.border}`, borderRadius: 4, height: 70, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
                 <img src={checkResult.afterUrl} alt="after" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
               </div>
             </div>

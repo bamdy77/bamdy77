@@ -50,7 +50,7 @@ function Hero() {
       padding: isMobile ? "54px 20px 84px" : isTablet ? "76px 28px 100px" : "100px 28px 120px",
     }}>
       <div style={{ maxWidth: 820, margin: "0 auto" }}>
-        <div style={{ display: "inline-block", fontSize: isMobile ? 11 : 12.5, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.28)", borderRadius: 0, padding: "6px 16px", marginBottom: 18 }}>
+        <div style={{ display: "inline-block", fontSize: isMobile ? 11 : 12.5, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.28)", borderRadius: 4, padding: "6px 16px", marginBottom: 18 }}>
           {t("hero.place")}
         </div>
         <h1 style={{ fontSize: isMobile ? 29 : isTablet ? 40 : 52, fontWeight: 800, lineHeight: 1.15, marginBottom: 16 }}>
@@ -73,7 +73,7 @@ function Hero() {
 }
 
 const heroBtn = {
-  display: "inline-flex", alignItems: "center", gap: 10, padding: "15px 28px", borderRadius: 0,
+  display: "inline-flex", alignItems: "center", gap: 10, padding: "15px 28px", borderRadius: 4,
   fontWeight: 800, fontSize: 16, textDecoration: "none", minWidth: 210, justifyContent: "center",
 };
 
@@ -92,10 +92,10 @@ function QuickAccess() {
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : isTablet ? "1fr 1fr" : "repeat(4, 1fr)", gap: isMobile ? 12 : 18 }}>
         {items.map(({ to, icon: Icon, title, text }) => (
           <Link key={title} to={to} className="pub-lift" style={{
-            background: "#fff", borderRadius: 0, padding: isMobile ? "16px 14px" : "22px 20px", textDecoration: "none",
+            background: "#fff", borderRadius: 4, padding: isMobile ? "16px 14px" : "22px 20px", textDecoration: "none",
             border: "1px solid #e2e8f0", display: "block",
           }}>
-            <div style={{ width: 42, height: 42, borderRadius: 0, background: "#eaf2fa", color: NAVY, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}><Icon size={22} /></div>
+            <div style={{ width: 42, height: 42, borderRadius: 4, background: "#eaf2fa", color: NAVY, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}><Icon size={22} /></div>
             <div style={{ color: NAVY, fontWeight: 800, fontSize: isMobile ? 14.5 : 16, marginBottom: 4 }}>{title}</div>
             <div style={{ color: "#64748B", fontSize: isMobile ? 12 : 13, lineHeight: 1.5 }}>{text}</div>
           </Link>
@@ -119,7 +119,7 @@ function About() {
             <img
               src="/assets/head-master.jpg" alt={t("about.headAlt")} width="220" height="260" loading="lazy"
               onError={() => setHeadPhotoFailed(true)}
-              style={{ width: isMobile ? 150 : 220, height: isMobile ? 176 : 260, objectFit: "cover", borderRadius: 0, margin: "0 auto", display: "block" }}
+              style={{ width: isMobile ? 150 : 220, height: isMobile ? 176 : 260, objectFit: "cover", borderRadius: 4, margin: "0 auto", display: "block" }}
             />
           )}
           <div>
@@ -132,7 +132,7 @@ function About() {
         </div>
         <div style={{
           display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 16 : 20,
-          background: "#2f4431", borderRadius: 0, padding: isMobile ? "20px 14px" : "26px 24px",
+          background: "#2f4431", borderRadius: 4, padding: isMobile ? "20px 14px" : "26px 24px",
         }}>
           <Fact label={t("fact.postal")} value={SCHOOL.poBox} />
           <Fact label={t("fact.regNo")} value={SCHOOL.regNo} />
@@ -168,7 +168,7 @@ function Boarding() {
         <SectionTitle title={t("boarding.title")} subtitle={t("boarding.subtitle")} />
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 20 }}>
           {cards.map(({ img, icon: Icon, title, text }) => (
-            <article key={title} className="pub-lift" style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 0, overflow: "hidden" }}>
+            <article key={title} className="pub-lift" style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, overflow: "hidden" }}>
               <SmartImage
                 src={img} alt={title} width="400" height="260"
                 wrapStyle={{ height: 170, background: `linear-gradient(150deg, ${NAVY}, #165D99)` }}
@@ -217,7 +217,7 @@ function Gallery() {
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : isTablet ? "repeat(3, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 16 }}>
           {loaded.map((src, i) => (
             <button key={src} type="button" className="pub-lift" onClick={() => setOpen(i)} aria-label={t("gallery.open", { n: i + 1 })}
-              style={{ padding: 0, border: "none", borderRadius: 0, overflow: "hidden", cursor: "zoom-in", background: "#dbe4ee", aspectRatio: "4 / 3" }}>
+              style={{ padding: 0, border: "none", borderRadius: 4, overflow: "hidden", cursor: "zoom-in", background: "#dbe4ee", aspectRatio: "4 / 3" }}>
               <img src={src} alt={t("gallery.photo", { n: i + 1 })} loading="lazy" decoding="async" width="400" height="300" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
             </button>
           ))}
@@ -235,7 +235,7 @@ function Gallery() {
               <button type="button" onClick={() => setOpen((open + 1) % loaded.length)} aria-label={t("gallery.next")} style={lbBtn({ right: 12, top: "50%" })}><ChevronRightIcon size={24} /></button>
             </>
           )}
-          <img src={loaded[open]} alt={t("gallery.photo", { n: open + 1 })} style={{ maxWidth: "100%", maxHeight: "88vh", borderRadius: 0, objectFit: "contain" }} />
+          <img src={loaded[open]} alt={t("gallery.photo", { n: open + 1 })} style={{ maxWidth: "100%", maxHeight: "88vh", borderRadius: 4, objectFit: "contain" }} />
         </div>
       )}
     </section>
@@ -251,7 +251,7 @@ const lbBtn = (pos) => ({
 function Contact() {
   const { isMobile, isTablet } = useBreakpoint();
   const { t } = useLang();
-  const box = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 0, padding: "22px 20px", textAlign: "center" };
+  const box = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, padding: "22px 20px", textAlign: "center" };
   const label = { fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748B", marginBottom: 8 };
   const val = { color: NAVY, fontWeight: 700, fontSize: 15, lineHeight: 1.6, overflowWrap: "anywhere" };
   return (

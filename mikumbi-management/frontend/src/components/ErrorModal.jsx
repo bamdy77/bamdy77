@@ -35,7 +35,7 @@ export function ErrorModalHost() {
       style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000, padding: 16 }}
       onMouseDown={(e) => { if (e.target === e.currentTarget) setState(null); }}
     >
-      <div style={{ background: THEME.surface, borderRadius: 0, width: "100%", maxWidth: 380, boxShadow: "0 20px 60px rgba(0,0,0,0.25)", padding: "36px 28px 28px", textAlign: "center" }}>
+      <div style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 380, boxShadow: "0 20px 60px rgba(0,0,0,0.25)", padding: "36px 28px 28px", textAlign: "center" }}>
         <div style={{
           width: 64, height: 64, borderRadius: "50%", margin: "0 auto 18px",
           border: `2px solid ${THEME.dangerLight}`, background: THEME.dangerLight,
@@ -53,7 +53,7 @@ export function ErrorModalHost() {
           autoFocus
           style={{
             padding: "10px 36px", background: THEME.navy, color: "#fff", border: "none",
-            borderRadius: 0, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
+            borderRadius: 4, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
           }}
         >OK</button>
       </div>

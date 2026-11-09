@@ -165,7 +165,7 @@ export default function ResultsManagement() {
       {teacherEvalOpen && <TeacherEvaluationModal token={token} onClose={() => setTeacherEvalOpen(false)} />}
 
       {/* Period selector - shared across tabs */}
-      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 10, flexWrap: "wrap", alignItems: isMobile ? "stretch" : "flex-end", marginBottom: 24, background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: isMobile ? 12 : 16 }}>
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 10, flexWrap: "wrap", alignItems: isMobile ? "stretch" : "flex-end", marginBottom: 24, background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 12 : 16 }}>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <Field label="Form">
             <select
@@ -271,7 +271,7 @@ function ResultsHistory({ onOpenPeriod }) {
       </div>
       {isMobile && <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 6 }}>↔ Swipe sideways to see every column</div>}
       <div style={{ overflowX: "auto" }}>
-      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden", minWidth: isMobile ? 640 : "auto" }}>
+      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden", minWidth: isMobile ? 640 : "auto" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg }}>
           <span style={{ flex: 1.5 }}>Form / Exam</span>
           <span style={{ flex: 1 }}>Period</span>
@@ -454,7 +454,7 @@ function EnterMarks({ period, subjects }) {
       )}
 
       <div style={{ overflowX: "auto" }}>
-      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden", maxWidth: 700, minWidth: isMobile ? 440 : "auto" }}>
+      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden", maxWidth: 700, minWidth: isMobile ? 440 : "auto" }}>
         <div style={{ display: "flex", padding: "8px 14px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg }}>
           <span style={{ width: 90 }}>Reg.No</span>
           <span style={{ flex: 1 }}>Name</span>
@@ -482,7 +482,7 @@ function EnterMarks({ period, subjects }) {
                 setMarkErr("");
                 setMarks({ ...marks, [s.id]: v });
               }}
-              style={{ width: 60, padding: "6px 8px", border: `1px solid ${THEME.border}`, borderRadius: 0, textAlign: "center" }}
+              style={{ width: 60, padding: "6px 8px", border: `1px solid ${THEME.border}`, borderRadius: 4, textAlign: "center" }}
             />
             <span style={{ width: 60, textAlign: "center", fontSize: 13, fontWeight: 700, color: THEME.heading }}>{grades[s.id] || "-"}</span>
           </div>
@@ -539,7 +539,7 @@ function TeacherStatus({ period }) {
   });
 
   return (
-    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0 }}>
+    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
       {rows.map((r, i) => (
         <div key={r.id} style={{ padding: isMobile ? "12px 14px" : "10px 16px", borderTop: i > 0 ? `1px solid ${THEME.border}` : "none", fontSize: 13 }}>
           {isMobile ? (
@@ -638,7 +638,7 @@ function ActionMenu({ children }) {
         ref={btnRef} onClick={toggle} aria-label="Actions" aria-haspopup="menu" aria-expanded={open}
         title="Actions" data-open={open} className="mk-actionmenu-btn"
         style={{
-          width: 34, height: 34, borderRadius: 0, border: `1.5px solid ${THEME.border}`, background: THEME.surface,
+          width: 34, height: 34, borderRadius: 4, border: `1.5px solid ${THEME.border}`, background: THEME.surface,
           cursor: "pointer", color: THEME.text, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}
       ><DotsVerticalIcon size={17} /></button>
@@ -647,7 +647,7 @@ function ActionMenu({ children }) {
           data-resultsmenu-portal role="menu" className="mk-actionmenu-panel"
           style={{
             position: "fixed", top: pos.top, left: pos.left, background: THEME.surface, border: `1px solid ${THEME.border}`,
-            borderRadius: 0, boxShadow: "0 10px 30px rgba(15,23,42,0.18)", zIndex: 1000, width: MENU_WIDTH,
+            borderRadius: 4, boxShadow: "0 10px 30px rgba(15,23,42,0.18)", zIndex: 1000, width: MENU_WIDTH,
             overflow: "hidden", padding: 5,
           }}
           onClick={() => setOpen(false)}
@@ -663,13 +663,13 @@ function MenuItem({ onClick, danger, icon, children }) {
   return (
     <button onClick={onClick} role="menuitem" className="mk-actionmenu-item" style={{
       display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", padding: "9px 10px", fontSize: 12.5,
-      fontWeight: 500, background: "transparent", border: "none", borderRadius: 0, cursor: "pointer",
+      fontWeight: 500, background: "transparent", border: "none", borderRadius: 4, cursor: "pointer",
       color: danger ? THEME.danger : THEME.text,
     }}>
       {icon && (
         <span style={{
           display: "flex", flexShrink: 0, alignItems: "center", justifyContent: "center", width: 22, height: 22,
-          borderRadius: 0, background: danger ? THEME.dangerLight : THEME.bg, color: danger ? THEME.danger : THEME.muted,
+          borderRadius: 4, background: danger ? THEME.dangerLight : THEME.bg, color: danger ? THEME.danger : THEME.muted,
         }}>{icon}</span>
       )}
       {children}
@@ -677,7 +677,7 @@ function MenuItem({ onClick, danger, icon, children }) {
   );
 }
 function StatusPill({ ok, children }) {
-  return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 0, background: ok ? THEME.successLight : THEME.warningLight, color: ok ? THEME.success : THEME.warning }}>{children}</span>;
+  return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 4, background: ok ? THEME.successLight : THEME.warningLight, color: ok ? THEME.success : THEME.warning }}>{children}</span>;
 }
 
 // ══════════════════ COMPILED RESULTS (all roles) ══════════════════
@@ -796,13 +796,13 @@ function ParentReportOptionsModal({ sheetId, studentId, studentName, onClose }) 
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 3100, display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20 }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 0, width: "100%", maxWidth: 460, maxHeight: isMobile ? "92vh" : "88vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 460, maxHeight: isMobile ? "92vh" : "88vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading }}>{studentId ? `Parent Report — ${studentName}` : "Parent Reports — All Students"}</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: THEME.muted }}><CloseIcon size={18} /></button>
         </div>
 
-        {err && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "8px 12px", borderRadius: 0, fontSize: 12.5, marginBottom: 12 }}>{err}</div>}
+        {err && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "8px 12px", borderRadius: 4, fontSize: 12.5, marginBottom: 12 }}>{err}</div>}
 
         <label style={labelStyle}>Mhula</label>
         <select value={mhula} onChange={(e) => setMhula(e.target.value)} style={{ ...selectStyle, width: "100%", marginBottom: 14 }}>
@@ -994,7 +994,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
   return createPortal(
     <>
       <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 3200, display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20 }} onClick={onClose}>
-        <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 0, width: "100%", maxWidth: 620, maxHeight: isMobile ? "94vh" : "90vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 620, maxHeight: isMobile ? "94vh" : "90vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4, gap: 10 }}>
             <div>
               <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading, display: "flex", alignItems: "center", gap: 8 }}><MessageIcon size={16} />Send Results via SMS</h3>
@@ -1003,7 +1003,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
             <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: THEME.muted, flexShrink: 0 }}><CloseIcon size={18} /></button>
           </div>
 
-          {err && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "8px 12px", borderRadius: 0, fontSize: 12.5, margin: "12px 0" }}>⚠ {err}</div>}
+          {err && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "8px 12px", borderRadius: 4, fontSize: 12.5, margin: "12px 0" }}>⚠ {err}</div>}
 
           {step === "compose" && (
             <div style={{ marginTop: 14 }}>
@@ -1015,7 +1015,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
               <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
                 {[["nextsms", "NEXTSMS"], ["android_gateway", "Android SMS Gateway"]].map(([val, label]) => (
                   <label key={val} style={{
-                    display: "flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 0,
+                    display: "flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 4,
                     border: `1.5px solid ${provider === val ? THEME.navy : THEME.border}`,
                     background: provider === val ? `${THEME.navy}10` : "transparent", cursor: "pointer", fontSize: 12.5,
                   }}>
@@ -1051,7 +1051,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
 
           {step === "review" && preview && (
             <div style={{ marginTop: 14 }}>
-              <div style={{ background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "8px 12px", fontSize: 12, color: THEME.text, marginBottom: 12 }}>
+              <div style={{ background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "8px 12px", fontSize: 12, color: THEME.text, marginBottom: 12 }}>
                 {preview.total_students} student(s) with results · {preview.matched.length} have a parent phone on file · {preview.unmatched.length} do not
               </div>
 
@@ -1062,7 +1062,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
                     <ChevronDownIcon size={11} style={{ transform: showUnmatched ? "rotate(180deg)" : "none" }} />
                   </button>
                   {showUnmatched && (
-                    <div style={{ marginTop: 6, border: `1px solid ${THEME.border}`, borderRadius: 0, maxHeight: 140, overflowY: "auto" }}>
+                    <div style={{ marginTop: 6, border: `1px solid ${THEME.border}`, borderRadius: 4, maxHeight: 140, overflowY: "auto" }}>
                       {preview.unmatched.map((u) => (
                         <div key={u.student_id} style={{ padding: "7px 12px", borderBottom: `1px solid ${THEME.border}`, fontSize: 12 }}>
                           <b>{u.full_name}</b> <span style={{ color: THEME.muted }}>· Reg No: {u.reg_no || "-"}</span>
@@ -1082,7 +1082,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
                 </div>
               </div>
 
-              <div style={{ maxHeight: 320, overflowY: "auto", border: `1px solid ${THEME.border}`, borderRadius: 0 }}>
+              <div style={{ maxHeight: 320, overflowY: "auto", border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
                 {preview.matched.length === 0 && (
                   <div style={{ padding: 14, fontSize: 12.5, color: THEME.muted }}>No student on this sheet has a saved parent phone number yet.</div>
                 )}
@@ -1095,7 +1095,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
                         <span style={{ color: THEME.muted, fontSize: 11, fontVariantNumeric: "tabular-nums" }}>{m.phone}</span>
                       </span>
                       <span style={{ color: THEME.muted, fontSize: 11 }}>{m.parent_name || "Parent/Guardian"} · Reg No: {m.reg_no || "-"}</span>
-                      <span style={{ background: THEME.bg, borderRadius: 0, padding: "6px 8px", fontSize: 11.5, color: THEME.text, lineHeight: 1.5, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }}>{m.message}</span>
+                      <span style={{ background: THEME.bg, borderRadius: 4, padding: "6px 8px", fontSize: 11.5, color: THEME.text, lineHeight: 1.5, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }}>{m.message}</span>
                       <span style={{ color: THEME.muted, fontSize: 10.5 }}>{m.char_count} characters · {m.sms_segments} SMS part(s)</span>
                     </span>
                   </label>
@@ -1116,7 +1116,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
               <div style={{
                 background: sendResult.status === "sent" ? THEME.successLight : sendResult.status === "partial" ? THEME.warningLight : THEME.dangerLight,
                 color: sendResult.status === "sent" ? THEME.success : sendResult.status === "partial" ? THEME.warning : THEME.danger,
-                borderRadius: 0, padding: "12px 14px", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8,
+                borderRadius: 4, padding: "12px 14px", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 8,
               }}>
                 <CheckCircleIcon size={16} />{sendResult.message}
               </div>
@@ -1124,7 +1124,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
               {sendResult.failures && sendResult.failures.length > 0 && (
                 <div style={{ marginTop: 12 }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: THEME.danger, margin: "0 0 6px" }}>Failed to send ({sendResult.failures.length}):</p>
-                  <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 0, maxHeight: 140, overflowY: "auto" }}>
+                  <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, maxHeight: 140, overflowY: "auto" }}>
                     {sendResult.failures.map((f, i) => (
                       <div key={i} style={{ padding: "7px 12px", borderBottom: `1px solid ${THEME.border}`, fontSize: 12 }}>
                         <b>{f.student_name}</b> <span style={{ color: THEME.muted }}>· {f.phone}</span>
@@ -1151,7 +1151,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
   );
 }
 
-const chipBtnStyle = { padding: "5px 10px", borderRadius: 0, border: `1px solid ${THEME.border}`, background: THEME.bg, color: THEME.text, fontSize: 11, fontWeight: 600, cursor: "pointer" };
+const chipBtnStyle = { padding: "5px 10px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.bg, color: THEME.text, fontSize: 11, fontWeight: 600, cursor: "pointer" };
 const linkBtnStyle = { background: "none", border: "none", color: THEME.heading, fontSize: 11.5, fontWeight: 600, cursor: "pointer", padding: 0 };
 
 function CompiledResults({ period }) {
@@ -1212,7 +1212,7 @@ function CompiledResults({ period }) {
   });
 
   return (
-    <div style={{ background: NECTA_SUMMARY_BG, padding: "14px 16px", borderRadius: 0 }}>
+    <div style={{ background: NECTA_SUMMARY_BG, padding: "14px 16px", borderRadius: 4 }}>
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
         <button onClick={() => pdfAction("print")} disabled={!sheetId || busyPdf} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { flex: 1, textAlign: "center" } : {}) }}>{busyPdf ? <SpinnerIcon size={14} /> : <PrinterIcon size={14} />}Print</button>
         <button onClick={() => pdfAction("export")} disabled={!sheetId || busyPdf} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { flex: 1, textAlign: "center" } : {}) }}>{busyPdf ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}Export PDF</button>
@@ -1439,7 +1439,7 @@ function ParentsReports({ period }) {
   return (
     <div>
       {canParentReport && sheetId && (
-        <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: isMobile ? 12 : 14, marginBottom: 18, maxWidth: 640 }}>
+        <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 12 : 14, marginBottom: 18, maxWidth: 640 }}>
           <p style={{ margin: "0 0 10px", fontSize: 12.5, fontWeight: 700, color: THEME.heading }}>Parent Report (PDF)</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 8, flexWrap: "wrap", alignItems: isMobile ? "stretch" : "center" }}>
             <input
@@ -1453,7 +1453,7 @@ function ParentsReports({ period }) {
             </button>
           </div>
           {prSearch.trim().length >= 2 && (
-            <div style={{ marginTop: 8, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden", maxHeight: 180, overflowY: "auto" }}>
+            <div style={{ marginTop: 8, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden", maxHeight: 180, overflowY: "auto" }}>
               {data.students
                 .filter((s) => s.full_name.toLowerCase().includes(prSearch.trim().toLowerCase()))
                 .slice(0, 8)
@@ -1484,7 +1484,7 @@ function ParentsReports({ period }) {
       )}
 
       {canSms && sheetId && (
-        <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: isMobile ? 12 : 14, marginBottom: 18, maxWidth: 640 }}>
+        <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 12 : 14, marginBottom: 18, maxWidth: 640 }}>
           <p style={{ margin: "0 0 4px", fontSize: 12.5, fontWeight: 700, color: THEME.heading }}>Send Results to Parents (SMS)</p>
           <p style={{ margin: "0 0 10px", fontSize: 11.5, color: THEME.muted, lineHeight: 1.5 }}>
             Automatically texts each student's own compiled result to their own registered parent number - matched by student, never mixed up.
@@ -1611,13 +1611,13 @@ function AcademicStudentResultsModal({ token, onClose }) {
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 3000, display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20 }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 0, width: "100%", maxWidth: 720, maxHeight: isMobile ? "92vh" : "88vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 720, maxHeight: isMobile ? "92vh" : "88vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading, display: "flex", alignItems: "center", gap: 8 }}><SearchIcon size={16} />Search Student Results</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: THEME.muted }}><CloseIcon size={18} /></button>
         </div>
 
-        {err && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "8px 12px", borderRadius: 0, fontSize: 12.5, marginBottom: 14 }}>{err}</div>}
+        {err && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "8px 12px", borderRadius: 4, fontSize: 12.5, marginBottom: 14 }}>{err}</div>}
 
         {!student ? (
           <>
@@ -1629,7 +1629,7 @@ function AcademicStudentResultsModal({ token, onClose }) {
             </div>
             {searching && <p style={{ fontSize: 12.5, color: THEME.muted }}>Searching…</p>}
             {!!matches.length && (
-              <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+              <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
                 {matches.map((s) => {
                   const name = [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ");
                   return (
@@ -1645,7 +1645,7 @@ function AcademicStudentResultsModal({ token, onClose }) {
           </>
         ) : (
           <>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, padding: "8px 12px", background: THEME.bg, borderRadius: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, padding: "8px 12px", background: THEME.bg, borderRadius: 4 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 13.5, color: THEME.text }}>{[student.first_name, student.middle_name, student.last_name].filter(Boolean).join(" ")}</div>
                 <div style={{ fontSize: 11.5, color: THEME.muted }}>{student.form} · Reg No: {student.reg_no || student.entry_no || "-"}</div>
@@ -1781,13 +1781,13 @@ function TeacherEvaluationModal({ token, onClose }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 3000, display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20 }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 0, width: "100%", maxWidth: 900, maxHeight: isMobile ? "92vh" : "88vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 900, maxHeight: isMobile ? "92vh" : "88vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading, display: "flex", alignItems: "center", gap: 8 }}><CheckCircleIcon size={16} />TEACHERS ASSESMENT</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: THEME.muted }}><CloseIcon size={18} /></button>
         </div>
 
-        {err && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "8px 12px", borderRadius: 0, fontSize: 12.5, marginBottom: 14 }}>{err}</div>}
+        {err && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "8px 12px", borderRadius: 4, fontSize: 12.5, marginBottom: 14 }}>{err}</div>}
 
         <div style={isMobile ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } : { display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
           <Field label="Darasa (Form)">
@@ -1833,7 +1833,7 @@ function TeacherEvaluationModal({ token, onClose }) {
         </div>
 
         {data && (
-          <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 0, padding: isMobile ? 14 : 18, background: THEME.bg }}>
+          <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 14 : 18, background: THEME.bg }}>
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 13, color: THEME.muted }}>
                 TATHMINI YA MATOKEO YA MTIHANI WA <strong style={{ color: THEME.text }}>{data.period.exam_type.toUpperCase()}</strong> {data.period.month.toUpperCase()}, {data.period.year} - {data.period.form.toUpperCase()}
@@ -1902,7 +1902,7 @@ function TeacherEvaluationModal({ token, onClose }) {
 function StudentResultCard({ result, isMobile, onPrint, onExport, busy }) {
   const { sheet, student } = result;
   return (
-    <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 0, padding: isMobile ? 14 : 18, background: THEME.bg }}>
+    <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 14 : 18, background: THEME.bg }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 14 }}>
         <div>
           <div style={{ fontWeight: 800, fontSize: 15, color: THEME.text }}>{student.full_name}</div>
@@ -1939,7 +1939,7 @@ function StudentResultCard({ result, isMobile, onPrint, onExport, busy }) {
           ["GPA", student.gpa],
           ["Subjects Sat", student.subjects_sat],
         ].map(([label, value]) => (
-          <div key={label} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "8px 12px" }}>
+          <div key={label} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "8px 12px" }}>
             <div style={{ fontSize: 10.5, fontWeight: 700, color: THEME.muted, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: THEME.text }}>{value ?? "-"}</div>
           </div>
@@ -2091,7 +2091,7 @@ function PublishedResults({ period }) {
       {sheetId ? (
         <div style={{
           display: "flex", alignItems: "center", gap: 12, background: THEME.surface, border: `1px solid ${THEME.border}`,
-          borderRadius: 0, padding: "12px 16px", maxWidth: 520,
+          borderRadius: 4, padding: "12px 16px", maxWidth: 520,
         }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 12.5, color: THEME.heading }}>Results Portal (Parents/Students)</div>
@@ -2170,14 +2170,14 @@ function OnlineSheetsList({ token, reloadKey, onChanged }) {
 }
 
 function Warn({ children }) {
-  return <div style={{ background: THEME.warningLight, color: THEME.warning, padding: 12, borderRadius: 0, fontSize: 13, marginBottom: 14 }}>{children}</div>;
+  return <div style={{ background: THEME.warningLight, color: THEME.warning, padding: 12, borderRadius: 4, fontSize: 13, marginBottom: 14 }}>{children}</div>;
 }
 
-const selectStyle = { padding: "8px 10px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13 };
+const selectStyle = { padding: "8px 10px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13 };
 const labelStyle = { display: "block", fontSize: 11.5, fontWeight: 700, color: THEME.muted, marginBottom: 5 };
-const inputStyle = { padding: "9px 12px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13 };
-const btnPrimary = { padding: "9px 18px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 0, fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
-const btnSecondary = { padding: "9px 18px", background: THEME.surface, color: THEME.heading, border: `1.5px solid ${THEME.heading}`, borderRadius: 0, fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
-const btnTiny = { padding: "4px 10px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 11, cursor: "pointer" };
-const tabActive = { padding: "8px 16px", borderRadius: 0, border: "none", background: THEME.navy, color: "#fff", fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
+const inputStyle = { padding: "9px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13 };
+const btnPrimary = { padding: "9px 18px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 4, fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
+const btnSecondary = { padding: "9px 18px", background: THEME.surface, color: THEME.heading, border: `1.5px solid ${THEME.heading}`, borderRadius: 4, fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
+const btnTiny = { padding: "4px 10px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 11, cursor: "pointer" };
+const tabActive = { padding: "8px 16px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
 const tabInactive = { ...tabActive, background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` };

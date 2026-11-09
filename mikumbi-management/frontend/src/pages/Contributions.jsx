@@ -66,8 +66,8 @@ function TabBar({ tabs, active, onChange, isCompact }) {
   );
 }
 
-const tabPillActive = (isCompact) => ({ display: "inline-flex", alignItems: "center", gap: 6, padding: isCompact ? "8px 13px" : "9px 16px", borderRadius: 0, border: "none", background: THEME.navy, color: "#fff", fontSize: isCompact ? 12.5 : 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" });
-const tabPillInactive = (isCompact) => ({ display: "inline-flex", alignItems: "center", gap: 6, padding: isCompact ? "8px 13px" : "9px 16px", borderRadius: 0, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontSize: isCompact ? 12.5 : 13, cursor: "pointer", whiteSpace: "nowrap" });
+const tabPillActive = (isCompact) => ({ display: "inline-flex", alignItems: "center", gap: 6, padding: isCompact ? "8px 13px" : "9px 16px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontSize: isCompact ? 12.5 : 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" });
+const tabPillInactive = (isCompact) => ({ display: "inline-flex", alignItems: "center", gap: 6, padding: isCompact ? "8px 13px" : "9px 16px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontSize: isCompact ? 12.5 : 13, cursor: "pointer", whiteSpace: "nowrap" });
 
 // Colored stat card, matching the tinted look Student Management/Timetable
 // already use (a pale wash of `color` behind the number) - Contributions
@@ -76,7 +76,7 @@ const tabPillInactive = (isCompact) => ({ display: "inline-flex", alignItems: "c
 // apart from "outstanding/pending" ones at a glance.
 function StatCard({ label, value, sub, color = THEME.navy }) {
   return (
-    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "12px 18px", minWidth: 160 }}>
+    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "12px 18px", minWidth: 160 }}>
       <div style={{ fontSize: 11.5, color: THEME.muted }}>{label}</div>
       <div style={{ fontSize: 20, fontWeight: 800, color }}>{value}</div>
       {sub && <div style={{ fontSize: 10.5, color: THEME.muted, marginTop: 2 }}>{sub}</div>}
@@ -89,7 +89,7 @@ function StatCard({ label, value, sub, color = THEME.navy }) {
 // as "selected" even at a glance while scrolling.
 const tabCard = (isActive) => ({
   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
-  padding: "14px 8px 12px", borderRadius: 0, cursor: "pointer", textAlign: "center",
+  padding: "14px 8px 12px", borderRadius: 4, cursor: "pointer", textAlign: "center",
   border: isActive ? `1px solid ${THEME.navy}` : `1px solid ${THEME.border}`,
   background: isActive ? THEME.navy : THEME.surface,
   boxShadow: isActive ? "0 4px 14px rgba(15,23,42,0.18)" : "0 1px 3px rgba(15,23,42,0.05)",
@@ -199,7 +199,7 @@ function PartTimeOversight({ token }) {
             {!summary.length && <p style={{ fontSize: 13, color: THEME.muted }}>No classes found.</p>}
           </div>
         ) : (
-        <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+        <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
           <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 560 }}>
             <span style={{ flex: 1.5 }}>Class</span>
             <span style={{ flex: 1 }}>Students Paid</span>
@@ -235,7 +235,7 @@ function PartTimeOversight({ token }) {
               {!drillRows.length && <p style={{ fontSize: 13, color: THEME.muted }}>No students found.</p>}
             </div>
           ) : (
-          <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+          <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
             <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 460 }}>
               <span style={{ flex: 2 }}>Name</span>
               <span style={{ flex: 1 }}>Status</span>
@@ -298,7 +298,7 @@ function PartTimeHistory({ token }) {
           {!rows.length && <p style={{ fontSize: 13, color: THEME.muted }}>No records for {year}.</p>}
         </div>
       ) : (
-      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 480 }}>
           <span style={{ flex: 1 }}>Month</span>
           <span style={{ flex: 1 }}>Class</span>
@@ -418,7 +418,7 @@ function PartTimeStudentHistory({ token }) {
           {!filtered.length && <p style={{ fontSize: 13, color: THEME.muted }}>{search ? "No matching student found." : `No contributions recorded for ${year}.`}</p>}
         </div>
       ) : (
-      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 680 }}>
           <span style={{ flex: 1.8 }}>Name</span><span style={{ flex: 0.8 }}>Class</span>
           <span style={{ flex: 1 }}>Months Paid</span><span style={{ flex: 0.7 }}>Ream(s)</span><span style={{ flex: 1 }}>Total Paid</span><span style={{ width: 110 }} />
@@ -462,7 +462,7 @@ function StudentPartTimeHistoryModal({ student, year, token, onClose }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: THEME.surface, borderRadius: 0, padding: 22, width: "100%", maxWidth: 460, maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 460, maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading }}>Contribution History - {name}</h3>
           <button onClick={onClose} style={{ border: "none", background: "none", fontSize: 20, cursor: "pointer", color: THEME.muted, lineHeight: 1 }}>&times;</button>
@@ -470,7 +470,7 @@ function StudentPartTimeHistoryModal({ student, year, token, onClose }) {
         {error && <ErrorBox msg={error} />}
         <div style={{ display: "grid", gap: 8 }}>
           {entries.map((e) => (
-            <div key={`${e.source}-${e.id}`} style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 10px", background: THEME.bg, borderRadius: 0, fontSize: 13 }}>
+            <div key={`${e.source}-${e.id}`} style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 10px", background: THEME.bg, borderRadius: 4, fontSize: 13 }}>
               {e.source === "ream" ? (
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -535,7 +535,7 @@ function DownloadOptionsModal({ year, downloading, onClose, onConfirm }) {
   };
 
   const radioRow = (value, label) => (
-    <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", border: `1px solid ${THEME.border}`, borderRadius: 0, cursor: "pointer", fontSize: 13, fontWeight: scope === value ? 700 : 500, background: scope === value ? THEME.bg : "transparent" }}>
+    <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", border: `1px solid ${THEME.border}`, borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: scope === value ? 700 : 500, background: scope === value ? THEME.bg : "transparent" }}>
       <input type="radio" name="dl-scope" checked={scope === value} onChange={() => setScope(value)} />
       {label}
     </label>
@@ -543,7 +543,7 @@ function DownloadOptionsModal({ year, downloading, onClose, onConfirm }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 210, padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: THEME.surface, borderRadius: 0, padding: 22, width: "100%", maxWidth: 380 }}>
+      <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 380 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading }}>Download Contributions Report</h3>
           <button onClick={onClose} style={{ border: "none", background: "none", fontSize: 20, cursor: "pointer", color: THEME.muted, lineHeight: 1 }}>&times;</button>
@@ -595,7 +595,7 @@ function ReamOversight({ token }) {
       <h3 style={{ fontSize: 14, marginBottom: 10 }}>Ream(s) - by Class</h3>
       <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
         {summary.map((r) => (
-          <div key={r.form} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "14px 18px", minWidth: 130, flex: isCompact ? "1 1 130px" : "0 0 auto" }}>
+          <div key={r.form} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "14px 18px", minWidth: 130, flex: isCompact ? "1 1 130px" : "0 0 auto" }}>
             <div style={{ fontSize: 12, color: THEME.muted }}>{r.form}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: THEME.heading }}>{r.students_brought}</div>
             <div style={{ fontSize: 11, color: THEME.muted }}>students brought Ream(s)</div>
@@ -622,7 +622,7 @@ function ReamOversight({ token }) {
           {!list.length && <p style={{ fontSize: 13, color: THEME.muted }}>No Ream(s) entries yet.</p>}
         </div>
       ) : (
-      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ minWidth: 420 }}>
           {list.slice(0, 30).map((r, i) => (
             <div key={r.id} style={{ display: "flex", alignItems: "center", padding: "8px 16px", fontSize: 13, borderTop: i > 0 ? `1px solid ${THEME.border}` : "none" }}>
@@ -689,7 +689,7 @@ function OtherExpensesOversight({ token }) {
           {!list.length && <p style={{ fontSize: 13, color: THEME.muted }}>No entries yet.</p>}
         </div>
       ) : (
-      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 520 }}>
           <span style={{ flex: 2 }}>Name</span><span style={{ flex: 1 }}>Class</span><span style={{ flex: 1 }}>Amount</span><span style={{ flex: 1 }}>Date</span><span style={{ width: 44 }} />
         </div>
@@ -732,7 +732,7 @@ function EditChargeModal({ charge, token, onClose, onDone }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
-      <div style={{ background: THEME.surface, borderRadius: 0, padding: 22, width: "100%", maxWidth: 360 }}>
+      <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 360 }}>
         <h3 style={{ margin: "0 0 4px", fontSize: 15, color: THEME.heading }}>Edit Payment - {name}</h3>
         <p style={{ margin: "0 0 16px", fontSize: 12.5, color: THEME.muted }}>{charge.charge_type} · {charge.charge_date?.slice?.(0, 10) || charge.charge_date}</p>
         <label style={{ fontSize: 12, color: THEME.muted, display: "block", marginBottom: 4 }}>Amount (TZS)</label>
@@ -839,7 +839,7 @@ function DailyCollections({ showClassFilter }) {
           {!rows.length && !noClass && <p style={{ fontSize: 13, color: THEME.muted }}>No payments were collected on {date}.</p>}
         </div>
       ) : (
-      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 520 }}>
           <span style={{ flex: 2 }}>Name</span>
           <span style={{ flex: 0.8 }}>Class</span>
@@ -928,7 +928,7 @@ function ClassTeacherPartTime() {
       {isHoliday && <p style={{ fontSize: 13.5, color: THEME.muted, marginBottom: 12 }}>No contribution is billed in {MONTHS[month - 1]} (school holiday).</p>}
 
       {!isHoliday && (
-        <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0 }}>
+        <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
           {!isCompact && (
             <div className="table-scroll">
               <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 420 }}>
@@ -1018,7 +1018,7 @@ function InstallmentPaymentModal({ student, year, month, token, onClose, onDone 
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
-      <div style={{ background: THEME.surface, borderRadius: 0, padding: 22, width: "100%", maxWidth: 400 }}>
+      <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 400 }}>
         <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>Pay in Installments</h3>
         <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 4 }}>{name} - {MONTHS[month - 1]} {year}</p>
         <p style={{ fontSize: 12, color: THEME.muted, marginBottom: 14 }}>Already paid TZS {already.toLocaleString()} of {MONTHLY_FEE.toLocaleString()}. Remaining: TZS {remaining.toLocaleString()}.</p>
@@ -1119,7 +1119,7 @@ function ClassTeacherReam() {
           {!filtered.length && !noClass && <p style={{ fontSize: 13, color: THEME.muted }}>{search ? "No matching student found." : "No students found for your class."}</p>}
         </div>
       ) : (
-      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0 }} className="table-scroll">
+      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4 }} className="table-scroll">
         <div style={{ display: "flex", alignItems: "center", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 340 }}>
           <span style={{ flex: 2 }}>Name</span><span style={{ width: 130, textAlign: "center" }}>Brought Ream(s)?</span>
         </div>
@@ -1172,14 +1172,14 @@ function AdvancePaymentModal({ student, year, currentMonth, token, onClose, onDo
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
-      <div style={{ background: THEME.surface, borderRadius: 0, padding: 22, width: "100%", maxWidth: 420, maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 420, maxHeight: "90vh", overflowY: "auto" }}>
         <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>Pay Months Ahead</h3>
         <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 14 }}>{[student.first_name, student.last_name].join(" ")} - select every month being paid for now (TZS {MONTHLY_FEE.toLocaleString()} each).</p>
         {error && <ErrorBox msg={error} />}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
           {futureMonths.map((m) => (
             <div key={m} onClick={() => toggle(m)} style={{
-              padding: "6px 10px", borderRadius: 0, cursor: "pointer", fontSize: 12.5,
+              padding: "6px 10px", borderRadius: 4, cursor: "pointer", fontSize: 12.5,
               border: `1px solid ${months.includes(m) ? THEME.navy : THEME.border}`,
               background: months.includes(m) ? THEME.navy : THEME.surface, color: months.includes(m) ? "#fff" : THEME.text,
             }}>{MONTHS[m - 1]}</div>
@@ -1196,7 +1196,7 @@ function AdvancePaymentModal({ student, year, currentMonth, token, onClose, onDo
 }
 
 function ErrorBox({ msg }) {
-  return <div style={{ marginBottom: 14, padding: 12, borderRadius: 0, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger }}>{msg}</div>;
+  return <div style={{ marginBottom: 14, padding: 12, borderRadius: 4, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger }}>{msg}</div>;
 }
 function StatusPill({ ok, children, style }) {
   return <span style={{ ...style, fontSize: 11.5, fontWeight: 700, color: ok ? THEME.success : THEME.muted }}>{children}</span>;
@@ -1251,11 +1251,11 @@ function ActionMenu({ children }) {
   return (
     <div ref={wrapRef} style={{ position: "relative" }}>
       <button ref={btnRef} onClick={toggle} style={{
-        width: 28, height: 28, borderRadius: 0, border: `1px solid ${THEME.border}`, background: THEME.surface,
+        width: 28, height: 28, borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface,
         cursor: "pointer", color: THEME.text, display: "flex", alignItems: "center", justifyContent: "center",
       }}><DotsVerticalIcon size={16} /></button>
       {open && createPortal(
-        <div data-contribmenu-portal style={{ position: "fixed", top: pos.top, left: pos.left, background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, boxShadow: "0 6px 18px rgba(0,0,0,0.18)", zIndex: 1000, width: MENU_WIDTH, overflow: "hidden" }} onClick={() => setOpen(false)}>
+        <div data-contribmenu-portal style={{ position: "fixed", top: pos.top, left: pos.left, background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, boxShadow: "0 6px 18px rgba(0,0,0,0.18)", zIndex: 1000, width: MENU_WIDTH, overflow: "hidden" }} onClick={() => setOpen(false)}>
           {children}
         </div>,
         document.body
@@ -1272,17 +1272,17 @@ function MenuItem({ onClick, icon: Icon, children }) {
   );
 }
 
-const selectStyle = { padding: "8px 12px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13 };
-const btnPrimary = { padding: "9px 16px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 0, cursor: "pointer", fontSize: 13, fontWeight: 600 };
-const btnSecondary = { padding: "9px 16px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, cursor: "pointer", fontSize: 13 };
-const btnRecord = { padding: "7px 12px", borderRadius: 0, border: `1px solid ${THEME.heading}`, background: THEME.surface, color: THEME.heading, fontSize: 12, fontWeight: 600, cursor: "pointer" };
+const selectStyle = { padding: "8px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13 };
+const btnPrimary = { padding: "9px 16px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 600 };
+const btnSecondary = { padding: "9px 16px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, cursor: "pointer", fontSize: 13 };
+const btnRecord = { padding: "7px 12px", borderRadius: 4, border: `1px solid ${THEME.heading}`, background: THEME.surface, color: THEME.heading, fontSize: 12, fontWeight: 600, cursor: "pointer" };
 
 // Mobile/tablet "row card" - the responsive stand-in for a flex-row table
 // column set. Every table in this file that used to force horizontal
 // scrolling on a phone (via a fixed minWidth) now switches to a stack of
 // these on isMobile/isCompact, so nothing sits off-screen.
 const cardList = { display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" };
-const rowCard = { background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "12px 14px" };
+const rowCard = { background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "12px 14px" };
 const cardHeadRow = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8 };
 const cardTitle = { fontSize: 14, fontWeight: 700, color: THEME.heading };
 const cardField = { display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12.5, padding: "3px 0" };

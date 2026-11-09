@@ -65,7 +65,7 @@ export default function JoiningInstructions() {
       {canList && (
         <button onClick={() => navigate("/dashboard/students")} style={{
           display: "inline-flex", alignItems: "center", gap: 6, background: THEME.surface,
-          border: `1.5px solid ${THEME.border}`, borderRadius: 0, color: THEME.heading,
+          border: `1.5px solid ${THEME.border}`, borderRadius: 4, color: THEME.heading,
           fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 14, padding: "8px 14px",
         }}>← Back to Student Management</button>
       )}
@@ -99,7 +99,7 @@ export default function JoiningInstructions() {
 
 function StatChip({ label, value, color }) {
   return (
-    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "10px 18px", minWidth: 120 }}>
+    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "10px 18px", minWidth: 120 }}>
       <div style={{ fontSize: 20, fontWeight: 800, color }}>{value}</div>
       <div style={{ fontSize: 11.5, color: THEME.muted }}>{label}</div>
     </div>
@@ -238,7 +238,7 @@ function ManualIssueTab({ token, onIssued }) {
 
   return (
     <div style={{ maxWidth: 480 }}>
-      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: 14, marginBottom: 18 }}>
+      <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 14, marginBottom: 18 }}>
         <div style={{ fontWeight: 700, fontSize: 12.5, color: THEME.heading, marginBottom: 10 }}>Offline? Get blank form</div>
         <button onClick={downloadBlank} disabled={blankBusy} style={secondaryBtn}>{blankBusy ? "Downloading..." : "Download Blank Form (PDF)"}</button>
       </div>
@@ -487,8 +487,8 @@ const linkBtn = { background: "none", border: "none", color: THEME.navy, fontWei
 const Muted = ({ children }) => <p style={{ color: THEME.muted, fontSize: 13.5, display: "flex", alignItems: "center", gap: 7 }}>{children}</p>;
 const thStyle = { padding: "8px 10px", textAlign: "left", borderBottom: `1px solid ${THEME.border}`, fontWeight: 700, whiteSpace: "nowrap" };
 const tdStyle = { padding: "7px 10px", borderBottom: `1px solid ${THEME.border}`, whiteSpace: "nowrap" };
-const inputStyle = { width: "100%", padding: "9px 12px", borderRadius: 0, border: `1px solid ${THEME.border}`, fontSize: 13, boxSizing: "border-box" };
-const primaryBtn = { padding: "9px 18px", borderRadius: 0, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" };
-const secondaryBtn = { padding: "9px 18px", borderRadius: 0, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontWeight: 700, fontSize: 13, cursor: "pointer" };
-const dangerBtn = { padding: "9px 18px", borderRadius: 0, border: "none", background: "#B91C1C", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" };
-const smallDangerBtn = { padding: "5px 10px", borderRadius: 0, border: "1px solid #B91C1C55", background: "none", color: "#B91C1C", fontWeight: 700, fontSize: 11.5, cursor: "pointer" };
+const inputStyle = { width: "100%", padding: "9px 12px", borderRadius: 4, border: `1px solid ${THEME.border}`, fontSize: 13, boxSizing: "border-box" };
+const primaryBtn = { padding: "9px 18px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" };
+const secondaryBtn = { padding: "9px 18px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontWeight: 700, fontSize: 13, cursor: "pointer" };
+const dangerBtn = { padding: "9px 18px", borderRadius: 4, border: "none", background: "#B91C1C", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" };
+const smallDangerBtn = { padding: "5px 10px", borderRadius: 4, border: "1px solid #B91C1C55", background: "none", color: "#B91C1C", fontWeight: 700, fontSize: 11.5, cursor: "pointer" };

@@ -14,7 +14,7 @@ const FORMS = ["Form I", "Form II", "Form III", "Form IV"];
 // tell "students who contributed" apart from totals at a glance.
 function StatCard({ label, value, sub, color = THEME.navy }) {
   return (
-    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "12px 18px", minWidth: 160 }}>
+    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "12px 18px", minWidth: 160 }}>
       <div style={{ fontSize: 11.5, color: THEME.muted }}>{label}</div>
       <div style={{ fontSize: 20, fontWeight: 800, color }}>{value}</div>
       {sub && <div style={{ fontSize: 10.5, color: THEME.muted, marginTop: 2 }}>{sub}</div>}
@@ -177,7 +177,7 @@ function FoodDailyCollections({ showClassFilter }) {
           {!grouped.length && !noClass && <p style={{ fontSize: 13, color: THEME.muted }}>No food contributions were recorded on {date}.</p>}
         </div>
       ) : (
-      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 620 }}>
           <span style={{ flex: 1.4 }}>Name</span>
           <span style={{ flex: 0.6 }}>Class</span>
@@ -203,7 +203,7 @@ function FoodDailyCollections({ showClassFilter }) {
         <Modal title={`${date} - ${[viewStudent.first_name, viewStudent.middle_name, viewStudent.last_name].filter(Boolean).join(" ")}`} onClose={() => setViewStudent(null)}>
           <div style={{ display: "grid", gap: 8 }}>
             {viewStudent.entries.map((e) => (
-              <div key={e.id} style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 10px", background: THEME.bg, borderRadius: 0, fontSize: 13 }}>
+              <div key={e.id} style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 10px", background: THEME.bg, borderRadius: 4, fontSize: 13 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontWeight: 600 }}>{labelFor(e.contribution_type)}</span>
                   <span>{Number(e.quantity)} {unitFor(e.contribution_type)}</span>
@@ -291,7 +291,7 @@ function FoodList({ category }) {
           {!filtered.length && <p style={{ fontSize: 13, color: THEME.muted }}>{search ? "No matching student found." : "No students found."}</p>}
         </div>
       ) : (
-      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 620 }}>
           <span style={{ flex: 1.3 }}>Name</span><span style={{ flex: 0.6 }}>Class</span><span style={{ flex: 2.5 }}>Contributed so far ({year})</span><span style={{ width: 130 }} />
         </div>
@@ -467,7 +467,7 @@ function FoodHistory({ showClassFilter = true }) {
           {!rows.length && !noClass && <p style={{ fontSize: 13, color: THEME.muted }}>No contributions recorded for {year}.</p>}
         </div>
       ) : (
-      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, overflow: "hidden" }}>
+      <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 620 }}>
           <span style={{ flex: 1.6 }}>Name</span><span style={{ flex: 0.8 }}>Class</span><span style={{ flex: 0.8 }}>Category</span>
           <span style={{ flex: 0.8 }}>Contributions</span><span style={{ flex: 1 }}>Last Date</span><span style={{ width: 110 }} />
@@ -532,7 +532,7 @@ function StudentHistoryModal({ student, year, onClose }) {
           <button onClick={() => setOpenType(null)} style={{ ...btnSecondary, marginBottom: 12, display: "inline-flex", alignItems: "center", gap: 6 }}><ChevronLeftIcon size={13} />Back to all types</button>
           <div style={{ display: "grid", gap: 8 }}>
             {openGroup.entries.map((e) => (
-              <div key={e.id} style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 10px", background: THEME.bg, borderRadius: 0, fontSize: 13 }}>
+              <div key={e.id} style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 10px", background: THEME.bg, borderRadius: 4, fontSize: 13 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontWeight: 600 }}>{new Date(e.created_at).toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" })}</span>
                   <span>{Number(e.quantity)} {openGroup.type.unit === "LITRES" ? "L" : "kg"}</span>
@@ -549,7 +549,7 @@ function StudentHistoryModal({ student, year, onClose }) {
             return (
               <button key={g.type.key} onClick={() => setOpenType(g.type.key)} style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", textAlign: "left",
-                padding: "10px 12px", background: THEME.bg, border: "none", borderRadius: 0, fontSize: 13, cursor: "pointer",
+                padding: "10px 12px", background: THEME.bg, border: "none", borderRadius: 4, fontSize: 13, cursor: "pointer",
               }}>
                 <span style={{ fontWeight: 600 }}>{g.type.label}</span>
                 <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -570,7 +570,7 @@ function StudentHistoryModal({ student, year, onClose }) {
 function Modal({ title, onClose, children }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: THEME.surface, borderRadius: 0, padding: 22, width: "100%", maxWidth: 420, maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 420, maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading }}>{title}</h3>
           <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: THEME.muted, lineHeight: 1, display: "flex", alignItems: "center" }}><CloseIcon size={18} /></button>
@@ -582,28 +582,28 @@ function Modal({ title, onClose, children }) {
 }
 
 function ErrorBox({ msg }) {
-  return <div style={{ marginBottom: 14, padding: 12, borderRadius: 0, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger }}>{msg}</div>;
+  return <div style={{ marginBottom: 14, padding: 12, borderRadius: 4, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger }}>{msg}</div>;
 }
 
-const tabActive = { padding: "8px 16px", borderRadius: 0, border: "none", background: THEME.navy, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" };
-const tabInactive = { padding: "8px 16px", borderRadius: 0, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontSize: 13, cursor: "pointer" };
+const tabActive = { padding: "8px 16px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" };
+const tabInactive = { padding: "8px 16px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontSize: 13, cursor: "pointer" };
 const tabCompact = { padding: "7px 12px", fontSize: 12, flexShrink: 0, whiteSpace: "nowrap" };
-const selectStyle = { padding: "8px 12px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 13 };
+const selectStyle = { padding: "8px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13 };
 const labelStyle = { fontSize: 12, fontWeight: 600, color: THEME.text, margin: 0 };
-const badge = { fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 0, background: THEME.successLight, color: THEME.success };
-const btnRecord = { padding: "7px 12px", borderRadius: 0, border: `1px solid ${THEME.heading}`, background: THEME.surface, color: THEME.heading, fontSize: 12, fontWeight: 600, cursor: "pointer" };
+const badge = { fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 4, background: THEME.successLight, color: THEME.success };
+const btnRecord = { padding: "7px 12px", borderRadius: 4, border: `1px solid ${THEME.heading}`, background: THEME.surface, color: THEME.heading, fontSize: 12, fontWeight: 600, cursor: "pointer" };
 
 // Mobile/tablet "row card" - the responsive stand-in for a flex-row table
 // column set. Every table in this file that used to force horizontal
 // scrolling on a phone or small tablet (via a fixed minWidth) switches to a
 // grid of these on isCompact, so nothing sits off-screen.
 const cardList = { display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" };
-const rowCard = { background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 0, padding: "12px 14px" };
+const rowCard = { background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "12px 14px" };
 const cardHeadRow = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8 };
 const cardTitle = { fontSize: 14, fontWeight: 700, color: THEME.text };
 const cardField = { display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12.5, padding: "3px 0" };
 const cardFieldLabel = { color: THEME.muted, flexShrink: 0 };
 const cardFieldValue = { color: THEME.text, fontWeight: 600, textAlign: "right" };
-const btnPrimary = { padding: "9px 18px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 0, fontWeight: 600, fontSize: 13, cursor: "pointer" };
-const btnSecondary = { padding: "9px 18px", background: THEME.surface, color: THEME.heading, border: `1.5px solid ${THEME.heading}`, borderRadius: 0, fontWeight: 600, fontSize: 13, cursor: "pointer" };
-const btnCancelRed = { padding: "9px 18px", background: THEME.surface, color: THEME.danger, border: `1.5px solid ${THEME.danger}`, borderRadius: 0, fontWeight: 600, fontSize: 13, cursor: "pointer" };
+const btnPrimary = { padding: "9px 18px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 4, fontWeight: 600, fontSize: 13, cursor: "pointer" };
+const btnSecondary = { padding: "9px 18px", background: THEME.surface, color: THEME.heading, border: `1.5px solid ${THEME.heading}`, borderRadius: 4, fontWeight: 600, fontSize: 13, cursor: "pointer" };
+const btnCancelRed = { padding: "9px 18px", background: THEME.surface, color: THEME.danger, border: `1.5px solid ${THEME.danger}`, borderRadius: 4, fontWeight: 600, fontSize: 13, cursor: "pointer" };

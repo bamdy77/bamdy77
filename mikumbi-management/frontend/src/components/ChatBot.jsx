@@ -226,7 +226,7 @@ export default function ChatBot() {
           width: compact ? "calc(100vw - 24px)" : 330,
           maxWidth: compact ? "calc(100vw - 24px)" : 330,
           height: compact ? "min(70vh, 480px)" : 440,
-          background: THEME.surface, borderRadius: 0,
+          background: THEME.surface, borderRadius: 4,
           boxShadow: "0 12px 32px rgba(15,23,42,0.25)", display: "flex", flexDirection: "column",
           overflow: "hidden", border: `1px solid ${THEME.border}`,
         }}>
@@ -251,7 +251,7 @@ export default function ChatBot() {
                 maxWidth: "82%",
                 background: m.from === "user" ? THEME.navy : THEME.surface,
                 color: m.from === "user" ? "#fff" : THEME.text,
-                padding: "9px 12px", borderRadius: 0,
+                padding: "9px 12px", borderRadius: 4,
                 borderBottomRightRadius: m.from === "user" ? 4 : 14,
                 borderBottomLeftRadius: m.from === "bot" ? 4 : 14,
                 fontSize: 13.5, lineHeight: 1.45, whiteSpace: "pre-wrap",
@@ -261,7 +261,7 @@ export default function ChatBot() {
               </div>
             ))}
             {typing && (
-              <div style={{ alignSelf: "flex-start", background: THEME.surface, borderRadius: 0, borderBottomLeftRadius: 4, padding: "10px 14px", boxShadow: "0 1px 2px rgba(15,23,42,0.08)" }}>
+              <div style={{ alignSelf: "flex-start", background: THEME.surface, borderRadius: 4, borderBottomLeftRadius: 4, padding: "10px 14px", boxShadow: "0 1px 2px rgba(15,23,42,0.08)" }}>
                 <TypingDots />
               </div>
             )}
@@ -276,7 +276,7 @@ export default function ChatBot() {
               onKeyDown={handleKeyDown}
               placeholder="Type your question..."
               style={{
-                flex: 1, border: `1px solid ${THEME.border}`, borderRadius: 0,
+                flex: 1, border: `1px solid ${THEME.border}`, borderRadius: 4,
                 padding: "9px 14px", fontSize: 13.5, outline: "none",
               }}
             />

@@ -45,7 +45,7 @@ export default function Login() {
       background: `linear-gradient(160deg, ${THEME.navy} 0%, ${THEME.navyDark} 100%)`,
     }}>
       <div style={{
-        margin: "auto", width: "100%", maxWidth: 780, display: "flex", borderRadius: 0,
+        margin: "auto", width: "100%", maxWidth: 780, display: "flex", borderRadius: 4,
         overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.3)", minHeight: 480,
       }}>
         {/* Rotating photos - left panel, hidden on narrow screens */}
@@ -88,7 +88,7 @@ export default function Login() {
 
             <button type="submit" disabled={busy} style={{
               width: "100%", marginTop: 20, padding: "12px 0", background: THEME.navy, color: "#fff",
-              border: "none", borderRadius: 0, fontWeight: 600, fontSize: 14.5, cursor: "pointer", opacity: busy ? 0.7 : 1,
+              border: "none", borderRadius: 4, fontWeight: 600, fontSize: 14.5, cursor: "pointer", opacity: busy ? 0.7 : 1,
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}>
               {busy ? <SpinnerIcon size={15} /> : <LoginIcon size={15} />}{busy ? "Signing in..." : "Login"}
@@ -108,4 +108,4 @@ export default function Login() {
 }
 
 const labelStyle = { display: "block", fontSize: 12.5, fontWeight: 600, color: THEME.text, marginTop: 14, marginBottom: 5 };
-const inputStyle = { width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 0, fontSize: 14 };
+const inputStyle = { width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 14 };
