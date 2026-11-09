@@ -881,6 +881,8 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
   const [error, setError]   = useState("");
   const [success, setSuccess] = useState("");
   const [transferModal, setTransferModal] = useState(null); // student row being marked transferred out
+  const [loginNoStudent, setLoginNoStudent] = useState(null); // student whose Results login number is shown
+  const [loginNoCopied, setLoginNoCopied] = useState(false);
   const [transferForm, setTransferForm] = useState({ dest_region:"", dest_district:"", dest_school:"", transfer_out_date:new Date().toISOString().slice(0,10) });
   const [reportModal, setReportModal] = useState(null); // student row for Admin bulk download
   const [reportInclude, setReportInclude] = useState({ hostel:false, contributions:false, results:false });
@@ -1167,7 +1169,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           : isTablet
             ? {display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}
             : {display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, reg., login or prem. no…" style={{...IS,maxWidth:isMobile||isTablet?"none":300, gridColumn:isTablet?"1 / -1":"auto"}}/>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, reg. or prem. no…" style={{...IS,maxWidth:isMobile||isTablet?"none":300, gridColumn:isTablet?"1 / -1":"auto"}}/>
           <select value={filterForm}   onChange={e=>setFilterForm(e.target.value)}   style={{...IS,width:isMobile||isTablet?"100%":140}}><option value="">All Forms</option>{FORMS.map(f=><option key={f}>{f}</option>)}<option value="GRADUATED">Graduated</option><option value="TRANSFERRED">Transferred</option></select>
           <select value={filterGender} onChange={e=>setFilterGender(e.target.value)} style={{...IS,width:isMobile||isTablet?"100%":130}}><option value="">All Genders</option><option>Male</option><option>Female</option></select>
           <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{...IS,width:isMobile||isTablet?"100%":140}}><option value="">All Statuses</option><option>Active</option><option>Inactive</option><option>Transferred</option><option>Graduated</option></select>
@@ -1189,8 +1191,6 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           )},
           {key:"prem_no",   label:"Prem No.",  render:r=>r.prem_no?digitsOnly(r.prem_no):<span style={{color:C.muted}}>-</span>},
           {key:"reg_no",    label:"Reg. No.", render:r=>r.reg_no||<span style={{color:C.muted}}>-</span>},
-          // Results portal username given to the parent - never changes.
-          {key:"results_login_no", label:"Login No.", render:r=>r.results_login_no?<span style={{fontFamily:"monospace",fontWeight:700,whiteSpace:"nowrap"}}>{r.results_login_no}</span>:<span style={{color:C.muted}}>-</span>},
           {key:"name",      label:"Full Name", render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
           filterForm==="GRADUATED"
             ? {key:"graduated_year", label:"Graduated Year", render:r=>r.graduated_at ? <Badge color="indigo">{new Date(r.graduated_at).getFullYear()}</Badge> : <span style={{color:C.muted}}>-</span>}
@@ -1210,6 +1210,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           {key:"actions",   label:"", render:r=>(
             <ActionsMenu items={[
               { label:"Edit",     onClick:()=>{setForm({...r,dob:r.dob?.slice(0,10),admission_date:r.admission_date?.slice(0,10),_region:findRegionForDistrict(r.district)});setModal(r);} },
+              { label:"Login No.", onClick:()=>{setLoginNoCopied(false);setLoginNoStudent(r);} },
               { label:"Contributions", onClick:()=>openChargeModal(r) },
               ...(r.status!=="Transferred" ? [{ label:"Mark Transferred", onClick:()=>{setTransferForm({dest_region:"",dest_district:"",dest_school:"",transfer_out_date:new Date().toISOString().slice(0,10)});setTransferModal(r);} }] : []),
               { label:"Search Results", icon:SearchIcon, onClick:()=>setResultsModalStudent(r) },
@@ -1219,6 +1220,22 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           )},
         ]}/>
       </Card>
+
+      {loginNoStudent && (
+        <Modal title="Login No. (Results)" onClose={()=>setLoginNoStudent(null)}>
+          <div style={{fontSize:13,color:C.muted,marginBottom:4}}>{[loginNoStudent.first_name,loginNoStudent.middle_name,loginNoStudent.last_name].filter(Boolean).join(" ")} · {loginNoStudent.form}</div>
+          <div style={{fontFamily:"monospace",fontSize:30,fontWeight:800,letterSpacing:"0.04em",color:C.text,margin:"10px 0 14px"}}>{loginNoStudent.results_login_no || "-"}</div>
+          <p style={{fontSize:12.5,color:C.muted,margin:"0 0 16px",lineHeight:1.6}}>
+            Mzazi anaingia kwenye Matokeo kwa namba hii, na password ni namba ya simu ya mzazi iliyosajiliwa{loginNoStudent.parent_phone ? <> (<b>{loginNoStudent.parent_phone}</b>)</> : ""}.
+          </p>
+          <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+            {loginNoStudent.results_login_no && (
+              <Btn variant="secondary" onClick={()=>{ try { navigator.clipboard.writeText(loginNoStudent.results_login_no); setLoginNoCopied(true); } catch { /* clipboard blocked */ } }}>{loginNoCopied ? "Copied" : "Copy"}</Btn>
+            )}
+            <Btn onClick={()=>setLoginNoStudent(null)}>Close</Btn>
+          </div>
+        </Modal>
+      )}
 
       {transferModal && (
         <Modal title={`Mark Transferred - ${transferModal.first_name} ${transferModal.last_name}`} onClose={()=>setTransferModal(null)}>
