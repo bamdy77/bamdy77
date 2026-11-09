@@ -281,10 +281,31 @@ const saveScores = async (req, res, next) => {
 
     const rows = [];
     let blockedByLock = false;
+    // A teacher may only write marks for a Form they teach, and only for
+    // students actually in that Form. Previously any sheet_id was accepted,
+    // so a teacher could write into another class's sheet.
+    let sheetStudentIds = null;
+    if (!isAdminOrAcademic) {
+      const sheetRes = await client.query(`SELECT form FROM score_sheets WHERE id = $1`, [sheet_id]);
+      if (!sheetRes.rows.length) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ error: "Score sheet not found." });
+      }
+      const sheetForm = sheetRes.rows[0].form;
+      if (!(req.user.assigned_forms || []).includes(sheetForm)) {
+        await client.query("ROLLBACK");
+        return res.status(403).json({ error: `You are not assigned to teach ${sheetForm}. Ask the Head Master to update your classes in User Accounts.` });
+      }
+      const st = await client.query(`SELECT id FROM students WHERE form = $1`, [sheetForm]);
+      sheetStudentIds = new Set(st.rows.map((r) => r.id));
+    }
+    let outOfScope = false;
+
     for (const row of scores) {
       const { student_id, subject_id, marks } = row;
       if (!student_id || !subject_id) continue;
-      if (!isAdminOrAcademic && !myScopedSubjectIds.includes(subject_id)) continue;
+      if (!isAdminOrAcademic && !myScopedSubjectIds.includes(Number(subject_id))) { outOfScope = true; continue; }
+      if (sheetStudentIds && !sheetStudentIds.has(Number(student_id))) { outOfScope = true; continue; }
       if (!isAdminOrAcademic && lockedSubjectIds.includes(subject_id)) { blockedByLock = true; continue; }
       const val = (marks === "" || marks === null || marks === undefined) ? null : Number(marks);
       // Marks must be a real number from 0–100 - reject the whole save with
@@ -299,6 +320,10 @@ const saveScores = async (req, res, next) => {
 
     // Nothing was saved AND it's specifically because of a lock - tell the
     // teacher clearly instead of silently reporting success with 0 changes.
+    if (!rows.length && outOfScope && !blockedByLock) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "These marks are for a subject or class you are not assigned to. Ask the Head Master to update your subjects/classes in User Accounts." });
+    }
     if (!rows.length && blockedByLock) {
       await client.query("ROLLBACK");
       return res.status(403).json({ error: "Your submission for this subject is locked - ask the Academic Master or Head Master to unlock it before making changes." });
@@ -545,6 +570,16 @@ const lockTeacher = async (req, res, next) => {
   if (!subjectId || !mySubjectIds.includes(subjectId))
     return res.status(403).json({ error: "Not your subject." });
   try {
+    // Same Form rule as saveScores: a teacher can only submit for a class
+    // they teach (submitting on another class's sheet used to be accepted
+    // and showed up as a bogus submission in Sheets & Status).
+    const myRoles = req.user.roles && req.user.roles.length ? req.user.roles : [req.user.role];
+    const isAdminOrAcademic = myRoles.some((r) => ["admin", "second_master", "academic"].includes(r));
+    const sheetRes = await query(`SELECT form FROM score_sheets WHERE id = $1`, [sheet_id]);
+    if (!sheetRes.rows.length) return res.status(404).json({ error: "Score sheet not found." });
+    if (!isAdminOrAcademic && !(req.user.assigned_forms || []).includes(sheetRes.rows[0].form)) {
+      return res.status(403).json({ error: `You are not assigned to teach ${sheetRes.rows[0].form}.` });
+    }
     await query(
       `INSERT INTO teacher_sheet_status (sheet_id, teacher_id, subject_id, is_locked, submitted_at) VALUES ($1, $2, $3, TRUE, NOW())
        ON CONFLICT (sheet_id, teacher_id, subject_id) DO UPDATE SET is_locked=TRUE, submitted_at=NOW()`,
