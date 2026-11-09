@@ -748,9 +748,12 @@ const toggleSheetOnlinePublish = async (req, res, next) => {
   try {
     const { rows } = await query(
       `UPDATE score_sheets
-       SET published_online = $2,
-           published_online_at = CASE WHEN $2 THEN NOW() ELSE NULL END,
-           published_online_by = CASE WHEN $2 THEN $3 ELSE NULL END
+       SET published_online = $2::boolean,
+           published_online_at = CASE WHEN $2::boolean THEN NOW() ELSE NULL END,
+           -- explicit casts: inside CASE, Postgres typed the bare $3 as text
+           -- and every publish failed with "published_online_by is of type
+           -- integer but expression is of type text".
+           published_online_by = CASE WHEN $2::boolean THEN $3::integer ELSE NULL END
        WHERE id = $1
        RETURNING id, published_online, published_online_at`,
       [sheet_id, published, req.user.id]

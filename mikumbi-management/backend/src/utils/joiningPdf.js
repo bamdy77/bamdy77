@@ -125,7 +125,10 @@ function drawBody(doc, body, year, { indent = 18 } = {}) {
     ensureSpace(doc, 16);
     if (line.startsWith("- ") || line === "-") {
       n += 1;
-      const numW = 28;
+      // Width of the widest numeral in THIS font (Courier is much wider than
+      // Arimo/Times) so "viii." never wraps inside its column.
+      doc.font("JI_REG").fontSize(10.5);
+      const numW = Math.ceil(doc.widthOfString("xviii.")) + 6;
       const y = doc.y;
       doc.font("JI_REG").fontSize(10.5).fillColor(INK)
         .text(`${roman(n)}.`, left + indent, y, { width: numW - 6, align: "right" });
@@ -183,10 +186,12 @@ function drawLetter(doc, { content, fullName, year, signatureBuf, qrBuf }) {
   (content.sections || []).forEach((s, i) => {
     ensureSpace(doc, 50);
     const y = doc.y;
-    doc.font("JI_BOLD").fontSize(10.8).fillColor(INK).text(`${i + 1}.`, left, y, { width: 18 });
-    doc.text(applyYear(s.title, year), left + 18, y, { width: width - 18 });
+    doc.font("JI_BOLD").fontSize(10.8).fillColor(INK);
+    const secW = Math.ceil(doc.widthOfString("10.")) + 6;
+    doc.text(`${i + 1}.`, left, y, { width: secW });
+    doc.text(applyYear(s.title, year), left + secW, y, { width: width - secW });
     doc.moveDown(0.15);
-    if (s.body) drawBody(doc, s.body, year);
+    if (s.body) drawBody(doc, s.body, year, { indent: secW });
     doc.moveDown(0.6);
   });
 
@@ -246,8 +251,8 @@ function drawParentForm(doc, { year }) {
     "Naahidi kuwa endapo mwanangu ataenda kinyume na taratibu zilizoainishwa katika fomu hii achukuliwe hatua stahili za kinidhamu kama zilivyoorodheshwa.",
   ].forEach((t, i) => {
     const y = doc.y;
-    doc.text(`${i + 1}.`, left, y, { width: 18 });
-    doc.text(t, left + 20, y, { width: width - 20, align: "justify", lineGap: 2 });
+    doc.text(`${i + 1}.`, left, y, { width: 24 });
+    doc.text(t, left + 26, y, { width: width - 26, align: "justify", lineGap: 2 });
     doc.moveDown(0.3);
   });
   doc.moveDown(1.2);
