@@ -9,21 +9,16 @@ async function seed() {
   console.log("Connected.");
 
   // ── Users ─────────────────────────────────────────────────────────────────
-  const adminPass = await bcrypt.hash("admin123", 10);
-  const academicPass = await bcrypt.hash("academic123", 10);
+  // ONE login only: the Head Master (admin). Every other account -
+  // Academic Master, Second Master, teachers - is created by the admin in
+  // User Accounts and given its role there.
+  const adminPass = await bcrypt.hash("admin123", 12);
 
   await query(`
     INSERT INTO users (username, password, full_name, role)
-    VALUES
-      ('admin',    $1, 'admin',                'admin'),
-      ('academic', $2, 'Academic Master',      'academic')
+    VALUES ('admin', $1, 'admin', 'admin')
     ON CONFLICT (username) DO NOTHING;
-  `, [adminPass, academicPass]);
-
-  // Older installs may have this account mislabeled "Second Master" from a
-  // previous seed — the 'academic' role IS the Academic Master, a distinct
-  // person/position from the Second Master, so the display name must match.
-  await query(`UPDATE users SET full_name = 'Academic Master' WHERE username = 'academic' AND full_name = 'Second Master';`);
+  `, [adminPass]);
 
   // ── Hostel Rooms (Girls Hostel only — Boys Hostel is one Hall, no rooms) ──
   const rooms = [];
@@ -70,7 +65,7 @@ async function seed() {
   console.log("Seed completed.");
   console.log("Default logins:");
   console.log("  Admin    — username: admin    | password: admin123");
-  console.log("  Academic — username: academic | password: academic123");
+  console.log("");
   process.exit(0);
 }
 

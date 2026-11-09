@@ -34,5 +34,4 @@ Doc Tools has been removed, so the image no longer installs LibreOffice.
 - Changing/resetting a password signs that person out everywhere else.
 - Optional `DATA_ENCRYPTION_KEY` on Render (see backend/.env.example) encrypts stored secrets;
   without it JWT_SECRET is used. Never change it after setting it.
-- IMPORTANT: if the default seed accounts (admin/admin123, academic/academic123) still exist,
-  change their passwords immediately.
+- IMPORTANT: the seed creates ONE account, admin/admin123 - change that password immediately.
