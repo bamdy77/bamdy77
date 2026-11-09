@@ -66,7 +66,9 @@ export default function ResultsManagement() {
   // ONLY "results" here, so they now have no tab left on this page - that is
   // the intended effect of restricting "Results" to the three roles above,
   // not an accidental removal of any other button.
-  const ADMIN_LIKE_TABS = ["enter", "results", "reports"];
+  // "published" lets the Head Master/Second Master show or hide results for
+  // parents, same as the Academic Master.
+  const ADMIN_LIKE_TABS = ["enter", "results", "reports", "published"];
   const TEACHER_TABS = ["enter"];
   // A Class Teacher gets "Enter Marks" (same as any teacher) PLUS "Parents
   // Reports" for their OWN class only - the Parent Report PDF section shows
@@ -222,6 +224,8 @@ export default function ResultsManagement() {
 
       {tab === "history" ? (
         <ResultsHistory onOpenPeriod={openPeriodFromHistory} />
+      ) : tab === "published" ? (
+        <PublishedResults period={period} />
       ) : !period ? (
         <p style={{ color: THEME.muted, fontSize: 13.5 }}>Select a period above to begin.</p>
       ) : (
@@ -230,7 +234,6 @@ export default function ResultsManagement() {
           {tab === "sheets" && <TeacherStatus period={period} />}
           {tab === "results" && <CompiledResults period={period} />}
           {tab === "reports" && <ParentsReports period={period} />}
-          {tab === "published" && <PublishedResults period={period} />}
         </>
       )}
     </div>
@@ -2030,6 +2033,7 @@ function PublishedResults({ period }) {
   const [sheetId, setSheetId] = useState(null); // resolved from the period selected in "Select Period" above
   const [onlinePublished, setOnlinePublished] = useState(false);
   const [onlineBusy, setOnlineBusy] = useState(false);
+  const [listKey, setListKey] = useState(0);
 
   // Resolves the underlying sheet_id for whatever period is selected in
   // "Select Period" above (same lookup CompiledResults uses), so the toggle
@@ -2055,6 +2059,7 @@ function PublishedResults({ period }) {
       const next = !onlinePublished;
       await apiFetch(`/results-mgmt/online-publish/${sheetId}`, { method: "PATCH", body: JSON.stringify({ published: next }) }, token);
       setOnlinePublished(next);
+      setListKey((k) => k + 1);
       showSuccess("Results Portal", next ? "Results Successfully Published to the parent/student portal." : "Results removed from the parent/student portal.");
     } catch (err) { showSuccess("Results Portal", err.message); } finally { setOnlineBusy(false); }
   };
@@ -2083,6 +2088,66 @@ function PublishedResults({ period }) {
         </div>
       ) : period && (
         <p style={{ fontSize: 12.5, color: THEME.muted }}>No results found for the selected period yet - enter and save results first.</p>
+      )}
+
+      <OnlineSheetsList token={token} reloadKey={listKey} onChanged={(id, val) => { if (id === sheetId) setOnlinePublished(val); }} />
+    </div>
+  );
+}
+
+// Every compiled exam, with a one-click Show / Hide for parents. Hiding only
+// removes it from the public Results portal - nothing is deleted, and it can
+// be shown again at any time.
+function OnlineSheetsList({ token, reloadKey, onChanged }) {
+  const [rows, setRows] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    apiFetch("/results-mgmt/online-sheets", {}, token).then(setRows).catch((e) => setError(e.message));
+  }, [token, reloadKey]);
+
+  const toggle = async (r) => {
+    setBusyId(r.id); setError("");
+    try {
+      const next = !r.published_online;
+      await apiFetch(`/results-mgmt/online-publish/${r.id}`, { method: "PATCH", body: JSON.stringify({ published: next }) }, token);
+      setRows((rs) => rs.map((x) => (x.id === r.id ? { ...x, published_online: next } : x)));
+      onChanged && onChanged(r.id, next);
+    } catch (e) { setError(e.message); } finally { setBusyId(null); }
+  };
+
+  return (
+    <div style={{ marginTop: 24 }}>
+      <div style={{ fontWeight: 700, fontSize: 13.5, color: THEME.heading, marginBottom: 4 }}>All results - visible to parents?</div>
+      <p style={{ fontSize: 11.5, color: THEME.muted, margin: "0 0 10px", maxWidth: 620 }}>
+        Show or hide any compiled exam on the parents' Results portal. Hiding does not delete anything - you can show it again at any time.
+      </p>
+      {error && <p style={{ color: THEME.danger, fontSize: 12.5 }}>{error}</p>}
+      {!rows ? <p style={{ fontSize: 12.5, color: THEME.muted }}>Loading...</p> : !rows.length ? (
+        <p style={{ fontSize: 12.5, color: THEME.muted }}>No compiled results yet.</p>
+      ) : (
+        <div style={{ overflowX: "auto", border: `1px solid ${THEME.border}`, background: THEME.surface }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+            <thead>
+              <tr>{["Form", "Exam", "Students", "Parents can see", ""].map((h) => <th key={h} style={{ textAlign: "left", padding: "8px 12px", borderBottom: `1px solid ${THEME.border}`, fontWeight: 700, whiteSpace: "nowrap" }}>{h}</th>)}</tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id}>
+                  <td style={td}>{r.form}</td>
+                  <td style={td}>{r.exam_type}{r.month ? ` - ${r.month}` : ""} {r.year}</td>
+                  <td style={td}>{r.students}</td>
+                  <td style={td}><StatusPill ok={r.published_online}>{r.published_online ? "Visible" : "Hidden"}</StatusPill></td>
+                  <td style={{ ...td, textAlign: "right" }}>
+                    <button onClick={() => toggle(r)} disabled={busyId === r.id} style={r.published_online ? btnSecondary : btnPrimary}>
+                      {busyId === r.id ? "..." : r.published_online ? "Hide from parents" : "Show to parents"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

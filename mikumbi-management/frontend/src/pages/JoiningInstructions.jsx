@@ -386,6 +386,25 @@ function SettingsTab({ token }) {
       {error && <p style={{ color: "#B91C1C", fontSize: 12.5, margin: "0 0 12px" }}>{error}</p>}
 
       <fieldset disabled={ro} style={{ border: "none", padding: 0, margin: 0, opacity: ro ? 0.7 : 1 }}>
+        <div style={{ ...sectionCard, marginBottom: 16 }}>
+          <div style={{ fontWeight: 800, fontSize: 13.5, color: THEME.heading, marginBottom: 10 }}>PDF appearance (choose before publishing)</div>
+          <label style={labelStyle}>Watermark</label>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+            {WATERMARK_OPTIONS.map((o) => (
+              <button key={o.id} type="button" onClick={() => update({ watermark: o.id })}
+                aria-pressed={(content.watermark || "text") === o.id}
+                style={(content.watermark || "text") === o.id ? choiceActive : choiceBtn}>
+                <div style={{ fontWeight: 700, fontSize: 12.5 }}>{o.label}</div>
+                <div style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>{o.hint}</div>
+              </button>
+            ))}
+          </div>
+          <label style={labelStyle}>Font</label>
+          <select value={content.font || "arimo"} onChange={(e) => update({ font: e.target.value })} style={{ ...inputStyle, maxWidth: 320 }}>
+            {FONT_OPTIONS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+          <p style={{ fontSize: 11.5, color: THEME.muted, margin: "8px 0 0" }}>Press <b>Save Changes</b>, then <b>Preview PDF</b> to see how it looks.</p>
+        </div>
         <div style={grid2}>
           <LabeledInput label="Admission year (Form I)" type="number" value={year} onChange={(v) => { setYear(v); setDirty(true); }} />
           <LabeledInput label="Phone numbers (WASILIANA NASI), comma separated" value={content.phones} onChange={(v) => update({ phones: v })} />
@@ -451,6 +470,19 @@ function LabeledArea({ label, value, onChange, rows = 4 }) {
     </div>
   );
 }
+const WATERMARK_OPTIONS = [
+  { id: "text", label: "MIKUMBI SECONDARY SCHOOL", hint: "Faint school name across the page" },
+  { id: "logo", label: "School logo", hint: "Faint badge in the centre, like the ID card" },
+  { id: "none", label: "Plain", hint: "No watermark" },
+];
+const FONT_OPTIONS = [
+  { id: "arimo", label: "Arimo (Arial style)" },
+  { id: "times", label: "Times New Roman" },
+  { id: "helvetica", label: "Helvetica" },
+  { id: "courier", label: "Courier (typewriter)" },
+];
+const choiceBtn = { textAlign: "left", padding: "10px 14px", minWidth: 180, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, cursor: "pointer" };
+const choiceActive = { ...choiceBtn, border: `1px solid ${THEME.navy}`, background: THEME.navy, color: "#fff" };
 const labelStyle = { display: "block", fontSize: 12.5, fontWeight: 600, color: THEME.text, marginBottom: 5 };
 const grid2 = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 };
 const noteBox = { border: `1px solid ${THEME.border}`, background: THEME.surface, padding: "10px 14px", fontSize: 12.5, color: THEME.text, marginBottom: 14, lineHeight: 1.6 };

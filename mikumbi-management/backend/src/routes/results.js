@@ -89,6 +89,7 @@ router.delete("/published/:id",  auth(["admin", "second_master", "academic"]), c
 //    → "Results", Reg No + parent-phone login). Separate from the
 //    Published-PDFs mechanism above — this gates the per-student online
 //    view, not a downloadable bulk PDF. ──
+router.get("/online-sheets", auth(["admin", "second_master", "academic"]), c.listOnlineSheets);
 router.patch("/online-publish/:sheet_id", auth(["admin", "second_master", "academic"]), c.toggleSheetOnlinePublish);
 
 module.exports = router;

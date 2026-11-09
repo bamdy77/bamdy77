@@ -34,22 +34,45 @@ function safeImage(doc, img, x, y, opts) {
 
 // Faint repeated school name across every page - keeps doc.x/doc.y intact
 // (doc.save/restore only protect graphics state, not the text cursor).
-// Also restores font/size/colour: drawWatermark runs from the "pageAdded"
-// event, i.e. possibly in the MIDDLE of a paragraph that is flowing onto a new
-// page - leaving the 46pt watermark font active would make the rest of that
-// paragraph print huge.
-function drawWatermark(doc) {
+const WATERMARK_LOGO = path.join(__dirname, "..", "assets", "shule-logo-watermark.png");
+
+// Fonts the school can pick in Edit & Publish. Times/Helvetica/Courier are
+// PDF built-ins (no file needed); Arimo is bundled (Arial-like).
+const FONT_CHOICES = {
+  arimo: { reg: ARIMO_REGULAR, bold: ARIMO_BOLD },
+  times: { reg: "Times-Roman", bold: "Times-Bold" },
+  helvetica: { reg: "Helvetica", bold: "Helvetica-Bold" },
+  courier: { reg: "Courier", bold: "Courier-Bold" },
+};
+
+// Faint background mark on every page: "text" (MIKUMBI SECONDARY SCHOOL),
+// "logo" (the school badge, like the ID card) or "none".
+// Deliberately uses NO transparency: some phone PDF viewers ignore PDF
+// opacity and showed the old 5%-opacity text as solid dark green. The text
+// is drawn in a very pale solid colour and the logo is a pre-faded image
+// (assets/shule-logo-watermark.png, already blended into white), so it looks
+// equally faint in every viewer. Drawn first on each page, under the text.
+// Also restores font/size/colour and the cursor: it runs from the
+// "pageAdded" event, possibly in the MIDDLE of a paragraph flowing onto a
+// new page.
+function drawWatermark(doc, mode = "text") {
+  if (mode === "none") return;
   const savedX = doc.x, savedY = doc.y;
   const savedFont = doc._font, savedSize = doc._fontSize, savedFill = doc._fillColor;
   const savedBottom = doc.page.margins.bottom;
   doc.page.margins.bottom = 0;
   doc.save();
-  doc.fillColor("#153810").opacity(0.05);
-  doc.font("JI_BOLD").fontSize(46);
-  doc.rotate(-35, { origin: [doc.page.width / 2, doc.page.height / 2] });
-  [-160, -20, 120].forEach((dy) => {
-    doc.text("MIKUMBI SECONDARY SCHOOL", -120, doc.page.height / 2 + dy, { width: doc.page.width + 240, align: "center", lineBreak: false });
-  });
+  if (mode === "logo") {
+    const size = 360;
+    safeImage(doc, WATERMARK_LOGO, (doc.page.width - size) / 2, (doc.page.height - size) / 2, { width: size, height: size });
+  } else {
+    doc.fillColor("#EEF2EE");
+    doc.font("JI_BOLD").fontSize(46);
+    doc.rotate(-35, { origin: [doc.page.width / 2, doc.page.height / 2] });
+    [-160, -20, 120].forEach((dy) => {
+      doc.text("MIKUMBI SECONDARY SCHOOL", -120, doc.page.height / 2 + dy, { width: doc.page.width + 240, align: "center", lineBreak: false });
+    });
+  }
   doc.restore();
   doc.page.margins.bottom = savedBottom;
   if (savedFont) doc._font = savedFont; // pdfkit internals: re-select the exact font object
@@ -69,8 +92,9 @@ function drawLetterhead(doc, content) {
 
   const rowY = doc.y + 8;
   const logo = 70;
-  safeImage(doc, SCHOOL_LOGO, left, rowY, { fit: [logo, logo] });
-  safeImage(doc, COUNCIL_LOGO, right - logo, rowY, { fit: [logo, logo] });
+  // District council (Halmashauri) logo on the LEFT, school badge on the RIGHT.
+  safeImage(doc, COUNCIL_LOGO, left, rowY, { fit: [logo, logo] });
+  safeImage(doc, SCHOOL_LOGO, right - logo, rowY, { fit: [logo, logo] });
 
   const phones = String(content.phones || "").split(/[,\n]/).map((p) => p.trim()).filter(Boolean);
   const colW = width / 2 - logo - 12;
@@ -345,10 +369,12 @@ function drawFooter(doc, generatedAt) {
 function renderJoiningPdf(stream, { content, fullName, year, signatureBuf, qrBuf, generatedAt }) {
   const doc = new PDFDocument({ size: "A4", margins: { top: 40, bottom: 44, left: 50, right: 50 }, bufferPages: true });
   doc.pipe(stream);
-  doc.registerFont("JI_REG", ARIMO_REGULAR);
-  doc.registerFont("JI_BOLD", ARIMO_BOLD);
-  doc.on("pageAdded", () => drawWatermark(doc));
-  drawWatermark(doc);
+  const font = FONT_CHOICES[content.font] || FONT_CHOICES.arimo;
+  doc.registerFont("JI_REG", font.reg);
+  doc.registerFont("JI_BOLD", font.bold);
+  const wm = ["text", "logo", "none"].includes(content.watermark) ? content.watermark : "text";
+  doc.on("pageAdded", () => drawWatermark(doc, wm));
+  drawWatermark(doc, wm);
 
   const y = Number(year) || new Date().getFullYear();
   drawLetter(doc, { content, fullName, year: y, signatureBuf, qrBuf });
@@ -362,4 +388,4 @@ function renderJoiningPdf(stream, { content, fullName, year, signatureBuf, qrBuf
   doc.end();
 }
 
-module.exports = { renderJoiningPdf };
+module.exports = { renderJoiningPdf, FONT_CHOICES };

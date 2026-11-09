@@ -717,6 +717,26 @@ const getSubmittedSheets = async (_req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// GET /api/results-mgmt/online-sheets - every COMPILED sheet (has student
+// results) with whether parents/students can currently see it on the public
+// Results portal - lets Admin/Second Master/Academic show or hide any
+// published exam in one place, without re-selecting its period first.
+const listOnlineSheets = async (_req, res, next) => {
+  try {
+    const { rows } = await query(
+      `SELECT ss.id, ss.form, ap.exam_type, ap.month, ap.year,
+              ss.published_online, ss.published_online_at,
+              (SELECT COUNT(*)::int FROM student_results sr WHERE sr.sheet_id = ss.id) AS students
+       FROM score_sheets ss
+       JOIN academic_periods ap ON ap.id = ss.period_id
+       WHERE EXISTS (SELECT 1 FROM student_results sr WHERE sr.sheet_id = ss.id)
+       ORDER BY ap.year DESC, ss.id DESC
+       LIMIT 300`
+    );
+    res.json(rows);
+  } catch (err) { next(err); }
+};
+
 // PATCH /api/results-mgmt/online-publish/:sheet_id - Admin/Second Master/
 // Academic Master only. Flips whether this one compiled sheet is visible on
 // the public Results portal (Publications → "Results", Reg No + parent
@@ -3469,6 +3489,6 @@ module.exports = {
   exportMyScoresPdf, exportResultsPdf, exportResultsExcel,
   getStudentPeriods, getStudentResult, exportStudentResultPdf, getStudentTrend,
   getParentReportMeta, exportParentReportPdf, exportParentReportPdfAll,
-  toggleSheetOnlinePublish,
+  toggleSheetOnlinePublish, listOnlineSheets,
   publicResultsCheckUsername, publicResultsLogin, requirePublicResultToken, publicResultsMe,
 };
