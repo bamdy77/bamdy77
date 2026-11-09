@@ -38,16 +38,21 @@ export default function ResultsManagement() {
   // until they logged out and back in. This re-seeds selection.form
   // whenever the person's real locked class changes, without touching
   // admin/second_master/academic's freely-editable Form field.
+  // Also covers a teacher with SEVERAL Forms: if the currently selected Form
+  // is no longer one they teach (re-assigned for a new year), jump to the
+  // first Form they DO teach and drop the previously opened period, which
+  // belonged to the old class.
+  const allowedFormsKey = JSON.stringify(
+    user.role === "teacher" ? (user.assigned_forms || [])
+    : user.role === "class_teacher" && user.class_teacher_of ? [user.class_teacher_of]
+    : null
+  );
   useEffect(() => {
-    const lockedForm =
-      user.role === "teacher" && (user.assigned_forms || []).length === 1 ? user.assigned_forms[0]
-      : user.role === "class_teacher" && user.class_teacher_of ? user.class_teacher_of
-      : null;
-    if (lockedForm) {
-      setSelection((s) => (s.form === lockedForm ? s : { ...s, form: lockedForm }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.assigned_forms, user.class_teacher_of, user.role]);
+    const allowed = JSON.parse(allowedFormsKey);
+    if (!allowed || !allowed.length) return;
+    setSelection((s) => (allowed.includes(s.form) ? s : { ...s, form: allowed[0] }));
+    setPeriod((p) => (p && !allowed.includes(p.form) ? null : p));
+  }, [allowedFormsKey]);
 
   const myRoles = user.roles && user.roles.length ? user.roles : [user.role];
   // Only the Academic Master administers the Results Management workflow
@@ -315,6 +320,17 @@ function EnterMarks({ period, subjects }) {
   const [unlockReqBusy, setUnlockReqBusy] = useState(false);
   const [unlockReqSent, setUnlockReqSent] = useState(false);
   const { confirm, ConfirmDialogPortal } = useConfirm();
+
+  // Keep the chosen subject valid when the account is re-assigned (e.g.
+  // CIVICS -> HISTORY): subjectId was only seeded once, so a teacher with a
+  // single new subject (no dropdown shown) stayed stuck on the old one and
+  // every save for the new subject was silently rejected.
+  const mySubjectsKey = (user.subject_ids || []).join(",");
+  useEffect(() => {
+    const ids = user.subject_ids || [];
+    setSubjectId((cur) => (ids.includes(cur) ? cur : ids[0] || null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mySubjectsKey]);
 
   const mySubjectName = subjects.find((s) => s.id === subjectId)?.name || "-";
 

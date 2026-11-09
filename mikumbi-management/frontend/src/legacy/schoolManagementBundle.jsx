@@ -2030,7 +2030,14 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
   };
 
   const openEditTeacher = t => {
-    setTForm({ short_name:t.short_name, subject:t.subject, classes:(t.assignments||[]).map(a=>({ cls:[a.form,a.stream].filter(Boolean).join(" "), periods_per_week:a.periods_per_week||4, subject:a.subject||t.subject })) });
+    // The subjects this teacher is registered for NOW (User Accounts). After
+    // a re-assignment (new subject / new Form for a new year) the roster row
+    // and its old class assignments can still carry the previous subject -
+    // pre-selecting that stale value made the Subject dropdown show one
+    // thing while saving another, so the new subject never took effect.
+    const allowed = (t.registered_subjects||[]).filter(Boolean);
+    const mainSubject = allowed.length && !allowed.includes(t.subject) ? allowed[0] : (t.subject || allowed[0] || "");
+    setTForm({ short_name:t.short_name, subject:mainSubject, classes:(t.assignments||[]).map(a=>({ cls:[a.form,a.stream].filter(Boolean).join(" "), periods_per_week:a.periods_per_week||4, subject:(a.subject && (!allowed.length || allowed.includes(a.subject))) ? a.subject : mainSubject })) });
     setEditTeacher(t); setShowAddTeacher(true);
   };
 

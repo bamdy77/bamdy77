@@ -327,6 +327,24 @@ const updateUser = async (req, res, next) => {
       }
     }
 
+    // Re-assigning a teacher to a DIFFERENT subject (e.g. next year: CIVICS
+    // Form I -> HISTORY Form II) used to leave the linked Timetable roster
+    // row on the OLD subject, so Teacher Assignment kept saving the old
+    // subject and the new one never worked. Whenever the account's subjects
+    // change, move the roster row's main subject onto one the account
+    // actually teaches now (keeping it if it's still taught).
+    if (Array.isArray(subjectIdsParam)) {
+      const names = await query(`SELECT name FROM subjects WHERE id = ANY($1::int[]) ORDER BY name`, [subjectIdsParam]);
+      const taught = names.rows.map((r) => r.name);
+      if (taught.length) {
+        await query(
+          `UPDATE teachers SET subject = $1, updated_at = NOW()
+           WHERE user_id = $2 AND (subject IS NULL OR NOT (subject = ANY($3::text[])))`,
+          [taught[0], req.params.id, taught]
+        );
+      }
+    }
+
     if (teacher_id) await query(`UPDATE teachers SET user_id = $1 WHERE id = $2`, [req.params.id, teacher_id]);
     res.json({ success: true, data: updated });
   } catch (err) { next(err); }
