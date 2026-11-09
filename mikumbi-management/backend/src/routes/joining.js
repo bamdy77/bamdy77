@@ -5,7 +5,7 @@ const {
   getJoiningSettings, updateJoiningSettings, publishJoiningSettings,
   listJoiningApplications, getJoiningStats, manualIssueJoining,
   exportJoiningApplicationsCsv, deleteJoiningApplication, deleteAllJoiningApplications,
-  downloadBlankJoiningPdf,
+  downloadBlankJoiningPdf, previewJoiningPdf,
 } = require("../controllers/joiningController");
 
 // Every route here requires a logged-in staff account.
@@ -16,6 +16,7 @@ router.use(auth());
 router.get("/settings", auth(["admin", "second_master"]), getJoiningSettings);
 router.put("/settings", auth(["admin", "second_master"]), updateJoiningSettings);
 router.post("/settings/publish", auth(["admin", "second_master"]), publishJoiningSettings);
+router.post("/preview-pdf", auth(["admin", "second_master"]), previewJoiningPdf);
 
 // Applicant list ("Yatahifadhiwe...ndio atayaona pekee") — Admin/Second Master only.
 router.get("/applications", auth(["admin", "second_master"]), listJoiningApplications);

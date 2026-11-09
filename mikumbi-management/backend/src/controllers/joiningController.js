@@ -13,20 +13,17 @@
 // One row per applicant (matched by name + exam number) in
 // joining_applications - repeat downloads increment download_count instead
 // of creating duplicate rows, capped at 5 (per spec).
-const path = require("path");
-const fs = require("fs");
 const jwt = require("jsonwebtoken");
-const PDFDocument = require("pdfkit");
 const { query } = require("../db/db");
 const { formatTZ } = require("../utils/tz");
-const { drawLetterheadSw, drawFooter, generateQrPngBuffer, SCHOOL_LOGO_PATH, requestBaseUrl } = require("../utils/pdfHeader");
+const { generateQrPngBuffer, requestBaseUrl } = require("../utils/pdfHeader");
 const { recordAudit } = require("../utils/auditLogger");
+const { cloudinaryResized } = require("../middleware/upload");
+const { DEFAULT_CONTENT, sanitizeContent, resolveContent } = require("../utils/joiningContent");
+const { renderJoiningPdf } = require("../utils/joiningPdf");
 
 const MAX_DOWNLOADS_PER_APPLICANT = 5;
 const EXAM_NUMBER_RE = /^PS\d{7}-\d{4}$/;
-
-const ARIMO_REGULAR = path.join(__dirname, "..", "assets", "fonts", "Arimo-Regular.ttf");
-const ARIMO_BOLD = path.join(__dirname, "..", "assets", "fonts", "Arimo-Bold.ttf");
 
 const norm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
 const buildDedupeKey = (first, middle, last, examNo) =>
@@ -54,174 +51,59 @@ function validateApplicationFields({ first_name, last_name, district, ward, vill
   return null;
 }
 
-// ── PDF generation (shared by the public download and the staff manual-
-//    issue "give the same form" flow) ──────────────────────────────────────
-function registerJoiningFonts(doc) {
-  doc.registerFont("JI_REG", ARIMO_REGULAR);
-  doc.registerFont("JI_BOLD", ARIMO_BOLD);
+// ── PDF generation (shared by the public download, the staff manual-issue
+//    flow, the blank printable form and the staff preview) ───────────────
+// Downloads the Head Master's signature uploaded in Settings -> Signature &
+// Stamp, so every Joining Instruction is signed automatically. Never throws:
+// no signature (or a slow/broken link) just leaves the dotted line instead.
+async function fetchHeadmasterSignature() {
+  try {
+    const { rows } = await query(`SELECT headmaster_signature_url FROM school_settings WHERE id = 1`);
+    const url = rows[0]?.headmaster_signature_url;
+    if (!url) return null;
+    const resp = await fetch(cloudinaryResized(url, "w_500,h_500,c_limit,q_100,f_png"));
+    if (!resp.ok) return null;
+    return Buffer.from(await resp.arrayBuffer());
+  } catch { return null; }
 }
 
-// A faint, repeated "MIKUMBI SECONDARY SCHOOL" watermark across the page -
-// low-opacity so it never interferes with reading the document itself.
-// IMPORTANT: doc.save()/doc.restore() only protect PDFKit's *graphics*
-// state (fill color, opacity, transform) - NOT the text cursor (doc.x/
-// doc.y). Every doc.text() call here moves that cursor to wherever the
-// watermark text finished, which - left unguarded - silently shoved
-// everything drawn afterwards (the letterhead, the whole document) down
-// the page. Saving/restoring x/y ourselves is what keeps this purely
-// cosmetic, with zero effect on where real content starts.
-function drawWatermark(doc) {
-  const savedX = doc.x, savedY = doc.y;
-  doc.save();
-  doc.fillColor("#153810").opacity(0.06);
-  doc.font("JI_BOLD").fontSize(46);
-  doc.rotate(-35, { origin: [doc.page.width / 2, doc.page.height / 2] });
-  doc.text("MIKUMBI SECONDARY SCHOOL", -120, doc.page.height / 2 - 160, { width: doc.page.width + 240, align: "center" });
-  doc.text("MIKUMBI SECONDARY SCHOOL", -120, doc.page.height / 2 - 20, { width: doc.page.width + 240, align: "center" });
-  doc.text("MIKUMBI SECONDARY SCHOOL", -120, doc.page.height / 2 + 120, { width: doc.page.width + 240, align: "center" });
-  doc.restore();
-  doc.x = savedX; doc.y = savedY;
+async function loadJoiningSettings() {
+  const { rows } = await query(`SELECT requirements_text, admission_year, is_published, content, updated_at FROM joining_settings WHERE id = 1`);
+  const row = rows[0] || {};
+  return {
+    admission_year: row.admission_year || new Date().getFullYear(),
+    is_published: !!row.is_published,
+    content: resolveContent(row.content),
+    has_custom_content: !!row.content,
+    updated_at: row.updated_at || null,
+  };
 }
 
-// Builds the absolute base URL of THIS server from the incoming request -
-// shared with every controller that needs a per-record verification link
-// (Identity Cards below). See requestBaseUrl in utils/pdfHeader.js for the
-// full explanation.
+const safeFileName = (s) => String(s || "").replace(/[^A-Za-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "Mwanafunzi";
 
-// Draws a plain, unmodified verification QR - no logo overlaid on the
-// pattern itself. The QR now encodes a LINK to /api/public/joining/verify/…
-// (see verifyJoiningDocument below) rather than raw text: scanning it opens
-// a small branded page - school logo top-center, then the confirmation
-// message - instead of dumping raw text into the phone's QR reader.
-function drawQr(doc, qrBuf, x, y, size) {
-  doc.image(qrBuf, x, y, { width: size, height: size });
-}
-
-// Draws the verification QR alone (no caption/instructional text next to
-// it - just the code itself) inside a small bordered box pinned near the
-// very bottom of the page, above drawFooter's own generation-time/page-
-// number band. Sized to the QR itself, not the full page width, so it
-// reads as a plain verification mark rather than a wall of text telling
-// the person what to do with their phone. Returns nothing; positions
-// everything itself using doc.page.height, so call it AFTER all the
-// flowing content above it has been written.
-function drawVerificationBlock(doc, qrBuf) {
-  const left = doc.page.margins.left;
-  const qrSize = 60;
-  const pad = 10;
-  const boxSize = qrSize + pad * 2;
-  const footerGap = 16; // clearance above drawFooter's own generation-time/page-number band
-
-  const boxY = doc.page.height - doc.page.margins.bottom - footerGap - boxSize;
-
-  // If the flowing content above would run into this reserved bottom
-  // block, push the block (and only the block) onto a fresh page instead
-  // of overlapping it.
-  let finalBoxY = boxY;
-  if (doc.y > boxY - 10) {
-    doc.addPage();
-    drawWatermark(doc);
-    finalBoxY = doc.page.height - doc.page.margins.bottom - footerGap - boxSize;
-  }
-
-  doc.save();
-  doc.roundedRect(left, finalBoxY, boxSize, boxSize, 8)
-    .lineWidth(0.8).fillOpacity(1).fillAndStroke("#F8FAFC", "#CBD5E1");
-  doc.restore();
-
-  drawQr(doc, qrBuf, left + pad, finalBoxY + pad, qrSize);
-}
-
-async function streamJoiningPdf(req, res, app, requirementsText, admissionYear) {
-  const fullName = [app.first_name, app.middle_name, app.last_name].filter(Boolean).join(" ").toUpperCase();
-  const verifyUrl = `${requestBaseUrl(req)}/api/public/joining/verify/JI-${app.id}`;
-  const qrBuf = await generateQrPngBuffer(verifyUrl, 220);
-
+async function streamJoiningPdf(req, res, { fullName, verifyRef, filename, content, admissionYear }) {
+  const settings = content ? null : await loadJoiningSettings();
+  const [qrBuf, signatureBuf] = await Promise.all([
+    generateQrPngBuffer(`${requestBaseUrl(req)}/api/public/joining/verify/${verifyRef}`, 220),
+    fetchHeadmasterSignature(),
+  ]);
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", `inline; filename="Joining-Instruction-${fullName.replace(/\s+/g, "-")}.pdf"`);
-  const doc = new PDFDocument({ margin: 40, size: "A4", bufferPages: true });
-  doc.pipe(res);
-  registerJoiningFonts(doc);
-  drawWatermark(doc);
-
-  drawLetterheadSw(doc, `MAELEKEZO YA KUJIUNGA NA KIDATO CHA KWANZA (${admissionYear || new Date().getFullYear()})`, { boldFont: "JI_BOLD" });
-
-  const left = doc.page.margins.left;
-  const right = doc.page.width - doc.page.margins.right;
-  const fullWidth = right - left;
-
-  // Per spec: the downloaded PDF shows ONLY the student's name - district,
-  // ward, village, exam number and exam year are still saved to the
-  // Applications list (Student Management → Joining Instructions) for
-  // Admin/Second Master to review, they just aren't printed here.
-  doc.moveDown(0.6);
-  doc.font("JI_BOLD").fontSize(15).fillColor("#0A1F5C")
-    .text(fullName, left, doc.y, { width: fullWidth, align: "center" });
-  doc.moveDown(1);
-
-  doc.font("JI_BOLD").fontSize(11.5).fillColor("#153810").text("MAHITAJI YA KUJIUNGA NA SHULE", left, doc.y, { width: fullWidth });
-  doc.moveDown(0.3);
-  doc.font("JI_REG").fontSize(10).fillColor("#0F172A")
-    .text(
-      requirementsText && requirementsText.trim()
-        ? requirementsText.trim()
-        : "Mahitaji ya kujiunga hayajawekwa bado. Tafadhali wasiliana na Uongozi wa Shule.",
-      left, doc.y, { width: fullWidth, align: "left", lineGap: 3 }
-    );
-
-  drawVerificationBlock(doc, qrBuf);
-
-  drawFooter(doc, formatTZ);
-  doc.end();
+  res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+  renderJoiningPdf(res, {
+    content: content || settings.content,
+    year: admissionYear || settings?.admission_year,
+    fullName,
+    signatureBuf,
+    qrBuf,
+    generatedAt: formatTZ(new Date()),
+  });
 }
 
-// A blank, printable version of the Joining Instruction - for Admin/Second
-// Master/Academic Master to download and print AHEAD of time, so a
-// family who reaches the school with no power/no internet still walks
-// away with a real form: the requirements, the letterhead, a generic
-// verification QR, and ONE blank line to write the student's name on by
-// hand. No applicant data, no per-student QR - this is a template, not a
-// record (nothing is written to joining_applications for this).
-async function streamBlankJoiningPdf(req, res, requirementsText, admissionYear) {
-  const verifyUrl = `${requestBaseUrl(req)}/api/public/joining/verify/blank`;
-  const qrBuf = await generateQrPngBuffer(verifyUrl, 220);
-
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", `inline; filename="Joining-Instruction-Fomu-Tupu.pdf"`);
-  const doc = new PDFDocument({ margin: 40, size: "A4", bufferPages: true });
-  doc.pipe(res);
-  registerJoiningFonts(doc);
-  drawWatermark(doc);
-
-  drawLetterheadSw(doc, `MAELEKEZO YA KUJIUNGA NA KIDATO CHA KWANZA (${admissionYear || new Date().getFullYear()})`, { boldFont: "JI_BOLD" });
-
-  const left = doc.page.margins.left;
-  const right = doc.page.width - doc.page.margins.right;
-  const fullWidth = right - left;
-
-  doc.moveDown(0.6);
-  doc.font("JI_BOLD").fontSize(10.5).fillColor("#0F172A").text("Jina la Mwanafunzi: ", left, doc.y, { continued: true, width: fullWidth });
-  const labelEndX = doc.x;
-  doc.text(" ", { continued: false });
-  const lineY = doc.y + 12;
-  doc.moveTo(labelEndX + 4, lineY).lineTo(right, lineY).lineWidth(0.8).strokeColor("#334155").stroke();
-  doc.y = lineY + 14;
-
-  doc.font("JI_BOLD").fontSize(11.5).fillColor("#153810").text("MAHITAJI YA KUJIUNGA NA SHULE", left, doc.y, { width: fullWidth });
-  doc.moveDown(0.3);
-  doc.font("JI_REG").fontSize(10).fillColor("#0F172A")
-    .text(
-      requirementsText && requirementsText.trim()
-        ? requirementsText.trim()
-        : "Mahitaji ya kujiunga hayajawekwa bado. Tafadhali wasiliana na Uongozi wa Shule.",
-      left, doc.y, { width: fullWidth, align: "left", lineGap: 3 }
-    );
-
-  drawVerificationBlock(doc, qrBuf);
-
-  drawFooter(doc, formatTZ);
-  doc.end();
-}
+const applicantName = (app) => [app.first_name, app.middle_name, app.last_name].filter(Boolean).join(" ").toUpperCase();
+const streamApplicantPdf = (req, res, app) => {
+  const fullName = applicantName(app);
+  return streamJoiningPdf(req, res, { fullName, verifyRef: `JI-${app.id}`, filename: `Joining-Instruction-${safeFileName(fullName)}.pdf` });
+};
 
 // ══════════════════════ PUBLIC ══════════════════════════════════════════
 // GET /api/public/joining/status - only whether the form is open. The
@@ -309,8 +191,7 @@ const downloadJoiningPdf = async (req, res, next) => {
     }
     const appRes = await query(`SELECT * FROM joining_applications WHERE id = $1`, [decoded.application_id]);
     if (!appRes.rows.length) return res.status(404).json({ message: "Taarifa za mwombaji hazikupatikana." });
-    const settingsRes = await query(`SELECT requirements_text, admission_year FROM joining_settings WHERE id = 1`);
-    await streamJoiningPdf(req, res, appRes.rows[0], settingsRes.rows[0]?.requirements_text || "", settingsRes.rows[0]?.admission_year);
+    await streamApplicantPdf(req, res, appRes.rows[0]);
   } catch (err) { next(err); }
 };
 
@@ -355,25 +236,67 @@ const verifyJoiningDocument = async (req, res) => {
 };
 
 // ══════════════════════ STAFF ═══════════════════════════════════════════
-// GET /api/joining/settings - Admin/Second Master
+// GET /api/joining/settings - Admin/Second Master. Returns the editable
+// content (saved, or the built-in default) plus the default itself so the
+// editor can offer "Rudisha maudhui ya awali".
 const getJoiningSettings = async (_req, res, next) => {
   try {
-    const { rows } = await query(`SELECT requirements_text, admission_year, is_published, updated_at FROM joining_settings WHERE id = 1`);
-    res.json(rows[0] || { requirements_text: "", admission_year: new Date().getFullYear(), is_published: false });
+    const s = await loadJoiningSettings();
+    res.json({ ...s, default_content: DEFAULT_CONTENT });
   } catch (err) { next(err); }
 };
 
-// PUT /api/joining/settings - { requirements_text, admission_year }
+// PUT /api/joining/settings - { content, admission_year }. Editing is only
+// allowed while the form is NOT published - the school reviews/edits first,
+// previews the PDF, then publishes. To change a published form, turn it off
+// first (Edit & Publish -> "Turn Off to Edit").
 const updateJoiningSettings = async (req, res, next) => {
   try {
-    const { requirements_text, admission_year } = req.body || {};
+    const current = await loadJoiningSettings();
+    if (current.is_published) {
+      return res.status(409).json({ message: "Joining Instruction imechapishwa tayari. Zima uchapishaji kwanza ili kuhariri." });
+    }
+    const { content, admission_year } = req.body || {};
+    const cleaned = sanitizeContent(content);
+    if (cleaned.error) return res.status(400).json({ message: cleaned.error });
     const yearNum = Number(admission_year);
-    const { rows } = await query(
-      `UPDATE joining_settings SET requirements_text = $1, admission_year = COALESCE($2, admission_year), updated_by = $3, updated_at = NOW() WHERE id = 1
-       RETURNING requirements_text, admission_year, is_published, updated_at`,
-      [requirements_text || "", Number.isInteger(yearNum) ? yearNum : null, req.user.id]
+    const nowYear = new Date().getFullYear();
+    if (!Number.isInteger(yearNum) || yearNum < 2000 || yearNum > nowYear + 2) {
+      return res.status(400).json({ message: "Mwaka wa kujiunga si sahihi." });
+    }
+    await query(
+      `UPDATE joining_settings SET content = $1::jsonb, admission_year = $2, updated_by = $3, updated_at = NOW() WHERE id = 1`,
+      [JSON.stringify(cleaned.content), yearNum, req.user.id]
     );
-    res.json(rows[0]);
+    recordAudit({
+      actor: req.user, req, action: "joining.update_content",
+      entityType: "joining_settings", entityId: 1,
+      description: "Joining Instruction content updated.",
+    }).catch(() => {});
+    const s = await loadJoiningSettings();
+    res.json({ ...s, default_content: DEFAULT_CONTENT });
+  } catch (err) { next(err); }
+};
+
+// POST /api/joining/preview-pdf - { content, admission_year } (unsaved
+// edits) - renders exactly what parents will download, with a sample name,
+// so the school can check it BEFORE saving/publishing. Nothing is stored.
+const previewJoiningPdf = async (req, res, next) => {
+  try {
+    const { content, admission_year } = req.body || {};
+    let resolved = null;
+    if (content) {
+      const cleaned = sanitizeContent(content);
+      if (cleaned.error) return res.status(400).json({ message: cleaned.error });
+      resolved = cleaned.content;
+    } else {
+      resolved = (await loadJoiningSettings()).content;
+    }
+    const yearNum = Number(admission_year) || (await loadJoiningSettings()).admission_year;
+    await streamJoiningPdf(req, res, {
+      fullName: "JINA LA MWANAFUNZI (MFANO)", verifyRef: "blank",
+      filename: "Joining-Instruction-Preview.pdf", content: resolved, admissionYear: yearNum,
+    });
   } catch (err) { next(err); }
 };
 
@@ -472,8 +395,7 @@ const deleteAllJoiningApplications = async (req, res, next) => {
 // name) to keep on hand for when the office has no power/no internet.
 const downloadBlankJoiningPdf = async (req, res, next) => {
   try {
-    const settingsRes = await query(`SELECT requirements_text, admission_year FROM joining_settings WHERE id = 1`);
-    await streamBlankJoiningPdf(req, res, settingsRes.rows[0]?.requirements_text || "", settingsRes.rows[0]?.admission_year);
+    await streamJoiningPdf(req, res, { fullName: null, verifyRef: "blank", filename: "Joining-Instruction-Fomu-Tupu.pdf" });
   } catch (err) { next(err); }
 };
 
@@ -530,8 +452,7 @@ const manualIssueJoining = async (req, res, next) => {
       row = ins.rows[0];
     }
 
-    const settingsRes = await query(`SELECT requirements_text, admission_year FROM joining_settings WHERE id = 1`);
-    await streamJoiningPdf(req, res, row, settingsRes.rows[0]?.requirements_text || "", settingsRes.rows[0]?.admission_year);
+    await streamApplicantPdf(req, res, row);
   } catch (err) { next(err); }
 };
 
@@ -540,5 +461,5 @@ module.exports = {
   getJoiningSettings, updateJoiningSettings, publishJoiningSettings,
   listJoiningApplications, getJoiningStats, manualIssueJoining,
   exportJoiningApplicationsCsv, deleteJoiningApplication, deleteAllJoiningApplications,
-  downloadBlankJoiningPdf, verifyJoiningDocument,
+  downloadBlankJoiningPdf, verifyJoiningDocument, previewJoiningPdf,
 };

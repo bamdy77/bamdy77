@@ -1595,6 +1595,9 @@ async function migrate() {
     );
   `);
   await query(`ALTER TABLE joining_settings ADD COLUMN IF NOT EXISTS admission_year INTEGER;`);
+  // Editable wording of the Joining Instruction (see utils/joiningContent.js).
+  // NULL = use the built-in default document.
+  await query(`ALTER TABLE joining_settings ADD COLUMN IF NOT EXISTS content JSONB;`);
   await query(`UPDATE joining_settings SET admission_year = EXTRACT(YEAR FROM CURRENT_DATE)::int WHERE admission_year IS NULL;`);
   await query(`INSERT INTO joining_settings (id, admission_year) VALUES (1, EXTRACT(YEAR FROM CURRENT_DATE)::int) ON CONFLICT (id) DO NOTHING;`);
 
