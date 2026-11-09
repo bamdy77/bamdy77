@@ -523,7 +523,7 @@ const createStudent = async (req, res, next) => {
       req.user?.id);
     await syncParentContact(student);
 
-    res.status(201).json({ success: true, data: student, message: `Student Successfully Saved - ${student.first_name} ${student.last_name} added to ${student.form}.` });
+    res.status(201).json({ success: true, data: student, message: `Student Successfully Saved - ${student.first_name} ${student.last_name} added to ${student.form}. Namba ya Kuingia (Matokeo): ${student.results_login_no || "-"}` });
   } catch (err) { next(err); }
 };
 

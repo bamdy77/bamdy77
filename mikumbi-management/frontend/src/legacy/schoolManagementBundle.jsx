@@ -940,7 +940,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
       if (modal==="add") {
         const res = await apiFetch("/students", { method:"POST", body:cleanForm }, token);
         studentId = res.data.id;
-        setSuccess("Student enrolled successfully.");
+        setSuccess(`Student enrolled successfully. Namba ya Kuingia (Matokeo): ${res.data.results_login_no || "-"}`);
       } else {
         await apiFetch(`/students/${form.id}`, { method:"PUT", body:cleanForm }, token);
         setSuccess("Student updated.");
