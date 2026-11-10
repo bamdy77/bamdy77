@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
@@ -8,7 +8,6 @@ import { ErrorModalHost } from "./components/ErrorModal";
 
 import Landing from "./pages/Landing";
 import { PrivacyPolicy, TermsOfService, SupportPage } from "./pages/LegalPages";
-import PublicationsPage from "./pages/PublicationsPage";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -42,7 +41,8 @@ export default function StaffApp() {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/support" element={<SupportPage />} />
-          <Route path="/publications" element={<PublicationsPage />} />
+          {/* Results & Joining Instructions live on the parents' site only. */}
+          <Route path="/publications" element={<Navigate to="/" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />

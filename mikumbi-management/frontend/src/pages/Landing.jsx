@@ -11,7 +11,7 @@ const FEATURES = [
   { Icon: IconResults,        title: "Results Management",  desc: "Teachers enter subject marks online; the system computes grades and Division automatically. The Academic Master reviews, unlocks or excludes a teacher's submission where needed, then compiles and publishes results as PDF or Excel. A dedicated Parents Reports section generates a Kiswahili Parent Report for every student with the Head Master's signature and school stamp applied automatically, and sends results to each parent by SMS." },
   { Icon: IconAnalytics,      title: "Analytics Dashboard", desc: "Turns years of results and attendance data into clear trend charts: school and per-subject pass-rate and GPA trends across exam periods, a school-wide teacher attendance trend over time, and an individual student's Division and GPA progress - each with an at-a-glance improving/declining/stable indicator." },
   { Icon: IconTams,           title: "TAMS (Teacher Attendance)", desc: "Teachers check in each morning with GPS - the system verifies they're on the school compound and on time, flags late arrivals with a reason, and gives management a live daily and monthly attendance dashboard." },
-  { Icon: IconTimetable,      title: "Timetable Generator", desc: "Assign teachers to subjects and classes, then auto-generate a clash-free timetable. View it per class, per teacher, or as one general school timetable, publish it to the public Publications page, and export any view as PDF." },
+  { Icon: IconTimetable,      title: "Timetable Generator", desc: "Assign teachers to subjects and classes, then auto-generate a clash-free timetable. View it per class, per teacher, or as one general school timetable, and export any view as PDF." },
   { Icon: IconHostel,         title: "Hostel Management",   desc: "Admit boarding students into Boys or Girls hostel, manage rooms, record hostel contributions and discipline cases, and view each occupant's full history - with PDF exports throughout." },
   { Icon: IconContributions,  title: "Contributions Management", desc: "Track part-time student fees, Ream contributions and other school charges per term, with clear paid/outstanding status, printable receipts, and a history that both the office and each class teacher can review." },
   { Icon: IconFood,           title: "Manage Foods",        desc: "The food teacher records each student's food contribution by type, with a running history and summary so the office can see who has contributed and who is still outstanding." },
@@ -71,12 +71,6 @@ export default function Landing() {
 
   // Close the mobile/tablet menu automatically if the viewport grows to desktop size.
   useEffect(() => { if (isDesktop) setMenuOpen(false); }, [isDesktop]);
-
-  const goToPublications = (view) => {
-    setMenuOpen(false);
-    setPubOpen(false);
-    navigate(`/publications?view=${view}`);
-  };
 
   return (
     <div style={{ minHeight: "100vh", background: THEME.bg }}>
@@ -138,16 +132,6 @@ export default function Landing() {
               <a href="#home" style={{ ...navLink, display: "inline-flex", alignItems: "center", gap: 6 }}><HomeIcon size={14} />Home</a>
               <a href="#features" style={{ ...navLink, display: "inline-flex", alignItems: "center", gap: 6 }}><StarIcon size={14} />Features</a>
               <a href="#about" style={{ ...navLink, display: "inline-flex", alignItems: "center", gap: 6 }}><InfoIcon size={14} />About</a>
-              <HoverMenu
-                variant="navy"
-                label="Publications"
-                icon={BookIcon}
-                buttonStyle={{ fontSize: 13.5 }}
-                items={[
-                  { label: "Results", icon: CheckCircleIcon, onClick: () => goToPublications("results") },
-                  { label: "Joining Instructions", icon: GraduationCapIcon, onClick: () => goToPublications("joining") },
-                ]}
-              />
               <Link to="/login" style={{ ...navLink, background: "#fff", color: THEME.navy, padding: "7px 18px", borderRadius: 4, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}><LoginIcon size={13} />Login</Link>
             </div>
           ) : (
@@ -169,30 +153,6 @@ export default function Landing() {
             <a href="#features" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><StarIcon size={15} />Features</a>
             <a href="#about" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><InfoIcon size={15} />About</a>
 
-            <button
-              onClick={() => setPubOpen((o) => !o)}
-              style={{
-                ...mobileMenuLink, width: "100%", textAlign: "left", background: "none", border: "none",
-                borderBottom: pubOpen ? "none" : mobileMenuLink.borderBottom, cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", gap: 10 }}><BookIcon size={15} />Publications</span>
-              <span style={{ display: "flex", transform: pubOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s ease" }}><ChevronDownIcon size={12} /></span>
-            </button>
-
-            {pubOpen && (
-              <div style={{ background: "rgba(0,0,0,0.15)" }}>
-                <button
-                  onClick={() => goToPublications("results")}
-                  style={{ ...mobileMenuLink, width: "100%", textAlign: "left", background: "none", border: "none", borderBottom: mobileMenuLink.borderBottom, cursor: "pointer", paddingLeft: 32, fontSize: 13.5, opacity: 0.9, display: "flex", alignItems: "center", gap: 8 }}
-                ><CheckCircleIcon size={13} />Results</button>
-                <button
-                  onClick={() => goToPublications("joining")}
-                  style={{ ...mobileMenuLink, width: "100%", textAlign: "left", background: "none", border: "none", borderBottom: "none", cursor: "pointer", paddingLeft: 32, fontSize: 13.5, opacity: 0.9, display: "flex", alignItems: "center", gap: 8 }}
-                ><GraduationCapIcon size={13} />Joining Instructions</button>
-              </div>
-            )}
           </div>
         )}
       </div>
