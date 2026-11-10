@@ -68,13 +68,13 @@ function IdentityBanner() {
           style={{ height: isMobile ? 42 : isTablet ? 64 : 92, width: "auto", flexShrink: 0 }} onError={(e) => (e.currentTarget.style.display = "none")} />
         <div style={{ minWidth: 0 }}>
           <div style={{
-            fontSize: isMobile ? 8.5 : isTablet ? 10.5 : 13, fontWeight: 700, letterSpacing: isMobile ? "0.06em" : "0.18em",
+            fontSize: isMobile ? 10 : isTablet ? 12.5 : 15.5, fontWeight: 700, letterSpacing: isMobile ? "0.06em" : "0.18em",
             color: "#0F172A", textTransform: "uppercase", marginBottom: isMobile ? 3 : 8,
           }}>{t("banner.country")}</div>
-          <div style={{ fontSize: isMobile ? 15 : isTablet ? 22 : 32, fontWeight: 800, color: NAVY, letterSpacing: "0.01em", lineHeight: 1.18, textTransform: "uppercase" }}>
+          <div style={{ fontSize: isMobile ? 17 : isTablet ? 23.5 : 34, fontWeight: 800, color: NAVY, letterSpacing: "0.01em", lineHeight: 1.18, textTransform: "uppercase" }}>
             {t("school.name")}
           </div>
-          <div style={{ fontSize: isMobile ? 10.5 : isTablet ? 12.5 : 15, fontStyle: "italic", color: ORANGE, fontWeight: 600, marginTop: isMobile ? 3 : 6 }}>
+          <div style={{ fontSize: isMobile ? 12.5 : isTablet ? 15 : 17, fontStyle: "italic", color: ORANGE, fontWeight: 600, marginTop: isMobile ? 3 : 6 }}>
             {t("school.motto")}
           </div>
         </div>
@@ -112,17 +112,17 @@ function NavBar() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, opacity: 0.92 }}>
           <LocationPinIcon size={14} />
-          <span style={{ fontSize: isMobile ? 11 : 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <span style={{ fontSize: isMobile ? 13 : 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {t("nav.location")}
           </span>
         </div>
 
         {isDesktop ? (
-          <div style={{ display: "flex", gap: 24, fontSize: 13.5, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 24, fontSize: 15, alignItems: "center" }}>
             <Link to="/" className="pub-navlink" style={link}><HomeIcon size={14} />{t("nav.home")}</Link>
             <Link to="/#about" className="pub-navlink" style={link}><InfoIcon size={14} />{t("nav.about")}</Link>
             <Link to="/#news" className="pub-navlink" style={link}><MegaphoneIcon size={14} />{t("nav.news")}</Link>
-            <HoverMenu label={t("nav.publications")} icon={BookIcon} items={PUBLICATION_ITEMS} variant="light" align="right" buttonStyle={{ fontSize: 13.5, fontWeight: 400 }} />
+            <HoverMenu label={t("nav.publications")} icon={BookIcon} items={PUBLICATION_ITEMS} variant="light" align="right" buttonStyle={{ fontSize: 15, fontWeight: 400 }} />
             <Link to="/#contact" className="pub-navlink" style={link}><MessageIcon size={14} />{t("nav.contact")}</Link>
             <LangToggle />
           </div>
@@ -153,7 +153,7 @@ function NavBar() {
           {pubOpen && (
             <div style={{ background: "rgba(0,0,0,0.15)" }}>
               {PUBLICATION_ITEMS.map((it) => (
-                <Link key={it.to} to={it.to} onClick={close} style={{ ...mobileLink, paddingLeft: 32, fontSize: 13.5, opacity: 0.92 }}>
+                <Link key={it.to} to={it.to} onClick={close} style={{ ...mobileLink, paddingLeft: 32, fontSize: 15, opacity: 0.92 }}>
                   <it.icon size={13} />{it.label}
                 </Link>
               ))}
@@ -168,7 +168,7 @@ function NavBar() {
 
 const mobileLink = {
   display: "flex", alignItems: "center", gap: 10, padding: "13px 20px", color: "#fff", textDecoration: "none",
-  fontSize: 14, fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.08)",
+  fontSize: 15.5, fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.08)",
 };
 function MobileLink({ to, onClick, icon, children, last }) {
   return <Link to={to} onClick={onClick} style={{ ...mobileLink, borderBottom: last ? "none" : mobileLink.borderBottom }}>{icon}{children}</Link>;
@@ -186,8 +186,8 @@ function Footer() {
   const { isMobile, isTablet } = useBreakpoint();
   const { t } = useLang();
   const cols = isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "1.5fr 1fr 1fr 1fr 1.3fr";
-  const head = { color: "#fff", fontSize: 16, fontWeight: 800, marginBottom: 14 };
-  const fl = { color: "#cfe0ee", textDecoration: "none", fontSize: 13.5, lineHeight: 1.4 };
+  const head = { color: "#fff", fontSize: 18, fontWeight: 800, marginBottom: 14 };
+  const fl = { color: "#cfe0ee", textDecoration: "none", fontSize: 15, lineHeight: 1.4 };
   const li = { marginBottom: 10 };
 
   return (
@@ -196,14 +196,14 @@ function Footer() {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
             <img src="/assets/shule.svg" alt="" width="56" height="56" style={{ height: 56, width: "auto" }} onError={(e) => (e.currentTarget.style.display = "none")} />
-            <div style={{ color: "#fff", fontWeight: 800, fontSize: 16, lineHeight: 1.25 }}>{t("school.name")}</div>
+            <div style={{ color: "#fff", fontWeight: 800, fontSize: 18, lineHeight: 1.25 }}>{t("school.name")}</div>
           </div>
-          <div style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{t("footer.tagline")}</div>
-          <div style={{ color: "#F5B041", fontSize: 13.5, fontStyle: "italic", marginBottom: 16 }}>{t("school.motto")}</div>
+          <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5, marginBottom: 6 }}>{t("footer.tagline")}</div>
+          <div style={{ color: "#F5B041", fontSize: 15, fontStyle: "italic", marginBottom: 16 }}>{t("school.motto")}</div>
           <div style={{ background: "#0a3556", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 4, padding: "14px 16px", maxWidth: 260 }}>
-            <div style={{ fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9fc0d9", marginBottom: 6 }}>{t("footer.identity")}</div>
-            <div style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{t("footer.regNo")} {SCHOOL.regNo}</div>
-            <div style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginTop: 2 }}>{t("footer.centreNo")} {SCHOOL.centreNo}</div>
+            <div style={{ fontSize: 12.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9fc0d9", marginBottom: 6 }}>{t("footer.identity")}</div>
+            <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5 }}>{t("footer.regNo")} {SCHOOL.regNo}</div>
+            <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5, marginTop: 2 }}>{t("footer.centreNo")} {SCHOOL.centreNo}</div>
           </div>
         </div>
 
@@ -236,19 +236,19 @@ function Footer() {
 
         <div>
           <div style={head}>{t("footer.contactUs")}</div>
-          <div style={{ color: "#fff", fontWeight: 700, fontSize: 13.5, marginBottom: 2 }}>{t("footer.postal")}</div>
-          <div style={{ fontSize: 13.5, marginBottom: 12 }}>{SCHOOL.poBox}, {SCHOOL.region}</div>
+          <div style={{ color: "#fff", fontWeight: 700, fontSize: 15, marginBottom: 2 }}>{t("footer.postal")}</div>
+          <div style={{ fontSize: 15, marginBottom: 12 }}>{SCHOOL.poBox}, {SCHOOL.region}</div>
           {siteConfig.phones.map((p) => (
-            <div key={p} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 13.5 }}>
+            <div key={p} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 15 }}>
               <PhoneSvg /><a className="pub-flink" href={toTelHref(p)} style={fl}>{p}</a>
             </div>
           ))}
-          <div style={{ display: "flex", gap: 8, marginTop: 6, fontSize: 13.5 }}>
+          <div style={{ display: "flex", gap: 8, marginTop: 6, fontSize: 15 }}>
             <MailSvg /><a className="pub-flink" href={`mailto:${siteConfig.email}`} style={{ ...fl, overflowWrap: "anywhere" }}>{siteConfig.email}</a>
           </div>
           {siteConfig.social.length > 0 && (
             <div style={{ marginTop: 18 }}>
-              <div style={{ ...head, fontSize: 14, marginBottom: 8 }}>{t("footer.follow")}</div>
+              <div style={{ ...head, fontSize: 15.5, marginBottom: 8 }}>{t("footer.follow")}</div>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 {siteConfig.social.map((s) => (
                   <a key={s.key} className="pub-flink" href={s.url} target="_blank" rel="noopener noreferrer" style={fl}>{s.label}</a>
@@ -258,7 +258,7 @@ function Footer() {
           )}
         </div>
       </div>
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.14)", textAlign: "center", padding: "16px 20px", fontSize: 12.5, color: "#cfe0ee" }}>
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.14)", textAlign: "center", padding: "16px 20px", fontSize: 15, color: "#cfe0ee" }}>
         © {new Date().getFullYear()} {t("school.name")}. {t("footer.rights")}
       </div>
     </footer>

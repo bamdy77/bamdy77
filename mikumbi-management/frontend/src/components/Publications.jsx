@@ -23,10 +23,10 @@ export default function Publications({ forcedView = null }) {
 
   return (
     <section id="publications" style={{ padding: "60px 24px", maxWidth: 1000, margin: "0 auto" }}>
-      <h2 style={{ textAlign: "center", color: THEME.heading, fontSize: 24, fontWeight: 800, marginBottom: 8 }}>
-        {tab === "joining" ? "Machapisho" : "Machapisho (Publications)"}
+      <h2 style={{ textAlign: "center", color: THEME.heading, fontSize: 25.5, fontWeight: 800, marginBottom: 8 }}>
+        Machapisho
       </h2>
-      <p style={{ textAlign: "center", color: THEME.muted, fontSize: 14, marginBottom: 28 }}>
+      <p style={{ textAlign: "center", color: THEME.muted, fontSize: 15.5, marginBottom: 28 }}>
         {tab === "joining" ? "Maelekezo ya Kujiunga na Kidato cha Kwanza"
           : tab === "results" ? "Matokeo ya Mwanafunzi"
           : "Matokeo na Maelekezo ya Kujiunga na Kidato cha Kwanza"}
@@ -52,10 +52,10 @@ export default function Publications({ forcedView = null }) {
           {!forcedView && <button onClick={() => setTab(null)} style={{
             display: "inline-flex", alignItems: "center", gap: 6,
             background: THEME.surface, border: `1.5px solid ${THEME.border}`, borderRadius: 4,
-            color: THEME.heading, fontWeight: 600, fontSize: 13.5,
+            color: THEME.heading, fontWeight: 600, fontSize: 15,
             cursor: "pointer", marginBottom: 20, padding: "9px 16px",
           }}>← Rudi Nyuma</button>}
-          <h3 style={{ textAlign: "center", color: THEME.heading, fontSize: 16, fontWeight: 700, marginBottom: 22 }}>
+          <h3 style={{ textAlign: "center", color: THEME.heading, fontSize: 18, fontWeight: 700, marginBottom: 22 }}>
             {tab === "results" ? "Matokeo (Results)" : "Maelekezo ya Kujiunga (Joining Instructions)"}
           </h3>
           {tab === "results" ? <ErrorBoundary><ResultsPortal /></ErrorBoundary> : <ErrorBoundary><JoiningInstructionsPanel /></ErrorBoundary>}
@@ -75,8 +75,8 @@ function PublicationCard({ title, subtitle, color, bg, icon, onClick }) {
       onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
     >
       <div style={{ marginBottom: 14, display: "flex", justifyContent: "center" }}>{icon}</div>
-      <div style={{ fontWeight: 800, fontSize: 17, color }}>{title}</div>
-      <div style={{ fontSize: 12.5, color: THEME.muted, marginTop: 6 }}>{subtitle}</div>
+      <div style={{ fontWeight: 800, fontSize: 19, color }}>{title}</div>
+      <div style={{ fontSize: 15, color: THEME.muted, marginTop: 6 }}>{subtitle}</div>
     </button>
   );
 }
@@ -181,20 +181,20 @@ function ResultsPortal() {
         <form onSubmit={checkUsername} style={{ display: "grid", gap: 12 }}>
           <label style={formLabel}>Namba ya Kuingia (Results Login Number)</label>
           <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Mfano: 2026-48319" inputMode="text" autoComplete="username" style={formInput} autoFocus />
-          <p style={{ fontSize: 11.5, color: THEME.muted, margin: 0 }}>Namba hii imeandikwa kwenye Ripoti ya Mzazi kama "NAMBA YA KUINGIA (MATOKEO)". Kama huna, wasiliana na shule.</p>
+          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>Namba hii imeandikwa kwenye Ripoti ya Mzazi kama "NAMBA YA KUINGIA (MATOKEO)". Kama huna, wasiliana na shule.</p>
           {error && <ErrorMsg>{error}</ErrorMsg>}
           <button type="submit" disabled={busy || !username.trim()} style={primaryBtn}>{busy ? "Inaangalia..." : "Endelea"}</button>
         </form>
       )}
       {step === "password" && (
         <form onSubmit={login} style={{ display: "grid", gap: 12 }}>
-          <div style={{ fontSize: 13, color: THEME.text }}>Namba ya Kuingia: <b>{username}</b> <button type="button" onClick={() => { setStep("username"); setError(""); }} style={{ ...smallLinkBtn, marginLeft: 8 }}>Badilisha</button></div>
+          <div style={{ fontSize: 15.5, color: THEME.text }}>Namba ya Kuingia: <b>{username}</b> <button type="button" onClick={() => { setStep("username"); setError(""); }} style={{ ...smallLinkBtn, marginLeft: 8 }}>Badilisha</button></div>
           <label style={formLabel}>Password</label>
           <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mfano: 0712345678" style={formInput} autoFocus />
-          <p style={{ fontSize: 11.5, color: THEME.muted, margin: 0 }}>Andika namba ya simu ya mzazi/mlezi iliyoandikwa wakati mwanafunzi anasajiliwa shuleni.</p>
+          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>Andika namba ya simu ya mzazi/mlezi iliyoandikwa wakati mwanafunzi anasajiliwa shuleni.</p>
           {error && <ErrorMsg>{error}</ErrorMsg>}
           <button type="submit" disabled={busy || !password.trim()} style={primaryBtn}>{busy ? "Inaingia..." : "Ingia"}</button>
-          <p style={{ fontSize: 11.5, color: THEME.muted, textAlign: "center", margin: 0 }}>Umesahau password? Wasiliana moja kwa moja na Mkuu wa Shule.</p>
+          <p style={{ fontSize: 13.5, color: THEME.muted, textAlign: "center", margin: 0 }}>Umesahau password? Wasiliana moja kwa moja na Mkuu wa Shule.</p>
         </form>
       )}
     </div>
@@ -208,11 +208,11 @@ function ResultCard({ r, student }) {
   return (
     <div style={{ background: "#ADD8E6", borderRadius: 4, padding: 14, border: "1px solid #7C93B8" }}>
       <div style={{ textAlign: "center", marginBottom: 10 }}>
-        <div style={{ fontWeight: 800, color: "#0A1F5C", fontSize: 15 }}>{student.full_name}</div>
-        <div style={{ fontSize: 12, color: "#0A1F5C" }}>{r.form} — {r.exam_type} {r.month ? `(${r.month})` : ""} {r.year}</div>
+        <div style={{ fontWeight: 800, color: "#0A1F5C", fontSize: 17 }}>{student.full_name}</div>
+        <div style={{ fontSize: 14, color: "#0A1F5C" }}>{r.form} — {r.exam_type} {r.month ? `(${r.month})` : ""} {r.year}</div>
       </div>
       <div style={{ background: "#FFFEEA", border: "1px solid #7C93B8", borderRadius: 4, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 15 }}>
           <thead>
             <tr style={{ background: "#FCF3C0" }}>
               <th style={thStyle}>Somo</th>
@@ -230,7 +230,7 @@ function ResultCard({ r, student }) {
             ))}
           </tbody>
         </table>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, padding: "10px 12px", borderTop: "1px solid #7C93B8", fontSize: 12, color: "#0A1F5C" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, padding: "10px 12px", borderTop: "1px solid #7C93B8", fontSize: 14, color: "#0A1F5C" }}>
           <SummaryChip label="Wastani (GPA)" value={s.gpa} />
           <SummaryChip label="Division" value={s.division} />
           <SummaryChip label="Points" value={s.points} />
@@ -283,7 +283,7 @@ function JoiningInstructionsPanel() {
         <Muted>Fomu ya Maelekezo ya kujiunga na kidato cha kwanza bado haijachapishwa mtandaoni. Tafadhali wasiliana na shule kwa maelekezo zaidi.</Muted>
       ) : step === "form" ? (
         <form onSubmit={onSubmitClick} style={{ display: "grid", gap: 12 }}>
-          <p style={{ fontSize: 13, color: THEME.muted, margin: "0 0 4px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15.5, color: THEME.muted, margin: "0 0 4px", lineHeight: 1.6 }}>
             Jaza taarifa za mwanafunzi aliyechaguliwa kujiunga na Kidato cha Kwanza. Utapakua barua ya Maelekezo ya Kujiunga pamoja na fomu za kujaza (Ahadi ya Mzazi, Ahadi ya Mwanafunzi, Maelezo Binafsi na Fomu ya Uchunguzi wa Afya). Zichapishe, zijaze na uzilete siku ya kuripoti.
           </p>
           <Field label="Jina la Kwanza" value={fields.first_name} onChange={set("first_name")} required />
@@ -299,7 +299,7 @@ function JoiningInstructionsPanel() {
         </form>
       ) : step === "confirm" ? (
         <div style={{ textAlign: "center", display: "grid", gap: 16 }}>
-          <p style={{ fontSize: 14, color: THEME.text }}>Una uhakika unataka kuwasilisha taarifa hizi?</p>
+          <p style={{ fontSize: 15.5, color: THEME.text }}>Una uhakika unataka kuwasilisha taarifa hizi?</p>
           <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
             <button onClick={confirmYes} disabled={busy} style={primaryBtn}>{busy ? "Inawasilisha..." : "NDIYO"}</button>
             <button onClick={() => setStep("form")} style={secondaryBtn}>GHAIRI</button>
@@ -307,7 +307,7 @@ function JoiningInstructionsPanel() {
         </div>
       ) : (
         <div style={{ textAlign: "center", display: "grid", gap: 16 }}>
-          <p style={{ fontSize: 14, color: THEME.text }}>{result?.message}</p>
+          <p style={{ fontSize: 15.5, color: THEME.text }}>{result?.message}</p>
           <a href={`${API_BASE}/public/joining/download-pdf?token=${encodeURIComponent(result.token)}`} target="_blank" rel="noreferrer" style={pdfButton}>
             <PdfIcon /> Pakua Joining Instruction (PDF)
           </a>
@@ -327,15 +327,15 @@ function Field({ label, value, onChange, type = "text", required, placeholder })
   );
 }
 
-const Muted = ({ children }) => <p style={{ textAlign: "center", color: THEME.muted, fontSize: 13.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>{children}</p>;
-const ErrorMsg = ({ children }) => <p style={{ color: "#B91C1C", fontSize: 12.5, margin: 0 }}>{children}</p>;
+const Muted = ({ children }) => <p style={{ textAlign: "center", color: THEME.muted, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>{children}</p>;
+const ErrorMsg = ({ children }) => <p style={{ color: "#B91C1C", fontSize: 15, margin: 0 }}>{children}</p>;
 
 const pdfButton = {
   display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 22px", background: THEME.navy,
-  color: "#fff", borderRadius: 4, textDecoration: "none", fontWeight: 600, fontSize: 13.5,
+  color: "#fff", borderRadius: 4, textDecoration: "none", fontWeight: 600, fontSize: 15,
 };
-const formLabel = { display: "block", fontSize: 12.5, fontWeight: 600, color: THEME.text, marginBottom: 4 };
-const formInput = { width: "100%", padding: "10px 12px", borderRadius: 4, border: `1px solid ${THEME.border}`, fontSize: 13.5, boxSizing: "border-box" };
-const primaryBtn = { padding: "11px 20px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: "pointer" };
-const secondaryBtn = { padding: "11px 20px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontWeight: 700, fontSize: 13.5, cursor: "pointer" };
-const smallLinkBtn = { background: "none", border: "none", color: THEME.navy, fontWeight: 600, fontSize: 12, cursor: "pointer", padding: 0, textDecoration: "underline" };
+const formLabel = { display: "block", fontSize: 15, fontWeight: 600, color: THEME.text, marginBottom: 4 };
+const formInput = { width: "100%", padding: "10px 12px", borderRadius: 4, border: `1px solid ${THEME.border}`, fontSize: 15, boxSizing: "border-box" };
+const primaryBtn = { padding: "11px 20px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" };
+const secondaryBtn = { padding: "11px 20px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontWeight: 700, fontSize: 15, cursor: "pointer" };
+const smallLinkBtn = { background: "none", border: "none", color: THEME.navy, fontWeight: 600, fontSize: 14, cursor: "pointer", padding: 0, textDecoration: "underline" };

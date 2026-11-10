@@ -15,7 +15,7 @@ import {
 
 const NAVY = "#0c426f";
 const ORANGE = "#F54927";
-const GREEN = "#415d43"; // About section colour requested by the school
+const GREEN = "#ED9137"; // About section colour requested by the school (orange)
 
 export default function PublicHome() {
   // Wake the (free-tier) backend while the visitor is reading the page, so
@@ -54,13 +54,13 @@ function Hero() {
       padding: isMobile ? "70px 20px 96px" : isTablet ? "110px 28px 120px" : "150px 28px 150px",
     }}>
       <div style={{ maxWidth: 820, margin: "0 auto" }}>
-        <div style={{ display: "inline-block", fontSize: isMobile ? 11 : 12.5, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.28)", borderRadius: 4, padding: "6px 16px", marginBottom: 18 }}>
+        <div style={{ display: "inline-block", fontSize: isMobile ? 13 : 15, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.28)", borderRadius: 4, padding: "6px 16px", marginBottom: 18 }}>
           {t("hero.place")}
         </div>
-        <h1 style={{ fontSize: isMobile ? 29 : isTablet ? 40 : 52, fontWeight: 800, lineHeight: 1.15, marginBottom: 16 }}>
+        <h1 style={{ fontSize: isMobile ? 30.5 : isTablet ? 42.5 : 55, fontWeight: 800, lineHeight: 1.15, marginBottom: 16 }}>
           {t("hero.welcome")}
         </h1>
-        <p style={{ fontSize: isMobile ? 15 : 18, lineHeight: 1.65, opacity: 0.94, maxWidth: 640, margin: "0 auto 30px" }}>
+        <p style={{ fontSize: isMobile ? 17 : 20, lineHeight: 1.65, opacity: 0.94, maxWidth: 640, margin: "0 auto 30px" }}>
           {t("hero.text")}
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
@@ -78,7 +78,7 @@ function Hero() {
 
 const heroBtn = {
   display: "inline-flex", alignItems: "center", gap: 10, padding: "15px 28px", borderRadius: 4,
-  fontWeight: 800, fontSize: 16, textDecoration: "none", minWidth: 210, justifyContent: "center",
+  fontWeight: 800, fontSize: 18, textDecoration: "none", minWidth: 210, justifyContent: "center",
 };
 
 // ─────────────────────────── Quick access ───────────────────────────
@@ -100,8 +100,8 @@ function QuickAccess() {
             border: "1px solid #e2e8f0", display: "block",
           }}>
             <div style={{ width: 42, height: 42, borderRadius: 4, background: "#eaf2fa", color: NAVY, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}><Icon size={22} /></div>
-            <div style={{ color: NAVY, fontWeight: 800, fontSize: isMobile ? 14.5 : 16, marginBottom: 4 }}>{title}</div>
-            <div style={{ color: "#64748B", fontSize: isMobile ? 12 : 13, lineHeight: 1.5 }}>{text}</div>
+            <div style={{ color: NAVY, fontWeight: 800, fontSize: isMobile ? 16 : 18, marginBottom: 4 }}>{title}</div>
+            <div style={{ color: "#64748B", fontSize: isMobile ? 14 : 15.5, lineHeight: 1.5 }}>{text}</div>
           </Link>
         ))}
       </div>
@@ -128,15 +128,15 @@ function About() {
           )}
           <div>
             <img src="/assets/shule.svg" alt="" width="64" height="64" style={{ height: isMobile ? 48 : 64, width: "auto", marginBottom: 12, display: showHead && !isMobile && !isTablet ? "none" : "inline-block" }} onError={(e) => (e.currentTarget.style.display = "none")} />
-            <h2 style={{ fontSize: isMobile ? 24 : 30, fontWeight: 800, marginBottom: 12 }}>{t("about.title")}</h2>
-            <p style={{ fontSize: isMobile ? 14.5 : 16, lineHeight: 1.8, color: "rgba(255,255,255,0.93)", maxWidth: 640, margin: showHead && !isMobile && !isTablet ? 0 : "0 auto" }}>
+            <h2 style={{ fontSize: isMobile ? 25.5 : 32, fontWeight: 800, marginBottom: 12 }}>{t("about.title")}</h2>
+            <p style={{ fontSize: isMobile ? 16 : 18, lineHeight: 1.8, color: "rgba(255,255,255,0.93)", maxWidth: 640, margin: showHead && !isMobile && !isTablet ? 0 : "0 auto" }}>
               {t("about.text")}
             </p>
           </div>
         </div>
         <div style={{
           display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 16 : 20,
-          background: "#2f4431", borderRadius: 4, padding: isMobile ? "20px 14px" : "26px 24px",
+          background: "#B9661B", borderRadius: 4, padding: isMobile ? "20px 14px" : "26px 24px",
         }}>
           <Fact label={t("fact.postal")} value={SCHOOL.poBox} />
           <Fact label={t("fact.regNo")} value={SCHOOL.regNo} />
@@ -150,8 +150,8 @@ function About() {
 function Fact({ label, value }) {
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>{label}</div>
-      <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", overflowWrap: "anywhere" }}>{value}</div>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 15.5, fontWeight: 700, color: "#fff", overflowWrap: "anywhere" }}>{value}</div>
     </div>
   );
 }
@@ -179,8 +179,8 @@ function Boarding() {
                 fallback={<div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.85)" }}><Icon size={48} /></div>}
               />
               <div style={{ padding: "16px 18px 20px" }}>
-                <h3 style={{ color: NAVY, fontSize: 17, fontWeight: 800, marginBottom: 6 }}>{title}</h3>
-                <p style={{ color: "#475569", fontSize: 13.5, lineHeight: 1.65 }}>{text}</p>
+                <h3 style={{ color: NAVY, fontSize: 19, fontWeight: 800, marginBottom: 6 }}>{title}</h3>
+                <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.65 }}>{text}</p>
               </div>
             </article>
           ))}
@@ -257,8 +257,8 @@ function Contact() {
   const { t } = useLang();
   const [mapActive, setMapActive] = useState(false);
   const box = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, padding: "22px 20px", textAlign: "center" };
-  const label = { fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748B", marginBottom: 8 };
-  const val = { color: NAVY, fontWeight: 700, fontSize: 15, lineHeight: 1.6, overflowWrap: "anywhere" };
+  const label = { fontSize: 13, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748B", marginBottom: 8 };
+  const val = { color: NAVY, fontWeight: 700, fontSize: 17, lineHeight: 1.6, overflowWrap: "anywhere" };
   return (
     <section id="contact" className="pub-section" style={{ background: "#fff", padding: isMobile ? "48px 18px" : "70px 24px" }}>
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>
@@ -292,13 +292,13 @@ function Contact() {
         <div style={{ marginTop: 28, border: "1px solid #e2e8f0", borderRadius: 4, overflow: "hidden", background: "#fff" }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, padding: isMobile ? "14px 16px" : "16px 20px" }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: NAVY, fontWeight: 800, fontSize: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: NAVY, fontWeight: 800, fontSize: 18 }}>
                 <span style={{ color: ORANGE, display: "flex" }}><LocationPinIcon size={18} /></span>{t("map.title")}
               </div>
-              <div style={{ color: "#64748B", fontSize: 13, marginTop: 4 }}>{t("map.text")}</div>
+              <div style={{ color: "#64748B", fontSize: 15.5, marginTop: 4 }}>{t("map.text")}</div>
             </div>
             <a href={siteConfig.location.directionsUrl} target="_blank" rel="noopener noreferrer" className="pub-btn"
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: ORANGE, color: "#fff", textDecoration: "none", fontWeight: 800, fontSize: 14, padding: "11px 18px", borderRadius: 4, ...(isMobile ? { width: "100%", justifyContent: "center" } : {}) }}>
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: ORANGE, color: "#fff", textDecoration: "none", fontWeight: 800, fontSize: 15.5, padding: "11px 18px", borderRadius: 4, ...(isMobile ? { width: "100%", justifyContent: "center" } : {}) }}>
               <LocationPinIcon size={16} />{t("map.directions")}
             </a>
           </div>
@@ -316,7 +316,7 @@ function Contact() {
             {!mapActive && (
               <button type="button" onClick={() => setMapActive(true)} aria-label={t("map.activate")}
                 style={{ position: "absolute", inset: 0, width: "100%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: 14 }}>
-                <span style={{ background: "rgba(12,66,111,0.88)", color: "#fff", fontWeight: 700, fontSize: 13, padding: "8px 14px", borderRadius: 4 }}>{t("map.activate")}</span>
+                <span style={{ background: "rgba(12,66,111,0.88)", color: "#fff", fontWeight: 700, fontSize: 15.5, padding: "8px 14px", borderRadius: 4 }}>{t("map.activate")}</span>
               </button>
             )}
           </div>

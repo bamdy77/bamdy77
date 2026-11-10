@@ -13,13 +13,13 @@ function Shell({ title, children }) {
   return (
     <PublicLayout>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: isMobile ? "30px 18px 50px" : "44px 24px 70px" }}>
-        <h1 style={{ color: NAVY, fontSize: isMobile ? 22 : 26, fontWeight: 800, marginBottom: 18 }}>{title}</h1>
-        <div style={{ color: "#0F172A", fontSize: 14.5, lineHeight: 1.8 }}>{children}</div>
+        <h1 style={{ color: NAVY, fontSize: isMobile ? 23.5 : 27.5, fontWeight: 800, marginBottom: 18 }}>{title}</h1>
+        <div style={{ color: "#0F172A", fontSize: 16, lineHeight: 1.8 }}>{children}</div>
       </div>
     </PublicLayout>
   );
 }
-const h2 = { color: NAVY, fontSize: 16.5, fontWeight: 700, marginTop: 24, marginBottom: 8 };
+const h2 = { color: NAVY, fontSize: 18.5, fontWeight: 700, marginTop: 24, marginBottom: 8 };
 const phones = () => siteConfig.phones.join(", ");
 
 export function PublicPrivacy() {
