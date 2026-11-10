@@ -15,7 +15,7 @@ import {
 
 const NAVY = "#0c426f";
 const ORANGE = "#F54927";
-const GREEN = "#ED9137"; // About section colour requested by the school (orange)
+const GREEN = "#415d43"; // About section colour requested by the school
 
 export default function PublicHome() {
   // Wake the (free-tier) backend while the visitor is reading the page, so
@@ -136,7 +136,7 @@ function About() {
         </div>
         <div style={{
           display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 16 : 20,
-          background: "#B9661B", borderRadius: 4, padding: isMobile ? "20px 14px" : "26px 24px",
+          background: "#2f4431", borderRadius: 4, padding: isMobile ? "20px 14px" : "26px 24px",
         }}>
           <Fact label={t("fact.postal")} value={SCHOOL.poBox} />
           <Fact label={t("fact.regNo")} value={SCHOOL.regNo} />
