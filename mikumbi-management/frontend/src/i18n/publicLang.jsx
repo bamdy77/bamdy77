@@ -141,6 +141,8 @@ const STRINGS = {
   "boarding.girls.text": { sw: "Huduma ya bweni inatolewa kwa wasichana wote.", en: "Boarding services are provided for all girls." },
   "boarding.ground.title": { sw: "Uwanja wa Shule", en: "School Grounds" },
   "boarding.ground.text": { sw: "Uwanja wa michezo na shughuli za wanafunzi nje ya darasa.", en: "Sports field and outdoor student activities." },
+  "boarding.farm.title": { sw: "Kazi za Shamba", en: "Farm Work" },
+  "boarding.farm.text": { sw: "Wanafunzi hujifunza kwa vitendo kupitia kazi za shamba, kwa kauli mbiu yetu “Elimu na Kazi”.", en: "Students learn by doing through farm work, in line with our motto “Education with work”." },
   "boarding.life.title": { sw: "Maisha ya Mwanafunzi", en: "Student Life" },
   "boarding.life.text": { sw: "Kujifunza, nidhamu na maisha ya jamii nje ya darasa.", en: "Learning, discipline and community life beyond the classroom." },
 

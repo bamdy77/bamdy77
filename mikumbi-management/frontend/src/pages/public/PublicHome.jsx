@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import PublicLayout from "../../components/public/PublicLayout";
 import NewsSection, { SectionTitle } from "../../components/public/NewsSection";
-import SmartImage, { useLoadedImages } from "../../components/public/SmartImage";
+import { useLoadedImages, Slideshow } from "../../components/public/SmartImage";
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { SCHOOL } from "../../styles/theme";
 import { siteConfig, toTelHref } from "../../config/siteConfig";
@@ -161,20 +161,21 @@ function Boarding() {
   const { isMobile, isTablet } = useBreakpoint();
   const { t } = useLang();
   const cards = [
-    { img: "/assets/classroom.jpg", icon: SchoolIcon, title: t("boarding.academics.title"), text: t("boarding.academics.text") },
-    { img: "/assets/girls-hostel.jpg", icon: BedIcon, title: t("boarding.girls.title"), text: t("boarding.girls.text") },
-    { img: "/assets/school-ground.jpg", icon: TrophyIcon, title: t("boarding.ground.title"), text: t("boarding.ground.text") },
-    { img: "/assets/students.jpg", icon: UsersIcon, title: t("boarding.life.title"), text: t("boarding.life.text") },
+    // Each card's photos change every 5 seconds (same files as the gallery).
+    { imgs: ["/assets/classroom.jpg"], icon: SchoolIcon, title: t("boarding.academics.title"), text: t("boarding.academics.text") },
+    { imgs: [1, 2, 3].map((n) => `/assets/gallery-hostel-${n}.jpg`), icon: BedIcon, title: t("boarding.girls.title"), text: t("boarding.girls.text") },
+    { imgs: [1, 2].map((n) => `/assets/gallery-grounds-${n}.jpg`), icon: TrophyIcon, title: t("boarding.ground.title"), text: t("boarding.ground.text") },
+    { imgs: [1, 2, 3].map((n) => `/assets/gallery-farm-${n}.jpg`), icon: UsersIcon, title: t("boarding.farm.title"), text: t("boarding.farm.text") },
   ];
   return (
     <section id="boarding" className="pub-section" style={{ background: "#fff", padding: isMobile ? "48px 18px" : "70px 24px" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <SectionTitle title={t("boarding.title")} subtitle={t("boarding.subtitle")} />
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 20 }}>
-          {cards.map(({ img, icon: Icon, title, text }) => (
+          {cards.map(({ imgs, icon: Icon, title, text }) => (
             <article key={title} className="pub-lift" style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, overflow: "hidden" }}>
-              <SmartImage
-                src={img} alt={title} width="400" height="260"
+              <Slideshow
+                srcs={imgs} alt={title}
                 wrapStyle={{ height: 190, background: `linear-gradient(150deg, ${NAVY}, #165D99)` }}
                 fallback={<div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.85)" }}><Icon size={48} /></div>}
               />
