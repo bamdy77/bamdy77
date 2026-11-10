@@ -64,7 +64,7 @@ function Hero() {
           {t("hero.text")}
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link to="/results" className="pub-btn" style={{ ...heroBtn, background: ORANGE, color: "#fff", boxShadow: "0 8px 22px rgba(245,73,39,0.4)" }}>
+          <Link to="/results" className="pub-btn" style={{ ...heroBtn, background: "#C2410C", color: "#fff", boxShadow: "0 2px 6px rgba(0,0,0,0.18)" }}>
             <CheckCircleIcon size={18} />{t("hero.results")}
           </Link>
           <Link to="/joining-instructions" className="pub-btn" style={{ ...heroBtn, background: "#fff", color: NAVY }}>
