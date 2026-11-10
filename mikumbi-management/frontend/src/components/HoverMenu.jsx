@@ -106,6 +106,13 @@ export default function HoverMenu({ label, icon: LabelIcon, items, variant = "li
               const marker = Ico
                 ? <Ico size={13} />
                 : <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", border: "2px solid #0c426f", flexShrink: 0 }} />;
+              if (it.href) {
+                const external = /^https?:/i.test(it.href);
+                return (
+                  <a key={it.label} href={it.href} {...common} onClick={closeAfter(it.onClick)}
+                    {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{marker}{it.label}</a>
+                );
+              }
               return it.to ? (
                 <Link key={it.label} to={it.to} {...common} onClick={closeAfter(it.onClick)}>{marker}{it.label}</Link>
               ) : (

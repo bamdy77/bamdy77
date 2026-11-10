@@ -85,6 +85,23 @@ function IdentityBanner() {
   );
 }
 
+// Small icons sized like the other menu icons (HoverMenu passes `size`).
+function PhoneIcon({ size = 13 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z" /></svg>;
+}
+function MailIcon({ size = 13 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>;
+}
+
+// Hovering "Mawasiliano" shows the school's contact details right away:
+// tap-to-call numbers, email, postal address and directions on the map.
+const contactItems = (t) => [
+  ...siteConfig.phones.map((p) => ({ label: `${t("contact.phone")}: ${p}`, href: toTelHref(p), icon: PhoneIcon })),
+  { label: siteConfig.email, href: `mailto:${siteConfig.email}`, icon: MailIcon },
+  { label: `${t("contact.postal")}: ${SCHOOL.poBox}`, to: "/#contact", icon: MessageIcon },
+  { label: t("map.directions"), href: siteConfig.location.directionsUrl, icon: LocationPinIcon },
+];
+
 const publicationItems = (t) => [
   { label: t("nav.results"), to: "/results", icon: CheckCircleIcon },
   { label: t("nav.joining"), to: "/joining-instructions", icon: GraduationCapIcon },
@@ -123,7 +140,7 @@ function NavBar() {
             <Link to="/#about" className="pub-navlink" style={link}><InfoIcon size={14} />{t("nav.about")}</Link>
             <Link to="/#news" className="pub-navlink" style={link}><MegaphoneIcon size={14} />{t("nav.news")}</Link>
             <HoverMenu label={t("nav.publications")} icon={BookIcon} items={PUBLICATION_ITEMS} variant="light" align="right" buttonStyle={{ fontSize: 15, fontWeight: 400 }} />
-            <Link to="/#contact" className="pub-navlink" style={link}><MessageIcon size={14} />{t("nav.contact")}</Link>
+            <HoverMenu label={t("nav.contact")} icon={MessageIcon} items={contactItems(t)} variant="light" align="right" buttonStyle={{ fontSize: 15, fontWeight: 400 }} />
             <LangToggle />
           </div>
         ) : (
