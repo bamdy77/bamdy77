@@ -193,12 +193,13 @@ function Boarding() {
 // ───────────────────────────── Gallery ─────────────────────────────
 // Photos grouped by category; the buttons above the grid filter them.
 const GALLERY_ITEMS = [
+  { src: "/assets/gallery-learning-1.jpg", cat: "learning" },
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-farm-${n}.jpg`, cat: "farm" })),
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-hostel-${n}.jpg`, cat: "hostel" })),
   ...[1, 2].map((n) => ({ src: `/assets/gallery-grounds-${n}.jpg`, cat: "grounds" })),
 ];
 const GALLERY = GALLERY_ITEMS.map((g) => g.src);
-const GALLERY_CATS = ["all", "farm", "hostel", "grounds"];
+const GALLERY_CATS = ["all", "learning", "farm", "hostel", "grounds"];
 
 function Gallery() {
   const { isMobile, isTablet } = useBreakpoint();
