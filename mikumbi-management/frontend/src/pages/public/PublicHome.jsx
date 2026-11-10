@@ -195,6 +195,7 @@ function Boarding() {
 // ───────────────────────────── Gallery ─────────────────────────────
 // Photos grouped by category; the buttons above the grid filter them.
 const GALLERY_ITEMS = [
+  ...[1, 2, 3, 4, 5].map((n) => ({ src: `/assets/gallery-students-${n}.jpg`, cat: "students" })),
   { src: "/assets/gallery-learning-1.jpg", cat: "learning" },
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-farm-${n}.jpg`, cat: "farm" })),
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-hostel-${n}.jpg`, cat: "hostel" })),
@@ -202,14 +203,17 @@ const GALLERY_ITEMS = [
   ...[1, 2, 3, 4].map((n) => ({ src: `/assets/gallery-sports-${n}.jpg`, cat: "sports" })),
 ];
 const GALLERY = GALLERY_ITEMS.map((g) => g.src);
-const GALLERY_CATS = ["all", "learning", "farm", "hostel", "sports", "grounds"];
+// One group is shown at a time (no "all" view - it made the page too crowded).
+const GALLERY_CATS = ["students", "learning", "farm", "hostel", "sports", "grounds"];
 
 function Gallery() {
   const { isMobile, isTablet } = useBreakpoint();
   const { t } = useLang();
   const available = useLoadedImages(GALLERY);
-  const [cat, setCat] = useState("all");
-  const items = GALLERY_ITEMS.filter((g) => available.includes(g.src) && (cat === "all" || g.cat === cat));
+  const cats = GALLERY_CATS.filter((c) => GALLERY_ITEMS.some((g) => g.cat === c && available.includes(g.src)));
+  const [picked, setCat] = useState(GALLERY_CATS[0]);
+  const cat = cats.includes(picked) ? picked : cats[0]; // fall back to the first group that has photos
+  const items = GALLERY_ITEMS.filter((g) => available.includes(g.src) && g.cat === cat);
   const loaded = items.map((g) => g.src);
   const [open, setOpen] = useState(null); // index into `loaded`
 
@@ -233,7 +237,7 @@ function Gallery() {
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <SectionTitle title={t("gallery.title")} subtitle={t("gallery.subtitle")} />
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, marginBottom: 20 }}>
-          {GALLERY_CATS.filter((c) => c === "all" || GALLERY_ITEMS.some((g) => g.cat === c && available.includes(g.src))).map((c) => (
+          {cats.map((c) => (
             <button key={c} type="button" onClick={() => { setCat(c); setOpen(null); }} aria-pressed={cat === c}
               style={{ padding: "8px 16px", borderRadius: 4, fontSize: 15, fontWeight: 700, cursor: "pointer",
                 border: `1px solid ${cat === c ? NAVY : "#cbd5e1"}`, background: cat === c ? NAVY : "#fff", color: cat === c ? "#fff" : NAVY }}>
@@ -242,14 +246,10 @@ function Gallery() {
           ))}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : isTablet ? "repeat(3, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 16 }}>
-          {items.map(({ src, cat: c }, i) => (
+          {items.map(({ src }, i) => (
             <button key={src} type="button" className="pub-lift" onClick={() => setOpen(i)} aria-label={t("gallery.open", { n: i + 1 })}
               style={{ position: "relative", padding: 0, border: "none", borderRadius: 4, overflow: "hidden", cursor: "zoom-in", background: "#dbe4ee", aspectRatio: "4 / 3" }}>
               <img src={src} alt={t("gallery.photo", { n: i + 1 })} loading="lazy" decoding="async" width="400" height="300" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 40%", display: "block" }} />
-              <span style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "18px 10px 8px", textAlign: "left",
-                background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 100%)", color: "#fff", fontSize: 14, fontWeight: 700 }}>
-                {t(`gallery.cat.${c}`)}
-              </span>
             </button>
           ))}
         </div>
