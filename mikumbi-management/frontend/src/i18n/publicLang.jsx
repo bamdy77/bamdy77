@@ -126,6 +126,8 @@ const STRINGS = {
   "fact.regNo": { sw: "Namba ya Usajili", en: "Registration No." },
   "fact.centreNo": { sw: "Namba ya Kituo", en: "Centre No." },
   "fact.region": { sw: "Mkoa", en: "Region" },
+  "fact.motto": { sw: "Kauli Mbiu", en: "Motto" },
+  "fact.location": { sw: "Mahali", en: "Location" },
 
   // Home - boarding
   "boarding.title": { sw: "Taaluma, Bweni na Hosteli", en: "Academics, Boarding & Hostels" },

@@ -7,7 +7,7 @@ import HoverMenu from "../HoverMenu";
 import { useLang, LangToggle } from "../../i18n/publicLang";
 import {
   HomeIcon, InfoIcon, BookIcon, MegaphoneIcon, MessageIcon, MenuIcon, CloseIcon, ChevronDownIcon,
-  CheckCircleIcon, GraduationCapIcon, LocationPinIcon,
+  CheckCircleIcon, GraduationCapIcon, LocationPinIcon, SchoolIcon, ShieldIcon,
 } from "../icons";
 
 const NAVY = "#0c426f";
@@ -102,6 +102,16 @@ const contactItems = (t) => [
   { label: t("map.directions"), href: siteConfig.location.directionsUrl, icon: LocationPinIcon },
 ];
 
+// Hovering "Kuhusu Shule" shows the school's key details and its sections.
+const aboutItems = (t) => [
+  { label: `${t("fact.motto")}: ${t("school.motto")}`, to: "/#about", icon: InfoIcon },
+  { label: `${t("fact.regNo")}: ${SCHOOL.regNo}`, to: "/#about", icon: ShieldIcon },
+  { label: `${t("fact.centreNo")}: ${SCHOOL.centreNo}`, to: "/#about", icon: ShieldIcon },
+  { label: `${t("fact.location")}: Newala, Mtwara`, to: "/#contact", icon: LocationPinIcon },
+  { label: t("boarding.title"), to: "/#boarding", icon: SchoolIcon },
+  { label: t("gallery.title"), to: "/#gallery", icon: BookIcon },
+];
+
 const publicationItems = (t) => [
   { label: t("nav.results"), to: "/results", icon: CheckCircleIcon },
   { label: t("nav.joining"), to: "/joining-instructions", icon: GraduationCapIcon },
@@ -137,7 +147,7 @@ function NavBar() {
         {isDesktop ? (
           <div style={{ display: "flex", gap: 24, fontSize: 15, alignItems: "center" }}>
             <Link to="/" className="pub-navlink" style={link}><HomeIcon size={14} />{t("nav.home")}</Link>
-            <Link to="/#about" className="pub-navlink" style={link}><InfoIcon size={14} />{t("nav.about")}</Link>
+            <HoverMenu label={t("nav.about")} icon={InfoIcon} items={aboutItems(t)} variant="light" buttonStyle={{ fontSize: 15, fontWeight: 400 }} />
             <Link to="/#news" className="pub-navlink" style={link}><MegaphoneIcon size={14} />{t("nav.news")}</Link>
             <HoverMenu label={t("nav.publications")} icon={BookIcon} items={PUBLICATION_ITEMS} variant="light" align="right" buttonStyle={{ fontSize: 15, fontWeight: 400 }} />
             <HoverMenu label={t("nav.contact")} icon={MessageIcon} items={contactItems(t)} variant="light" align="right" buttonStyle={{ fontSize: 15, fontWeight: 400 }} />
