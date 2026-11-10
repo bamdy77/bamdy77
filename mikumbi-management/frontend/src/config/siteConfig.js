@@ -33,7 +33,7 @@ export const siteConfig = {
     embedUrl: `https://maps.google.com/maps?q=${lat},${lng}&t=m&z=14&hl=sw&output=embed`,
     directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
   },
-  email: env.VITE_CONTACT_EMAIL || "info@your-domain.com",
+  email: env.VITE_CONTACT_EMAIL || "support@mikumbusecondary.com",
   phones,
   social, // empty => the "Follow Us" block is not rendered
 };
