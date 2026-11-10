@@ -120,11 +120,14 @@ function About() {
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: showHead && !isMobile && !isTablet ? "220px 1fr" : "1fr", gap: 32, alignItems: "center", textAlign: showHead && !isMobile && !isTablet ? "left" : "center", marginBottom: 32 }}>
           {showHead && (
+            <figure style={{ margin: 0 }}>
             <img
               src="/assets/head-master.jpg" alt={t("about.headAlt")} width="220" height="260" loading="lazy"
               onError={() => setHeadPhotoFailed(true)}
               style={{ width: isMobile ? 160 : 230, height: isMobile ? 190 : 270, objectFit: "cover", objectPosition: "50% 20%", borderRadius: 4, margin: "0 auto", display: "block", boxShadow: "0 10px 26px rgba(0,0,0,0.25)" }}
             />
+            <figcaption style={{ marginTop: 10, textAlign: "center", fontSize: 15, fontWeight: 700, opacity: 0.95 }}>{t("about.headCaption")}</figcaption>
+            </figure>
           )}
           <div>
             <img src="/assets/shule.svg" alt="" width="64" height="64" style={{ height: isMobile ? 48 : 64, width: "auto", marginBottom: 12, display: showHead && !isMobile && !isTablet ? "none" : "inline-block" }} onError={(e) => (e.currentTarget.style.display = "none")} />
@@ -162,7 +165,7 @@ function Boarding() {
   const { t } = useLang();
   const cards = [
     // Each card's photos change every 5 seconds (same files as the gallery).
-    { imgs: ["/assets/classroom.jpg"], icon: SchoolIcon, title: t("boarding.academics.title"), text: t("boarding.academics.text") },
+    { imgs: ["/assets/gallery-learning-2.jpg", "/assets/gallery-learning-3.jpg", "/assets/classroom.jpg"], icon: SchoolIcon, title: t("boarding.academics.title"), text: t("boarding.academics.text") },
     { imgs: [1, 2, 3].map((n) => `/assets/gallery-hostel-${n}.jpg`), icon: BedIcon, title: t("boarding.girls.title"), text: t("boarding.girls.text") },
     // Michezo: put the 4 sports photos in public/assets as gallery-sports-1.jpg ... gallery-sports-4.jpg
     { imgs: [1, 2, 3, 4].map((n) => `/assets/gallery-sports-${n}.jpg`), icon: TrophyIcon, title: t("boarding.sports.title"), text: t("boarding.sports.text") },
@@ -196,15 +199,16 @@ function Boarding() {
 // Photos grouped by category; the buttons above the grid filter them.
 const GALLERY_ITEMS = [
   ...[1, 2, 3, 4, 5].map((n) => ({ src: `/assets/gallery-students-${n}.jpg`, cat: "students" })),
-  { src: "/assets/gallery-learning-1.jpg", cat: "learning" },
+  ...[2, 3, 1].map((n) => ({ src: `/assets/gallery-learning-${n}.jpg`, cat: "learning" })),
+  ...[1, 2, 3, 4, 5, 6].map((n) => ({ src: `/assets/gallery-leaders-${n}.jpg`, cat: "leaders" })),
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-farm-${n}.jpg`, cat: "farm" })),
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-hostel-${n}.jpg`, cat: "hostel" })),
-  ...[1, 2].map((n) => ({ src: `/assets/gallery-grounds-${n}.jpg`, cat: "grounds" })),
+  ...[3, 4, 1, 2].map((n) => ({ src: `/assets/gallery-grounds-${n}.jpg`, cat: "grounds" })),
   ...[1, 2, 3, 4].map((n) => ({ src: `/assets/gallery-sports-${n}.jpg`, cat: "sports" })),
 ];
 const GALLERY = GALLERY_ITEMS.map((g) => g.src);
 // One group is shown at a time (no "all" view - it made the page too crowded).
-const GALLERY_CATS = ["students", "learning", "farm", "hostel", "sports", "grounds"];
+const GALLERY_CATS = ["students", "learning", "leaders", "farm", "hostel", "sports", "grounds"];
 
 function Gallery() {
   const { isMobile, isTablet } = useBreakpoint();
@@ -249,7 +253,7 @@ function Gallery() {
           {items.map(({ src }, i) => (
             <button key={src} type="button" className="pub-lift" onClick={() => setOpen(i)} aria-label={t("gallery.open", { n: i + 1 })}
               style={{ position: "relative", padding: 0, border: "none", borderRadius: 4, overflow: "hidden", cursor: "zoom-in", background: "#dbe4ee", aspectRatio: "4 / 3" }}>
-              <img src={src} alt={t("gallery.photo", { n: i + 1 })} loading="lazy" decoding="async" width="400" height="300" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 40%", display: "block" }} />
+              <img src={src} alt={t("gallery.photo", { n: i + 1 })} loading="lazy" decoding="async" width="400" height="300" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 35%", display: "block" }} />
             </button>
           ))}
         </div>
