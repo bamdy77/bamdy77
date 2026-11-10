@@ -80,7 +80,7 @@ export function PublicSupport() {
     return (
       <Shell title="Support">
         <ul style={{ paddingLeft: 20 }}>
-          <li style={{ marginBottom: 8 }}>Can't log in to Results? Use the Results Login Number (e.g. 2026-48319) printed on the Parent Report, and the guardian phone number given when the student was registered.</li>
+          <li style={{ marginBottom: 8 }}>Can't log in to Results? Use the student's Results Login Number. If you don't have it, contact the school.</li>
           <li style={{ marginBottom: 8 }}>The Joining Instruction form says it is not published yet? The school will open it when admissions start - please check again later.</li>
           <li style={{ marginBottom: 8 }}>Still need help? Call the school: {phones()}.</li>
         </ul>
@@ -90,7 +90,7 @@ export function PublicSupport() {
   return (
     <Shell title="Msaada">
       <ul style={{ paddingLeft: 20 }}>
-        <li style={{ marginBottom: 8 }}>Huwezi kuingia kwenye Matokeo? Tumia Namba ya Kuingia (mfano 2026-48319) iliyopo kwenye Ripoti ya Mzazi, na namba ya simu ya mzazi/mlezi iliyotolewa wakati mwanafunzi anasajiliwa.</li>
+        <li style={{ marginBottom: 8 }}>Huwezi kuingia kwenye Matokeo? Tumia Namba ya Kuingia ya mwanafunzi. Kama huna namba hiyo, wasiliana na shule.</li>
         <li style={{ marginBottom: 8 }}>Fomu ya Maelekezo ya Kujiunga inasema bado haijachapishwa? Shule itaifungua muda wa usajili ukifika - tafadhali angalia tena baadaye.</li>
         <li style={{ marginBottom: 8 }}>Bado unahitaji msaada? Piga simu shuleni: {phones()}.</li>
       </ul>

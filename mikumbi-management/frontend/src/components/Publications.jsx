@@ -181,7 +181,7 @@ function ResultsPortal() {
         <form onSubmit={checkUsername} style={{ display: "grid", gap: 12 }}>
           <label style={formLabel}>Namba ya Kuingia (Results Login Number)</label>
           <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Mfano: 2026-48319" inputMode="text" autoComplete="username" style={formInput} autoFocus />
-          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>Namba hii imeandikwa kwenye Ripoti ya Mzazi kama "NAMBA YA KUINGIA (MATOKEO)". Kama huna, wasiliana na shule.</p>
+          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>Kama huna namba hii, wasiliana na shule.</p>
           {error && <ErrorMsg>{error}</ErrorMsg>}
           <button type="submit" disabled={busy || !username.trim()} style={primaryBtn}>{busy ? "Inaangalia..." : "Endelea"}</button>
         </form>
