@@ -29,6 +29,10 @@ import {
   SpinnerIcon, SchoolIcon, UsersIcon, SearchIcon, PersonSilhouetteIcon, InfoIcon,
 } from "../components/icons";
 
+// Short chart label. Month included - "Monthly 2026" alone was identical for
+// every monthly test of the year, so the points could not be told apart.
+const periodLabel = (r) => `${String(r.exam_type || "").split(" ")[0]} ${String(r.month || "").slice(0, 3)} ${r.year}`.replace(/\s+/g, " ").trim();
+
 const FORMS = ["Form I", "Form II", "Form III", "Form IV"];
 // Mirrors backend DIVISION_RANK (resultsController.js) so the Division
 // chart can plot a category on a numeric axis and label it back correctly.
@@ -84,18 +88,23 @@ function ResultsTrendSection({ isCompact }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
+  // Only the newest request may update the screen - switching Form quickly
+  // used to let a slow, older response overwrite the newer Form's charts.
+  const reqId = useRef(0);
   const load = useCallback((f, sid) => {
+    const id = ++reqId.current;
     setLoading(true); setLoadError("");
     const qs = sid ? `?form=${encodeURIComponent(f)}&subject_id=${sid}` : `?form=${encodeURIComponent(f)}`;
     apiFetch(`/results-mgmt/analytics${qs}`, {}, token)
       .then((d) => {
+        if (id !== reqId.current) return;
         setData(d);
         // Auto-pick the first subject with history the first time a form
         // loads, so the drill-down chart isn't empty by default.
         if (!sid && d.subjects && d.subjects.length) setSubjectId(String(d.subjects[0].id));
       })
-      .catch((err) => { setData(null); setLoadError(err.message || "Failed to load results analytics."); })
-      .finally(() => setLoading(false));
+      .catch((err) => { if (id !== reqId.current) return; setData(null); setLoadError(err.message || "Failed to load results analytics."); })
+      .finally(() => { if (id === reqId.current) setLoading(false); });
   }, [token]);
 
   useEffect(() => { load(form, ""); setSubjectId(""); /* eslint-disable-next-line */ }, [form, token]);
@@ -136,7 +145,7 @@ function ResultsTrendSection({ isCompact }) {
             directionGoodWhen="improving"
           >
             <TrendChart
-              points={(data.overallTrend || []).map((r) => ({ label: `${r.exam_type.split(" ")[0]} ${r.year}`, value: r.pass_pct }))}
+              points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.pass_pct }))}
               valueSuffix="%" higherIsBetter
               emptyText="No compiled results yet for this form - pass rate trend will appear once at least two exam periods have included results."
             />
@@ -149,7 +158,7 @@ function ResultsTrendSection({ isCompact }) {
             directionGoodWhen="improving"
           >
             <TrendChart
-              points={(data.overallTrend || []).map((r) => ({ label: `${r.exam_type.split(" ")[0]} ${r.year}`, value: r.school_gpa }))}
+              points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.school_gpa }))}
               higherIsBetter={false}
               emptyText="No compiled GPA data yet for this form."
             />
@@ -164,7 +173,7 @@ function ResultsTrendSection({ isCompact }) {
                 directionGoodWhen="improving"
               >
                 <TrendChart
-                  points={(data.subjectTrend || []).map((r) => ({ label: `${r.exam_type.split(" ")[0]} ${r.year}`, value: r.pass_pct }))}
+                  points={(data.subjectTrend || []).map((r) => ({ label: periodLabel(r), value: r.pass_pct }))}
                   valueSuffix="%" higherIsBetter
                   emptyText={`Not enough exam history for ${data.subjectMeta.name} in ${form} yet.`}
                 />
@@ -176,7 +185,7 @@ function ResultsTrendSection({ isCompact }) {
                 directionGoodWhen="improving"
               >
                 <TrendChart
-                  points={(data.subjectTrend || []).map((r) => ({ label: `${r.exam_type.split(" ")[0]} ${r.year}`, value: r.gpa }))}
+                  points={(data.subjectTrend || []).map((r) => ({ label: periodLabel(r), value: r.gpa }))}
                   higherIsBetter={false}
                   emptyText={`Not enough exam history for ${data.subjectMeta.name} in ${form} yet.`}
                 />
@@ -252,7 +261,7 @@ function AttendanceTrendSection() {
               {(data.months || []).map((m, i) => (
                 <div key={m.month} style={{ ...rowStyle, borderTop: i === 0 ? "none" : `1px solid ${THEME.border}` }}>
                   <span style={{ flex: 1.2, fontWeight: 600 }}>{m.month}</span>
-                  <span style={{ flex: 1, display: "flex", alignItems: "center", gap: 5 }}><UsersIcon size={12} />{m.teacherCount}</span>
+                  <span style={{ flex: 1, display: "flex", alignItems: "center", gap: 5 }}><UsersIcon size={12} />{m.teacherCount ?? "-"}</span>
                   <span style={{ flex: 1, color: THEME.success, fontWeight: 600 }}>{m.presentPct != null ? `${m.presentPct}%` : "-"}</span>
                   <span style={{ flex: 1 }}>{m.onTimePct != null ? `${m.onTimePct}%` : "-"}</span>
                   <span style={{ flex: 1, color: THEME.warning }}>{m.latePct != null ? `${m.latePct}%` : "-"}</span>
@@ -288,10 +297,11 @@ function StudentTrendSection() {
   // otherwise immediately re-trigger the search effect below and wipe out
   // the student just picked.
   const justPickedRef = useRef(false);
+  const reqId = useRef(0); // newest student-trend request wins
 
   useEffect(() => {
     if (justPickedRef.current) { justPickedRef.current = false; return; }
-    setStudent(null); setData(null);
+    setStudent(null); setData(null); reqId.current++; setLoading(false);
     if (!search.trim()) { setMatches([]); return; }
     setSearching(true);
     const t = setTimeout(() => {
@@ -304,15 +314,17 @@ function StudentTrendSection() {
   }, [search, token]);
 
   const load = useCallback((studentId, subId) => {
+    const id = ++reqId.current;
     setLoading(true); setLoadError("");
     const qs = subId ? `?student_id=${studentId}&subject_id=${subId}` : `?student_id=${studentId}`;
     apiFetch(`/results-mgmt/student-trend${qs}`, {}, token)
       .then((d) => {
+        if (id !== reqId.current) return;
         setData(d);
         if (!subId && d.subjects && d.subjects.length) setSubjectId(String(d.subjects[0].id));
       })
-      .catch((err) => { setData(null); setLoadError(err.message || "Failed to load this student's trend."); })
-      .finally(() => setLoading(false));
+      .catch((err) => { if (id !== reqId.current) return; setData(null); setLoadError(err.message || "Failed to load this student's trend."); })
+      .finally(() => { if (id === reqId.current) setLoading(false); });
   }, [token]);
 
   const pickStudent = (s) => {
@@ -397,7 +409,7 @@ function StudentTrendSection() {
             directionGoodWhen="improving"
           >
             <TrendChart
-              points={(data.overallTrend || []).map((r) => ({ label: `${r.exam_type.split(" ")[0]} ${r.year}`, value: r.division_rank }))}
+              points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.division_rank }))}
               higherIsBetter={false}
               valueFormatter={(v) => DIVISION_LABELS[Math.round(v)] || v}
               emptyText="No division history yet for this student."
@@ -411,7 +423,7 @@ function StudentTrendSection() {
             directionGoodWhen="improving"
           >
             <TrendChart
-              points={(data.overallTrend || []).map((r) => ({ label: `${r.exam_type.split(" ")[0]} ${r.year}`, value: r.gpa }))}
+              points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.gpa }))}
               higherIsBetter={false}
               emptyText="No result history yet for this student."
             />
@@ -462,7 +474,7 @@ function StudentTrendSection() {
               directionGoodWhen="improving"
             >
               <TrendChart
-                points={(data.subjectTrend || []).map((r) => ({ label: `${r.exam_type.split(" ")[0]} ${r.year}`, value: r.marks }))}
+                points={(data.subjectTrend || []).map((r) => ({ label: periodLabel(r), value: r.marks }))}
                 higherIsBetter
                 emptyText={`Not enough exam history for ${data.subjectMeta.name} yet.`}
               />

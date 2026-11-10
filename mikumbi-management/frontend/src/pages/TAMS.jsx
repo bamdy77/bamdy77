@@ -111,8 +111,11 @@ function TeacherCheckIn() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [gpsRetryTick]);
 
-  const nameOk = fullName.trim().replace(/\s+/g, " ").split(" ").length >= 2 &&
-    fullName.trim().toLowerCase() === (user.full_name || "").trim().toLowerCase();
+  // Same rule as the server: spacing and capital letters don't matter. (The
+  // old extra "at least two words" rule blocked anyone registered with a
+  // single name even though the server would have accepted them.)
+  const norm = (v) => (v || "").trim().replace(/\s+/g, " ").toLowerCase();
+  const nameOk = norm(fullName) !== "" && norm(fullName) === norm(user.full_name);
   const passwordOk = password.length > 0;
   const gpsOk = gps && gps !== "denied";
   // Recomputed on every render, including the 30s tick from nowTick above,

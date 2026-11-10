@@ -2,15 +2,29 @@ const { query } = require("../db/db");
 const bcrypt = require("bcryptjs");
 
 // ── CONFIG - override any of these via backend/.env without touching code ──
-const CONFIG = {
-  SCHOOL_LAT: Number(process.env.TAMS_SCHOOL_LAT) || -10.561915,
-  SCHOOL_LNG: Number(process.env.TAMS_SCHOOL_LNG) || 39.178560,
-  SCHOOL_RADIUS_M: Number(process.env.TAMS_SCHOOL_RADIUS_M) || 50,
-  DEADLINE_HOUR: Number(process.env.TAMS_DEADLINE_HOUR) || 7,
-  DEADLINE_MIN: Number(process.env.TAMS_DEADLINE_MIN) || 30,
-  WINDOW_OPEN_HOUR: Number(process.env.TAMS_WINDOW_OPEN_HOUR) || 6,
-  WINDOW_CLOSE_HOUR: Number(process.env.TAMS_WINDOW_CLOSE_HOUR) || 8,
+// `Number(x) || def` would silently ignore a legitimate 0 (e.g. a 7:00
+// deadline set as TAMS_DEADLINE_MIN=0 became 7:30) - only fall back when
+// the variable is missing or not a number.
+const envNum = (name, def) => {
+  const raw = process.env[name];
+  if (raw === undefined || String(raw).trim() === "") return def;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : def;
 };
+const CONFIG = {
+  SCHOOL_LAT: envNum("TAMS_SCHOOL_LAT", -10.561915),
+  SCHOOL_LNG: envNum("TAMS_SCHOOL_LNG", 39.178560),
+  SCHOOL_RADIUS_M: envNum("TAMS_SCHOOL_RADIUS_M", 50),
+  DEADLINE_HOUR: envNum("TAMS_DEADLINE_HOUR", 7),
+  DEADLINE_MIN: envNum("TAMS_DEADLINE_MIN", 30),
+  WINDOW_OPEN_HOUR: envNum("TAMS_WINDOW_OPEN_HOUR", 6),
+  WINDOW_CLOSE_HOUR: envNum("TAMS_WINDOW_CLOSE_HOUR", 8),
+};
+
+// Query-string guards: a malformed date/month/id used to reach Postgres and
+// come back as a 500 instead of a clear 400.
+const isDateStr = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
+const isMonthStr = (v) => typeof v === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(v);
 
 // ── Helpers (unchanged formulas from the original TAMS project) ────────────
 function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -138,9 +152,10 @@ const checkin = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "No teacher record is linked to this account. Contact the Head Master." });
 
     const late = isLate(now);
-    if (late && !lateReason)
+    const reason = typeof lateReason === "string" ? lateReason.trim() : "";
+    if (late && !reason)
       return res.status(400).json({ success: false, message: "You are arriving after 7:30 AM - a reason is required." });
-    if (late && lateReason && lateReason.length > 75)
+    if (late && reason.length > 75)
       return res.status(400).json({ success: false, message: "Reason for being late must be 75 characters or fewer." });
 
     const today = getTodayDate(now);
@@ -171,7 +186,7 @@ const checkin = async (req, res, next) => {
       `INSERT INTO tams_attendance
         (teacher_id, teacher_name, subject, date, time_str, is_late, late_reason, latitude, longitude, distance_m, ip_address, device_fingerprint)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-      [teacher.id, displayName, teacher.subject, today, timeStr, late, lateReason || null, lat, lng, Math.round(distance), clientIP, deviceFingerprint || null]
+      [teacher.id, displayName, teacher.subject, today, timeStr, late, late ? reason : null, lat, lng, Math.round(distance), clientIP, deviceFingerprint || null]
     );
 
     if (deviceFingerprint) {
@@ -207,6 +222,7 @@ const myHistory = async (req, res, next) => {
 const dashboard = async (req, res, next) => {
   try {
     const date = req.query.date || getTodayDate(getTanzaniaTime());
+    if (!isDateStr(date)) return res.status(400).json({ success: false, message: "Invalid date." });
     const [present, allTeachers] = await Promise.all([
       query("SELECT * FROM tams_attendance WHERE date = $1 ORDER BY time_str ASC", [date]),
       // Only teachers with a linked User Account can ever log in and check
@@ -249,6 +265,10 @@ const dashboard = async (req, res, next) => {
 const history = async (req, res, next) => {
   try {
     const { from, to, teacher_id, status } = req.query;
+    if ((from && !isDateStr(from)) || (to && !isDateStr(to)))
+      return res.status(400).json({ success: false, message: "Invalid date range." });
+    if (teacher_id && !/^\d+$/.test(String(teacher_id)))
+      return res.status(400).json({ success: false, message: "Invalid teacher." });
     const conditions = [];
     const params = [];
     if (from) { params.push(from); conditions.push(`date >= $${params.length}`); }
@@ -268,11 +288,19 @@ const history = async (req, res, next) => {
 // Sundays excluded) - this is a pure calendar calculation, independent of
 // whether any attendance was actually recorded, so it's stable and
 // predictable for every month, past or present.
+//
+// For the CURRENT month only the weekdays up to and including today count -
+// otherwise on the 10th every teacher showed ~15 "absent" days that had not
+// happened yet. A future month has 0 working days so far.
 function countWeekdaysInMonth(month) {
   const [y, m] = month.split("-").map(Number);
   const daysInMonth = new Date(y, m, 0).getDate();
+  const today = getTodayDate(getTanzaniaTime());
+  const thisMonth = today.slice(0, 7);
+  if (month > thisMonth) return 0;
+  const lastDay = month === thisMonth ? Number(today.slice(8, 10)) : daysInMonth;
   let count = 0;
-  for (let d = 1; d <= daysInMonth; d++) {
+  for (let d = 1; d <= lastDay; d++) {
     const day = new Date(y, m - 1, d).getDay(); // 0 = Sunday, 6 = Saturday
     if (day !== 0 && day !== 6) count++;
   }
@@ -283,6 +311,7 @@ function countWeekdaysInMonth(month) {
 const monthlySummary = async (req, res, next) => {
   try {
     const month = req.query.month || getTodayDate(getTanzaniaTime()).slice(0, 7);
+    if (!isMonthStr(month)) return res.status(400).json({ success: false, message: "Invalid month." });
     const summaryResult = await query(
       `SELECT t.id AS teacher_id, t.full_name, t.short_name,
               COUNT(a.id) AS days_present,
@@ -298,7 +327,7 @@ const monthlySummary = async (req, res, next) => {
     // "Working days" = every Monday–Friday in the month (weekends
     // excluded), per spec - the same figure for every teacher that month.
     const workingDays = countWeekdaysInMonth(month);
-    const pct = (n) => (workingDays > 0 ? Math.round((n / workingDays) * 1000) / 10 : 0);
+    const pct = (n) => (workingDays > 0 ? Math.min(100, Math.round((n / workingDays) * 1000) / 10) : 0);
     const summary = summaryResult.rows.map((r) => {
       const present = Number(r.days_present);
       const late = Number(r.days_late);
@@ -336,6 +365,7 @@ const exportPdf = async (req, res, next) => {
   try {
     const { from, to, label } = req.query;
     if (!from || !to) return res.status(400).json({ success: false, message: "from and to dates are required." });
+    if (!isDateStr(from) || !isDateStr(to)) return res.status(400).json({ success: false, message: "Invalid date range." });
 
     const result = await query(
       `SELECT a.* FROM tams_attendance a
@@ -406,8 +436,18 @@ const attendanceTrend = async (req, res, next) => {
       months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
     }
 
+    // Months before the very first TAMS check-in are "no data", not 100%
+    // absent - otherwise a school that started using TAMS in November showed
+    // every earlier month as a total wash-out and skewed the trend.
+    const firstRes = await query("SELECT MIN(date)::text AS first FROM tams_attendance");
+    const firstMonth = firstRes.rows[0]?.first ? firstRes.rows[0].first.slice(0, 7) : null;
+
     const results = [];
     for (const month of months) {
+      if (!firstMonth || month < firstMonth) {
+        results.push({ month, workingDays: countWeekdaysInMonth(month), teacherCount: null, presentPct: null, onTimePct: null, latePct: null, absentPct: null });
+        continue;
+      }
       const summaryResult = await query(
         `SELECT COUNT(DISTINCT t.id) AS teacher_count,
                 COUNT(a.id) AS total_present,
@@ -425,7 +465,7 @@ const attendanceTrend = async (req, res, next) => {
       const totalLate = Number(row.total_late) || 0;
       const totalOnTime = totalPresent - totalLate;
       const possibleSlots = teacherCount * workingDays;
-      const pct = (n) => (possibleSlots > 0 ? Math.round((n / possibleSlots) * 1000) / 10 : null);
+      const pct = (n) => (possibleSlots > 0 ? Math.min(100, Math.round((n / possibleSlots) * 1000) / 10) : null);
       results.push({
         month,
         workingDays,
@@ -433,7 +473,7 @@ const attendanceTrend = async (req, res, next) => {
         presentPct: pct(totalPresent),
         onTimePct: pct(totalOnTime),
         latePct: pct(totalLate),
-        absentPct: possibleSlots > 0 ? Math.round((100 - (totalPresent / possibleSlots) * 100) * 10) / 10 : null,
+        absentPct: possibleSlots > 0 ? Math.max(0, Math.round((100 - (totalPresent / possibleSlots) * 100) * 10) / 10) : null,
       });
     }
 

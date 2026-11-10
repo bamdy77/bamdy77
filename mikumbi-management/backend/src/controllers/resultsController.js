@@ -1122,6 +1122,7 @@ const exportMyScoresPdf = async (req, res, next) => {
 const getStudentPeriods = async (req, res, next) => {
   const { student_id } = req.query;
   if (!student_id) return res.status(400).json({ error: "student_id required." });
+  if (!/^\d+$/.test(String(student_id))) return res.status(400).json({ error: "Invalid student." });
   try {
     const { rows } = await query(
       `SELECT DISTINCT ss.id AS sheet_id, ap.id AS period_id, ap.form, ap.exam_type, ap.month, ap.year
@@ -1198,6 +1199,13 @@ const MIN_POINTS_FOR_PROJECTION = 3;
 // evaluated one step past the last known point. GPA here is 1=best (Grade
 // A) .. 5=worst (Grade F) - see grade_to_points/points_to_avg_grade - so a
 // NEGATIVE slope means grades are IMPROVING, not declining.
+// Exam periods sorted by calendar month (English or Kiswahili name), so a
+// period entered late still lands in the right place on the trend charts.
+const MONTH_ORDER_SQL = `COALESCE(
+  array_position(ARRAY['january','february','march','april','may','june','july','august','september','october','november','december'], lower(ap.month)),
+  array_position(ARRAY['januari','februari','machi','aprili','mei','juni','julai','agosti','septemba','oktoba','novemba','desemba'], lower(ap.month)),
+  13)`;
+
 const projectNextGpa = (series) => {
   const vals = series.map((s) => s.gpa).filter((v) => v != null);
   if (vals.length < MIN_POINTS_FOR_PROJECTION) {
@@ -1247,6 +1255,8 @@ const divisionToRank = (d) => (d != null && DIVISION_RANK[d] != null ? DIVISION_
 const getStudentTrend = async (req, res, next) => {
   const { student_id, subject_id } = req.query;
   if (!student_id) return res.status(400).json({ error: "student_id required." });
+  if (!/^\d+$/.test(String(student_id)) || (subject_id && !/^\d+$/.test(String(subject_id))))
+    return res.status(400).json({ error: "Invalid student or subject." });
   // A Teacher may only drill down into subjects they teach (per their
   // subject_ids in User Accounts) - not every subject the student has.
   const isTeacher = req.user.role === "teacher";
@@ -1271,7 +1281,7 @@ const getStudentTrend = async (req, res, next) => {
        JOIN score_sheets ss ON ss.id = sr.sheet_id
        JOIN academic_periods ap ON ap.id = ss.period_id
        WHERE sr.student_id = $1
-       ORDER BY ap.year ASC, ap.id ASC`,
+       ORDER BY ap.year ASC, ${MONTH_ORDER_SQL} ASC, ap.id ASC`,
       [student_id]
     );
     const overallTrend = overallRes.rows.map((r) => ({
@@ -1307,7 +1317,7 @@ const getStudentTrend = async (req, res, next) => {
          JOIN score_sheets ss ON ss.id = sc.sheet_id
          JOIN academic_periods ap ON ap.id = ss.period_id
          WHERE sc.student_id = $1 AND sc.subject_id = $2 AND sc.marks IS NOT NULL
-         ORDER BY ap.year ASC, ap.id ASC`,
+         ORDER BY ap.year ASC, ${MONTH_ORDER_SQL} ASC, ap.id ASC`,
         [student_id, subject_id]
       );
       subjectTrend = subjRes.rows.map((r) => ({
@@ -1985,6 +1995,7 @@ const getHistory = async (req, res, next) => {
 // or one Academic Master deliberately excluded.
 const getResultsAnalytics = async (req, res, next) => {
   const { form, subject_id } = req.query;
+  if (subject_id && !/^\d+$/.test(String(subject_id))) return res.status(400).json({ error: "Invalid subject." });
   if (!form || !VALID_FORMS.includes(form)) return res.status(400).json({ error: "A valid form is required." });
   try {
     const overallRes = await query(
@@ -1993,7 +2004,7 @@ const getResultsAnalytics = async (req, res, next) => {
        JOIN score_sheets ss ON ss.period_id = ap.id AND ss.form = ap.form
        JOIN school_overall_performance sop ON sop.sheet_id = ss.id
        WHERE ap.form = $1
-       ORDER BY ap.year ASC, ap.id ASC`,
+       ORDER BY ap.year ASC, ${MONTH_ORDER_SQL} ASC, ap.id ASC`,
       [form]
     );
     const overallTrend = overallRes.rows.map((r) => ({
@@ -2030,7 +2041,7 @@ const getResultsAnalytics = async (req, res, next) => {
          JOIN score_sheets ss ON ss.period_id = ap.id AND ss.form = ap.form
          JOIN subject_performance spf ON spf.sheet_id = ss.id AND spf.subject_id = $2
          WHERE ap.form = $1
-         ORDER BY ap.year ASC, ap.id ASC`,
+         ORDER BY ap.year ASC, ${MONTH_ORDER_SQL} ASC, ap.id ASC`,
         [form, subject_id]
       );
       subjectTrend = subjRes.rows.map((r) => ({
