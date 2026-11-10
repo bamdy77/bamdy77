@@ -164,7 +164,8 @@ function Boarding() {
     // Each card's photos change every 5 seconds (same files as the gallery).
     { imgs: ["/assets/classroom.jpg"], icon: SchoolIcon, title: t("boarding.academics.title"), text: t("boarding.academics.text") },
     { imgs: [1, 2, 3].map((n) => `/assets/gallery-hostel-${n}.jpg`), icon: BedIcon, title: t("boarding.girls.title"), text: t("boarding.girls.text") },
-    { imgs: [1, 2].map((n) => `/assets/gallery-grounds-${n}.jpg`), icon: TrophyIcon, title: t("boarding.ground.title"), text: t("boarding.ground.text") },
+    // Michezo: put the 4 sports photos in public/assets as gallery-sports-1.jpg ... gallery-sports-4.jpg
+    { imgs: [1, 2, 3, 4].map((n) => `/assets/gallery-sports-${n}.jpg`), icon: TrophyIcon, title: t("boarding.sports.title"), text: t("boarding.sports.text") },
     { imgs: [1, 2, 3].map((n) => `/assets/gallery-farm-${n}.jpg`), icon: UsersIcon, title: t("boarding.farm.title"), text: t("boarding.farm.text") },
   ];
   return (
@@ -198,9 +199,10 @@ const GALLERY_ITEMS = [
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-farm-${n}.jpg`, cat: "farm" })),
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-hostel-${n}.jpg`, cat: "hostel" })),
   ...[1, 2].map((n) => ({ src: `/assets/gallery-grounds-${n}.jpg`, cat: "grounds" })),
+  ...[1, 2, 3, 4].map((n) => ({ src: `/assets/gallery-sports-${n}.jpg`, cat: "sports" })),
 ];
 const GALLERY = GALLERY_ITEMS.map((g) => g.src);
-const GALLERY_CATS = ["all", "learning", "farm", "hostel", "grounds"];
+const GALLERY_CATS = ["all", "learning", "farm", "hostel", "sports", "grounds"];
 
 function Gallery() {
   const { isMobile, isTablet } = useBreakpoint();
@@ -231,7 +233,7 @@ function Gallery() {
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <SectionTitle title={t("gallery.title")} subtitle={t("gallery.subtitle")} />
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, marginBottom: 20 }}>
-          {GALLERY_CATS.map((c) => (
+          {GALLERY_CATS.filter((c) => c === "all" || GALLERY_ITEMS.some((g) => g.cat === c && available.includes(g.src))).map((c) => (
             <button key={c} type="button" onClick={() => { setCat(c); setOpen(null); }} aria-pressed={cat === c}
               style={{ padding: "8px 16px", borderRadius: 4, fontSize: 15, fontWeight: 700, cursor: "pointer",
                 border: `1px solid ${cat === c ? NAVY : "#cbd5e1"}`, background: cat === c ? NAVY : "#fff", color: cat === c ? "#fff" : NAVY }}>
