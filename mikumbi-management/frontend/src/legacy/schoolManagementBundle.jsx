@@ -584,7 +584,7 @@ const ActionsMenu = ({ items }) => {
 // including the --mk-xxx CSS variables - meaning it repaints correctly on
 // every theme (System Default / Dark / Nocturne) with no extra logic here.
 const StatCard = ({ label, value, sub, color=C.accent }) => (
-  <div style={{background: C.surface,border: `1px solid ${C.border}`,borderRadius:4,padding:18}}>
+  <div style={{background:`color-mix(in srgb, ${color} 16%, ${C.surface})`,border: `1px solid ${C.border}`,borderRadius:4,padding:18}}>
     <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:5}}>{label}</div>
     <div style={{fontSize:26,fontWeight:800,color}}>{value}</div>
     {sub&&<div style={{fontSize:12,color:C.muted,marginTop:3}}>{sub}</div>}

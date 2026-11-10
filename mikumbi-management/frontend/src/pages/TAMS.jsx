@@ -607,7 +607,7 @@ function ChecklistItem({ ok, label, children }) {
 // resolves to, so it repaints correctly on every theme automatically.
 function StatCard({ label, value, color = THEME.navy, sub }) {
   return (
-    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "16px 24px" }}>
+    <div style={{ background: `color-mix(in srgb, ${color} 16%, ${THEME.surface})`, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "16px 24px" }}>
       <div style={{ fontSize: 24, fontWeight: 800, color }}>{value}</div>
       <div style={{ fontSize: 12, color: THEME.muted }}>{label}</div>
       {sub != null && <div style={{ fontSize: 11.5, color: THEME.muted, marginTop: 2 }}>{sub}</div>}

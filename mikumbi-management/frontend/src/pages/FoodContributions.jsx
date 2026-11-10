@@ -14,7 +14,7 @@ const FORMS = ["Form I", "Form II", "Form III", "Form IV"];
 // tell "students who contributed" apart from totals at a glance.
 function StatCard({ label, value, sub, color = THEME.navy }) {
   return (
-    <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "12px 18px", minWidth: 160 }}>
+    <div style={{ background: `color-mix(in srgb, ${color} 16%, ${THEME.surface})`, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "12px 18px", minWidth: 160 }}>
       <div style={{ fontSize: 11.5, color: THEME.muted }}>{label}</div>
       <div style={{ fontSize: 20, fontWeight: 800, color }}>{value}</div>
       {sub && <div style={{ fontSize: 10.5, color: THEME.muted, marginTop: 2 }}>{sub}</div>}
