@@ -60,9 +60,8 @@ export default function Login() {
             THEME.text below) turns light for Dark/Nocturne; the two must
             always move together or labels go invisible. */}
         <div style={{ flex: 1, minWidth: 320, background: THEME.surface, padding: "44px 36px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <img src="/assets/govt-logo.svg" alt="Government logo" style={{ height: isNarrow ? 34 : 44 }} onError={(e) => (e.currentTarget.style.display = "none")} />
-            <img src="/assets/shule.svg" alt="School logo" style={{ height: isNarrow ? 34 : 44 }} onError={(e) => (e.currentTarget.style.display = "none")} />
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+            <img src="/assets/shule.svg" alt="School logo" style={{ height: isNarrow ? 56 : 68 }} onError={(e) => (e.currentTarget.style.display = "none")} />
           </div>
           <div style={{ textAlign: "center", marginBottom: 24 }}>
             <div style={{ fontWeight: 800, fontSize: 18, color: THEME.navy }}>{SCHOOL.name}</div>
