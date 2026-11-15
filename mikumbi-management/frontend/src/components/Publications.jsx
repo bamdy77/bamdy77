@@ -1,3 +1,4 @@
+import ProtectedView from "./public/ProtectedView";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { apiFetch, API_BASE } from "../utils/api";
@@ -167,9 +168,17 @@ function ResultsPortal() {
         ) : !results || !results.results || !results.results.length ? (
           <Muted>Hakuna matokeo yaliyochapishwa kwa sasa kwa mwanafunzi huyu.</Muted>
         ) : (
-          <div style={{ display: "grid", gap: 22 }}>
-            {results.results.map((r) => <ResultCard key={r.sheet_id} r={r} student={results.student} />)}
-          </div>
+          <ProtectedView
+            watermark={`${username} · ${results.student?.full_name || ""} · ${new Date().toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}`}
+            labels={{
+              viewOnly: "Matokeo haya ni ya kusoma tu. Hayaruhusiwi kupakuliwa, kuchapishwa wala kunakiliwa.",
+              hidden: "Matokeo yamefichwa. Rudi kwenye ukurasa huu kuyaona tena.",
+              noPrint: "Matokeo haya hayaruhusiwi kuchapishwa. Yasome kwenye tovuti ya shule.",
+            }}>
+            <div style={{ display: "grid", gap: 22 }}>
+              {results.results.map((r) => <ResultCard key={r.sheet_id} r={r} student={results.student} />)}
+            </div>
+          </ProtectedView>
         )}
       </div>
     );
