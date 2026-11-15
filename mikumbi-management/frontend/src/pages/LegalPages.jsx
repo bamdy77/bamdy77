@@ -1,71 +1,122 @@
 import { Link } from "react-router-dom";
 import { THEME, SCHOOL } from "../styles/theme";
+import LegalDoc, { ul, li } from "../components/LegalDoc";
+import { siteConfig, toTelHref } from "../config/siteConfig";
 
-function LegalShell({ title, children }) {
+// Privacy / Terms / Support for the STAFF site (English). The parents'
+// versions are in pages/public/PublicLegal.jsx. Keep both in line with what
+// the system really does.
+const UPDATED = "15 November 2026";
+const TABS = [
+  { to: "/privacy", label: "Privacy Policy" },
+  { to: "/terms", label: "Terms of Use" },
+  { to: "/support", label: "Help & Support" },
+];
+const LABELS = { updated: "Last updated", contents: "Contents", tabsLabel: "Policy pages" };
+const CONTACT = {
+  title: "Contact the system administrators",
+  body: <>The Head Master and the Second Master manage all staff accounts.<br />
+    Phone: {siteConfig.phones.map((p, i) => <span key={p}>{i ? ", " : ""}<a href={toTelHref(p)} style={{ color: "inherit", fontWeight: 700 }}>{p}</a></span>)}<br />
+    Email: <a href={`mailto:${siteConfig.email}`} style={{ color: "inherit", fontWeight: 700 }}>{siteConfig.email}</a></>,
+};
+
+function LegalShell({ children }) {
   return (
     <div style={{ minHeight: "100vh", background: THEME.bg }}>
       <nav style={{ background: THEME.navy, padding: "14px 24px", display: "flex", alignItems: "center", gap: 14 }}>
         <Link to="/" style={{ color: "#fff", textDecoration: "none", fontWeight: 700, fontSize: 14 }}>← {SCHOOL.name}</Link>
       </nav>
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "44px 24px 80px" }}>
-        <h1 style={{ color: THEME.heading, fontSize: 24, fontWeight: 800, marginBottom: 20 }}>{title}</h1>
-        <div style={{ color: THEME.text, fontSize: 14, lineHeight: 1.8 }}>{children}</div>
-      </div>
+      {children}
     </div>
   );
 }
-
-const h2 = { color: THEME.heading, fontSize: 16, fontWeight: 700, marginTop: 26, marginBottom: 8 };
+const P = ({ children }) => <p style={{ margin: 0 }}>{children}</p>;
 
 export function PrivacyPolicy() {
   return (
-    <LegalShell title="Privacy Policy">
-      <p>This system ({SCHOOL.name} Unified School Management System) collects and stores information needed to run the school's day-to-day operations - student records, exam results, attendance, hostel and contribution records, and staff accounts.</p>
-      <h2 style={h2}>What we collect</h2>
-      <p>Student names, class/form, guardian contact details, exam scores, hostel occupancy, and food/financial contribution records; staff names, usernames, roles, and attendance/GPS check-in data (Teacher Attendance Management System - TAMS). We also store the Head Master's signature, the school stamp, and each Class Teacher's own signature (uploaded via Settings), which are used only to complete printed Parent Reports.</p>
-      <h2 style={h2}>Why we collect it</h2>
-      <p>Solely to manage academic records, school attendance, hostel life, and contributions - and so that every teacher can view results and the timetable easily, without needing to go to the Academic Office every time. The system also keeps the records of exams of any kind, accessible at any time from anywhere. Guardian contact numbers are used only to send that student's own results by SMS - never shared with, or mixed up between, other students' parents.</p>
-      <h2 style={h2}>Who can see it</h2>
-      <p>Access is role-based - teachers, Class Teachers, the Academic Master, the Second Master, and the Head Master each see only what their role requires. A Class Teacher can generate Parent Reports for their own class only. Parents and students do not use this system and never have access to it.</p>
-      <h2 style={h2}>Data storage</h2>
-      <p>Data is stored on a secured, password-protected database. Only authorized school staff accounts, issued and managed by the Head Master, can access the system.</p>
-      <h2 style={h2}>Contact</h2>
-      <p>For any questions about your data, contact the school administration directly.</p>
+    <LegalShell>
+      <LegalDoc tabs={TABS} labels={LABELS} updated={UPDATED} contact={CONTACT} title="Privacy Policy"
+        summary="This staff system holds the school's student, results, attendance and finance records. It collects only what the school needs, shows each person only what their role requires, and never sells or shares data."
+        sections={[
+          { id: "what", title: "What the system holds", body: <ul style={ul}>
+            <li style={li}><b>Students:</b> names, form, gender, guardian contacts, admission and results login numbers, photos, hostel, contribution and food records, and exam results.</li>
+            <li style={li}><b>Staff:</b> names, usernames, roles, subjects, phone/email, profile photo, and TAMS attendance (time, GPS distance from school, device).</li>
+            <li style={li}><b>Documents:</b> the Head Master's signature, the school stamp and Class Teachers' signatures, used only on official documents.</li>
+            <li style={li}><b>Preferences:</b> theme and font choice. Your font choice is saved on your account so it follows you to other devices.</li>
+          </ul> },
+          { id: "why", title: "Why it is used", body: <P>Only to run the school: academic records and results, attendance, timetable, hostel, contributions, communication with parents, and official documents. Guardian phone numbers are used only for that student's own messages and as the parent's results password.</P> },
+          { id: "who", title: "Who can see what", body: <ul style={ul}>
+            <li style={li}>Access is role-based: each role (Head Master, Second Master, Academic Master, Class Teacher, Teacher, Patron/Matron, Food Teacher) sees only its own modules.</li>
+            <li style={li}>A Class Teacher sees only their own class; a Teacher enters scores only for their own subjects and forms.</li>
+            <li style={li}>Parents see only their own child's published results on the parents' website, view-only.</li>
+            <li style={li}>Sensitive actions are recorded in the Audit Log.</li>
+          </ul> },
+          { id: "security", title: "How it is protected", body: <ul style={ul}>
+            <li style={li}>Encrypted connection (HTTPS), hashed passwords and a protected database; sensitive settings are encrypted.</li>
+            <li style={li}>Accounts lock for 15 minutes after 8 wrong passwords. Changing a password signs out every other session.</li>
+            <li style={li}>Request limits protect the system from automated attacks.</li>
+            <li style={li}>QR codes on documents show full details only for genuine, school-issued documents.</li>
+          </ul> },
+          { id: "retention", title: "How long records are kept", body: <P>Academic and attendance records are kept as official school records. Graduated students' records are removed automatically after the retention period set by the school.</P> },
+          { id: "rights", title: "Corrections", body: <P>If any record about you or a student is wrong, ask the Head Master or Second Master to correct it.</P> },
+          { id: "changes", title: "Changes", body: <P>This policy is updated when the system changes. The date at the top shows the current version.</P> },
+        ]} />
     </LegalShell>
   );
 }
 
 export function TermsOfService() {
   return (
-    <LegalShell title="Terms of Service">
-      <p>By using this system, staff agree to the following. This system is for school staff only - parents and students do not use it and are not covered by these terms.</p>
-      <h2 style={h2}>Acceptable use</h2>
-      <p>Accounts are for official school use only. Sharing login credentials, attempting to access data outside your assigned role, or submitting false attendance/results is strictly prohibited.</p>
-      <h2 style={h2}>Attendance (TAMS)</h2>
-      <p>Teachers must check in truthfully, from their own registered device, within the school's registration window and GPS radius. Attempting to falsify location or check in on behalf of another teacher is a serious violation.</p>
-      <h2 style={h2}>Academic records</h2>
-      <p>Only authorized roles (Head Master, Second Master, Academic Master) may add, edit, or publish student records and results. A Class Teacher may generate and send Parent Reports for their own class only. Once published, every teacher can view results and the timetable directly in the system, without visiting the Academic Office. The system keeps the record of exams of any kind, accessible at any time from anywhere.</p>
-      <h2 style={h2}>Signature and stamp images</h2>
-      <p>Whoever uploads the Head Master's signature, the school stamp, or a Class Teacher's signature (via Settings) confirms they are authorized to do so on that person's behalf. These images are applied automatically to Parent Reports and must be kept accurate and up to date.</p>
-      <h2 style={h2}>Changes</h2>
-      <p>The school may update these terms as the system evolves. Continued use after an update means you accept the revised terms.</p>
+    <LegalShell>
+      <LegalDoc tabs={TABS} labels={LABELS} updated={UPDATED} contact={CONTACT} title="Terms of Use"
+        summary="This system is for authorized Mikumbi Secondary School staff only. By signing in you agree to use it honestly and to protect students' information."
+        sections={[
+          { id: "accounts", title: "Your account", body: <ul style={ul}>
+            <li style={li}>Accounts are created only by the Head Master or Second Master and are personal. Never share your password.</li>
+            <li style={li}>Use a strong password (at least 8 characters, with letters and numbers) and sign out on shared devices.</li>
+            <li style={li}>Report a lost phone or a suspected break-in to the Head Master straight away.</li>
+          </ul> },
+          { id: "use", title: "Acceptable use", body: <ul style={ul}>
+            <li style={li}>Use the system only for official school work and only within your role.</li>
+            <li style={li}>Do not try to open data outside your role, and do not copy student data out of the system without permission.</li>
+            <li style={li}>Do not enter false results, attendance, payments or records.</li>
+          </ul> },
+          { id: "tams", title: "Attendance (TAMS)", body: <P>Check in truthfully, yourself, from your own registered device, inside the school area and within the registration window. Checking in for someone else or faking your location is a serious offence.</P> },
+          { id: "results", title: "Results and documents", body: <P>Only authorized roles may enter, compile, publish or hide results. Publishing results to parents is a decision of the Head Master. Signatures and the stamp may be uploaded only by the person authorized to do so, and are applied automatically to official documents.</P> },
+          { id: "privacy", title: "Student privacy", body: <P>Treat every student record as confidential. Do not share results, phone numbers or photos on social media or with anyone not entitled to them.</P> },
+          { id: "breach", title: "Breaking these terms", body: <P>Misuse may lead to the account being suspended and to disciplinary action under the school's and the Government's rules.</P> },
+          { id: "changes", title: "Changes", body: <P>The school may update these terms as the system evolves. Continuing to use the system means you accept the updated terms.</P> },
+        ]} />
     </LegalShell>
   );
 }
 
 export function SupportPage() {
   return (
-    <LegalShell title="Support">
-      <p>Need help using the system? Start here:</p>
-      <h2 style={h2}>Common issues</h2>
-      <ul style={{ paddingLeft: 20 }}>
-        <li style={{ marginBottom: 8 }}>Forgot your password? Use "Forgot Password" on the Login page and enter your registered Gmail address - this works for every account, including School Patron and School Matron. If your account has no email on file yet, ask the Head Master or Second Master to add one in User Accounts.</li>
-        <li style={{ marginBottom: 8 }}>TAMS check-in failing? Confirm GPS is enabled, you're within the school compound, and you're checking in between 6:00-8:00 AM.</li>
-        <li style={{ marginBottom: 8 }}>Can't see a module? Access is role-based - contact the Head Master or Second Master to confirm your assigned role.</li>
-        <li style={{ marginBottom: 8 }}>Signature or stamp looking small, or still showing its paper background, on a Parent Report? Re-upload it in Settings - Signature &amp; Stamp using a clear, evenly-lit photo with plain paper around the ink; the system removes the background automatically.</li>
-      </ul>
-      <h2 style={h2}>Still stuck?</h2>
-      <p>Contact the school's system administrator (Head Master / Second Master) directly, or use the Msaidizi wa Mfumo chat assistant in the bottom-right corner of the site for instant answers to common questions.</p>
+    <LegalShell>
+      <LegalDoc tabs={TABS} labels={LABELS} updated={UPDATED} contact={CONTACT} title="Help & Support"
+        summary="Quick answers to common questions. Tap a question to see its answer. You can also ask the system assistant (chat button, bottom right) once signed in."
+        faqs={[
+          { id: "account", title: "Signing in", items: [
+            { q: "I forgot my password.", a: "Use \"Forgot Password\" on the login page and enter your registered email. If your account has no email yet, ask the Head Master or Second Master to add one in User Accounts." },
+            { q: "My account is locked.", a: "After 8 wrong passwords the account locks for 15 minutes. Wait, then try again, or ask the Head Master to reset your password." },
+            { q: "I was signed out suddenly.", a: "Your password was changed (by you or an administrator), which signs out other sessions. Sign in with the new password." },
+            { q: "I can't see a module.", a: "Modules depend on your role. Ask the Head Master or Second Master to check your role in User Accounts." },
+          ] },
+          { id: "tams", title: "Attendance (TAMS)", items: [
+            { q: "My check-in fails.", a: "Turn on GPS (location), make sure you are inside the school area, and check in during the registration window (6:00 to 8:00 AM)." },
+            { q: "It says this device belongs to another teacher.", a: "Each device can check in only one teacher. Use your own phone, or ask the Head Master." },
+          ] },
+          { id: "results", title: "Results and documents", items: [
+            { q: "A teacher can't enter scores.", a: "Check that the teacher's subjects and forms are set in User Accounts, and that the sheet is not locked." },
+            { q: "The signature or stamp looks wrong on reports.", a: "Re-upload it in Settings → Signature & Stamp using a clear photo on plain white paper; the background is removed automatically." },
+            { q: "Where is a student's Results Login Number?", a: "In Student Management, open the ⋮ menu on the student's row and choose \"Login No.\"." },
+          ] },
+          { id: "app", title: "App, theme and font", items: [
+            { q: "How do I install the app?", a: "Open the staff site home page and tap \"Download the App\". On iPhone, use Safari's Share button → \"Add to Home Screen\"." },
+            { q: "How do I change the font or theme?", a: "Open Settings (gear icon) → Font or Theme. Your font choice is saved on your account." },
+          ] },
+        ]} />
     </LegalShell>
   );
 }
