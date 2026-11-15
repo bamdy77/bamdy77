@@ -201,7 +201,9 @@ const GALLERY_ITEMS = [
   ...[1, 2, 3, 4, 5].map((n) => ({ src: `/assets/gallery-students-${n}.jpg`, cat: "students" })),
   ...[2, 3, 1].map((n) => ({ src: `/assets/gallery-learning-${n}.jpg`, cat: "learning" })),
   // One photo per leader: Head Master, Second Master, Academic Master.
-  ...[2, 4, 6].map((n) => ({ src: `/assets/gallery-leaders-${n}.jpg`, cat: "leaders" })),
+  { src: "/assets/gallery-leaders-2.jpg", cat: "leaders", caption: "gallery.role.head" },
+  { src: "/assets/gallery-leaders-4.jpg", cat: "leaders", caption: "gallery.role.second" },
+  { src: "/assets/gallery-leaders-6.jpg", cat: "leaders", caption: "gallery.role.academic" },
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-farm-${n}.jpg`, cat: "farm" })),
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-hostel-${n}.jpg`, cat: "hostel" })),
   ...[3, 4, 1, 2].map((n) => ({ src: `/assets/gallery-grounds-${n}.jpg`, cat: "grounds" })),
@@ -251,10 +253,16 @@ function Gallery() {
           ))}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : isTablet ? "repeat(3, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 16 }}>
-          {items.map(({ src }, i) => (
+          {items.map(({ src, caption }, i) => (
             <button key={src} type="button" className="pub-lift" onClick={() => setOpen(i)} aria-label={t("gallery.open", { n: i + 1 })}
               style={{ position: "relative", padding: 0, border: "none", borderRadius: 4, overflow: "hidden", cursor: "zoom-in", background: "#dbe4ee", aspectRatio: "4 / 3" }}>
               <img src={src} alt={t("gallery.photo", { n: i + 1 })} loading="lazy" decoding="async" width="400" height="300" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 35%", display: "block" }} />
+              {caption && (
+                <span style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "22px 12px 10px", textAlign: "center",
+                  background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.72) 100%)", color: "#fff", fontSize: isMobile ? 13.5 : 16, fontWeight: 800 }}>
+                  {t(caption)}
+                </span>
+              )}
             </button>
           ))}
         </div>
