@@ -210,17 +210,20 @@ const GALLERY_ITEMS = [
   ...[1, 2, 3, 4].map((n) => ({ src: `/assets/gallery-sports-${n}.jpg`, cat: "sports" })),
 ];
 const GALLERY = GALLERY_ITEMS.map((g) => g.src);
-// One group is shown at a time (no "all" view - it made the page too crowded).
-const GALLERY_CATS = ["students", "learning", "leaders", "farm", "hostel", "sports", "grounds"];
+// "Zote" (all) is selected first, but no photo is shown until the visitor
+// asks to see them - keeps the page light and uncluttered.
+const GALLERY_CATS = ["all", "students", "learning", "leaders", "farm", "hostel", "sports", "grounds"];
 
 function Gallery() {
   const { isMobile, isTablet } = useBreakpoint();
   const { t } = useLang();
   const available = useLoadedImages(GALLERY);
-  const cats = GALLERY_CATS.filter((c) => GALLERY_ITEMS.some((g) => g.cat === c && available.includes(g.src)));
-  const [picked, setCat] = useState(GALLERY_CATS[0]);
-  const cat = cats.includes(picked) ? picked : cats[0]; // fall back to the first group that has photos
-  const items = GALLERY_ITEMS.filter((g) => available.includes(g.src) && g.cat === cat);
+  const cats = GALLERY_CATS.filter((c) => c === "all" || GALLERY_ITEMS.some((g) => g.cat === c && available.includes(g.src)));
+  const [picked, setPicked] = useState("all");
+  const [shown, setShown] = useState(false); // photos stay hidden until the visitor chooses to view them
+  const setCat = (c) => { setPicked(c); setShown(true); };
+  const cat = cats.includes(picked) ? picked : "all";
+  const items = GALLERY_ITEMS.filter((g) => available.includes(g.src) && (cat === "all" || g.cat === cat));
   const loaded = items.map((g) => g.src);
   const [open, setOpen] = useState(null); // index into `loaded`
 
@@ -247,12 +250,21 @@ function Gallery() {
           {cats.map((c) => (
             <button key={c} type="button" onClick={() => { setCat(c); setOpen(null); }} aria-pressed={cat === c}
               style={{ padding: "8px 16px", borderRadius: 4, fontSize: 15, fontWeight: 700, cursor: "pointer",
-                border: `1px solid ${cat === c ? NAVY : "#cbd5e1"}`, background: cat === c ? NAVY : "#fff", color: cat === c ? "#fff" : NAVY }}>
+                border: `1px solid ${cat === c ? NAVY : "#cbd5e1"}`, background: cat === c ? NAVY : "#fff", color: cat === c ? "#fff" : NAVY }}
+              aria-controls="gallery-grid">
               {t(`gallery.cat.${c}`)}
             </button>
           ))}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : isTablet ? "repeat(3, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 16 }}>
+        {!shown ? (
+          <div style={{ textAlign: "center", padding: "10px 0 4px" }}>
+            <button type="button" className="pub-btn" onClick={() => setShown(true)} aria-controls="gallery-grid"
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 4, border: "none", background: NAVY, color: "#fff", fontSize: 16, fontWeight: 800, cursor: "pointer" }}>
+              {t("gallery.show", { n: available.length })}
+            </button>
+          </div>
+        ) : (
+        <div id="gallery-grid" style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : isTablet ? "repeat(3, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 16 }}>
           {items.map(({ src, caption }, i) => (
             <button key={src} type="button" className="pub-lift" onClick={() => setOpen(i)} aria-label={t("gallery.open", { n: i + 1 })}
               style={{ position: "relative", padding: 0, border: "none", borderRadius: 4, overflow: "hidden", cursor: "zoom-in", background: "#dbe4ee", aspectRatio: "4 / 3" }}>
@@ -266,6 +278,7 @@ function Gallery() {
             </button>
           ))}
         </div>
+        )}
       </div>
 
       {open !== null && loaded[open] && (

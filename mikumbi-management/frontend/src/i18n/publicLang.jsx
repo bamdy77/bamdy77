@@ -152,6 +152,8 @@ const STRINGS = {
   // Home - gallery
   "gallery.title": { sw: "Picha za Shule", en: "Photo Gallery" },
   "gallery.subtitle": { sw: "Maisha katika Shule ya Sekondari Mikumbi", en: "Life at Mikumbi Secondary School" },
+  "gallery.cat.all": { sw: "Zote", en: "All" },
+  "gallery.show": { sw: "Tazama Picha ({n})", en: "View Photos ({n})" },
   "gallery.cat.students": { sw: "Wanafunzi", en: "Students" },
   "gallery.cat.learning": { sw: "Kujifunza", en: "Learning" },
   "gallery.role.head": { sw: "Mkuu wa Shule", en: "Head Master" },
