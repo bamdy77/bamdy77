@@ -308,9 +308,17 @@ function JoiningInstructionsPanel() {
       ) : (
         <div style={{ textAlign: "center", display: "grid", gap: 16 }}>
           <p style={{ fontSize: 15.5, color: THEME.text }}>{result?.message}</p>
-          <a href={`${API_BASE}/public/joining/download-pdf?token=${encodeURIComponent(result.token)}`} target="_blank" rel="noreferrer" style={pdfButton}>
-            <PdfIcon /> Pakua Joining Instruction (PDF)
-          </a>
+          {/* Two clear choices: save the file to the phone/computer, or just open it to read. */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
+            <a href={`${API_BASE}/public/joining/download-pdf?dl=1&token=${encodeURIComponent(result.token)}`} download style={pdfButton}>
+              <DownloadArrow /> Pakua (Download)
+            </a>
+            <a href={`${API_BASE}/public/joining/download-pdf?token=${encodeURIComponent(result.token)}`} target="_blank" rel="noreferrer"
+              style={{ ...pdfButton, background: "#fff", color: THEME.navy, border: `1px solid ${THEME.navy}` }}>
+              <PdfIcon /> Fungua kusoma
+            </a>
+          </div>
+          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>Faili litahifadhiwa kwenye sehemu ya "Downloads" ya simu au kompyuta yako.</p>
           <button onClick={() => { setStep("form"); setResult(null); setFields((f) => ({ ...f, exam_number: "" })); }} style={smallLinkBtn}>Wasilisha taarifa nyingine</button>
         </div>
       )}
@@ -339,3 +347,7 @@ const formInput = { width: "100%", padding: "10px 12px", borderRadius: 4, border
 const primaryBtn = { padding: "11px 20px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" };
 const secondaryBtn = { padding: "11px 20px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontWeight: 700, fontSize: 15, cursor: "pointer" };
 const smallLinkBtn = { background: "none", border: "none", color: THEME.navy, fontWeight: 600, fontSize: 14, cursor: "pointer", padding: 0, textDecoration: "underline" };
+
+function DownloadArrow() {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>;
+}

@@ -81,14 +81,16 @@ async function loadJoiningSettings() {
 
 const safeFileName = (s) => String(s || "").replace(/[^A-Za-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "Mwanafunzi";
 
-async function streamJoiningPdf(req, res, { fullName, verifyRef, filename, content, admissionYear }) {
+async function streamJoiningPdf(req, res, { fullName, verifyRef, filename, content, admissionYear, download = false }) {
   const settings = content ? null : await loadJoiningSettings();
   const [qrBuf, signatureBuf] = await Promise.all([
     generateQrPngBuffer(`${requestBaseUrl(req)}/api/public/joining/verify/${verifyRef}`, 220),
     fetchHeadmasterSignature(),
   ]);
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+  // `download` = save the file (phones open "inline" PDFs in a viewer and
+  // many never offer a save option); otherwise open it for reading.
+  res.setHeader("Content-Disposition", `${download ? "attachment" : "inline"}; filename="${filename}"`);
   renderJoiningPdf(res, {
     content: content || settings.content,
     year: admissionYear || settings?.admission_year,
@@ -110,6 +112,7 @@ const formOneYearFor = (app) => {
 const streamApplicantPdf = (req, res, app) => {
   const fullName = applicantName(app);
   return streamJoiningPdf(req, res, {
+    download: req.query.dl === "1",
     fullName, verifyRef: `JI-${app.id}`, filename: `Joining-Instruction-${safeFileName(fullName)}.pdf`,
     admissionYear: formOneYearFor(app),
   });
