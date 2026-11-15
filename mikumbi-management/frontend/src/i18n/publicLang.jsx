@@ -165,6 +165,12 @@ const STRINGS = {
   "gallery.prev": { sw: "Picha iliyotangulia", en: "Previous photo" },
   "gallery.next": { sw: "Picha inayofuata", en: "Next photo" },
   "common.close": { sw: "Funga", en: "Close" },
+  // Interface font chooser
+  "font.label": { sw: "Aina ya herufi", en: "Font" },
+  "font.hint": { sw: "Chagua aina ya herufi za tovuti hii. Inabadilika papo hapo.", en: "Choose the font used on this website. It changes right away." },
+  "font.default": { sw: "Kawaida", en: "Default" },
+  "font.reset": { sw: "Rudisha ya kawaida", en: "Reset to default" },
+  "font.done": { sw: "Sawa", en: "Done" },
 
   // Home - contact
   "contact.title": { sw: "Wasiliana Nasi", en: "Contact Us" },

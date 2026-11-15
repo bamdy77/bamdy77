@@ -1680,6 +1680,16 @@ async function migrate() {
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;`);
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_logins INTEGER NOT NULL DEFAULT 0;`);
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;`);
+  // Interface font chooser: NULL = the system default font.
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_font VARCHAR(20);`);
+  await query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_preferred_font_check') THEN
+        ALTER TABLE users ADD CONSTRAINT users_preferred_font_check
+          CHECK (preferred_font IS NULL OR preferred_font IN ('default','arial','poppins','times','opensans'));
+      END IF;
+    END $$;
+  `);
   // Same protection for the parents' Results login: 8 wrong phone numbers
   // for one student lock that student's online login for 30 minutes, so the
   // phone number (the password) cannot be guessed from many IPs.

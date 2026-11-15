@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { useFont } from "./context/FontContext";
+import { useEffect } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import WakingUp from "./components/WakingUp";
@@ -33,6 +35,7 @@ export default function StaffApp() {
   return (
     <WakingUp>
       <AuthProvider>
+        <AccountFontSync />
         <SuccessModalHost />
         <ErrorModalHost />
         <Routes>
@@ -76,4 +79,17 @@ export default function StaffApp() {
       </AuthProvider>
     </WakingUp>
   );
+}
+
+// A logged-in staff member's saved font (users.preferred_font, NULL = default)
+// follows them to every device: it is applied after login and whenever /me
+// refreshes, and it wins over whatever this browser had stored.
+function AccountFontSync() {
+  const { user } = useAuth();
+  const { setFont } = useFont();
+  // Only trust records that carry the field (a user cached before this
+  // feature existed would otherwise reset the font until /me answers).
+  const saved = user && Object.prototype.hasOwnProperty.call(user, "preferred_font") ? (user.preferred_font || "default") : null;
+  useEffect(() => { if (saved) setFont(saved); }, [user?.id, saved, setFont]);
+  return null;
 }

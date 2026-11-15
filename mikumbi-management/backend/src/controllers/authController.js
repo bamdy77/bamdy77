@@ -81,7 +81,8 @@ const login = async (req, res, next) => {
       user: { id: user.id, username: user.username, role: user.role, roles, full_name: user.full_name,
         subject_ids: user.subject_ids || [], subject_names, assigned_forms: user.assigned_forms || [],
         class_teacher_of: user.class_teacher_of || null, photo_url: user.photo_url || null,
-        phone: user.phone || null, email: user.email || null, employment_type: user.employment_type || "Permanent" },
+        phone: user.phone || null, email: user.email || null, employment_type: user.employment_type || "Permanent",
+        preferred_font: user.preferred_font || null },
     });
   } catch (err) {
     next(err);
@@ -91,6 +92,23 @@ const login = async (req, res, next) => {
 // GET /api/auth/me
 const me = async (req, res) => {
   res.json({ success: true, user: req.user });
+};
+
+// PUT /api/auth/preferences/font  { font }
+// Saves the interface font for the CALLER only (req.user.id from the token;
+// there is no user id in the request, so nobody can change someone else's).
+const FONT_CHOICES = ["default", "arial", "poppins", "times", "opensans"];
+const setPreferredFont = async (req, res, next) => {
+  try {
+    const font = req.body ? req.body.font : undefined;
+    if (typeof font !== "string" || !FONT_CHOICES.includes(font))
+      return res.status(400).json({ success: false, message: `Invalid font. Choose one of: ${FONT_CHOICES.join(", ")}.` });
+    // "default" is stored as NULL so the account simply follows the system default.
+    await query("UPDATE users SET preferred_font = $1 WHERE id = $2", [font === "default" ? null : font, req.user.id]);
+    res.json({ success: true, preferred_font: font === "default" ? null : font });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // POST /api/auth/change-password
@@ -238,4 +256,5 @@ const removeAvatar = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { login, me, changePassword, forgotPassword, resetPassword, uploadAvatar, removeAvatar };
+module.exports = {
+  setPreferredFont, login, me, changePassword, forgotPassword, resetPassword, uploadAvatar, removeAvatar };

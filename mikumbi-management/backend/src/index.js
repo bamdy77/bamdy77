@@ -225,7 +225,12 @@ if (fs.existsSync(FRONTEND_DIST)) {
   app.use(express.static(FRONTEND_DIST, {
     index: false, // never auto-serve a cached index.html from here — the catch-all below always sends it explicitly with no-cache
     setHeaders: (res, filePath) => {
-      if (/[.-][a-f0-9]{8,}\.(js|css)$/.test(filePath)) {
+      if (/[\\/]fonts[\\/].+\.woff2$/.test(filePath)) {
+        // Self-hosted interface fonts (font chooser). File names never change
+        // for the same font version, so they can be cached for a year.
+        res.setHeader("Content-Type", "font/woff2");
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else if (/[.-][a-f0-9]{8,}\.(js|css)$/.test(filePath)) {
         res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
       } else {
         res.setHeader("Cache-Control", "no-cache");
@@ -235,6 +240,13 @@ if (fs.existsSync(FRONTEND_DIST)) {
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api")) return next();
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    // The API's locked-down CSP (default-src 'none') would block the web
+    // app's own scripts, styles and self-hosted fonts, so the app shell gets
+    // a policy that allows only this origin (plus the existing map embed).
+    res.setHeader("Content-Security-Policy",
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; " +
+      "font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https:; " +
+      "frame-src https://maps.google.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
     res.sendFile(path.join(FRONTEND_DIST, "index.html"));
   });
 }

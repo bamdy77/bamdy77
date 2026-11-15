@@ -1213,7 +1213,7 @@ function CompiledResults({ period }) {
   });
 
   return (
-    <div style={{ background: NECTA_SUMMARY_BG, padding: "14px 16px", borderRadius: 4 }}>
+    <div className="mk-font-exempt" style={{ background: NECTA_SUMMARY_BG, padding: "14px 16px", borderRadius: 4 }}>
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
         <button onClick={() => pdfAction("print")} disabled={!sheetId || busyPdf} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { flex: 1, textAlign: "center" } : {}) }}>{busyPdf ? <SpinnerIcon size={14} /> : <PrinterIcon size={14} />}Print</button>
         <button onClick={() => pdfAction("export")} disabled={!sheetId || busyPdf} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { flex: 1, textAlign: "center" } : {}) }}>{busyPdf ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}Export PDF</button>
@@ -2000,7 +2000,7 @@ function TopBottomPerformers({ students, isMobile }) {
   const bottom10 = ranked.slice().sort((a, b) => b.position - a.position).slice(0, 10);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 20 }}>
+    <div className="mk-font-exempt" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 20 }}>
       <PerformersTable
         title="TOP 10 PERFORMING STUDENTS" icon={TrophyIcon} accent={THEME.success}
         rows={top10.map((s, i) => ({ ...s, rank: i + 1 }))}

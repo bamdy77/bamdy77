@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { SCHOOL } from "../../styles/theme";
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { siteConfig, toTelHref } from "../../config/siteConfig";
 import HoverMenu from "../HoverMenu";
 import { useLang, LangToggle } from "../../i18n/publicLang";
+import FontChooser from "../FontChooser";
+import { useFont } from "../../context/FontContext";
 import {
   HomeIcon, InfoIcon, BookIcon, MegaphoneIcon, MessageIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   CheckCircleIcon, GraduationCapIcon, LocationPinIcon, SchoolIcon, ShieldIcon,
@@ -130,6 +132,10 @@ function NavBar() {
   const { pathname } = useLocation();
   const { t } = useLang();
   const PUBLICATION_ITEMS = publicationItems(t);
+  const { font, setFont } = useFont();
+  const [fontOpen, setFontOpen] = useState(false);
+  const fontBtnRef = useRef(null);
+  const fontRowRef = useRef(null);
 
   useEffect(() => { setMenuOpen(false); setPubOpen(false); }, [pathname]);
   useEffect(() => { if (isDesktop) setMenuOpen(false); }, [isDesktop]);
@@ -157,6 +163,8 @@ function NavBar() {
             <Link to="/#news" className="pub-navlink" style={link}><MegaphoneIcon size={14} />{t("nav.news")}</Link>
             <HoverMenu label={t("nav.publications")} icon={BookIcon} items={PUBLICATION_ITEMS} variant="light" align="right" buttonStyle={{ fontSize: 15, fontWeight: 400 }} />
             <HoverMenu label={t("nav.contact")} icon={MessageIcon} items={contactItems(t)} variant="light" align="right" buttonStyle={{ fontSize: 15, fontWeight: 400 }} />
+            <button ref={fontBtnRef} type="button" onClick={() => setFontOpen(true)} aria-haspopup="dialog" aria-label={t("font.label")} title={t("font.label")}
+              style={{ background: "none", border: "1px solid rgba(255,255,255,0.6)", color: "#fff", cursor: "pointer", padding: "4px 9px", fontSize: 12, fontWeight: 800, letterSpacing: "0.04em" }}>Aa</button>
             <LangToggle />
           </div>
         ) : (
@@ -192,9 +200,21 @@ function NavBar() {
               ))}
             </div>
           )}
-          <MobileLink to="/#contact" onClick={close} icon={<MessageIcon size={15} />} last>{t("nav.contact")}</MobileLink>
+          <MobileLink to="/#contact" onClick={close} icon={<MessageIcon size={15} />}>{t("nav.contact")}</MobileLink>
+          <button ref={fontRowRef} type="button" onClick={() => setFontOpen(true)} aria-haspopup="dialog"
+            style={{ ...mobileLink, width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", borderBottom: "none" }}>
+            <span aria-hidden="true" style={{ width: 15, fontWeight: 800, fontSize: 13 }}>Aa</span>{t("font.label")}
+          </button>
         </div>
       )}
+      <FontChooser
+        open={fontOpen}
+        onClose={() => setFontOpen(false)}
+        returnFocusRef={isDesktop ? fontBtnRef : fontRowRef}
+        value={font}
+        onChange={setFont}
+        labels={{ title: t("font.label"), hint: t("font.hint"), defaultName: t("font.default"), reset: t("font.reset"), done: t("font.done"), close: t("common.close") }}
+      />
     </div>
   );
 }

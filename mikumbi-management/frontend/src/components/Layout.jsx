@@ -11,6 +11,9 @@ import { useConfirm } from "./ConfirmDialog";
 import { showSuccess } from "./SuccessModal";
 import { showError } from "./ErrorModal";
 import NotificationBell from "./NotificationBell";
+import FontChooser from "./FontChooser";
+import { useFont } from "../context/FontContext";
+import { apiFetch } from "../utils/api";
 import { SettingsIcon, LockIcon, PaletteIcon, ChevronDownIcon, CheckIcon, MenuIcon, CloseIcon, GraduationCapIcon, CoinsIcon, UtensilsIcon, TableIcon, BedIcon, BarChartIcon, ClockIcon, MessageIcon, UsersIcon, LogoutIcon, CameraIcon, TrashIcon, UserCircleIcon, EyeIcon, SpinnerIcon, FileClockIcon, EditIcon } from "./icons";
 
 // Module visibility, exactly per spec:
@@ -547,6 +550,22 @@ function SettingsMenu({ navigate, user }) {
   const [themeOpen, setThemeOpen] = useState(false);
   const wrapRef = useRef(null);
   const { theme, setTheme } = useTheme();
+  const { font, setFont } = useFont();
+  const { token, updateUser } = useAuth();
+  const [fontNote, setFontNote] = useState("");
+  const [fontOpen, setFontOpen] = useState(false);
+  const gearRef = useRef(null);
+  // Apply at once, then save on the account so it follows the user to other devices.
+  const chooseFont = async (value) => {
+    if (!setFont(value)) return;
+    setFontNote("");
+    try {
+      const res = await apiFetch("/auth/preferences/font", { method: "PUT", body: JSON.stringify({ font: value }) }, token);
+      updateUser({ preferred_font: res.preferred_font ?? null });
+    } catch {
+      setFontNote("Applied on this device, but it could not be saved to your account. Please try again later.");
+    }
+  };
   const myRoles = user?.roles?.length ? user.roles : [user?.role];
   const canManageSignature = myRoles.some((r) => ["admin", "second_master", "academic", "class_teacher"].includes(r));
   const canManageSms = myRoles.some((r) => ["admin", "second_master", "academic"].includes(r));
@@ -567,6 +586,7 @@ function SettingsMenu({ navigate, user }) {
   return (
     <div ref={wrapRef} style={{ position: "relative", flexShrink: 0 }}>
       <button
+        ref={gearRef}
         onClick={() => setOpen((o) => !o)}
         aria-label="Settings"
         title="Settings"
@@ -578,6 +598,16 @@ function SettingsMenu({ navigate, user }) {
         }}
       ><SettingsIcon size={18} /></button>
 
+      <FontChooser
+        open={fontOpen}
+        onClose={() => setFontOpen(false)}
+        returnFocusRef={gearRef}
+        value={font}
+        onChange={chooseFont}
+        note={fontNote}
+        labels={{ title: "Font", hint: "Choose the font used across the system. It changes right away.", defaultName: "Default",
+          reset: "Reset to default", done: "Done", close: "Close" }}
+      />
       {open && (
         <div style={{
           position: "absolute", right: 0, top: 42, minWidth: 226,
@@ -599,6 +629,15 @@ function SettingsMenu({ navigate, user }) {
               SMS Gateway
             </SettingsItem>
           )}
+
+          <button type="button" aria-haspopup="dialog" onClick={() => { setOpen(false); setThemeOpen(false); setFontOpen(true); }} style={{
+            display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
+            padding: "11px 14px", background: "none", border: "none", borderTop: `1px solid ${THEME.border}`, cursor: "pointer",
+            fontSize: 13, color: THEME.text,
+          }}>
+            <span aria-hidden="true" style={{ width: 15, textAlign: "center", fontWeight: 800, fontSize: 12 }}>Aa</span>
+            <span style={{ flex: 1 }}>Font</span>
+          </button>
 
           <div style={{ borderTop: `1px solid ${THEME.border}` }}>
             <button
