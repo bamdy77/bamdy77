@@ -44,7 +44,8 @@ function validateApplicationFields({ first_name, last_name, district, ward, vill
   }
   const yearNum = Number(exam_year);
   const nowYear = new Date().getFullYear();
-  if (!Number.isInteger(yearNum) || yearNum < 2000 || yearNum > nowYear + 1) {
+  // Standard VII is finished before Form One starts, so it can never be in the future.
+  if (!Number.isInteger(yearNum) || yearNum < 2000 || yearNum > nowYear) {
     return "Mwaka wa kumaliza Darasa la Saba si sahihi.";
   }
   return null;
@@ -98,9 +99,20 @@ async function streamJoiningPdf(req, res, { fullName, verifyRef, filename, conte
 }
 
 const applicantName = (app) => [app.first_name, app.middle_name, app.last_name].filter(Boolean).join(" ").toUpperCase();
+// The applicant's Form One year is the year AFTER they finished Standard VII
+// (e.g. Std VII 2026 -> Form One 2027). Previously the PDF could show the
+// Std VII year as the Form One year. Falls back to the admission year set by
+// the school when the record has no valid exam year.
+const formOneYearFor = (app) => {
+  const y = Number(app.exam_year);
+  return Number.isInteger(y) && y >= 2000 ? y + 1 : undefined;
+};
 const streamApplicantPdf = (req, res, app) => {
   const fullName = applicantName(app);
-  return streamJoiningPdf(req, res, { fullName, verifyRef: `JI-${app.id}`, filename: `Joining-Instruction-${safeFileName(fullName)}.pdf` });
+  return streamJoiningPdf(req, res, {
+    fullName, verifyRef: `JI-${app.id}`, filename: `Joining-Instruction-${safeFileName(fullName)}.pdf`,
+    admissionYear: formOneYearFor(app),
+  });
 };
 
 // ══════════════════════ PUBLIC ══════════════════════════════════════════
