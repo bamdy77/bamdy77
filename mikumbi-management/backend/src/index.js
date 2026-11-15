@@ -302,6 +302,8 @@ app.listen(PORT, () => {
   console.log(`  Environment : ${process.env.NODE_ENV || "development"}`);
   console.log(`  Timezone    : Africa/Dar_es_Salaam`);
   console.log(`  Health check: http://localhost:${PORT}/api/health`);
+  console.log(`  Email       : ${require("./utils/mailer").mailStatus()}`);
+  if (!process.env.FRONTEND_URL) console.log("  WARNING     : FRONTEND_URL is not set - password reset links fall back to the requesting site.");
   console.log("─────────────────────────────────────────────────");
 });
 

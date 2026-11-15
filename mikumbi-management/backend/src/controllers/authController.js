@@ -143,6 +143,23 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+// Where the reset link should point. FRONTEND_URL wins; without it the
+// link used to point at http://localhost:5173, which opens nothing on the
+// user's phone. Fallback: the site the request came from, but ONLY if it is
+// a trusted origin (ALLOWED_ORIGINS or a *.vercel.app preview) - never an
+// arbitrary Origin header, so the link cannot be redirected to a fake site.
+function staffSiteUrl(req) {
+  const configured = String(process.env.FRONTEND_URL || "").trim().replace(/\/+$/, "");
+  if (configured) return configured;
+  const origin = String(req.headers.origin || "").trim().replace(/\/+$/, "");
+  const allowed = String(process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim().replace(/\/+$/, "")).filter(Boolean);
+  try {
+    const u = new URL(origin);
+    if (u.protocol === "https:" && (allowed.includes(origin) || /\.vercel\.app$/i.test(u.hostname))) return origin;
+  } catch { /* not a URL */ }
+  return "http://localhost:5173";
+}
+
 // POST /api/auth/forgot-password  { email }
 const forgotPassword = async (req, res, next) => {
   try {
@@ -173,7 +190,7 @@ const forgotPassword = async (req, res, next) => {
       [tokenHash, expires, user.id]
     );
 
-    const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password?token=${rawToken}&uid=${user.id}`;
+    const resetUrl = `${staffSiteUrl(req)}/reset-password?token=${rawToken}&uid=${user.id}`;
     await sendPasswordResetEmail(user.email, user.full_name, resetUrl);
 
     res.json(genericMsg);
