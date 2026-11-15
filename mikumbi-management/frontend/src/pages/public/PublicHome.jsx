@@ -204,7 +204,8 @@ function Boarding() {
 const GALLERY_ITEMS = [
   ...[1, 2, 3, 4, 5].map((n) => ({ src: `/assets/gallery-students-${n}.jpg`, cat: "students" })),
   ...[2, 3, 1].map((n) => ({ src: `/assets/gallery-learning-${n}.jpg`, cat: "learning" })),
-  ...[1, 2, 3, 4, 5, 6].map((n) => ({ src: `/assets/gallery-leaders-${n}.jpg`, cat: "leaders" })),
+  // One photo per leader: Head Master, Second Master, Academic Master.
+  ...[2, 4, 6].map((n) => ({ src: `/assets/gallery-leaders-${n}.jpg`, cat: "leaders" })),
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-farm-${n}.jpg`, cat: "farm" })),
   ...[1, 2, 3].map((n) => ({ src: `/assets/gallery-hostel-${n}.jpg`, cat: "hostel" })),
   ...[3, 4, 1, 2].map((n) => ({ src: `/assets/gallery-grounds-${n}.jpg`, cat: "grounds" })),

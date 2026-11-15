@@ -63,9 +63,8 @@ export default function Login() {
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
             <img src="/assets/shule.svg" alt="School logo" style={{ height: isNarrow ? 56 : 68 }} onError={(e) => (e.currentTarget.style.display = "none")} />
           </div>
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <div style={{ fontWeight: 800, fontSize: 18, color: THEME.navy }}>{SCHOOL.name}</div>
-            <div style={{ fontSize: 12.5, color: THEME.muted, marginTop: 2 }}>{SCHOOL.motto}</div>
+          <div style={{ textAlign: "center", fontSize: 14, color: THEME.muted, marginBottom: 24 }}>
+            Login with registered credentials
           </div>
 
           <form onSubmit={submit}>
