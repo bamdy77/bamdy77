@@ -904,7 +904,9 @@ const publicResultsLogin = async (req, res, next) => {
 // no `role`/`extra_roles` and doesn't correspond to a users.id).
 const requirePublicResultToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : (req.query.token || null);
+  // Header only: a token in the URL would end up in browser history and logs.
+  const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
+  res.setHeader("Cache-Control", "no-store");
   if (!token) return res.status(401).json({ message: "Umeondoka kwenye mfumo. Tafadhali ingia tena." });
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

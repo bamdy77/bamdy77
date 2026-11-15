@@ -29,6 +29,25 @@ const resultsLoginLimiter = rateLimit({
   },
 });
 
+// Per-IP ceiling on top of the per-number limiter above: without it one
+// device could try thousands of DIFFERENT login numbers (each got its own
+// 20-attempt budget). 60 per 15 min still lets a whole school on one
+// connection check results normally.
+const resultsIpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: { message: "Majaribio mengi kutoka kifaa/mtandao huu. Tafadhali subiri dakika 15." },
+  keyGenerator: (req) => req.ip || req.socket?.remoteAddress || "unknown",
+});
+
+// Verification pages are public; this stops anyone hammering them to guess references.
+const verifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  message: "Too many requests.",
+  keyGenerator: (req) => req.ip || req.socket?.remoteAddress || "unknown",
+});
+
 const joiningSubmitLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
@@ -37,15 +56,15 @@ const joiningSubmitLimiter = rateLimit({
 });
 
 // ── Results portal (Publications → "Results") ───────────────────────────
-router.post("/results/check-username", resultsLoginLimiter, publicResultsCheckUsername);
-router.post("/results/login", resultsLoginLimiter, publicResultsLogin);
+router.post("/results/check-username", resultsIpLimiter, resultsLoginLimiter, publicResultsCheckUsername);
+router.post("/results/login", resultsIpLimiter, resultsLoginLimiter, publicResultsLogin);
 router.get("/results/me", requirePublicResultToken, publicResultsMe);
 
 // ── Joining Instructions (Publications → "Joining Instructions") ────────
 router.get("/joining/status", publicJoiningStatus);
 router.post("/joining/submit", joiningSubmitLimiter, submitJoining);
 router.get("/joining/download-pdf", downloadJoiningPdf);
-router.get("/joining/verify/:ref", verifyJoiningDocument);
+router.get("/joining/verify/:ref", verifyLimiter, verifyJoiningDocument);
 
 // ── Generic document verification (footer QR on every other exported PDF —
 //    Contributions, Food Contribution, TAMS, Hostel, Student Management,
@@ -53,6 +72,6 @@ router.get("/joining/verify/:ref", verifyJoiningDocument);
 router.get("/verify", verifyGenericDocument);
 
 // ── Student Identity Card verification (back-side QR) ──────────────────
-router.get("/id-card/verify/:studentId", verifyIdCard);
+router.get("/id-card/verify/:studentId", verifyLimiter, verifyIdCard);
 
 module.exports = router;

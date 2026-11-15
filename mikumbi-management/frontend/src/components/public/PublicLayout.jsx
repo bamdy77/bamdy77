@@ -258,12 +258,7 @@ function Footer() {
             <img src="/assets/shule.svg" alt="" width="56" height="56" style={{ height: 56, width: "auto" }} onError={(e) => (e.currentTarget.style.display = "none")} />
             <div style={{ color: "#fff", fontWeight: 800, fontSize: 18, lineHeight: 1.25 }}>{t("school.name")}</div>
           </div>
-          <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5, marginBottom: 16 }}>{t("footer.tagline")}</div>
-          <div style={{ background: "#0a3556", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 4, padding: "14px 16px", maxWidth: 260 }}>
-            <div style={{ fontSize: 12.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9fc0d9", marginBottom: 6 }}>{t("footer.identity")}</div>
-            <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5 }}>{t("footer.regNo")} {SCHOOL.regNo}</div>
-            <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5, marginTop: 2 }}>{t("footer.centreNo")} {SCHOOL.centreNo}</div>
-          </div>
+          <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5 }}>{t("footer.tagline")}</div>
         </div>
 
         <nav aria-label="Publications">

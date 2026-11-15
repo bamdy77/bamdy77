@@ -33,12 +33,15 @@ const ordinalSw = (n) => ORDINALS_SW[n] || `${n}`;
 
 // Validates the shared fields for both the public submission and the staff
 // manual-issue form - returns an error message string, or null if valid.
-function validateApplicationFields({ first_name, last_name, district, ward, village, exam_number, exam_year }) {
+function validateApplicationFields({ first_name, middle_name, last_name, district, ward, village, exam_number, exam_year }) {
   if (!first_name || !String(first_name).trim()) return "Tafadhali jaza Jina la Kwanza.";
   if (!last_name || !String(last_name).trim()) return "Tafadhali jaza Jina la Ukoo.";
   if (!district || !String(district).trim()) return "Tafadhali jaza Wilaya.";
   if (!ward || !String(ward).trim()) return "Tafadhali jaza Kata.";
   if (!village || !String(village).trim()) return "Tafadhali jaza Mtaa/Kijiji.";
+  const tooLong = (v, n) => v != null && String(v).trim().length > n;
+  if ([first_name, middle_name, last_name].some((v) => tooLong(v, 60))) return "Jina ni refu kupita kiasi (herufi 60 zinatosha).";
+  if ([district, ward, village].some((v) => tooLong(v, 100))) return "Wilaya, Kata au Mtaa/Kijiji ni ndefu kupita kiasi.";
   if (!exam_number || !EXAM_NUMBER_RE.test(String(exam_number).trim().toUpperCase())) {
     return "Namba ya Mtihani si sahihi. Tumia mfumo: PS1234567-0001.";
   }
@@ -113,7 +116,7 @@ const streamApplicantPdf = (req, res, app) => {
   const fullName = applicantName(app);
   return streamJoiningPdf(req, res, {
     download: req.query.dl === "1",
-    fullName, verifyRef: `JI-${app.id}`, filename: `Joining-Instruction-${safeFileName(fullName)}.pdf`,
+    fullName, verifyRef: `JI-${app.id}-${signRef("JI", app.id)}`, filename: `Joining-Instruction-${safeFileName(fullName)}.pdf`,
     admissionYear: formOneYearFor(app),
   });
 };
@@ -217,16 +220,21 @@ const downloadJoiningPdf = async (req, res, next) => {
 // (logo top-center, message below) is shared with every other QR in the
 // system - see utils/verifyPage.js.
 const { renderVerifyPage } = require("../utils/verifyPage");
+const { signRef, verifyRef, maskName } = require("../utils/qrSign");
 
 const verifyJoiningDocument = async (req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.setHeader("Cache-Control", "no-store");
   try {
     const ref = String(req.params.ref || "");
     if (ref.toLowerCase() === "blank") {
       return res.send(renderVerifyPage({ heading: "Fomu Tupu ya Maelekezo ya Kujiunga", details: [] }));
     }
-    const m = ref.match(/^JI-(\d+)$/i);
+    const m = ref.match(/^JI-(\d+)(?:-([a-f0-9]{20}))?$/i);
     if (!m) return res.status(404).send(renderVerifyPage({ heading: "Rejea Batili", notFound: true }));
+    const signed = verifyRef("JI", m[1], (m[2] || "").toLowerCase());
+    if (m[2] && !signed) return res.status(404).send(renderVerifyPage({ heading: "Rejea Batili", notFound: true }));
 
     const { rows } = await query(
       `SELECT first_name, middle_name, last_name, exam_number FROM joining_applications WHERE id = $1`,
@@ -238,10 +246,10 @@ const verifyJoiningDocument = async (req, res) => {
     const fullName = [app.first_name, app.middle_name, app.last_name].filter(Boolean).join(" ").toUpperCase();
     return res.send(renderVerifyPage({
       heading: "Maelekezo ya Kujiunga na Kidato cha Kwanza",
-      details: [
-        { label: "Mwanafunzi", value: fullName },
-        { label: "Namba ya Mtihani", value: app.exam_number },
-      ],
+      // Full details only for a genuinely signed QR (see utils/qrSign.js).
+      details: signed
+        ? [{ label: "Mwanafunzi", value: fullName }, { label: "Namba ya Mtihani", value: app.exam_number }]
+        : [{ label: "Mwanafunzi", value: maskName(fullName) }],
     }));
   } catch {
     return res.status(500).send(renderVerifyPage({ heading: "Hitilafu ya Mfumo", notFound: true }));

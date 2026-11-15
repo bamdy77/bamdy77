@@ -21,6 +21,7 @@ const { query } = require("../db/db");
 const { formatTZ } = require("../utils/tz");
 const { SCHOOL_LOGO_PATH, generateQrPngBuffer, requestBaseUrl } = require("../utils/pdfHeader");
 const { cloudinaryResized } = require("../middleware/upload");
+const { signRef, verifyRef, maskName } = require("../utils/qrSign");
 const { renderVerifyPage } = require("../utils/verifyPage");
 
 const MM = 2.83465; // points per mm
@@ -280,7 +281,7 @@ const generateIdCardsPdf = async (req, res, next) => {
         // of opening anything, which some phones surface as an "install
         // the Google app to continue" style prompt. A URL opens the actual
         // branded verification page directly (see verifyIdCard below).
-        const verifyUrl = `${requestBaseUrl(req)}/api/public/id-card/verify/${s.id}`;
+        const verifyUrl = `${requestBaseUrl(req)}/api/public/id-card/verify/${s.id}?s=${signRef("ID", s.id)}`;
         return generateQrPngBuffer(verifyUrl, 140);
       })),
     ]);
@@ -341,6 +342,13 @@ const verifyIdCard = async (req, res, next) => {
   try {
     const studentId = parseInt(req.params.studentId, 10);
     res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+    res.setHeader("Cache-Control", "no-store");
+    const sig = typeof req.query.s === "string" ? req.query.s.toLowerCase() : "";
+    const signed = Number.isInteger(studentId) && verifyRef("ID", studentId, sig);
+    if (sig && !signed) {
+      return res.send(renderVerifyPage({ heading: "Kitambulisho Hakikuthibitishwa", notFound: true }));
+    }
     if (!Number.isInteger(studentId)) {
       return res.send(renderVerifyPage({ heading: "Kitambulisho Hakikuthibitishwa", notFound: true }));
     }
@@ -355,12 +363,19 @@ const verifyIdCard = async (req, res, next) => {
     const fullName = [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ").toUpperCase();
     res.send(renderVerifyPage({
       heading: "Kitambulisho Halali cha Mwanafunzi",
-      details: [
-        { label: "Jina", value: fullName },
-        { label: "Darasa", value: s.form },
-        { label: "Namba ya Usajili", value: s.reg_no || s.admission_no || "-" },
-        { label: "Hali", value: s.status || "Active" },
-      ],
+      // Full details only for a signed QR (cards printed from now on). Older
+      // cards still verify, with the name masked and no registration number.
+      details: signed
+        ? [
+            { label: "Jina", value: fullName },
+            { label: "Darasa", value: s.form },
+            { label: "Namba ya Usajili", value: s.reg_no || s.admission_no || "-" },
+            { label: "Hali", value: s.status || "Active" },
+          ]
+        : [
+            { label: "Jina", value: maskName(fullName) },
+            { label: "Hali", value: s.status || "Active" },
+          ],
     }));
   } catch (err) { next(err); }
 };
