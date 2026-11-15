@@ -8,9 +8,10 @@ import { ChevronDownIcon } from "./icons";
 //  - toggles on tap for touch screens (phones/tablets have no hover),
 //  - closes when clicking/tapping anywhere outside.
 //
-// items: [{ label, icon?: Component, to?: string, onClick?: fn }]
+// items: [{ label, icon?: Component, to?: string, onClick?: fn,
+//          style?: extra item style, selected?: bool (shows a check mark) }]
 // variant: "light" (white panel, school website) | "navy" (staff Landing look)
-export default function HoverMenu({ label, icon: LabelIcon, items, variant = "light", buttonStyle = {}, align = "left" }) {
+export default function HoverMenu({ label, icon: LabelIcon, items, variant = "light", buttonStyle = {}, align = "left", ariaLabel, title }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
   const closeTimer = useRef(null);
@@ -66,6 +67,8 @@ export default function HoverMenu({ label, icon: LabelIcon, items, variant = "li
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={ariaLabel}
+        title={title}
         onPointerDown={(e) => { lastPointer.current = e.pointerType || "mouse"; }}
         onClick={(e) => {
           // With a mouse the menu is already open from hovering - a click
@@ -99,11 +102,15 @@ export default function HoverMenu({ label, icon: LabelIcon, items, variant = "li
                   ...itemBase, display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
                   padding: "12px 18px", background: "none", border: "none", textDecoration: "none", cursor: "pointer",
                   borderBottom: last ? "none" : itemBase.borderBottom, transition: "background 0.15s, color 0.15s",
+                  ...(it.selected ? { background: "#eef4fa" } : {}), ...(it.style || {}),
                 },
+                ...(it.selected !== undefined ? { role: "menuitemradio", "aria-checked": !!it.selected } : {}),
                 onMouseEnter: (e) => { e.currentTarget.style.background = isNavy ? "rgba(255,255,255,0.08)" : "#f1f6fb"; if (isNavy) e.currentTarget.style.color = "#D4A017"; },
-                onMouseLeave: (e) => { e.currentTarget.style.background = "none"; if (isNavy) e.currentTarget.style.color = "#fff"; },
+                onMouseLeave: (e) => { e.currentTarget.style.background = it.selected ? "#eef4fa" : "none"; if (isNavy) e.currentTarget.style.color = "#fff"; },
               };
-              const marker = Ico
+              const marker = it.selected !== undefined
+                ? <span aria-hidden="true" style={{ width: 14, flexShrink: 0, fontWeight: 800 }}>{it.selected ? "✓" : ""}</span>
+                : Ico
                 ? <Ico size={13} />
                 : <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", border: "2px solid #0c426f", flexShrink: 0 }} />;
               if (it.href) {

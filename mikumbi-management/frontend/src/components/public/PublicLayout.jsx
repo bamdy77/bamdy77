@@ -7,6 +7,7 @@ import HoverMenu from "../HoverMenu";
 import { useLang, LangToggle } from "../../i18n/publicLang";
 import FontChooser from "../FontChooser";
 import { useFont } from "../../context/FontContext";
+import { FONT_OPTIONS, FONT_STACKS, DEFAULT_FONT } from "../../styles/fonts";
 import {
   HomeIcon, InfoIcon, BookIcon, MegaphoneIcon, MessageIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   CheckCircleIcon, GraduationCapIcon, LocationPinIcon, SchoolIcon, ShieldIcon,
@@ -134,7 +135,6 @@ function NavBar() {
   const PUBLICATION_ITEMS = publicationItems(t);
   const { font, setFont } = useFont();
   const [fontOpen, setFontOpen] = useState(false);
-  const fontBtnRef = useRef(null);
   const fontRowRef = useRef(null);
 
   useEffect(() => { setMenuOpen(false); setPubOpen(false); }, [pathname]);
@@ -163,8 +163,15 @@ function NavBar() {
             <Link to="/#news" className="pub-navlink" style={link}><MegaphoneIcon size={14} />{t("nav.news")}</Link>
             <HoverMenu label={t("nav.publications")} icon={BookIcon} items={PUBLICATION_ITEMS} variant="light" align="right" buttonStyle={{ fontSize: 15, fontWeight: 400 }} />
             <HoverMenu label={t("nav.contact")} icon={MessageIcon} items={contactItems(t)} variant="light" align="right" buttonStyle={{ fontSize: 15, fontWeight: 400 }} />
-            <button ref={fontBtnRef} type="button" onClick={() => setFontOpen(true)} aria-haspopup="dialog" aria-label={t("font.label")} title={t("font.label")}
-              style={{ background: "none", border: "1px solid rgba(255,255,255,0.6)", color: "#fff", cursor: "pointer", padding: "4px 9px", fontSize: 12, fontWeight: 800, letterSpacing: "0.04em" }}>Aa</button>
+            {/* Hover (like the other menus) shows the fonts, each in its own font. */}
+            <HoverMenu label="Aa" ariaLabel={t("font.label")} title={t("font.label")} variant="light" align="right"
+              buttonStyle={{ border: "1px solid rgba(255,255,255,0.6)", padding: "3px 8px", fontSize: 12, fontWeight: 800, letterSpacing: "0.04em" }}
+              items={FONT_OPTIONS.map((o) => ({
+                label: o.value === DEFAULT_FONT ? t("font.default") : o.label,
+                onClick: () => setFont(o.value),
+                selected: font === o.value,
+                style: { fontFamily: FONT_STACKS[o.value], fontSize: 15 },
+              }))} />
             <LangToggle />
           </div>
         ) : (
@@ -210,7 +217,7 @@ function NavBar() {
       <FontChooser
         open={fontOpen}
         onClose={() => setFontOpen(false)}
-        returnFocusRef={isDesktop ? fontBtnRef : fontRowRef}
+        returnFocusRef={fontRowRef}
         value={font}
         onChange={setFont}
         labels={{ title: t("font.label"), hint: t("font.hint"), defaultName: t("font.default"), reset: t("font.reset"), done: t("font.done"), close: t("common.close") }}
@@ -251,8 +258,7 @@ function Footer() {
             <img src="/assets/shule.svg" alt="" width="56" height="56" style={{ height: 56, width: "auto" }} onError={(e) => (e.currentTarget.style.display = "none")} />
             <div style={{ color: "#fff", fontWeight: 800, fontSize: 18, lineHeight: 1.25 }}>{t("school.name")}</div>
           </div>
-          <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5, marginBottom: 6 }}>{t("footer.tagline")}</div>
-          <div style={{ color: "#F5B041", fontSize: 15, fontStyle: "italic", marginBottom: 16 }}>{t("school.motto")}</div>
+          <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5, marginBottom: 16 }}>{t("footer.tagline")}</div>
           <div style={{ background: "#0a3556", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 4, padding: "14px 16px", maxWidth: 260 }}>
             <div style={{ fontSize: 12.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9fc0d9", marginBottom: 6 }}>{t("footer.identity")}</div>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5 }}>{t("footer.regNo")} {SCHOOL.regNo}</div>
