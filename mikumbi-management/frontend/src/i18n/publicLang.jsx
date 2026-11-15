@@ -84,7 +84,7 @@ const STRINGS = {
   "footer.centreNo": { sw: "Namba ya Kituo", en: "Centre No." },
   "footer.school": { sw: "Shule", en: "School" },
   "footer.aboutUs": { sw: "Kuhusu Sisi", en: "About Us" },
-  "footer.boarding": { sw: "Bweni na Hosteli", en: "Boarding & Hostels" },
+  "footer.boarding": { sw: "Bweni na Kambi", en: "Boarding & Hostels" },
   "footer.gallery": { sw: "Picha", en: "Gallery" },
   "footer.quickLinks": { sw: "Viungo Muhimu", en: "Quick Links" },
   "footer.privacy": { sw: "Sera ya Faragha", en: "Privacy Policy" },
@@ -99,8 +99,8 @@ const STRINGS = {
   "hero.place": { sw: "Newala · Mtwara · Tanzania", en: "Newala · Mtwara · Tanzania" },
   "hero.welcome": { sw: "Karibu Shule ya Sekondari Mikumbi", en: "Welcome to Mikumbi Secondary School" },
   "hero.text": {
-    sw: "“Elimu na Kazi” — shule ya kutwa yenye bweni kwa wasichana wote na hosteli kwa wavulana.",
-    en: "“Education with work” — a day school with boarding for all girls and hostel facilities for boys.",
+    sw: "Shule ya kutwa, yenye bweni kwa wasichana wote na kambi kwa wavulana.",
+    en: "A day school, with boarding for all girls and hostel facilities for boys.",
   },
   "hero.results": { sw: "Angalia Matokeo", en: "Check Results" },
   "hero.joining": { sw: "Maelekezo ya Kujiunga", en: "Joining Instructions" },
@@ -131,9 +131,9 @@ const STRINGS = {
   "fact.location": { sw: "Mahali", en: "Location" },
 
   // Home - boarding
-  "boarding.title": { sw: "Taaluma, Bweni na Hosteli", en: "Academics, Boarding & Hostels" },
+  "boarding.title": { sw: "Taaluma, Bweni na Kambi", en: "Academics, Boarding & Hostels" },
   "boarding.subtitle": {
-    sw: "Shule ya Sekondari Mikumbi ni shule ya kutwa, yenye bweni kwa wasichana wote na hosteli kwa wavulana.",
+    sw: "Shule ya Sekondari Mikumbi ni shule ya kutwa, yenye bweni kwa wasichana wote na kambi kwa wavulana.",
     en: "Mikumbi Secondary School is a day school, with boarding for all girls and hostel facilities for boys.",
   },
   "boarding.academics.title": { sw: "Taaluma", en: "Academics" },

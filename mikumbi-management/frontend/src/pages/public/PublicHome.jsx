@@ -60,7 +60,11 @@ function Hero() {
         <h1 style={{ fontSize: isMobile ? 30.5 : isTablet ? 42.5 : 55, fontWeight: 800, lineHeight: 1.15, marginBottom: 16 }}>
           {t("hero.welcome")}
         </h1>
-        <p style={{ fontSize: isMobile ? 17 : 20, lineHeight: 1.65, opacity: 0.94, maxWidth: 640, margin: "0 auto 30px" }}>
+        {/* Motto on its own line, then one short sentence about the school. */}
+        <p style={{ fontSize: isMobile ? 19 : 23, fontWeight: 700, fontStyle: "italic", color: "#FCD34D", marginBottom: 8 }}>
+          “{t("school.motto")}”
+        </p>
+        <p style={{ fontSize: isMobile ? 16.5 : 19, lineHeight: 1.6, opacity: 0.94, maxWidth: 560, margin: "0 auto 30px", textWrap: "balance" }}>
           {t("hero.text")}
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>

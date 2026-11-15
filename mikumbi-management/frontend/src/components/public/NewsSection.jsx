@@ -119,8 +119,11 @@ export function SectionTitle({ icon, title, subtitle, light = false }) {
   );
 }
 
+// "JIPYA / NEW" badge: blinks with a bright glow to draw the eye to fresh
+// announcements (animation lives in PublicLayout's <style>; it is switched
+// off for visitors who ask their device for reduced motion).
 function NewTag({ label = "NEW" }) {
-  return <span style={{ background: ORANGE, color: "#fff", fontSize: 12.5, fontWeight: 800, letterSpacing: "0.08em", padding: "3px 9px", borderRadius: 4 }}>{label}</span>;
+  return <span className="pub-new-tag" style={{ background: ORANGE, color: "#fff", fontSize: 12.5, fontWeight: 800, letterSpacing: "0.08em", padding: "3px 9px", borderRadius: 4, display: "inline-block" }}>{label}</span>;
 }
 
 function ReadMore({ onClick, label = "Read more" }) {

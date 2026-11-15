@@ -23,6 +23,12 @@ export default function PublicLayout({ children }) {
         .pub-section { scroll-margin-top: 76px; }
         .pub-lift { transition: transform .18s ease, box-shadow .18s ease; }
         .pub-lift:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(15,23,42,.10); }
+        @keyframes pubNewGlow {
+          0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245,73,39,0.0); filter: brightness(1); }
+          50% { opacity: 0.55; box-shadow: 0 0 14px 5px rgba(255,170,60,0.95); filter: brightness(1.35); }
+        }
+        .pub-new-tag { animation: pubNewGlow 1.2s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .pub-new-tag { animation: none; } }
         .pub-btn { transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
         .pub-btn:hover { transform: translateY(-2px); }
         .pub-navlink:hover { opacity: .8; }

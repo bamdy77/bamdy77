@@ -1,3 +1,4 @@
+import InstallAppButton from "../components/InstallAppButton";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { THEME, SCHOOL } from "../styles/theme";
@@ -266,6 +267,7 @@ export default function Landing() {
             <AboutFact label="Centre No." value={SCHOOL.centreNo} />
             <AboutFact label="Region" value={SCHOOL.region} />
           </div>
+          <InstallAppButton style={{ marginTop: isMobile ? 22 : 28 }} />
         </div>
       </section>
 
