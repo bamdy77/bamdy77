@@ -48,7 +48,7 @@ function Hero() {
       // A light, bottom-weighted shade keeps the school photo clearly
       // visible (it used to sit under a ~90% navy wash) while the text on
       // top stays readable.
-      backgroundImage: "linear-gradient(180deg, rgba(7,44,75,0.35) 0%, rgba(7,44,75,0.55) 55%, rgba(7,44,75,0.85) 100%), url(/assets/hero.jpg), url(/assets/picha.png), linear-gradient(160deg, #0c426f 0%, #072C4B 100%)",
+      backgroundImage: "linear-gradient(180deg, rgba(5,30,52,0.55) 0%, rgba(5,30,52,0.66) 55%, rgba(5,30,52,0.88) 100%), url(/assets/hero.jpg), url(/assets/picha.png), linear-gradient(160deg, #0c426f 0%, #072C4B 100%)",
       backgroundSize: "cover", backgroundPosition: isMobile ? "center 25%" : "center 30%",
       textShadow: "0 2px 12px rgba(0,0,0,0.45)",
       padding: isMobile ? "70px 20px 96px" : isTablet ? "110px 28px 120px" : "150px 28px 150px",
@@ -60,10 +60,6 @@ function Hero() {
         <h1 style={{ fontSize: isMobile ? 30.5 : isTablet ? 42.5 : 55, fontWeight: 800, lineHeight: 1.15, marginBottom: 16 }}>
           {t("hero.welcome")}
         </h1>
-        {/* Motto on its own line, then one short sentence about the school. */}
-        <p style={{ fontSize: isMobile ? 19 : 23, fontWeight: 700, fontStyle: "italic", color: "#FCD34D", marginBottom: 8 }}>
-          “{t("school.motto")}”
-        </p>
         <p style={{ fontSize: isMobile ? 16.5 : 19, lineHeight: 1.6, opacity: 0.94, maxWidth: 560, margin: "0 auto 30px", textWrap: "balance" }}>
           {t("hero.text")}
         </p>
