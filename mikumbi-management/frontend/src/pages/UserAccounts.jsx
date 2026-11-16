@@ -197,7 +197,7 @@ export default function UserAccounts() {
           <FormSection title="Account Details" isMobile={isMobile}>
             <div style={grid2(isMobile)}>
               <Field label="Username" required>
-                <input placeholder="e.g. jmussa" required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={fieldInput} />
+                <input placeholder="e.g. MR.BEYANGA" required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={fieldInput} />
               </Field>
               <Field label="Full Name" required>
                 <input placeholder="e.g. Juma Mussa" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} style={fieldInput} />
