@@ -150,6 +150,10 @@ const STRINGS = {
   "boarding.life.text": { sw: "Kujifunza, nidhamu na maisha ya jamii nje ya darasa.", en: "Learning, discipline and community life beyond the classroom." },
 
   // Home - gallery
+  "videos.title": { sw: "Video kwa Wazazi", en: "Videos for Parents" },
+  "videos.subtitle": { sw: "Mafunzo mafupi kutoka shuleni. Tazama hapa au pakua.", en: "Short guides from the school. Watch here or download." },
+  "videos.download": { sw: "Pakua", en: "Download" },
+  "nav.videos": { sw: "Video kwa Wazazi", en: "Videos for Parents" },
   "gallery.title": { sw: "Picha za Shule", en: "Photo Gallery" },
   "gallery.subtitle": { sw: "Maisha katika Shule ya Sekondari Mikumbi", en: "Life at Mikumbi Secondary School" },
   "gallery.cat.all": { sw: "Zote", en: "All" },

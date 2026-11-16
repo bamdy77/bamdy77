@@ -124,6 +124,7 @@ const aboutItems = (t) => [
 const publicationItems = (t) => [
   { label: t("nav.results"), to: "/results", icon: CheckCircleIcon },
   { label: t("nav.joining"), to: "/joining-instructions", icon: GraduationCapIcon },
+  { label: t("nav.videos"), to: "/#videos", icon: MegaphoneIcon },
 ];
 
 function NavBar() {

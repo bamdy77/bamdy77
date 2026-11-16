@@ -5,6 +5,7 @@ import { THEME } from "../styles/theme";
 import { useConfirm } from "../components/ConfirmDialog";
 import { showSuccess } from "../components/SuccessModal";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import ParentVideosTab from "./ParentVideosTab";
 import { ChevronDownIcon, MegaphoneIcon, MessageIcon, SendIcon, PlusCircleIcon, TrashIcon, CheckIcon, CloseIcon, SpinnerIcon } from "../components/icons";
 
 export default function Communications() {
@@ -21,8 +22,13 @@ export default function Communications() {
         {(user.role === "admin" || user.role === "second_master") && (
           <TabBtn active={tab === "sms"} isMobile={isMobile} onClick={() => setTab("sms")}><MessageIcon size={14} />SMS Service</TabBtn>
         )}
+        {(user.role === "admin" || user.role === "second_master") && (
+          <TabBtn active={tab === "videos"} isMobile={isMobile} onClick={() => setTab("videos")}><span aria-hidden="true">▶</span>Parent Videos</TabBtn>
+        )}
       </div>
-      {tab === "announcements" ? <AnnouncementsTab isMobile={isMobile} /> : <SmsTab isMobile={isMobile} isTablet={isTablet} />}
+      {tab === "announcements" ? <AnnouncementsTab isMobile={isMobile} />
+        : tab === "videos" ? <ParentVideosTab isMobile={isMobile} />
+        : <SmsTab isMobile={isMobile} isTablet={isTablet} />}
     </div>
   );
 }

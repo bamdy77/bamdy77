@@ -1,3 +1,4 @@
+import VideosSection from "../../components/public/VideosSection";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import PublicLayout from "../../components/public/PublicLayout";
@@ -27,6 +28,7 @@ export default function PublicHome() {
       <Hero />
       <QuickAccess />
       <NewsSection />
+      <VideosSection />
       <About />
       <Boarding />
       <Gallery />

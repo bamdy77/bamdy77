@@ -1680,6 +1680,20 @@ async function migrate() {
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;`);
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_logins INTEGER NOT NULL DEFAULT 0;`);
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;`);
+  // Training videos for parents (files live on Cloudinary; only metadata here).
+  await query(`
+    CREATE TABLE IF NOT EXISTS parent_videos (
+      id          SERIAL PRIMARY KEY,
+      title       VARCHAR(150) NOT NULL,
+      description TEXT,
+      public_id   TEXT NOT NULL UNIQUE,
+      video_url   TEXT NOT NULL,
+      bytes       BIGINT,
+      duration    NUMERIC,
+      is_active   BOOLEAN NOT NULL DEFAULT true,
+      created_by  INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );`);
   // Two-step verification (Head Master / Second Master): pending email codes
   // and devices trusted for 60 days. Only hashes are stored.
   await query(`

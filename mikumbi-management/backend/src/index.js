@@ -205,6 +205,8 @@ app.use("/api/chatbot",       chatbotRoutes);
 // public submit/download. Mounted last among API routes so nothing above
 // is ever shadowed by it.
 app.use("/api/backups",       require("./routes/backups"));
+app.use("/api/videos",        require("./routes/videos").staff);
+app.use("/api/public/videos", require("./routes/videos").pub);
 app.use("/api/public",        publicRoutes);
 
 // ── Serve the built frontend (single-service deployment) ───────────────────
@@ -247,7 +249,7 @@ if (fs.existsSync(FRONTEND_DIST)) {
     // a policy that allows only this origin (plus the existing map embed).
     res.setHeader("Content-Security-Policy",
       "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; " +
-      "font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https:; " +
+      "font-src 'self'; img-src 'self' data: blob: https:; media-src 'self' https://res.cloudinary.com; connect-src 'self' https:; " +
       "frame-src https://maps.google.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
     res.sendFile(path.join(FRONTEND_DIST, "index.html"));
   });
