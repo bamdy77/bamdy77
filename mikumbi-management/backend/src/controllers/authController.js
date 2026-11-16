@@ -182,7 +182,7 @@ async function issueLogin(res, user, extra = {}) {
         subject_ids: user.subject_ids || [], subject_names, assigned_forms: user.assigned_forms || [],
         class_teacher_of: user.class_teacher_of || null, photo_url: user.photo_url || null,
         phone: user.phone || null, email: user.email || null, employment_type: user.employment_type || "Permanent",
-        preferred_font: user.preferred_font || null },
+        preferred_font: user.preferred_font || null, preferred_language: user.preferred_language || null },
       ...extra,
     });
 }
@@ -204,6 +204,20 @@ const setPreferredFont = async (req, res, next) => {
     // "default" is stored as NULL so the account simply follows the system default.
     await query("UPDATE users SET preferred_font = $1 WHERE id = $2", [font === "default" ? null : font, req.user.id]);
     res.json({ success: true, preferred_font: font === "default" ? null : font });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PUT /api/auth/preferences/language  { language: "en" | "sw" }
+// Saves the interface language for the CALLER only (id from the token).
+const setPreferredLanguage = async (req, res, next) => {
+  try {
+    const language = req.body ? req.body.language : undefined;
+    if (language !== "en" && language !== "sw")
+      return res.status(400).json({ success: false, message: "Invalid language. Choose en or sw." });
+    await query("UPDATE users SET preferred_language = $1 WHERE id = $2", [language, req.user.id]);
+    res.json({ success: true, preferred_language: language });
   } catch (err) {
     next(err);
   }
@@ -374,5 +388,5 @@ const removeAvatar = async (req, res, next) => {
 };
 
 module.exports = {
-  setPreferredFont,
+  setPreferredFont, setPreferredLanguage,
   verifyLoginCode, login, me, changePassword, forgotPassword, resetPassword, uploadAvatar, removeAvatar };

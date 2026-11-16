@@ -6,9 +6,11 @@ import { THEME } from "../styles/theme";
 import { PasswordInput } from "../components/PasswordInput";
 import { showSuccess } from "../components/SuccessModal";
 import { LockIcon, SpinnerIcon } from "../components/icons";
+import { useLang } from "../i18n";
 
 export default function ChangePassword() {
   const { token, user, replaceToken } = useAuth();
+  const { t } = useLang();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,11 +35,11 @@ export default function ChangePassword() {
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("New password and confirmation do not match.");
+      setError(t("pw.noMatchNew"));
       return;
     }
     if (newPassword === oldPassword) {
-      setError("New password must be different from the old password.");
+      setError(t("pw.sameAsOld"));
       return;
     }
 
@@ -50,44 +52,44 @@ export default function ChangePassword() {
       );
       if (r && r.token) replaceToken(r.token);
       reset();
-      showSuccess("Password Changed", "Your password has been changed successfully. Use it next time you log in.");
+      showSuccess(t("pw.changedTitle"), t("pw.changedText"));
     } catch (err) {
-      setError(err.message || "Could not change password. Please try again.");
+      setError(err.message || t("pw.changeFailed"));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div style={{ padding: 40, maxWidth: 480 }}>
-      <h2 style={{ color: THEME.heading, fontSize: 20, marginBottom: 4 }}>Change Password</h2>
+    <div style={{ padding: "clamp(16px, 4vw, 40px)", maxWidth: 480 }}>
+      <h2 style={{ color: THEME.heading, fontSize: 20, marginBottom: 4 }}>{t("pw.changeTitle")}</h2>
       <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 24 }}>
-        Update the password for your account ({user.username || user.full_name}).
+        {t("pw.changeIntro", { name: user.username || user.full_name })}
       </p>
 
       <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 24 }}>
-        <Field label="Current Password">
+        <Field label={t("pw.current")}>
           <PasswordInput
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
-            placeholder="Enter your current password"
+            placeholder={t("pw.currentPh")}
             autoFocus
           />
         </Field>
 
-        <Field label="New Password">
+        <Field label={t("pw.new")}>
           <PasswordInput
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="At least 8 characters, letters and numbers"
+            placeholder={t("pw.newPh")}
           />
         </Field>
 
-        <Field label="Confirm New Password" last>
+        <Field label={t("pw.confirmNew")} last>
           <PasswordInput
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Re-enter the new password"
+            placeholder={t("pw.confirmPh")}
           />
         </Field>
 
@@ -101,7 +103,7 @@ export default function ChangePassword() {
           width: "100%", padding: "12px 0", background: THEME.navy, color: "#fff",
           border: "none", borderRadius: 4, fontWeight: 700, fontSize: 14, cursor: "pointer",
           opacity: busy ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-        }}>{busy ? <SpinnerIcon size={15} /> : <LockIcon size={15} />}{busy ? "Saving..." : "Save New Password"}</button>
+        }}>{busy ? <SpinnerIcon size={15} /> : <LockIcon size={15} />}{busy ? t("common.saving") : t("pw.saveNew")}</button>
       </form>
     </div>
   );

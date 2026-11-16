@@ -7,6 +7,8 @@ import Layout from "./components/Layout";
 import WakingUp from "./components/WakingUp";
 import { SuccessModalHost } from "./components/SuccessModal";
 import { ErrorModalHost } from "./components/ErrorModal";
+import { LangProvider } from "./i18n";
+import { StaffLangSync } from "./i18n/StaffLang";
 
 import Landing from "./pages/Landing";
 import { PrivacyPolicy, TermsOfService, SupportPage } from "./pages/LegalPages";
@@ -34,9 +36,11 @@ import IdentityCards from "./pages/IdentityCards";
 
 export default function StaffApp() {
   return (
+    <LangProvider site="staff">
     <WakingUp>
       <AuthProvider>
         <AccountFontSync />
+        <StaffLangSync />
         <SuccessModalHost />
         <ErrorModalHost />
         <Routes>
@@ -80,6 +84,7 @@ export default function StaffApp() {
         </Routes>
       </AuthProvider>
     </WakingUp>
+    </LangProvider>
   );
 }
 

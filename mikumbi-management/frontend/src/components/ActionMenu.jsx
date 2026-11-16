@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { THEME } from "../styles/theme";
 import { DotsVerticalIcon } from "./icons";
+import { useLang } from "../i18n";
 
 // Portal-based + flip-aware, same approach as Student Management's
 // ActionsMenu: a plain `position:absolute` dropdown (the old implementation)
@@ -11,6 +12,7 @@ import { DotsVerticalIcon } from "./icons";
 // document.body portal and flipping upward when there isn't room below
 // fixes that for every card, not just the ones with space beneath them.
 export function ActionMenu({ children }) {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
   const btnRef = useRef(null);
@@ -52,7 +54,7 @@ export function ActionMenu({ children }) {
 
   return (
     <div ref={wrapRef} style={{ position: "relative" }}>
-      <button ref={btnRef} onClick={toggle} aria-label="Actions" title="Actions" style={{
+      <button ref={btnRef} onClick={toggle} aria-label={t("common.actions")} title={t("common.actions")} style={{
         width: 28, height: 28, borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface,
         cursor: "pointer", color: THEME.text, display: "flex", alignItems: "center", justifyContent: "center",
       }}><DotsVerticalIcon size={16} /></button>

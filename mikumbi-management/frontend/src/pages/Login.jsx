@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useLang } from "../i18n";
+import { StaffLangToggle } from "../i18n/StaffLang";
 import { THEME, SCHOOL } from "../styles/theme";
 import PhotoCarousel from "../components/PhotoCarousel";
 import { PasswordInput, UserIcon } from "../components/PasswordInput";
@@ -18,6 +20,7 @@ function useIsNarrow(breakpoint = 720) {
 
 export default function Login() {
   const { login, verifyLoginCode } = useAuth();
+  const { t } = useLang();
   const [twofa, setTwofa] = useState(null); // { challenge_id, email_hint } while waiting for the emailed code
   const [code, setCode] = useState("");
   // Example digits shown in the empty code box - a different random number each time.
@@ -42,7 +45,7 @@ export default function Login() {
       if (r && r.twofa) { setTwofa(r.twofa); setCode(""); return; }
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message || "Login failed.");
+      setError(err.message || t("login.failed"));
     } finally {
       setBusy(false);
     }
@@ -59,7 +62,7 @@ export default function Login() {
       await new Promise((r) => setTimeout(r, 700));
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message || "Wrong code.");
+      setError(err.message || t("login.wrongCode"));
       setCode(""); // wrong code: clear the box so the next 6 digits are checked again
       if (err.expired) { setTwofa(null); setPassword(""); }
     } finally { setBusy(false); }
@@ -68,8 +71,9 @@ export default function Login() {
   return (
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "stretch", justifyContent: "center",
-      background: `linear-gradient(160deg, ${THEME.navy} 0%, ${THEME.navyDark} 100%)`,
+      background: `linear-gradient(160deg, ${THEME.navy} 0%, ${THEME.navyDark} 100%)`, position: "relative",
     }}>
+      <div style={{ position: "absolute", top: 14, right: 14, zIndex: 2 }}><StaffLangToggle /></div>
       <div style={{
         margin: "auto", width: "100%", maxWidth: 780, display: "flex", borderRadius: 4,
         overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.3)", minHeight: 480,
@@ -87,22 +91,22 @@ export default function Login() {
             always move together or labels go invisible. */}
         <div style={{ flex: 1, minWidth: 320, background: THEME.surface, padding: "44px 36px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-            <img src="/assets/shule.svg" alt="School logo" style={{ height: isNarrow ? 56 : 68 }} onError={(e) => (e.currentTarget.style.display = "none")} />
+            <img src="/assets/shule.svg" alt={t("login.logoAlt")} style={{ height: isNarrow ? 56 : 68 }} onError={(e) => (e.currentTarget.style.display = "none")} />
           </div>
           <div style={{ textAlign: "center", fontSize: 14, color: THEME.muted, marginBottom: 24 }}>
-            Login with registered credentials
+            {t("login.subtitle")}
           </div>
 
           {twofa ? (
             <form onSubmit={submitCode}>
               <div style={{ fontSize: 14, color: THEME.text, lineHeight: 1.6, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "10px 12px" }}>
-                New device: for your security, we sent a 6-digit code to <b>{twofa.email_hint}</b>. Enter it below. This device will then be remembered for 30 days.
+                {t("login.newDevice1")} <b>{twofa.email_hint}</b>. {t("login.newDevice2")}
               </div>
-              <label style={labelStyle}>Login code</label>
+              <label style={labelStyle}>{t("login.code")}</label>
               {/* Checks automatically as soon as the 6th digit is entered (typed or pasted). */}
               <input value={code} onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setCode(v); if (v.length === 6) submitCode(null, v); }}
                 disabled={busy} inputMode="numeric" autoComplete="one-time-code"
-                autoFocus placeholder={codeHint} aria-label="Login code" className={busy && !verified ? "mk-code-checking" : ""}
+                autoFocus placeholder={codeHint} aria-label={t("login.code")} className={busy && !verified ? "mk-code-checking" : ""}
                 style={{ ...inputStyle, fontSize: 22, letterSpacing: 8, textAlign: "center", transition: "border-color .2s, box-shadow .2s",
                   ...(code.length === 6 ? { borderColor: THEME.navy, boxShadow: `0 0 0 3px ${THEME.navy}22` } : {}) }} />
               <style>{`@keyframes mkCodePulse { 0%,100% { box-shadow: 0 0 0 3px rgba(12,66,111,.15); } 50% { box-shadow: 0 0 0 7px rgba(12,66,111,.32); } }
@@ -116,15 +120,15 @@ export default function Login() {
                 border: "none", borderRadius: 4, fontWeight: 600, fontSize: 14.5, cursor: "pointer", opacity: busy || code.length !== 6 ? 0.7 : 1,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 ...(verified ? { background: THEME.success, opacity: 1 } : {}),
-              }}>{verified ? <span className="mk-code-ok">✓ Verified</span> : busy ? <><SpinnerIcon size={15} />Verifying…</> : "Verify and sign in"}</button>
+              }}>{verified ? <span className="mk-code-ok">✓ {t("login.verified")}</span> : busy ? <><SpinnerIcon size={15} />{t("login.verifying")}</> : t("login.verify")}</button>
               <button type="button" onClick={() => { setTwofa(null); setError(""); setPassword(""); }}
                 style={{ width: "100%", marginTop: 10, background: "none", border: "none", color: THEME.navy, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
-                Didn't get the code? Sign in again to send a new one
+                {t("login.noCode")}
               </button>
             </form>
           ) : (
           <form onSubmit={submit}>
-            <label style={labelStyle}>Username</label>
+            <label style={labelStyle}>{t("login.username")}</label>
             <div style={{ position: "relative" }}>
               <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", display: "flex" }}>
                 <UserIcon />
@@ -135,10 +139,10 @@ export default function Login() {
               />
             </div>
 
-            <label style={labelStyle}>Password</label>
+            <label style={labelStyle}>{t("login.password")}</label>
             <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="" />
 
-            {notice && !error && <div role="status" style={{ color: THEME.navy, background: "#eef4fb", border: "1px solid #c9dcf0", borderRadius: 4, padding: "8px 10px", fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>{notice}</div>}
+            {notice && !error && <div role="status" style={{ color: THEME.navy, background: "#eef4fb", border: "1px solid #c9dcf0", borderRadius: 4, padding: "8px 10px", fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>{notice.startsWith("session.") ? t(notice) : notice}</div>}
             {error && <div style={{ color: THEME.danger, fontSize: 13, marginTop: 8 }}>{error}</div>}
 
             <button type="submit" disabled={busy} style={{
@@ -146,16 +150,16 @@ export default function Login() {
               border: "none", borderRadius: 4, fontWeight: 600, fontSize: 14.5, cursor: "pointer", opacity: busy ? 0.7 : 1,
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}>
-              {busy ? <SpinnerIcon size={15} /> : <LoginIcon size={15} />}{busy ? "Signing in..." : "Login"}
+              {busy ? <SpinnerIcon size={15} /> : <LoginIcon size={15} />}{busy ? t("login.signingIn") : t("login.signIn")}
             </button>
           </form>
           )}
 
           <div style={{ textAlign: "center", marginTop: 16 }}>
-            <Link to="/forgot-password" style={{ fontSize: 13, color: THEME.navy }}>Forgot Password?</Link>
+            <Link to="/forgot-password" style={{ fontSize: 13, color: THEME.navy }}>{t("login.forgot")}</Link>
           </div>
           <div style={{ textAlign: "center", marginTop: 10 }}>
-            <Link to="/" style={{ fontSize: 12.5, color: THEME.muted, display: "inline-flex", alignItems: "center", gap: 4 }}><ChevronLeftIcon size={12} />Back to Home</Link>
+            <Link to="/" style={{ fontSize: 12.5, color: THEME.muted, display: "inline-flex", alignItems: "center", gap: 4 }}><ChevronLeftIcon size={12} />{t("login.backHome")}</Link>
           </div>
         </div>
       </div>

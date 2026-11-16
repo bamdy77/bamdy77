@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLang } from "../i18n";
 import { THEME } from "../styles/theme";
 import { API_BASE } from "../context/AuthContext";
 import MikumbiLoader from "./MikumbiLoader";
@@ -10,6 +11,7 @@ import MikumbiLoader from "./MikumbiLoader";
 // "starting up" screen (with a slow-connection reassurance after a while)
 // until the backend responds, then renders the real app underneath.
 export default function WakingUp({ children }) {
+  const { t } = useLang();
   const [awake, setAwake] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -46,14 +48,14 @@ export default function WakingUp({ children }) {
         </div>
         <div style={{ fontSize: 13.5, opacity: 0.85 }}>
           {failed
-            ? "This is taking longer than usual to start up. Please check your internet connection, then try refreshing the page."
-            : "Starting up, please wait..."}
+            ? t("wake.slow")
+            : t("wake.starting")}
         </div>
         {failed && (
           <button onClick={() => window.location.reload()} style={{
             marginTop: 18, padding: "10px 24px", background: "#fff", color: THEME.navy,
             border: "none", borderRadius: 4, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
-          }}>Refresh</button>
+          }}>{t("wake.refresh")}</button>
         )}
       </div>
     </div>

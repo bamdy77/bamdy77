@@ -5,15 +5,17 @@ import { apiFetch, API_BASE } from "../utils/api";
 import { THEME } from "../styles/theme";
 import { SpinnerIcon } from "./icons";
 import ErrorBoundary from "./ErrorBoundary";
+import { useLang } from "../i18n";
+import { formLabel as formName } from "../i18n/display";
 
-// This whole file is public-facing (no login) — everything here is written
-// in Kiswahili per spec ("Melekezo ya kule yawe ya kiswahili maana kuna
-// baadhi ya wazazi hawajui kabisa kingereza").
+// This whole file is public-facing (no login). Kiswahili by default (many
+// parents do not read English); fully English when the parent picks EN.
 
 // `forcedView` ("results" | "joining") lets the public website open this panel
 // straight from its own /results and /joining-instructions routes, instead of
 // relying on the ?view= query string.
 export default function Publications({ forcedView = null }) {
+  const { t } = useLang();
   const [searchParams] = useSearchParams();
   const initialView = forcedView || searchParams.get("view"); // "results" | "joining" | null
   const [tab, setTab] = useState(initialView === "results" || initialView === "joining" ? initialView : null);
@@ -25,24 +27,24 @@ export default function Publications({ forcedView = null }) {
   return (
     <section id="publications" style={{ padding: "60px 24px", maxWidth: 1000, margin: "0 auto" }}>
       <h2 style={{ textAlign: "center", color: THEME.heading, fontSize: 25.5, fontWeight: 800, marginBottom: 8 }}>
-        Machapisho
+        {t("pub.heading")}
       </h2>
       <p style={{ textAlign: "center", color: THEME.muted, fontSize: 15.5, marginBottom: 28 }}>
-        {tab === "joining" ? "Maelekezo ya Kujiunga na Kidato cha Kwanza"
-          : tab === "results" ? "Matokeo ya Mwanafunzi"
-          : "Matokeo na Maelekezo ya Kujiunga na Kidato cha Kwanza"}
+        {tab === "joining" ? t("pub.sub.joining")
+          : tab === "results" ? t("pub.sub.results")
+          : t("pub.sub.both")}
       </p>
 
       {tab === null ? (
         <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
           <PublicationCard
-            title="Matokeo (Results)" subtitle="Angalia matokeo ya mwanafunzi wako mtandaoni"
+            title={t("pub.card.results")} subtitle={t("pub.card.resultsText")}
             color={THEME.navy} bg="#EAF0FF"
             icon={<ResultsIcon color={THEME.navy} />}
             onClick={() => setTab("results")}
           />
           <PublicationCard
-            title="Maelekezo ya Kujiunga" subtitle="Kwa wanafunzi wanaotarajia kujiunga na Kidato cha Kwanza"
+            title={t("pub.card.joining")} subtitle={t("pub.card.joiningText")}
             color="#B7791F" bg="#FFF6E5"
             icon={<JoiningIcon color="#B7791F" />}
             onClick={() => setTab("joining")}
@@ -55,9 +57,9 @@ export default function Publications({ forcedView = null }) {
             background: THEME.surface, border: `1.5px solid ${THEME.border}`, borderRadius: 4,
             color: THEME.heading, fontWeight: 600, fontSize: 15,
             cursor: "pointer", marginBottom: 20, padding: "9px 16px",
-          }}>← Rudi Nyuma</button>}
+          }}>← {t("common.back")}</button>}
           <h3 style={{ textAlign: "center", color: THEME.heading, fontSize: 18, fontWeight: 700, marginBottom: 22 }}>
-            {tab === "results" ? "Matokeo (Results)" : "Maelekezo ya Kujiunga (Joining Instructions)"}
+            {tab === "results" ? t("pub.card.results") : t("pub.card.joining")}
           </h3>
           {tab === "results" ? <ErrorBoundary><ResultsPortal /></ErrorBoundary> : <ErrorBoundary><JoiningInstructionsPanel /></ErrorBoundary>}
         </div>
@@ -110,6 +112,7 @@ function PdfIcon() {
 
 // ══════════════════════ RESULTS PORTAL (login-gated, view only) ═══════════
 function ResultsPortal() {
+  const { t, lang } = useLang();
   const [step, setStep] = useState("username"); // username | password | results
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -126,9 +129,9 @@ function ResultsPortal() {
     try {
       const r = await apiFetch("/public/results/check-username", { method: "POST", body: JSON.stringify({ username }) });
       if (r.valid) setStep("password");
-      else setError(r.message || "Namba ya Kuingia si sahihi.");
+      else setError(r.message || t("res.badLogin"));
     } catch {
-      setError("Hitilafu imetokea. Tafadhali jaribu tena.");
+      setError(t("pub.genericError"));
     } finally { setBusy(false); }
   };
 
@@ -139,7 +142,7 @@ function ResultsPortal() {
       const r = await apiFetch("/public/results/login", { method: "POST", body: JSON.stringify({ username, password }) });
       setToken(r.token); setStudent(r.student); setStep("results");
     } catch (err) {
-      setError((err && err.message) || "Namba ya simu na Namba ya Kuingia hazilingani.");
+      setError((err && err.message) || t("res.mismatch"));
     } finally { setBusy(false); }
   };
 
@@ -161,22 +164,22 @@ function ResultsPortal() {
     return (
       <div>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
-          <button onClick={logout} style={smallLinkBtn}>Toka (Logout)</button>
+          <button onClick={logout} style={smallLinkBtn}>{t("res.logout")}</button>
         </div>
         {loadingResults ? (
-          <Muted><SpinnerIcon size={14} /> Inapakia matokeo...</Muted>
+          <Muted><SpinnerIcon size={14} /> {t("res.loading")}</Muted>
         ) : !results || !results.results || !results.results.length ? (
-          <Muted>Hakuna matokeo yaliyochapishwa kwa sasa kwa mwanafunzi huyu.</Muted>
+          <Muted>{t("res.none")}</Muted>
         ) : (
           <ProtectedView
             watermark={`${username} · ${results.student?.full_name || ""} · ${new Date().toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}`}
             labels={{
-              viewOnly: "Matokeo haya ni ya kusoma tu. Hayaruhusiwi kupakuliwa, kuchapishwa wala kunakiliwa.",
-              hidden: "Matokeo yamefichwa. Rudi kwenye ukurasa huu kuyaona tena.",
-              noPrint: "Matokeo haya hayaruhusiwi kuchapishwa. Yasome kwenye tovuti ya shule.",
+              viewOnly: t("res.viewOnly"),
+              hidden: t("res.hidden"),
+              noPrint: t("res.noPrint"),
             }}>
             <div style={{ display: "grid", gap: 22 }}>
-              {results.results.map((r) => <ResultCard key={r.sheet_id} r={r} student={results.student} />)}
+              {results.results.map((r) => <ResultCard key={r.sheet_id} r={r} student={results.student} t={t} lang={lang} />)}
             </div>
           </ProtectedView>
         )}
@@ -188,22 +191,22 @@ function ResultsPortal() {
     <div style={{ maxWidth: 380, margin: "0 auto" }}>
       {step === "username" && (
         <form onSubmit={checkUsername} style={{ display: "grid", gap: 12 }}>
-          <label style={formLabel}>Namba ya Kuingia (Results Login Number)</label>
-          <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Mfano: 2026-48319" inputMode="text" autoComplete="username" style={formInput} autoFocus />
-          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>Kama huna namba hii, wasiliana na shule.</p>
+          <label style={formLabel}>{t("res.loginNumber")}</label>
+          <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder={t("res.loginNumberEg")} inputMode="text" autoComplete="username" style={formInput} autoFocus />
+          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>{t("res.noNumber")}</p>
           {error && <ErrorMsg>{error}</ErrorMsg>}
-          <button type="submit" disabled={busy || !username.trim()} style={primaryBtn}>{busy ? "Inaangalia..." : "Endelea"}</button>
+          <button type="submit" disabled={busy || !username.trim()} style={primaryBtn}>{busy ? t("res.checking") : t("res.continue")}</button>
         </form>
       )}
       {step === "password" && (
         <form onSubmit={login} style={{ display: "grid", gap: 12 }}>
-          <div style={{ fontSize: 15.5, color: THEME.text }}>Namba ya Kuingia: <b>{username}</b> <button type="button" onClick={() => { setStep("username"); setError(""); }} style={{ ...smallLinkBtn, marginLeft: 8 }}>Badilisha</button></div>
-          <label style={formLabel}>Password</label>
-          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mfano: 0712345678" style={formInput} autoFocus />
-          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>Andika namba ya simu ya mzazi/mlezi iliyoandikwa wakati mwanafunzi anasajiliwa shuleni.</p>
+          <div style={{ fontSize: 15.5, color: THEME.text }}>{t("res.loginNumberShort")}: <b>{username}</b> <button type="button" onClick={() => { setStep("username"); setError(""); }} style={{ ...smallLinkBtn, marginLeft: 8 }}>{t("res.change")}</button></div>
+          <label style={formLabel}>{t("res.password")}</label>
+          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("res.passwordEg")} style={formInput} autoFocus />
+          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>{t("res.passwordHint")}</p>
           {error && <ErrorMsg>{error}</ErrorMsg>}
-          <button type="submit" disabled={busy || !password.trim()} style={primaryBtn}>{busy ? "Inaingia..." : "Ingia"}</button>
-          <p style={{ fontSize: 13.5, color: THEME.muted, textAlign: "center", margin: 0 }}>Umesahau password? Wasiliana moja kwa moja na Mkuu wa Shule.</p>
+          <button type="submit" disabled={busy || !password.trim()} style={primaryBtn}>{busy ? t("res.signingIn") : t("res.signIn")}</button>
+          <p style={{ fontSize: 13.5, color: THEME.muted, textAlign: "center", margin: 0 }}>{t("res.forgot")}</p>
         </form>
       )}
     </div>
@@ -212,21 +215,21 @@ function ResultsPortal() {
 
 // Styled to echo the Parent Report / NECTA look — navy-blue outer panel,
 // cream/yellow inner table.
-function ResultCard({ r, student }) {
+function ResultCard({ r, student, t, lang }) {
   const s = r.student || {};
   return (
     <div style={{ background: "#ADD8E6", borderRadius: 4, padding: 14, border: "1px solid #7C93B8" }}>
       <div style={{ textAlign: "center", marginBottom: 10 }}>
         <div style={{ fontWeight: 800, color: "#0A1F5C", fontSize: 17 }}>{student.full_name}</div>
-        <div style={{ fontSize: 14, color: "#0A1F5C" }}>{r.form} — {r.exam_type} {r.month ? `(${r.month})` : ""} {r.year}</div>
+        <div style={{ fontSize: 14, color: "#0A1F5C" }}>{formName(lang, r.form)} — {r.exam_type} {r.month ? `(${r.month})` : ""} {r.year}</div>
       </div>
       <div style={{ background: "#FFFEEA", border: "1px solid #7C93B8", borderRadius: 4, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 15 }}>
           <thead>
             <tr style={{ background: "#FCF3C0" }}>
-              <th style={thStyle}>Somo</th>
-              <th style={thStyle}>Alama</th>
-              <th style={thStyle}>Daraja</th>
+              <th style={thStyle}>{t("res.subject")}</th>
+              <th style={thStyle}>{t("res.marks")}</th>
+              <th style={thStyle}>{t("res.grade")}</th>
             </tr>
           </thead>
           <tbody>
@@ -240,10 +243,10 @@ function ResultCard({ r, student }) {
           </tbody>
         </table>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, padding: "10px 12px", borderTop: "1px solid #7C93B8", fontSize: 14, color: "#0A1F5C" }}>
-          <SummaryChip label="Wastani (GPA)" value={s.gpa} />
-          <SummaryChip label="Division" value={s.division} />
-          <SummaryChip label="Points" value={s.points} />
-          <SummaryChip label="Nafasi (Position)" value={s.position && s.total_students ? `${s.position} / ${s.total_students}` : s.position} />
+          <SummaryChip label={t("res.gpa")} value={s.gpa} />
+          <SummaryChip label={t("res.division")} value={s.division} />
+          <SummaryChip label={t("res.points")} value={s.points} />
+          <SummaryChip label={t("res.position")} value={s.position && s.total_students ? `${s.position} / ${s.total_students}` : s.position} />
         </div>
       </div>
     </div>
@@ -258,6 +261,7 @@ const tdStyle = { padding: "7px 10px", borderBottom: "1px solid #E5D9A0", color:
 
 // ══════════════════════ JOINING INSTRUCTIONS (public form) ════════════════
 function JoiningInstructionsPanel() {
+  const { t } = useLang();
   const [status, setStatus] = useState(null); // null=loading
   const [step, setStep] = useState("form"); // form | confirm | done
   const [fields, setFields] = useState({ first_name: "", middle_name: "", last_name: "", district: "", ward: "", village: "", exam_number: "", exam_year: new Date().getFullYear() });
@@ -279,39 +283,39 @@ function JoiningInstructionsPanel() {
       const r = await apiFetch("/public/joining/submit", { method: "POST", body: JSON.stringify(fields) });
       setResult(r); setStep("done");
     } catch (err) {
-      setError((err && err.message) || "Hitilafu imetokea. Tafadhali jaribu tena.");
+      setError((err && err.message) || t("pub.genericError"));
       setStep("form");
     } finally { setBusy(false); }
   };
 
-  if (status === null) return <Muted><SpinnerIcon size={14} /> Inapakia...</Muted>;
+  if (status === null) return <Muted><SpinnerIcon size={14} /> {t("common.loading")}</Muted>;
 
   return (
     <div style={{ maxWidth: 520, margin: "0 auto" }}>
       {!status.is_published ? (
-        <Muted>Fomu ya Maelekezo ya kujiunga na kidato cha kwanza bado haijachapishwa mtandaoni. Tafadhali wasiliana na shule kwa maelekezo zaidi.</Muted>
+        <Muted>{t("join.notPublished")}</Muted>
       ) : step === "form" ? (
         <form onSubmit={onSubmitClick} style={{ display: "grid", gap: 12 }}>
           <p style={{ fontSize: 15.5, color: THEME.muted, margin: "0 0 4px", lineHeight: 1.6 }}>
-            Jaza taarifa za mwanafunzi aliyechaguliwa kujiunga na Kidato cha Kwanza. Utapakua barua ya Maelekezo ya Kujiunga pamoja na fomu za kujaza (Ahadi ya Mzazi, Ahadi ya Mwanafunzi, Maelezo Binafsi na Fomu ya Uchunguzi wa Afya). Zichapishe, zijaze na uzilete siku ya kuripoti.
+            {t("join.intro")}
           </p>
-          <Field label="Jina la Kwanza" value={fields.first_name} onChange={set("first_name")} required />
-          <Field label="Jina la Kati" value={fields.middle_name} onChange={set("middle_name")} />
-          <Field label="Jina la Ukoo" value={fields.last_name} onChange={set("last_name")} required />
-          <Field label="Wilaya" value={fields.district} onChange={set("district")} required />
-          <Field label="Kata" value={fields.ward} onChange={set("ward")} required />
-          <Field label="Mtaa/Kijiji" value={fields.village} onChange={set("village")} required />
-          <Field label="Namba ya Mtihani wa Darasa la Saba" value={fields.exam_number} onChange={set("exam_number")} placeholder="PS1234567-0001" required />
-          <Field label="Mwaka wa Kumaliza Darasa la Saba" value={fields.exam_year} onChange={set("exam_year")} type="number" required />
+          <Field label={t("join.firstName")} value={fields.first_name} onChange={set("first_name")} required />
+          <Field label={t("join.middleName")} value={fields.middle_name} onChange={set("middle_name")} />
+          <Field label={t("join.lastName")} value={fields.last_name} onChange={set("last_name")} required />
+          <Field label={t("join.district")} value={fields.district} onChange={set("district")} required />
+          <Field label={t("join.ward")} value={fields.ward} onChange={set("ward")} required />
+          <Field label={t("join.village")} value={fields.village} onChange={set("village")} required />
+          <Field label={t("join.examNumber")} value={fields.exam_number} onChange={set("exam_number")} placeholder="PS1234567-0001" required />
+          <Field label={t("join.examYear")} value={fields.exam_year} onChange={set("exam_year")} type="number" required />
           {error && <ErrorMsg>{error}</ErrorMsg>}
-          <button type="submit" style={primaryBtn}>Wasilisha</button>
+          <button type="submit" style={primaryBtn}>{t("join.submit")}</button>
         </form>
       ) : step === "confirm" ? (
         <div style={{ textAlign: "center", display: "grid", gap: 16 }}>
-          <p style={{ fontSize: 15.5, color: THEME.text }}>Una uhakika unataka kuwasilisha taarifa hizi?</p>
+          <p style={{ fontSize: 15.5, color: THEME.text }}>{t("join.confirm")}</p>
           <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
-            <button onClick={confirmYes} disabled={busy} style={primaryBtn}>{busy ? "Inawasilisha..." : "NDIYO"}</button>
-            <button onClick={() => setStep("form")} style={secondaryBtn}>GHAIRI</button>
+            <button onClick={confirmYes} disabled={busy} style={primaryBtn}>{busy ? t("join.submitting") : t("join.yes")}</button>
+            <button onClick={() => setStep("form")} style={secondaryBtn}>{t("join.cancel")}</button>
           </div>
         </div>
       ) : (
@@ -320,15 +324,15 @@ function JoiningInstructionsPanel() {
           {/* Two clear choices: save the file to the phone/computer, or just open it to read. */}
           <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
             <a href={`${API_BASE}/public/joining/download-pdf?dl=1&token=${encodeURIComponent(result.token)}`} download style={pdfButton}>
-              <DownloadArrow /> Pakua (Download)
+              <DownloadArrow /> {t("common.download")}
             </a>
             <a href={`${API_BASE}/public/joining/download-pdf?token=${encodeURIComponent(result.token)}`} target="_blank" rel="noreferrer"
               style={{ ...pdfButton, background: "#fff", color: THEME.navy, border: `1px solid ${THEME.navy}` }}>
-              <PdfIcon /> Fungua kusoma
+              <PdfIcon /> {t("join.openToRead")}
             </a>
           </div>
-          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>Faili litahifadhiwa kwenye sehemu ya "Downloads" ya simu au kompyuta yako.</p>
-          <button onClick={() => { setStep("form"); setResult(null); setFields((f) => ({ ...f, exam_number: "" })); }} style={smallLinkBtn}>Wasilisha taarifa nyingine</button>
+          <p style={{ fontSize: 13.5, color: THEME.muted, margin: 0 }}>{t("join.savedTo")}</p>
+          <button onClick={() => { setStep("form"); setResult(null); setFields((f) => ({ ...f, exam_number: "" })); }} style={smallLinkBtn}>{t("join.another")}</button>
         </div>
       )}
     </div>

@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useLang } from "../i18n";
 import { THEME } from "../styles/theme";
 
 // A password <input> with a show/hide toggle - custom SVG eye icon, never
 // an emoji. Drop-in replacement: same value/onChange/placeholder props as
 // a normal <input>, plus optional style overrides.
-export function PasswordInput({ value, onChange, placeholder = "Password", style = {}, autoFocus, required = true }) {
+export function PasswordInput({ value, onChange, placeholder, style = {}, autoFocus, required = true }) {
+  const { t } = useLang();
   const [visible, setVisible] = useState(false);
   return (
     <div style={{ position: "relative" }}>
@@ -12,7 +14,7 @@ export function PasswordInput({ value, onChange, placeholder = "Password", style
         type={visible ? "text" : "password"}
         value={value}
         onChange={onChange}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("login.password")}
         required={required}
         autoFocus={autoFocus}
         style={{ width: "100%", padding: "10px 40px 10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 14, ...style }}
@@ -20,7 +22,7 @@ export function PasswordInput({ value, onChange, placeholder = "Password", style
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        aria-label={visible ? "Hide password" : "Show password"}
+        aria-label={visible ? t("pw.hidePw") : t("pw.showPw")}
         style={{
           position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
           background: "none", border: "none", cursor: "pointer", padding: 4,

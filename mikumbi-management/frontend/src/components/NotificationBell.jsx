@@ -3,25 +3,28 @@ import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
 import { BellIcon } from "./icons";
+import { useLang } from "../i18n";
+import { formatDate } from "../i18n/display";
 
 // Bell icon in the header (desktop sidebar top + mobile top bar). Polls the
 // unread count in the background so the badge stays current without the
 // user having to open the dropdown, and refreshes the full list whenever
 // the dropdown is opened or a notification is marked read.
-function timeAgo(iso) {
+function timeAgo(iso, t, tn, lang) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
+  if (mins < 1) return t("time.justNow");
+  if (mins < 60) return tn("time.minutesAgo", mins);
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} hour${hrs === 1 ? "" : "s"} ago`;
+  if (hrs < 24) return tn("time.hoursAgo", hrs);
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
-  return new Date(iso).toLocaleDateString();
+  if (days < 7) return tn("time.daysAgo", days);
+  return formatDate(lang, iso);
 }
 
 export default function NotificationBell({ dark }) {
   const { token } = useAuth();
+  const { t, tn, lang } = useLang();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [count, setCount] = useState(0);
@@ -108,8 +111,8 @@ export default function NotificationBell({ dark }) {
     <div ref={wrapRef} style={{ position: "relative", flexShrink: 0 }}>
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label="Notifications"
-        title="Notifications"
+        aria-label={t("bell.title")}
+        title={t("bell.title")}
         style={{
           position: "relative", display: "flex", alignItems: "center", justifyContent: "center",
           width: 34, height: 34, borderRadius: 4, border: "1px solid rgba(255,255,255,0.28)",
@@ -138,18 +141,18 @@ export default function NotificationBell({ dark }) {
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "10px 14px", borderBottom: `1px solid ${THEME.border}`,
           }}>
-            <span style={{ fontWeight: 800, fontSize: 13, color: THEME.heading }}>Notifications</span>
+            <span style={{ fontWeight: 800, fontSize: 13, color: THEME.heading }}>{t("bell.title")}</span>
             {count > 0 && (
               <button onClick={markAllRead} style={{
                 background: "none", border: "none", color: THEME.navy, fontSize: 11.5, fontWeight: 700, cursor: "pointer",
-              }}>Mark All Read</button>
+              }}>{t("bell.markAll")}</button>
             )}
           </div>
 
           <div style={{ maxHeight: 360, overflowY: "auto" }}>
-            {loading && <div style={{ padding: 16, fontSize: 12.5, color: THEME.muted, textAlign: "center" }}>Loading...</div>}
+            {loading && <div style={{ padding: 16, fontSize: 12.5, color: THEME.muted, textAlign: "center" }}>{t("common.loading")}</div>}
             {!loading && items.length === 0 && (
-              <div style={{ padding: 20, fontSize: 12.5, color: THEME.muted, textAlign: "center" }}>No notifications.</div>
+              <div style={{ padding: 20, fontSize: 12.5, color: THEME.muted, textAlign: "center" }}>{t("bell.empty")}</div>
             )}
             {!loading && items.map((n, i) => (
               <button
@@ -166,7 +169,7 @@ export default function NotificationBell({ dark }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: THEME.heading }}>{n.title}</div>
                     <div style={{ fontSize: 12, color: THEME.text, marginTop: 2, lineHeight: 1.4 }}>{n.message}</div>
-                    <div style={{ fontSize: 10.5, color: THEME.muted, marginTop: 4 }}>{timeAgo(n.created_at)}</div>
+                    <div style={{ fontSize: 10.5, color: THEME.muted, marginTop: 4 }}>{timeAgo(n.created_at, t, tn, lang)}</div>
                   </div>
                 </div>
               </button>

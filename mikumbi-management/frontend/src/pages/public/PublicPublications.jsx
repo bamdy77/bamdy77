@@ -3,7 +3,7 @@ import PublicLayout from "../../components/public/PublicLayout";
 import Publications from "../../components/Publications";
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { ChevronLeftIcon } from "../../components/icons";
-import { useLang } from "../../i18n/publicLang";
+import { useLang } from "../../i18n";
 
 // /results and /joining-instructions on the public site. They reuse the
 // existing public portals (Kiswahili instructions for parents, rate limiting

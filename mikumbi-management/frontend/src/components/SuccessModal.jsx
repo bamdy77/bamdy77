@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { translate, getLang } from "../i18n";
 import { THEME } from "../styles/theme";
 
 // Every save/submit action across the system should confirm itself the same
@@ -166,7 +167,7 @@ export function SuccessModalHost() {
             boxShadow: "0 4px 10px -2px rgba(12,66,111,0.4)",
             animation: "mk-success-fade-up 0.4s ease 0.4s both",
           }}
-        >OK</button>
+        >{translate(getLang(), "common.ok")}</button>
 
         {/* Green countdown line - starts full and drains to nothing over
             exactly DISMISS_AFTER (6s), so it visibly finishes right as the

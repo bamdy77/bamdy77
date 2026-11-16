@@ -3,12 +3,15 @@ import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { CloseIcon } from "./icons";
+import { useLang } from "../i18n";
+import { formatDate } from "../i18n/display";
 
 // `endpoint` decides WHICH announcements are shown. The staff dashboard uses
 // "/communications/announcements/staff" (needs the login `token`; returns only
 // notices addressed to Staff or to Both). The public website has its own
 // NewsSection and never uses this banner.
 export default function AnnouncementsBanner({ endpoint = "/communications/announcements/public", token = null }) {
+  const { t } = useLang();
   const [announcements, setAnnouncements] = useState([]);
   const [open, setOpen] = useState(false);
   const { isMobile, isTablet } = useBreakpoint();
@@ -50,7 +53,7 @@ export default function AnnouncementsBanner({ endpoint = "/communications/announ
           fontSize: isMobile ? 9.5 : 10, fontWeight: 700, letterSpacing: "0.05em", padding: isMobile ? "2.5px 7px" : "3px 8px", borderRadius: 4,
           animation: "mikumbi-notice-pulse 1.6s ease-in-out infinite",
         }}>
-          <MegaphoneIcon color="#fff" /> {isMobile ? "" : "NOTICE"}
+          <MegaphoneIcon color="#fff" /> {isMobile ? "" : t("ann.notice")}
         </span>
 
         <div className="mikumbi-marquee-wrap" style={{ flex: 1, overflow: "hidden", whiteSpace: "nowrap", minWidth: 0 }}>
@@ -63,7 +66,7 @@ export default function AnnouncementsBanner({ endpoint = "/communications/announ
         <button onClick={() => setOpen(true)} style={{
           flexShrink: 0, background: "rgba(255,255,255,0.92)", color: "#F54927", border: "none", borderRadius: 4,
           padding: isMobile ? "4px 10px" : "5px 12px", fontSize: isMobile ? 10.5 : 11.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
-        }}>Read More</button>
+        }}>{t("ann.readMore")}</button>
       </div>
 
       {open && <AnnouncementsModal announcements={announcements} onClose={() => setOpen(false)} />}
@@ -72,6 +75,7 @@ export default function AnnouncementsBanner({ endpoint = "/communications/announ
 }
 
 function AnnouncementsModal({ announcements, onClose }) {
+  const { t, lang } = useLang();
   return (
     <div
       style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}
@@ -79,8 +83,8 @@ function AnnouncementsModal({ announcements, onClose }) {
     >
       <div style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 560, maxHeight: "80vh", overflowY: "auto", padding: 22 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading }}>Announcements</h3>
-          <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: THEME.muted, lineHeight: 1, display: "flex", alignItems: "center" }}><CloseIcon size={18} /></button>
+          <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading }}>{t("ann.title")}</h3>
+          <button onClick={onClose} aria-label={t("common.close")} style={{ border: "none", background: "none", cursor: "pointer", color: THEME.muted, lineHeight: 1, display: "flex", alignItems: "center" }}><CloseIcon size={18} /></button>
         </div>
         <div style={{ display: "grid", gap: 12 }}>
           {announcements.map((a) => (
@@ -91,7 +95,7 @@ function AnnouncementsModal({ announcements, onClose }) {
               </div>
               <p style={{ margin: "0 0 8px", fontSize: 13.5, color: THEME.text, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{a.message}</p>
               <div style={{ fontSize: 11.5, color: THEME.muted }}>
-                Sent {new Date(a.created_at).toLocaleString("en-GB", { timeZone: "Africa/Dar_es_Salaam", dateStyle: "medium", timeStyle: "short" })} · by {a.created_by_name}
+                {t("ann.sent", { date: formatDate(lang, a.created_at, { withTime: true }), name: a.created_by_name || "" })}
               </div>
             </div>
           ))}

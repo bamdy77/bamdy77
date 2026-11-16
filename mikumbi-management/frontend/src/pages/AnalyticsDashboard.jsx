@@ -19,6 +19,7 @@
 // noted above - this page is an ADDITIONAL, not the only, layer of
 // protection (see ProtectedRoute in App.jsx).
 import { useState, useEffect, useCallback, useRef } from "react";
+import VisitorStats from "../components/VisitorStats";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
@@ -64,6 +65,8 @@ export default function AnalyticsDashboard() {
 
       {canSeeSchoolWide && (
         <>
+          <VisitorStats isCompact={isCompact} />
+          <div style={{ height: 1, background: THEME.border, margin: "32px 0" }} />
           <ResultsTrendSection isCompact={isCompact} />
           <div style={{ height: 1, background: THEME.border, margin: "32px 0" }} />
         </>

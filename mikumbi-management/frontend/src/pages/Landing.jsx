@@ -1,4 +1,6 @@
 import InstallAppButton from "../components/InstallAppButton";
+import { useLang } from "../i18n";
+import { StaffLangToggle } from "../i18n/StaffLang";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { THEME, SCHOOL } from "../styles/theme";
@@ -8,16 +10,16 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { ChevronDownIcon, MenuIcon, CloseIcon, CheckCircleIcon, TableIcon, LoginIcon, HomeIcon, StarIcon, InfoIcon, BookIcon, GraduationCapIcon, BarChartIcon, ClockIcon, TrendingUpIcon, MessageIcon, CoinsIcon, UtensilsIcon } from "../components/icons";
 
 const FEATURES = [
-  { Icon: IconStudents,       title: "Student Management",  desc: "Enroll and manage every student's record - personal details, class, stream and status - plus per-student charges, promotion between forms, and photo, PDF report and full history for every student, always in sync with Results, Hostel and Contributions." },
-  { Icon: IconResults,        title: "Results Management",  desc: "Teachers enter subject marks online; the system computes grades and Division automatically. The Academic Master reviews, unlocks or excludes a teacher's submission where needed, then compiles and publishes results as PDF or Excel. A dedicated Parents Reports section generates a Kiswahili Parent Report for every student with the Head Master's signature and school stamp applied automatically, and sends results to each parent by SMS." },
-  { Icon: IconAnalytics,      title: "Analytics Dashboard", desc: "Turns years of results and attendance data into clear trend charts: school and per-subject pass-rate and GPA trends across exam periods, a school-wide teacher attendance trend over time, and an individual student's Division and GPA progress - each with an at-a-glance improving/declining/stable indicator." },
-  { Icon: IconTams,           title: "TAMS (Teacher Attendance)", desc: "Teachers check in each morning with GPS - the system verifies they're on the school compound and on time, flags late arrivals with a reason, and gives management a live daily and monthly attendance dashboard." },
-  { Icon: IconTimetable,      title: "Timetable Generator", desc: "Assign teachers to subjects and classes, then auto-generate a clash-free timetable. View it per class, per teacher, or as one general school timetable, and export any view as PDF." },
-  { Icon: IconHostel,         title: "Hostel Management",   desc: "Admit boarding students into Boys or Girls hostel, manage rooms, record hostel contributions and discipline cases, and view each occupant's full history - with PDF exports throughout." },
-  { Icon: IconContributions,  title: "Contributions Management", desc: "Track part-time student fees, Ream contributions and other school charges per term, with clear paid/outstanding status, printable receipts, and a history that both the office and each class teacher can review." },
-  { Icon: IconFood,           title: "Manage Foods",        desc: "The food teacher records each student's food contribution by type, with a running history and summary so the office can see who has contributed and who is still outstanding." },
-  { Icon: IconCommunications, title: "Communications",      desc: "Post school-wide announcements and send SMS updates to parents, staff, or any saved contact group via NextSMS - with delivery history kept for every message sent." },
-  { Icon: IconChatbot,        title: "Help Chatbot",        desc: "Stuck on a page or not sure how something works? Open the chat assistant in the corner of any screen and ask - it explains features and walks you through common tasks." },
+  { Icon: IconStudents, id: "students" },
+  { Icon: IconResults, id: "results" },
+  { Icon: IconAnalytics, id: "analytics" },
+  { Icon: IconTams, id: "tams" },
+  { Icon: IconTimetable, id: "timetable" },
+  { Icon: IconHostel, id: "hostel" },
+  { Icon: IconContributions, id: "contributions" },
+  { Icon: IconFood, id: "food" },
+  { Icon: IconCommunications, id: "communications" },
+  { Icon: IconChatbot, id: "chatbot" },
 ];
 
 // Five modules shown as icon "badges" across the hero, mirroring the
@@ -25,14 +27,14 @@ const FEATURES = [
 // same flat-line-icon-in-a-circle treatment, just five of our own modules
 // instead of three generic ones.
 const HERO_MODULES = [
-  { Icon: GraduationCapIcon, label: "Student Management" },
-  { Icon: BarChartIcon,      label: "Results Management" },
-  { Icon: ClockIcon,         label: "TAMS" },
-  { Icon: TrendingUpIcon,    label: "Analytics" },
-  { Icon: MessageIcon,       label: "Communications" },
-  { Icon: TableIcon,         label: "Timetable Generator" },
-  { Icon: UtensilsIcon,      label: "Manage Foods" },
-  { Icon: CoinsIcon,         label: "Contributions Management" },
+  { Icon: GraduationCapIcon, label: "menu.students" },
+  { Icon: BarChartIcon,      label: "menu.results" },
+  { Icon: ClockIcon,         label: "menu.tams" },
+  { Icon: TrendingUpIcon,    label: "menu.analytics" },
+  { Icon: MessageIcon,       label: "menu.communications" },
+  { Icon: TableIcon,         label: "menu.timetable" },
+  { Icon: UtensilsIcon,      label: "menu.food" },
+  { Icon: CoinsIcon,         label: "menu.contributions" },
 ];
 
 // Tileable "S4005" pattern used as the hero's tech-background texture -
@@ -57,6 +59,7 @@ const HERO_CODE_TILE = encodeURIComponent(`
 
 export default function Landing() {
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
+  const { t } = useLang();
   const isCompact = !isDesktop; // mobile + tablet share the hamburger nav
   const [pubOpen, setPubOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -94,22 +97,22 @@ export default function Landing() {
           padding: isMobile ? "16px 12px" : isTablet ? "24px 22px" : "32px 24px",
           textAlign: "center",
         }}>
-          <img src="/assets/govt-logo.svg" alt="Government of Tanzania emblem" style={{ height: isMobile ? 42 : isTablet ? 64 : 92, flexShrink: 0 }} onError={(e) => (e.currentTarget.style.display = "none")} />
+          <img src="/assets/govt-logo.svg" alt={t("layout.coatAlt")} style={{ height: isMobile ? 42 : isTablet ? 64 : 92, flexShrink: 0 }} onError={(e) => (e.currentTarget.style.display = "none")} />
           <div style={{ minWidth: 0 }}>
             <div style={{
               fontSize: isMobile ? 8.5 : isTablet ? 10.5 : 13, fontWeight: 700,
               letterSpacing: isMobile ? "0.06em" : "0.18em", color: THEME.text,
               textTransform: "uppercase", marginBottom: isMobile ? 3 : 8,
-            }}>The United Republic of Tanzania</div>
+            }}>{t("banner.country")}</div>
             <div style={{
               fontSize: isMobile ? 15 : isTablet ? 22 : 32, fontWeight: 800, color: THEME.navy,
               letterSpacing: "0.01em", lineHeight: 1.18, textTransform: "uppercase",
             }}>{SCHOOL.name}</div>
             <div style={{ fontSize: isMobile ? 10.5 : isTablet ? 12.5 : 15, fontStyle: "italic", color: "#F54927", fontWeight: 600, marginTop: isMobile ? 3 : 6 }}>
-              {SCHOOL.motto}
+              {t("school.motto")}
             </div>
           </div>
-          <img src="/assets/shule.svg" alt="School badge" style={{ height: isMobile ? 42 : isTablet ? 64 : 92, flexShrink: 0 }} onError={(e) => (e.currentTarget.style.display = "none")} />
+          <img src="/assets/shule.svg" alt={t("layout.badgeAlt")} style={{ height: isMobile ? 42 : isTablet ? 64 : 92, flexShrink: 0 }} onError={(e) => (e.currentTarget.style.display = "none")} />
         </div>
       </div>
 
@@ -130,17 +133,19 @@ export default function Landing() {
 
           {isDesktop ? (
             <div style={{ display: "flex", gap: 22, fontSize: 13.5, alignItems: "center" }}>
-              <a href="#home" style={{ ...navLink, display: "inline-flex", alignItems: "center", gap: 6 }}><HomeIcon size={14} />Home</a>
-              <a href="#features" style={{ ...navLink, display: "inline-flex", alignItems: "center", gap: 6 }}><StarIcon size={14} />Features</a>
-              <a href="#about" style={{ ...navLink, display: "inline-flex", alignItems: "center", gap: 6 }}><InfoIcon size={14} />About</a>
-              <Link to="/login" style={{ ...navLink, background: "#fff", color: THEME.navy, padding: "7px 18px", borderRadius: 4, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}><LoginIcon size={13} />Login</Link>
+              <a href="#home" style={{ ...navLink, display: "inline-flex", alignItems: "center", gap: 6 }}><HomeIcon size={14} />{t("land.home")}</a>
+              <a href="#features" style={{ ...navLink, display: "inline-flex", alignItems: "center", gap: 6 }}><StarIcon size={14} />{t("land.features")}</a>
+              <a href="#about" style={{ ...navLink, display: "inline-flex", alignItems: "center", gap: 6 }}><InfoIcon size={14} />{t("land.about")}</a>
+              <Link to="/login" style={{ ...navLink, background: "#fff", color: THEME.navy, padding: "7px 18px", borderRadius: 4, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}><LoginIcon size={13} />{t("login.signIn")}</Link>
+              <StaffLangToggle />
             </div>
           ) : (
             <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12, flexShrink: 0 }}>
-              <Link to="/login" style={{ ...navLink, background: "#fff", color: THEME.navy, padding: isMobile ? "6px 14px" : "7px 16px", borderRadius: 4, fontWeight: 700, fontSize: isMobile ? 12.5 : 13.5, display: "inline-flex", alignItems: "center", gap: 5 }}><LoginIcon size={12} />Login</Link>
+              <Link to="/login" style={{ ...navLink, background: "#fff", color: THEME.navy, padding: isMobile ? "6px 14px" : "7px 16px", borderRadius: 4, fontWeight: 700, fontSize: isMobile ? 12.5 : 13.5, display: "inline-flex", alignItems: "center", gap: 5 }}><LoginIcon size={12} />{t("login.signIn")}</Link>
+              <StaffLangToggle />
               <button
                 onClick={() => setMenuOpen((o) => { const next = !o; if (!next) setPubOpen(false); return next; })}
-                aria-label={menuOpen ? "Close menu" : "Open menu"}
+                aria-label={menuOpen ? t("menu.close") : t("menu.open")}
                 style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: "4px 2px", display: "flex", alignItems: "center" }}
               >{menuOpen ? <CloseIcon size={20} /> : <MenuIcon size={22} />}</button>
             </div>
@@ -150,9 +155,9 @@ export default function Landing() {
         {/* Mobile / tablet dropdown menu */}
         {isCompact && menuOpen && (
           <div style={{ background: "#0c426f", borderTop: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 24px rgba(0,0,0,0.2)" }}>
-            <a href="#home" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><HomeIcon size={15} />Home</a>
-            <a href="#features" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><StarIcon size={15} />Features</a>
-            <a href="#about" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><InfoIcon size={15} />About</a>
+            <a href="#home" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><HomeIcon size={15} />{t("land.home")}</a>
+            <a href="#features" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><StarIcon size={15} />{t("land.features")}</a>
+            <a href="#about" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><InfoIcon size={15} />{t("land.about")}</a>
 
           </div>
         )}
@@ -183,7 +188,7 @@ export default function Landing() {
           fontSize: isMobile ? 26 : isTablet ? 34 : 42,
           marginBottom: isMobile ? 26 : 34, lineHeight: 1.25,
           maxWidth: isMobile ? 320 : 720,
-        }}>SCHOOL MANAGEMENT SYSTEM</h1>
+        }}>{t("land.heroTitle")}</h1>
 
         {/* Eight module icon badges - flat line icon inside a cream circle
             with a navy ring, same treatment as the reference's globe/
@@ -199,8 +204,8 @@ export default function Landing() {
             <div
               key={label}
               className="mk-hero-icon-circle"
-              title={label}
-              aria-label={label}
+              title={t(label)}
+              aria-label={t(label)}
               style={{
                 width: isMobile ? 54 : isTablet ? 68 : 82,
                 height: isMobile ? 54 : isTablet ? 68 : 82,
@@ -217,27 +222,27 @@ export default function Landing() {
           marginBottom: 30, flexWrap: "wrap", justifyContent: "center", rowGap: 10,
           maxWidth: isMobile ? 320 : 680,
         }}>
-          NOW IS <span className="mk-live-badge"><LiveIcon /> LIVE</span>
+          {t("land.nowIs")} <span className="mk-live-badge"><LiveIcon /> {t("land.live")}</span>
         </div>
-        <a href="#features" className="mk-hero-cta" style={{ fontSize: isMobile ? 13 : 14 }}>Explore Features</a>
+        <a href="#features" className="mk-hero-cta" style={{ fontSize: isMobile ? 13 : 14 }}>{t("land.explore")}</a>
       </header>
 
       {/* Features */}
       <section id="features" style={{ padding: isMobile ? "44px 18px" : isTablet ? "50px 22px" : "60px 24px", background: "#e0e1dd" }}>
        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <h2 style={{ textAlign: "center", color: THEME.navy, fontSize: isMobile ? 20 : 24, fontWeight: 800, marginBottom: isMobile ? 26 : 40 }}>Features</h2>
+        <h2 style={{ textAlign: "center", color: THEME.navy, fontSize: isMobile ? 20 : 24, fontWeight: 800, marginBottom: isMobile ? 26 : 40 }}>{t("land.features")}</h2>
         <div style={{
           display: "grid",
           gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(230px, 1fr))",
           gap: isMobile ? 16 : 30,
         }}>
-          {FEATURES.map(({ Icon, title, desc }) => (
-            <div key={title} className="mk-feature-card" style={{
+          {FEATURES.map(({ Icon, id }) => (
+            <div key={id} className="mk-feature-card" style={{
               textAlign: "center", padding: isMobile ? "18px 16px" : "24px 18px",
             }}>
               <Icon size={isMobile ? 72 : 90} />
-              <h3 style={{ fontSize: isMobile ? 14.5 : 15.5, color: THEME.text, fontWeight: 700, margin: "14px 0 6px" }}>{title}</h3>
-              <p style={{ fontSize: isMobile ? 12 : 12.5, color: THEME.muted, lineHeight: 1.55 }}>{desc}</p>
+              <h3 style={{ fontSize: isMobile ? 14.5 : 15.5, color: THEME.text, fontWeight: 700, margin: "14px 0 6px" }}>{t(`feat.${id}.title`)}</h3>
+              <p style={{ fontSize: isMobile ? 12 : 12.5, color: THEME.muted, lineHeight: 1.55 }}>{t(`feat.${id}.desc`)}</p>
             </div>
           ))}
         </div>
@@ -248,11 +253,10 @@ export default function Landing() {
       <section id="about" style={{ background: "#415d43", padding: isMobile ? "44px 18px" : isTablet ? "50px 22px" : "60px 24px" }}>
         <div style={{ maxWidth: 820, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: isMobile ? 22 : 30 }}>
-            <img src="/assets/shule.svg" alt="School logo" style={{ height: isMobile ? 48 : 64, marginBottom: 14 }} onError={(e) => (e.currentTarget.style.display = "none")} />
-            <h2 style={{ color: "#fff", fontSize: isMobile ? 20 : 24, fontWeight: 800, marginBottom: 8 }}>About the School</h2>
+            <img src="/assets/shule.svg" alt={t("login.logoAlt")} style={{ height: isMobile ? 48 : 64, marginBottom: 14 }} onError={(e) => (e.currentTarget.style.display = "none")} />
+            <h2 style={{ color: "#fff", fontSize: isMobile ? 20 : 24, fontWeight: 800, marginBottom: 8 }}>{t("about.title")}</h2>
             <p style={{ color: "rgba(255,255,255,0.92)", fontSize: isMobile ? 13 : 14.5, maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
-              Mikumbi Secondary School is located in {SCHOOL.district}, {SCHOOL.region}. Our motto, "{SCHOOL.motto}", guides
-              everything we do, from the classroom to the community.
+              {t("about.text")}
             </p>
           </div>
           <div style={{
@@ -262,10 +266,10 @@ export default function Landing() {
             background: "#2f4431", border: "1px solid #243826", borderRadius: 4,
             padding: isMobile ? "20px 14px" : 24,
           }}>
-            <AboutFact label="Postal Address" value={SCHOOL.poBox} />
-            <AboutFact label="Registration No." value={SCHOOL.regNo} />
-            <AboutFact label="Centre No." value={SCHOOL.centreNo} />
-            <AboutFact label="Region" value={SCHOOL.region} />
+            <AboutFact label={t("fact.postal")} value={SCHOOL.poBox} />
+            <AboutFact label={t("fact.regNo")} value={SCHOOL.regNo} />
+            <AboutFact label={t("fact.centreNo")} value={SCHOOL.centreNo} />
+            <AboutFact label={t("fact.region")} value={SCHOOL.region} />
           </div>
           <InstallAppButton style={{ marginTop: isMobile ? 22 : 28 }} />
         </div>
@@ -273,11 +277,11 @@ export default function Landing() {
 
       {/* Footer */}
       <footer style={{ background: "#0c426f", color: "#f0f7fc", padding: isMobile ? "22px 20px" : "28px 24px", textAlign: "center", fontSize: isMobile ? 11.5 : 12.5 }}>
-        <div>© {new Date().getFullYear()} {SCHOOL.name}. All Rights Reserved.</div>
+        <div>© {new Date().getFullYear()} {SCHOOL.name}. {t("footer.rights")}</div>
         <div style={{ marginTop: 8, display: "flex", justifyContent: "center", gap: isMobile ? 12 : 18, flexWrap: "wrap" }}>
-          <Link to="/privacy" style={{ color: "#cbd5e1" }}>Privacy Policy</Link>
-          <Link to="/terms" style={{ color: "#cbd5e1" }}>Terms of Service</Link>
-          <Link to="/support" style={{ color: "#cbd5e1" }}>Support</Link>
+          <Link to="/privacy" style={{ color: "#cbd5e1" }}>{t("footer.privacy")}</Link>
+          <Link to="/terms" style={{ color: "#cbd5e1" }}>{t("footer.terms")}</Link>
+          <Link to="/support" style={{ color: "#cbd5e1" }}>{t("footer.support")}</Link>
         </div>
       </footer>
     </div>

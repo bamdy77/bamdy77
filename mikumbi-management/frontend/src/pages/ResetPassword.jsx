@@ -5,8 +5,11 @@ import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
 import { PasswordInput } from "../components/PasswordInput";
 import { LockIcon, SpinnerIcon } from "../components/icons";
+import { useLang } from "../i18n";
+import { StaffLangToggle } from "../i18n/StaffLang";
 
 export default function ResetPassword() {
+  const { t } = useLang();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const token = params.get("token");
@@ -21,7 +24,7 @@ export default function ResetPassword() {
   const submit = async (e) => {
     e.preventDefault();
     setError("");
-    if (password !== confirm) return setError("Passwords do not match.");
+    if (password !== confirm) return setError(t("pw.noMatch"));
     { const pwErr = passwordProblem(password); if (pwErr) return setError(pwErr); }
     setBusy(true);
     try {
@@ -38,31 +41,32 @@ export default function ResetPassword() {
   if (!token || !uid) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: THEME.bg }}>
-        <div style={{ color: THEME.danger }}>This link is invalid. <Link to="/forgot-password">Request a new one</Link></div>
+        <div style={{ color: THEME.danger, padding: 20 }}>{t("pw.linkInvalid")} <Link to="/forgot-password">{t("pw.requestNew")}</Link></div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: THEME.bg, padding: 20 }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: THEME.bg, padding: 20, position: "relative" }}>
+      <div style={{ position: "absolute", top: 14, right: 14 }}><StaffLangToggle dark={false} /></div>
       <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 4, padding: 32, boxShadow: "0 10px 30px rgba(15,23,42,0.1)" }}>
-        <h2 style={{ fontSize: 17, color: THEME.navy, marginBottom: 18 }}>Set a New Password</h2>
+        <h2 style={{ fontSize: 17, color: THEME.navy, marginBottom: 18 }}>{t("pw.setNewTitle")}</h2>
         {done ? (
           <div style={{ color: THEME.success, background: THEME.successLight, padding: 12, borderRadius: 4, fontSize: 13.5 }}>
-            Password changed. Redirecting to Login...
+            {t("pw.redirecting")}
           </div>
         ) : (
           <form onSubmit={submit}>
             <div style={{ marginBottom: 12 }}>
-              <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="New password" />
+              <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("pw.newShort")} />
             </div>
-            <PasswordInput value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm new password" />
+            <PasswordInput value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder={t("pw.confirmShort")} />
             {error && <div style={{ color: THEME.danger, fontSize: 13, marginTop: 8 }}>{error}</div>}
             <button type="submit" disabled={busy} style={{
               width: "100%", marginTop: 16, padding: "11px 0", background: THEME.navy, color: "#fff",
               border: "none", borderRadius: 4, fontWeight: 600, cursor: "pointer", opacity: busy ? 0.7 : 1,
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            }}>{busy ? <SpinnerIcon size={14} /> : <LockIcon size={14} />}{busy ? "Saving..." : "Save Password"}</button>
+            }}>{busy ? <SpinnerIcon size={14} /> : <LockIcon size={14} />}{busy ? t("common.saving") : t("pw.save")}</button>
           </form>
         )}
       </div>

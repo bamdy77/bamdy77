@@ -1760,6 +1760,28 @@ async function migrate() {
       END IF;
     END $$;
   `);
+  // Parents' website visitor counter (privacy friendly: a daily-changing
+  // one-way code per visitor, no IP / cookie / name). See routes/visits.js.
+  await query(`
+    CREATE TABLE IF NOT EXISTS site_visits (
+      day      DATE        NOT NULL,
+      visitor  CHAR(16)    NOT NULL,
+      page     VARCHAR(20) NOT NULL,
+      device   VARCHAR(10) NOT NULL DEFAULT 'computer',
+      views    INTEGER     NOT NULL DEFAULT 1,
+      PRIMARY KEY (day, visitor, page)
+    );`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_site_visits_day ON site_visits(day);`);
+  // Interface language (en | sw): NULL = the staff site default (English).
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(2);`);
+  await query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_preferred_language_check') THEN
+        ALTER TABLE users ADD CONSTRAINT users_preferred_language_check
+          CHECK (preferred_language IS NULL OR preferred_language IN ('en','sw'));
+      END IF;
+    END $$;
+  `);
   // Same protection for the parents' Results login: 8 wrong phone numbers
   // for one student lock that student's online login for 30 minutes, so the
   // phone number (the password) cannot be guessed from many IPs.

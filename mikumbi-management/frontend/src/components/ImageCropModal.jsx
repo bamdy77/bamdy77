@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useLang } from "../i18n";
 import { THEME } from "../styles/theme";
 
 const HANDLE_SIZE = 22; // touch-friendly hit target, not the visible dot size
@@ -14,6 +15,7 @@ const MIN_CROP = 40; // px, in on-screen (displayed) coordinates
 //
 // Props: `file` (the picked File/Blob), `onCancel()`, `onConfirm(croppedFile)`.
 export default function ImageCropModal({ file, onCancel, onConfirm }) {
+  const { t } = useLang();
   const [imgUrl, setImgUrl] = useState(null);
   const [natural, setNatural] = useState({ w: 0, h: 0 });
   const [displayed, setDisplayed] = useState({ w: 0, h: 0 });
@@ -142,8 +144,8 @@ export default function ImageCropModal({ file, onCancel, onConfirm }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.82)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ background: THEME.surface, borderRadius: 4, padding: 16, maxWidth: 520, width: "100%", maxHeight: "92vh", display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: 15, color: THEME.heading, fontWeight: 700 }}>Crop the photo</h3>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: THEME.muted }}>Drag the corners to fit tightly around just the signature/stamp ink, then confirm.</p>
+          <h3 style={{ margin: 0, fontSize: 15, color: THEME.heading, fontWeight: 700 }}>{t("crop.title")}</h3>
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: THEME.muted }}>{t("crop.hint")}</p>
         </div>
 
         <div
@@ -154,7 +156,7 @@ export default function ImageCropModal({ file, onCancel, onConfirm }) {
             <img
               ref={imgRef}
               src={imgUrl}
-              alt="to crop"
+              alt={t("crop.alt")}
               onLoad={onImgLoad}
               draggable={false}
               style={{ maxWidth: "100%", maxHeight: "60vh", display: "block", objectFit: "contain" }}
@@ -184,14 +186,14 @@ export default function ImageCropModal({ file, onCancel, onConfirm }) {
             disabled={busy}
             style={{ padding: "9px 16px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.bg, color: THEME.text, fontSize: 13, fontWeight: 600, cursor: busy ? "default" : "pointer" }}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleConfirm}
             disabled={busy || !box}
             style={{ padding: "9px 18px", borderRadius: 4, border: `1px solid ${THEME.navy}`, background: THEME.navy, color: "#fff", fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 }}
           >
-            {busy ? "Cropping…" : "Use this crop"}
+            {busy ? t("crop.busy") : t("crop.use")}
           </button>
         </div>
       </div>

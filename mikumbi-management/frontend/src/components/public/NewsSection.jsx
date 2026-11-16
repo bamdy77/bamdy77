@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { apiFetch } from "../../utils/api";
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { MegaphoneIcon, CloseIcon, CalendarIcon, ChevronRightIcon } from "../icons";
-import { useLang } from "../../i18n/publicLang";
+import { useLang } from "../../i18n";
 
 const NAVY = "#0c426f";
 const ORANGE = "#F54927";

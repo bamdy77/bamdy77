@@ -26,7 +26,7 @@ const auth = (roles = []) => {
       // effect on their very next request, not just at their next login.
       const result = await query(`
         SELECT u.is_active, u.role, u.extra_roles, u.subject_ids, u.assigned_forms, u.class_teacher_of, u.photo_url,
-               u.phone, u.email, u.employment_type, u.password_changed_at, u.preferred_font,
+               u.phone, u.email, u.employment_type, u.password_changed_at, u.preferred_font, u.preferred_language,
                COALESCE((SELECT array_agg(s.name ORDER BY s.name) FROM subjects s WHERE s.id = ANY(u.subject_ids)), '{}') AS subject_names
         FROM users u WHERE u.id = $1
       `, [decoded.id]);
@@ -50,6 +50,7 @@ const auth = (roles = []) => {
         phone: liveRow.phone || null, email: liveRow.email || null,
         employment_type: liveRow.employment_type || "Permanent",
         preferred_font: liveRow.preferred_font || null,
+        preferred_language: liveRow.preferred_language || null,
       };
 
       if (roles.length && !liveRoles.some((r) => roles.includes(r))) {

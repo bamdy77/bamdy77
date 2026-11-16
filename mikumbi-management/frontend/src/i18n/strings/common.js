@@ -1,0 +1,83 @@
+// Texts shared by both sites, and the SCHOOL GLOSSARY: the display names of
+// values that are stored in the database as fixed identifiers (roles, forms,
+// gender, months ...). The stored values never change; only how they are
+// shown. Use i18n/display.js to show them. { key: { en, sw } }
+const COMMON_STRINGS = {
+  // ── Glossary: roles (users.role / extra_roles) ──────────────────────────
+  "role.admin": { en: "Head Master", sw: "Mkuu wa Shule" },
+  "role.second_master": { en: "Second Master", sw: "Makamu Mkuu wa Shule" },
+  "role.academic": { en: "Academic Master", sw: "Mwalimu wa Taaluma" },
+  "role.teacher": { en: "Teacher", sw: "Mwalimu" },
+  "role.class_teacher": { en: "Class Teacher", sw: "Mwalimu wa Darasa" },
+  "role.patron": { en: "School Patron", sw: "Mlezi wa Kiume (Patron)" },
+  "role.matron": { en: "School Matron", sw: "Mlezi wa Kike (Matron)" },
+  "role.food_teacher": { en: "Food Teacher", sw: "Mwalimu wa Chakula" },
+
+  // ── Glossary: forms (students.form) ─────────────────────────────────────
+  "form.Form I": { en: "Form I", sw: "Kidato cha Kwanza" },
+  "form.Form II": { en: "Form II", sw: "Kidato cha Pili" },
+  "form.Form III": { en: "Form III", sw: "Kidato cha Tatu" },
+  "form.Form IV": { en: "Form IV", sw: "Kidato cha Nne" },
+  "form.short.Form I": { en: "Form I", sw: "Kidato I" },
+  "form.short.Form II": { en: "Form II", sw: "Kidato II" },
+  "form.short.Form III": { en: "Form III", sw: "Kidato III" },
+  "form.short.Form IV": { en: "Form IV", sw: "Kidato IV" },
+
+  // ── Glossary: gender, employment ────────────────────────────────────────
+  "gender.Male": { en: "Male", sw: "Me" },
+  "gender.Female": { en: "Female", sw: "Ke" },
+  "gender.long.Male": { en: "Male", sw: "Mvulana" },
+  "gender.long.Female": { en: "Female", sw: "Msichana" },
+  "employment.Permanent": { en: "Government", sw: "Serikali" },
+  "employment.Temporary": { en: "Temporary", sw: "Wa Muda" },
+  "status.Active": { en: "Active", sw: "Hai" },
+  "status.Inactive": { en: "Inactive", sw: "Amezimwa" },
+
+  // ── Glossary: months and weekdays ───────────────────────────────────────
+  "month.1": { en: "January", sw: "Januari" },
+  "month.2": { en: "February", sw: "Februari" },
+  "month.3": { en: "March", sw: "Machi" },
+  "month.4": { en: "April", sw: "Aprili" },
+  "month.5": { en: "May", sw: "Mei" },
+  "month.6": { en: "June", sw: "Juni" },
+  "month.7": { en: "July", sw: "Julai" },
+  "month.8": { en: "August", sw: "Agosti" },
+  "month.9": { en: "September", sw: "Septemba" },
+  "month.10": { en: "October", sw: "Oktoba" },
+  "month.11": { en: "November", sw: "Novemba" },
+  "month.12": { en: "December", sw: "Desemba" },
+  "day.0": { en: "Sunday", sw: "Jumapili" },
+  "day.1": { en: "Monday", sw: "Jumatatu" },
+  "day.2": { en: "Tuesday", sw: "Jumanne" },
+  "day.3": { en: "Wednesday", sw: "Jumatano" },
+  "day.4": { en: "Thursday", sw: "Alhamisi" },
+  "day.5": { en: "Friday", sw: "Ijumaa" },
+  "day.6": { en: "Saturday", sw: "Jumamosi" },
+
+  // ── Common actions and states ───────────────────────────────────────────
+  "common.close": { en: "Close", sw: "Funga" },
+  "common.cancel": { en: "Cancel", sw: "Ghairi" },
+  "common.save": { en: "Save", sw: "Hifadhi" },
+  "common.saving": { en: "Saving…", sw: "Inahifadhi…" },
+  "common.delete": { en: "Delete", sw: "Futa" },
+  "common.edit": { en: "Edit", sw: "Hariri" },
+  "common.add": { en: "Add", sw: "Ongeza" },
+  "common.yes": { en: "Yes", sw: "Ndiyo" },
+  "common.no": { en: "No", sw: "Hapana" },
+  "common.ok": { en: "OK", sw: "Sawa" },
+  "common.done": { en: "Done", sw: "Sawa" },
+  "common.back": { en: "Back", sw: "Rudi" },
+  "common.retry": { en: "Retry", sw: "Jaribu tena" },
+  "common.loading": { en: "Loading…", sw: "Inapakia…" },
+  "common.actions": { en: "Actions", sw: "Vitendo" },
+  "common.download": { en: "Download", sw: "Pakua" },
+  "common.search": { en: "Search", sw: "Tafuta" },
+  "common.show": { en: "Show", sw: "Onyesha" },
+  "common.hide": { en: "Hide", sw: "Ficha" },
+  "common.required": { en: "Required", sw: "Lazima" },
+  "common.language": { en: "Language", sw: "Lugha" },
+  "common.error": { en: "Error", sw: "Hitilafu" },
+  "common.success": { en: "Success", sw: "Imefanikiwa" },
+  "common.pressToClose": { en: "Press OK to close", sw: "Bonyeza Sawa kufunga" },
+};
+export default COMMON_STRINGS;

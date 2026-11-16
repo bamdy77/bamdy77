@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
+import { getLang, useLang } from "../i18n";
 
 // In development (and when frontend+backend are deployed together behind
 // one proxy/domain) the relative "/api" path just works. When deployed as
@@ -23,10 +24,12 @@ const REASON_KEY = "mikumbi_logout_reason";
 const readActive = () => { try { return Number(localStorage.getItem(ACTIVE_KEY)) || 0; } catch { return 0; } };
 const markActive = () => { try { localStorage.setItem(ACTIVE_KEY, String(Date.now())); } catch { /* ignore */ } };
 const tokenExp = (tok) => { try { return JSON.parse(atob(tok.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp * 1000 || 0; } catch { return 0; } };
-const MSG_IDLE = "You were signed out because the system was not used for 30 minutes. Please sign in again.";
-const MSG_EXPIRED = "Your session has ended (12 hours). Please sign in again.";
+// Shown on the Login page; these are i18n keys (see strings/staff.js).
+const MSG_IDLE = "session.idle";
+const MSG_EXPIRED = "session.expired";
 
 export function AuthProvider({ children }) {
+  const { t } = useLang();
   const [token, setToken] = useState(() => {
     const tok = localStorage.getItem("mikumbi_token") || null;
     if (!tok) return null;
@@ -50,7 +53,7 @@ export function AuthProvider({ children }) {
     // Validate the stored token once on load - if it's expired/invalid,
     // log the person out instead of showing a broken dashboard.
     if (!token) { setLoading(false); return; }
-    fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}`, "Accept-Language": getLang() } })
       .then(async (r) => {
         if (r.ok) { const data = await r.json(); setUser(data.user); return; }
         // Only "this sign-in is not valid" signs out; a sleeping/restarting
@@ -82,7 +85,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (username, password) => {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Accept-Language": getLang() },
       body: JSON.stringify({ username, password, device_token: readDevices()[deviceKeyFor(username)] }),
     });
     const data = await res.json();
@@ -95,7 +98,7 @@ export function AuthProvider({ children }) {
   const verifyLoginCode = useCallback(async (username, challengeId, code) => {
     const res = await fetch(`${API_BASE}/auth/login/verify`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Accept-Language": getLang() },
       body: JSON.stringify({ challenge_id: challengeId, code }),
     });
     const data = await res.json();
@@ -140,7 +143,7 @@ export function AuthProvider({ children }) {
   const refreshUser = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}`, "Accept-Language": getLang() } });
       if (!res.ok) return;
       const data = await res.json();
       if (data?.user) {
@@ -212,13 +215,13 @@ export function AuthProvider({ children }) {
         <div role="alertdialog" aria-modal="true" aria-labelledby="idle-title"
           style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#fff", borderRadius: 6, padding: "22px 22px 18px", maxWidth: 380, width: "100%", boxShadow: "0 12px 40px rgba(0,0,0,0.25)", textAlign: "center" }}>
-            <div id="idle-title" style={{ fontSize: 17, fontWeight: 800, color: "#0c426f", marginBottom: 8 }}>Are you still there?</div>
+            <div id="idle-title" style={{ fontSize: 17, fontWeight: 800, color: "#0c426f", marginBottom: 8 }}>{t("idle.title")}</div>
             <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, margin: "0 0 16px" }}>
-              For security, you will be signed out in <b>{Math.floor(warnLeft / 60)}:{String(warnLeft % 60).padStart(2, "0")}</b> because the system has not been used.
+              {t("idle.text1")} <b>{Math.floor(warnLeft / 60)}:{String(warnLeft % 60).padStart(2, "0")}</b> {t("idle.text2")}
             </p>
             <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-              <button type="button" onClick={() => logout("You signed out.")} style={{ padding: "9px 16px", borderRadius: 4, border: "1px solid #cbd5e1", background: "#fff", color: "#334155", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Sign out</button>
-              <button type="button" autoFocus onClick={stayIn} style={{ padding: "9px 18px", borderRadius: 4, border: "none", background: "#0c426f", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>Stay signed in</button>
+              <button type="button" onClick={() => logout("session.signedOut")} style={{ padding: "9px 16px", borderRadius: 4, border: "1px solid #cbd5e1", background: "#fff", color: "#334155", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>{t("idle.signOut")}</button>
+              <button type="button" autoFocus onClick={stayIn} style={{ padding: "9px 18px", borderRadius: 4, border: "none", background: "#0c426f", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>{t("idle.stay")}</button>
             </div>
           </div>
         </div>,

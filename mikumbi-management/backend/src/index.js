@@ -114,6 +114,10 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
+// Language of the person reading the response (en | sw): API messages are
+// sent in that language. Before the rate limiters so their messages too.
+app.use(require("./middleware/lang"));
+
 // Rate limiting
 // General API limit. Keyed per signed-in STAFF ACCOUNT when a valid token is
 // sent, and per IP otherwise: the whole school WiFi shares one public IP
@@ -208,6 +212,8 @@ app.use("/api/backups",       require("./routes/backups"));
 app.use("/api/exam-types",    require("./routes/examTypes"));
 app.use("/api/videos",        require("./routes/videos").staff);
 app.use("/api/public/videos", require("./routes/videos").pub);
+app.use("/api/public/visit",  require("./routes/visits").pub);
+app.use("/api/visits",        require("./routes/visits").staff);
 app.use("/api/public",        publicRoutes);
 
 // ── Serve the built frontend (single-service deployment) ───────────────────

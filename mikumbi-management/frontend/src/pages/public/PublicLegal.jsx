@@ -1,9 +1,10 @@
 import PublicLayout from "../../components/public/PublicLayout";
 import LegalDoc, { ul, li } from "../../components/LegalDoc";
-import { useLang } from "../../i18n/publicLang";
+import { useLang } from "../../i18n";
 import { siteConfig, toTelHref } from "../../config/siteConfig";
 import { SCHOOL } from "../../styles/theme";
 
+// i18n-scan: bilingual-document (each text exists in Kiswahili AND English below)
 // Privacy / Terms / Support for the PARENTS' website (Kiswahili default,
 // full English when EN is chosen). The staff versions are in
 // pages/LegalPages.jsx. Keep both in line with what the system really does.
@@ -36,6 +37,7 @@ export function PublicPrivacy() {
         <li style={li}><b>Maelekezo ya Kujiunga:</b> majina ya mwanafunzi, wilaya, kata, mtaa/kijiji, namba ya mtihani wa Darasa la Saba na mwaka aliomaliza.</li>
         <li style={li}><b>Matokeo:</b> Namba ya Kuingia ya mwanafunzi na namba ya simu ya mzazi/mlezi (inatumika kuthibitisha tu, haihifadhiwi upya).</li>
         <li style={li}><b>Mipangilio ya kifaa chako:</b> lugha na aina ya herufi unazochagua huhifadhiwa kwenye kivinjari chako tu, si kwenye seva ya shule.</li>
+        <li style={li}><b>Idadi ya wageni:</b> tunahesabu ni watu wangapi wanatembelea tovuti kila siku na kurasa wanazofungua. Hatuhifadhi jina, namba ya simu, anwani ya IP wala "cookie"; kila mgeni huwakilishwa na namba fupi isiyoweza kurudishwa nyuma inayobadilika kila siku, kwa hiyo hakuna mtu anayeweza kutambuliwa au kufuatiliwa.</li>
       </ul></> },
     { id: "matumizi", title: "Tunavyotumia taarifa hizi", body: <ul style={ul}>
       <li style={li}>Kutoa Maelekezo ya Kujiunga yenye jina la mwanafunzi na kujiandaa kupokea wanafunzi wapya.</li>
@@ -62,6 +64,7 @@ export function PublicPrivacy() {
         <li style={li}><b>Joining Instructions:</b> the student's names, district, ward, village/street, Standard Seven exam number and completion year.</li>
         <li style={li}><b>Results:</b> the student's Results Login Number and the parent/guardian phone number (used only to confirm it is you).</li>
         <li style={li}><b>Your device settings:</b> the language and font you choose are kept in your own browser, not on the school's server.</li>
+        <li style={li}><b>Visitor numbers:</b> we count how many people visit the website each day and which pages they open. We do not store your name, phone number, IP address or any cookie; each visitor is represented by a short one-way code that changes every day, so nobody can be identified or followed.</li>
       </ul></> },
     { id: "use", title: "How we use it", body: <ul style={ul}>
       <li style={li}>To issue Joining Instructions in the student's name and to prepare for new students.</li>

@@ -4,7 +4,7 @@ import { SCHOOL } from "../../styles/theme";
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { siteConfig, toTelHref } from "../../config/siteConfig";
 import HoverMenu from "../HoverMenu";
-import { useLang, LangToggle } from "../../i18n/publicLang";
+import { useLang, LangToggle } from "../../i18n";
 import FontChooser from "../FontChooser";
 import { useFont } from "../../context/FontContext";
 import { FONT_OPTIONS, FONT_STACKS, DEFAULT_FONT } from "../../styles/fonts";
@@ -73,7 +73,7 @@ function IdentityBanner() {
         position: "relative", maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center",
         gap: isMobile ? 12 : isTablet ? 26 : 46, padding: isMobile ? "16px 12px" : isTablet ? "24px 22px" : "32px 24px", textAlign: "center",
       }}>
-        <img src="/assets/govt-logo.svg" alt="Coat of arms of the United Republic of Tanzania" width="92" height="92"
+        <img src="/assets/govt-logo.svg" alt={t("layout.coatAlt")} width="92" height="92"
           style={{ height: isMobile ? 42 : isTablet ? 64 : 92, width: "auto", flexShrink: 0 }} onError={(e) => (e.currentTarget.style.display = "none")} />
         <div style={{ minWidth: 0 }}>
           <div style={{
@@ -87,7 +87,7 @@ function IdentityBanner() {
             {t("school.motto")}
           </div>
         </div>
-        <img src="/assets/shule.svg" alt="Mikumbi Secondary School badge" width="92" height="92"
+        <img src="/assets/shule.svg" alt={t("layout.badgeAlt")} width="92" height="92"
           style={{ height: isMobile ? 42 : isTablet ? 64 : 92, width: "auto", flexShrink: 0 }} onError={(e) => (e.currentTarget.style.display = "none")} />
       </div>
     </header>
@@ -146,7 +146,7 @@ function NavBar() {
 
   return (
     <div className="pub-nav" style={{ position: "sticky", top: 0, zIndex: 50 }}>
-      <nav aria-label="Main" style={{
+      <nav aria-label={t("layout.navMain")} style={{
         background: NAVY, color: "#fff", padding: isMobile ? "10px 14px" : isTablet ? "11px 18px" : "13px 28px",
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
       }}>
@@ -221,7 +221,7 @@ function NavBar() {
         returnFocusRef={fontRowRef}
         value={font}
         onChange={setFont}
-        labels={{ title: t("font.label"), hint: t("font.hint"), defaultName: t("font.default"), reset: t("font.reset"), done: t("font.done"), close: t("common.close") }}
+        labels={{ title: t("font.label"), hint: t("font.hint"), defaultName: t("font.default"), reset: t("font.reset"), done: t("font.done"), close: t("common.close"), sample: t("font.sample") }}
       />
     </div>
   );
@@ -262,7 +262,7 @@ function Footer() {
           <div style={{ color: "#fff", fontWeight: 700, fontSize: 15.5 }}>{t("footer.tagline")}</div>
         </div>
 
-        <nav aria-label="Publications">
+        <nav aria-label={t("layout.navPublications")}>
           <div style={head}>{t("nav.publications")}</div>
           <ul style={{ listStyle: "none", padding: 0 }}>
             <li style={li}><Link className="pub-flink" to="/results" style={fl}>{t("nav.results")}</Link></li>
@@ -270,7 +270,7 @@ function Footer() {
           </ul>
         </nav>
 
-        <nav aria-label="School">
+        <nav aria-label={t("layout.navSchool")}>
           <div style={head}>{t("footer.school")}</div>
           <ul style={{ listStyle: "none", padding: 0 }}>
             <li style={li}><Link className="pub-flink" to="/#about" style={fl}>{t("footer.aboutUs")}</Link></li>
@@ -280,7 +280,7 @@ function Footer() {
           </ul>
         </nav>
 
-        <nav aria-label="Quick links">
+        <nav aria-label={t("layout.navQuick")}>
           <div style={head}>{t("footer.quickLinks")}</div>
           <ul style={{ listStyle: "none", padding: 0 }}>
             <li style={li}><Link className="pub-flink" to="/privacy" style={fl}>{t("footer.privacy")}</Link></li>

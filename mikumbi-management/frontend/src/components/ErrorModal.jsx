@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { translate, getLang } from "../i18n";
 import { THEME } from "../styles/theme";
 
 // Same pub/sub pattern as SuccessModal (see that file for the full
@@ -55,7 +56,7 @@ export function ErrorModalHost() {
             padding: "10px 36px", background: THEME.navy, color: "#fff", border: "none",
             borderRadius: 4, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
           }}
-        >OK</button>
+        >{translate(getLang(), "common.ok")}</button>
       </div>
     </div>
   );

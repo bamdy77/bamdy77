@@ -1,4 +1,5 @@
 import { API_BASE } from "../context/AuthContext";
+import { getLang } from "../i18n";
 
 // Shared fetch helper - attaches the Bearer token automatically, throws a
 // readable Error on failure so callers can just try/catch and show err.message.
@@ -6,6 +7,8 @@ export async function apiFetch(path, options = {}, token) {
   const headers = { ...(options.headers || {}) };
   if (!(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
   if (token) headers.Authorization = `Bearer ${token}`;
+  // Server messages come back in the language shown on screen (en | sw).
+  if (!headers["Accept-Language"]) headers["Accept-Language"] = getLang();
 
   let res;
   try {

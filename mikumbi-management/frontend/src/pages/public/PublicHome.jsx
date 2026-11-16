@@ -8,7 +8,7 @@ import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { SCHOOL } from "../../styles/theme";
 import { siteConfig, toTelHref } from "../../config/siteConfig";
 import { API_BASE } from "../../utils/api";
-import { useLang } from "../../i18n/publicLang";
+import { useLang } from "../../i18n";
 import {
   CheckCircleIcon, GraduationCapIcon, MegaphoneIcon, MessageIcon, SchoolIcon, BedIcon, UsersIcon,
   LocationPinIcon, ChevronRightIcon, CloseIcon, ChevronLeftIcon, TrophyIcon,

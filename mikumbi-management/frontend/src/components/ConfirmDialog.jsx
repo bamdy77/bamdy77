@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { translate, getLang } from "../i18n";
 import { THEME } from "../styles/theme";
 import { CheckIcon, CloseIcon } from "./icons";
 
@@ -16,8 +17,8 @@ export function useConfirm() {
   const ConfirmDialogPortal = state ? (
     <ConfirmDialog
       message={state.message}
-      confirmLabel={state.confirmLabel || "Yes"}
-      cancelLabel={state.cancelLabel || "No"}
+      confirmLabel={state.confirmLabel || translate(getLang(), "common.yes")}
+      cancelLabel={state.cancelLabel || translate(getLang(), "common.no")}
       danger={state.danger !== false}
       onConfirm={() => { const fn = state.onYes; setState(null); fn(); }}
       onCancel={() => setState(null)}

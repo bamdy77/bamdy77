@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiFetch, API_BASE } from "../../utils/api";
-import { useLang } from "../../i18n/publicLang";
+import { useLang } from "../../i18n";
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { SectionTitle } from "./NewsSection";
 

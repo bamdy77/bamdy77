@@ -74,7 +74,7 @@ export default function FontChooser({ value, onChange, labels, renderTrigger, no
                     }}>
                     <div style={{ flex: 1, minWidth: 0, fontFamily: FONT_STACKS[opt.value] }}>
                       <div style={{ fontSize: 15.5, fontWeight: 700 }}>{opt.value === DEFAULT_FONT ? labels.defaultName : opt.label}</div>
-                      <div style={{ fontSize: 13, color: "#475569", overflowWrap: "anywhere" }}>Aa Bb 123 - Mwanafunzi hodari / Student of the year</div>
+                      <div style={{ fontSize: 13, color: "#475569", overflowWrap: "anywhere" }}>Aa Bb 123 - {labels.sample || ""}</div>
                     </div>
                     <span aria-hidden="true" style={{ width: 20, flexShrink: 0, color: "#0c426f", fontWeight: 800, fontSize: 16 }}>{selected ? "✓" : ""}</span>
                   </div>

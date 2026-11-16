@@ -14,6 +14,9 @@ import NotificationBell from "./NotificationBell";
 import FontChooser from "./FontChooser";
 import { useFont } from "../context/FontContext";
 import { apiFetch } from "../utils/api";
+import { useLang } from "../i18n";
+import { StaffLangToggle } from "../i18n/StaffLang";
+import { roleLabel as roleName, formLabel as formName } from "../i18n/display";
 import { ShieldIcon, SettingsIcon, LockIcon, PaletteIcon, ChevronDownIcon, CheckIcon, MenuIcon, CloseIcon, GraduationCapIcon, CoinsIcon, UtensilsIcon, TableIcon, BedIcon, BarChartIcon, ClockIcon, MessageIcon, UsersIcon, LogoutIcon, CameraIcon, TrashIcon, UserCircleIcon, EyeIcon, SpinnerIcon, FileClockIcon, EditIcon } from "./icons";
 
 // Module visibility, exactly per spec:
@@ -75,9 +78,9 @@ function getInitials(name) {
 // one of those boundaries, without needing to log out and back in.
 function getGreeting() {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 17) return "Good Afternoon";
-  return "Good Evening";
+  if (hour < 12) return "greet.morning";
+  if (hour < 17) return "greet.afternoon";
+  return "greet.evening";
 }
 
 // One reusable row inside the account menu below - icon + label, with an
@@ -104,6 +107,7 @@ function MenuRow({ icon, label, onClick, danger, divider, disabled }) {
 }
 
 function Avatar({ name, size = 40, photoUrl, onLogout, onPickPhoto, onRemovePhoto, onViewProfile, onViewPhoto, uploading }) {
+  const { t } = useLang();
   const [menuOpen, setMenuOpen] = useState(false);
   const wrapRef = useRef(null);
 
@@ -124,7 +128,7 @@ function Avatar({ name, size = 40, photoUrl, onLogout, onPickPhoto, onRemovePhot
       <button
         type="button"
         onClick={() => !uploading && setMenuOpen((v) => !v)}
-        aria-label="Account menu" title="Account menu"
+        aria-label={t("acct.menu")} title={t("acct.menu")}
         disabled={uploading}
         style={{
           width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0, position: "relative",
@@ -155,17 +159,17 @@ function Avatar({ name, size = 40, photoUrl, onLogout, onPickPhoto, onRemovePhot
           background: "#fff", borderRadius: 4, boxShadow: "0 10px 30px rgba(0,0,0,0.22)",
           minWidth: 200, overflow: "hidden", zIndex: 95,
         }}>
-          <MenuRow icon={<UserCircleIcon size={15} />} label="Profile"
+          <MenuRow icon={<UserCircleIcon size={15} />} label={t("acct.profile")}
             onClick={() => { setMenuOpen(false); onViewProfile(); }} />
-          <MenuRow icon={<EyeIcon size={15} />} label="View Profile Photo"
+          <MenuRow icon={<EyeIcon size={15} />} label={t("acct.viewPhoto")}
             onClick={() => { setMenuOpen(false); onViewPhoto(); }} />
-          <MenuRow icon={<CameraIcon size={15} />} label={photoUrl ? "Change Photo" : "Upload Photo"}
+          <MenuRow icon={<CameraIcon size={15} />} label={photoUrl ? t("acct.changePhoto") : t("acct.uploadPhoto")}
             disabled={uploading} onClick={() => { setMenuOpen(false); onPickPhoto(); }} />
           {photoUrl && (
-            <MenuRow icon={<TrashIcon size={15} />} label="Remove Photo" danger
+            <MenuRow icon={<TrashIcon size={15} />} label={t("acct.removePhoto")} danger
               disabled={uploading} onClick={() => { setMenuOpen(false); onRemovePhoto(); }} />
           )}
-          <MenuRow icon={<LogoutIcon size={15} />} label="Logout" divider
+          <MenuRow icon={<LogoutIcon size={15} />} label={t("acct.logout")} divider
             onClick={() => { setMenuOpen(false); onLogout(); }} />
         </div>
       )}
@@ -179,6 +183,7 @@ function Avatar({ name, size = 40, photoUrl, onLogout, onPickPhoto, onRemovePhot
 // backend endpoint needed. Same modal-overlay pattern as SuccessModal/
 // ErrorModal for a consistent feel.
 function ProfileModal({ user, displayName, roleText, onClose, onViewPhoto }) {
+  const { t, lang } = useLang();
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -190,15 +195,15 @@ function ProfileModal({ user, displayName, roleText, onClose, onViewPhoto }) {
       <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
       {value
         ? <div style={{ fontSize: 14, fontWeight: 600, color: "#fff", marginTop: 2 }}>{value}</div>
-        : <div style={{ fontSize: 13.5, fontStyle: "italic", color: "rgba(255,255,255,0.55)", marginTop: 2 }}>Not Registered</div>}
+        : <div style={{ fontSize: 13.5, fontStyle: "italic", color: "rgba(255,255,255,0.55)", marginTop: 2 }}>{t("acct.notRegistered")}</div>}
     </div>
   );
 
   // Per spec, the Head Master's account shows BOTH "Admin" and "Head
   // Master" on the Role line - every other account just shows whatever
   // role(s) it actually holds (e.g. "Academic Master + Matron").
-  const rolesDisplay = user.role === "admin" ? "Admin, Head Master" : roleText;
-  const employmentDisplay = user.employment_type === "Temporary" ? "Part-Time" : "Permanent Employee (Government)";
+  const rolesDisplay = user.role === "admin" ? t("acct.adminRole") : roleText;
+  const employmentDisplay = user.employment_type === "Temporary" ? t("acct.partTime") : t("acct.permanent");
 
   // A rich, saturated navy - deliberately a different, more vivid shade
   // than the darker striped backdrop behind it, so the card reads as a
@@ -231,24 +236,24 @@ function ProfileModal({ user, displayName, roleText, onClose, onViewPhoto }) {
             background: "rgba(255,255,255,0.1)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer",
           }}
         >
-          <EyeIcon size={13} />View Profile Photo
+          <EyeIcon size={13} />{t("acct.viewPhoto")}
         </button>
         <div style={{ textAlign: "left" }}>
-          {row("Full Name", user.full_name)}
-          {row("Username", user.username)}
-          {row("Role(s)", rolesDisplay)}
-          {row("Subjects Taught", user.subject_names?.length ? user.subject_names.join(", ") : null)}
-          {row("Classes Taught", user.assigned_forms?.length ? user.assigned_forms.join(", ") : null)}
-          {row("Class Teacher Of", user.class_teacher_of)}
-          {row("Phone Number", user.phone)}
-          {row("Employment Status", employmentDisplay)}
-          {row("Email", user.email)}
+          {row(t("acct.fullName"), user.full_name)}
+          {row(t("acct.username"), user.username)}
+          {row(t("acct.roles"), rolesDisplay)}
+          {row(t("acct.subjects"), user.subject_names?.length ? user.subject_names.join(", ") : null)}
+          {row(t("acct.classes"), user.assigned_forms?.length ? user.assigned_forms.map((f) => formName(lang, f)).join(", ") : null)}
+          {row(t("acct.classTeacherOf"), user.class_teacher_of ? formName(lang, user.class_teacher_of) : null)}
+          {row(t("acct.phone"), user.phone)}
+          {row(t("acct.employment"), employmentDisplay)}
+          {row(t("acct.email"), user.email)}
         </div>
         <button
           type="button" onClick={onClose}
           style={{ marginTop: 18, width: "100%", padding: "10px 0", borderRadius: 4, border: "none", background: THEME.gold, color: THEME.navyDark, fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}
         >
-          Close
+          {t("common.close")}
         </button>
       </div>
     </div>
@@ -257,6 +262,7 @@ function ProfileModal({ user, displayName, roleText, onClose, onViewPhoto }) {
 
 export default function Layout() {
   const { user, logout, token, updateUser, refreshUser } = useAuth();
+  const { t, lang } = useLang();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -277,7 +283,7 @@ export default function Layout() {
   const myRoles = user.roles && user.roles.length ? user.roles : [user.role];
   const visible = MODULES.filter((m) => m.roles.some((r) => myRoles.includes(r)));
   const displayName = user.username;
-  const roleText = myRoles.map(roleLabel).join(" + ");
+  const roleText = myRoles.map((r) => roleName(lang, r)).join(" + ");
 
   // Time-of-day greeting shown at the top of the account header, in the
   // spot that used to show the static school name. Recomputed every minute
@@ -288,7 +294,7 @@ export default function Layout() {
     const id = setInterval(() => setGreeting(getGreeting()), 60000);
     return () => clearInterval(id);
   }, []);
-  const greetLine = displayName ? `${greeting}, ${displayName}` : greeting;
+  const greetLine = displayName ? `${t(greeting)}, ${displayName}` : t(greeting);
 
   // Close the drawer automatically on navigation (tablet/mobile), and any
   // time the viewport grows back to desktop size.
@@ -296,8 +302,8 @@ export default function Layout() {
   useEffect(() => { if (isDesktop) setDrawerOpen(false); }, [isDesktop]);
 
   const doLogout = () => {
-    confirm("Are you sure you want to log out?", () => { logout(); navigate("/"); }, {
-      confirmLabel: "Log Out", cancelLabel: "Cancel", danger: false,
+    confirm(t("acct.logoutConfirm"), () => { logout(); navigate("/"); }, {
+      confirmLabel: t("acct.logout"), cancelLabel: t("common.cancel"), danger: false,
     });
   };
 
@@ -319,11 +325,11 @@ export default function Layout() {
     e.target.value = ""; // let the same file be re-picked later if needed
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      showError("Invalid File", "Please choose an image file (JPG, PNG, etc.).");
+      showError(t("acct.badFileTitle"), t("acct.badFile"));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      showError("Photo Too Large", "Please choose an image under 5MB.");
+      showError(t("acct.tooLargeTitle"), t("acct.tooLarge"));
       return;
     }
     setPhotoAction("uploading");
@@ -332,15 +338,15 @@ export default function Layout() {
       fd.append("photo", file);
       const res = await fetch(`${API_BASE}/auth/photo`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, "Accept-Language": lang },
         body: fd,
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.success) throw new Error(data.message || "Photo upload failed.");
+      if (!res.ok || !data.success) throw new Error(data.message || t("acct.uploadFailed"));
       updateUser({ photo_url: data.photo_url });
-      showSuccess("Profile Photo", "Your profile photo has been uploaded successfully.");
+      showSuccess(t("acct.photoTitle"), t("acct.photoUploaded"));
     } catch (err) {
-      showError("Could Not Upload Photo", err.message);
+      showError(t("acct.uploadErrTitle"), err.message);
     } finally {
       setPhotoAction(null);
     }
@@ -351,23 +357,23 @@ export default function Layout() {
     // Cloudinary too, not just unlinked) - confirm Yes/No before acting,
     // same in-app dialog used for Logout, rather than removing it the
     // instant "Remove Photo" is tapped.
-    confirm("Are you sure you want to remove your profile photo?", async () => {
+    confirm(t("acct.removeConfirm"), async () => {
       setPhotoAction("removing");
       try {
         const res = await fetch(`${API_BASE}/auth/photo`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}`, "Accept-Language": lang },
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.success) throw new Error(data.message || "Could not remove photo.");
+        if (!res.ok || !data.success) throw new Error(data.message || t("acct.removeFailed"));
         updateUser({ photo_url: null });
-        showSuccess("Profile Photo", "Your profile photo has been removed successfully.");
+        showSuccess(t("acct.photoTitle"), t("acct.photoRemoved"));
       } catch (err) {
-        showError("Could Not Remove Photo", err.message);
+        showError(t("acct.removeErrTitle"), err.message);
       } finally {
         setPhotoAction(null);
       }
-    }, { confirmLabel: "Yes", cancelLabel: "No", danger: true });
+    }, { confirmLabel: t("common.yes"), cancelLabel: t("common.no"), danger: true });
   };
 
   const navLinks = (
@@ -380,7 +386,7 @@ export default function Layout() {
           display: "flex", alignItems: "center", gap: 12,
         }}>
           <span style={{ display: "flex", flexShrink: 0, opacity: 0.9 }}><m.Icon size={16} /></span>
-          {m.label}
+          {t(`menu.${m.key}`)}
         </Link>
       ))}
     </nav>
@@ -409,6 +415,9 @@ export default function Layout() {
               <NotificationBell />
             </div>
           </div>
+          <div style={{ padding: "0 20px 12px", display: "flex", alignItems: "center", gap: 8, fontSize: 11.5, opacity: 0.9 }}>
+            {t("common.language")}: <StaffLangToggle />
+          </div>
           {navLinks}
         </aside>
       ) : (
@@ -418,7 +427,7 @@ export default function Layout() {
             position: "fixed", top: 0, left: 0, right: 0, height: 60, background: THEME.navy, color: "#fff",
             display: "flex", alignItems: "center", gap: 8, padding: "0 10px 0 4px", zIndex: 60,
           }}>
-            <button onClick={() => setDrawerOpen(true)} aria-label="Open menu" style={{
+            <button onClick={() => setDrawerOpen(true)} aria-label={t("menu.open")} style={{
               background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 9,
               display: "flex", alignItems: "center", flexShrink: 0,
             }}><MenuIcon /></button>
@@ -445,7 +454,7 @@ export default function Layout() {
             transition: "transform 0.22s ease",
             boxShadow: drawerOpen ? "4px 0 24px rgba(0,0,0,0.25)" : "none",
           }}>
-            <button onClick={() => setDrawerOpen(false)} aria-label="Close menu" style={{
+            <button onClick={() => setDrawerOpen(false)} aria-label={t("menu.close")} style={{
               position: "absolute", top: 14, right: 14, background: "none", border: "none", color: "#fff",
               cursor: "pointer", padding: 6, display: "flex", alignItems: "center",
             }}><CloseIcon /></button>
@@ -454,6 +463,9 @@ export default function Layout() {
               <div style={{ minWidth: 0 }}>
                 <div title={greetLine} style={{ fontWeight: 800, fontSize: 12, lineHeight: 1.3, wordBreak: "break-word" }}>{greetLine}</div>
               </div>
+            </div>
+            <div style={{ padding: "0 20px 12px", display: "flex", alignItems: "center", gap: 8, fontSize: 12, opacity: 0.9 }}>
+              {t("common.language")}: <StaffLangToggle />
             </div>
             {navLinks}
           </aside>
@@ -506,7 +518,7 @@ export default function Layout() {
           fontSize: 13.5, fontWeight: 600,
         }}>
           <SpinnerIcon size={16} />
-          {photoAction === "removing" ? "Removing..." : "Uploading..."}
+          {photoAction === "removing" ? t("acct.removing") : t("acct.uploading")}
         </div>
       )}
 
@@ -527,9 +539,9 @@ export default function Layout() {
                 : getInitials(displayName)}
             </div>
             <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>{displayName}</div>
-            {!user.photo_url && <div style={{ fontSize: 12.5, fontStyle: "italic", color: "rgba(255,255,255,0.55)", marginTop: 4 }}>No profile photo uploaded yet</div>}
+            {!user.photo_url && <div style={{ fontSize: 12.5, fontStyle: "italic", color: "rgba(255,255,255,0.55)", marginTop: 4 }}>{t("acct.noPhoto")}</div>}
             <button onClick={() => setPhotoViewOpen(false)} style={{ marginTop: 14, padding: "9px 22px", background: THEME.gold, color: THEME.navyDark, border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
-              Close
+              {t("common.close")}
             </button>
           </div>
         </div>
@@ -546,6 +558,7 @@ export default function Layout() {
 // and Theme only - Logout now lives on the Avatar itself (tap/click the
 // avatar to log out), so this menu never needs to carry it.
 function SettingsMenu({ navigate, user }) {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const wrapRef = useRef(null);
@@ -563,7 +576,7 @@ function SettingsMenu({ navigate, user }) {
       const res = await apiFetch("/auth/preferences/font", { method: "PUT", body: JSON.stringify({ font: value }) }, token);
       updateUser({ preferred_font: res.preferred_font ?? null });
     } catch {
-      setFontNote("Applied on this device, but it could not be saved to your account. Please try again later.");
+      setFontNote(t("font.notSaved"));
     }
   };
   const myRoles = user?.roles?.length ? user.roles : [user?.role];
@@ -589,8 +602,8 @@ function SettingsMenu({ navigate, user }) {
       <button
         ref={gearRef}
         onClick={() => setOpen((o) => !o)}
-        aria-label="Settings"
-        title="Settings"
+        aria-label={t("set.title")}
+        title={t("set.title")}
         style={{
           display: "flex", alignItems: "center", justifyContent: "center",
           width: 34, height: 34, borderRadius: 4, border: "1px solid rgba(255,255,255,0.28)",
@@ -606,8 +619,8 @@ function SettingsMenu({ navigate, user }) {
         value={font}
         onChange={chooseFont}
         note={fontNote}
-        labels={{ title: "Font", hint: "Choose the font used across the system. It changes right away.", defaultName: "Default",
-          reset: "Reset to default", done: "Done", close: "Close" }}
+        labels={{ title: t("font.label"), hint: t("font.staffHint"), defaultName: t("font.default"),
+          reset: t("font.reset"), done: t("font.done"), close: t("common.close"), sample: t("font.sample") }}
       />
       {open && (
         <div style={{
@@ -616,24 +629,24 @@ function SettingsMenu({ navigate, user }) {
           borderRadius: 4, boxShadow: "0 12px 32px rgba(0,0,0,0.22)", zIndex: 100, overflow: "hidden",
         }}>
           <SettingsItem icon={<LockIcon />} onClick={() => { setOpen(false); navigate("/dashboard/change-password"); }}>
-            Change Password
+            {t("pw.changeTitle")}
           </SettingsItem>
 
           {canManageSignature && (
             <SettingsItem icon={<EditIcon />} onClick={() => { setOpen(false); navigate("/dashboard/signature-stamp"); }}>
-              Signature &amp; Stamp
+              {t("set.signature")}
             </SettingsItem>
           )}
 
           {canManageSms && (
             <SettingsItem icon={<MessageIcon />} onClick={() => { setOpen(false); navigate("/dashboard/sms-gateway"); }}>
-              SMS Gateway
+              {t("set.sms")}
             </SettingsItem>
           )}
 
           {isHeadMaster && (
             <SettingsItem icon={<ShieldIcon />} onClick={() => { setOpen(false); navigate("/dashboard/backups"); }}>
-              Database Backup
+              {t("set.backup")}
             </SettingsItem>
           )}
 
@@ -643,8 +656,12 @@ function SettingsMenu({ navigate, user }) {
             fontSize: 13, color: THEME.text,
           }}>
             <span aria-hidden="true" style={{ width: 15, textAlign: "center", fontWeight: 800, fontSize: 12 }}>Aa</span>
-            <span style={{ flex: 1 }}>Font</span>
+            <span style={{ flex: 1 }}>{t("font.label")}</span>
           </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", borderTop: `1px solid ${THEME.border}`, fontSize: 13, color: THEME.text }}>
+            <span style={{ flex: 1 }}>{t("common.language")}</span>
+            <StaffLangToggle dark={false} />
+          </div>
 
           <div style={{ borderTop: `1px solid ${THEME.border}` }}>
             <button
@@ -656,7 +673,7 @@ function SettingsMenu({ navigate, user }) {
               }}
             >
               <PaletteIcon />
-              <span style={{ flex: 1 }}>Theme</span>
+              <span style={{ flex: 1 }}>{t("set.theme")}</span>
               <span style={{ display: "flex", transform: themeOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s ease" }}>
                 <ChevronDownIcon />
               </span>
@@ -674,7 +691,7 @@ function SettingsMenu({ navigate, user }) {
                     }}
                   >
                     <span style={{ width: 14, height: 14, borderRadius: "50%", background: opt.swatch, border: `1px solid ${THEME.border}`, flexShrink: 0 }} />
-                    <span style={{ flex: 1 }}>{opt.label}</span>
+                    <span style={{ flex: 1 }}>{t(`theme.${opt.value}`)}</span>
                     {theme === opt.value && <CheckIcon size={13} />}
                   </button>
                 ))}
@@ -697,10 +714,4 @@ function SettingsItem({ icon, children, onClick, danger }) {
   );
 }
 
-function roleLabel(role) {
-  return {
-    admin: "Head Master", second_master: "Second Master", academic: "Academic Master",
-    teacher: "Teacher", patron: "School Patron", matron: "School Matron",
-    class_teacher: "Class Teacher", food_teacher: "Food Teacher",
-  }[role] || role;
-}
+
