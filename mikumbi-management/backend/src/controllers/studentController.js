@@ -897,7 +897,7 @@ const exportStudentPdf = async (req, res, next) => {
     } else {
       historyRes.rows.forEach(h => {
         doc.fontSize(9).font("Helvetica").fillColor("#0F172A")
-          .text(`${h.event_at_tz}  -  ${h.event_type}${h.from_value ? `  (${h.from_value} → ${h.to_value})` : ""}${h.note ? `  ${h.note}` : ""}${h.recorded_by_name ? `  - by ${h.recorded_by_name}` : ""}`);
+          .text(`${String(h.event_at_tz || "").slice(0, 10)}  -  ${h.event_type}${h.from_value ? `  (${h.from_value} → ${h.to_value})` : ""}${h.note ? `  ${h.note}` : ""}${h.recorded_by_name ? `  - by ${h.recorded_by_name}` : ""}`);
       });
     }
     doc.moveDown(1);
