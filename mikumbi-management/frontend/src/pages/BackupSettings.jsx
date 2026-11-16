@@ -36,13 +36,14 @@ export default function BackupSettings() {
   };
 
   // Fetch with the login token (never put it in the URL), then save the file.
-  const download = async (b) => {
-    setDownloading(b.id);
+  // kind "excel" = readable workbook; "full" = complete copy used to restore the system.
+  const download = async (b, kind) => {
+    setDownloading(`${b.id}-${kind}`);
     try {
-      const res = await fetch(`${API_BASE}/backups/${b.id}/download`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/backups/${b.id}/${kind === "excel" ? "excel" : "download"}`, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.message || "Download failed."); }
       const blob = await res.blob();
-      const name = (res.headers.get("content-disposition") || "").match(/filename="([^"]+)"/)?.[1] || `mikumbi-backup-${b.id}.json.gz`;
+      const name = (res.headers.get("content-disposition") || "").match(/filename="([^"]+)"/)?.[1] || (kind === "excel" ? `Mikumbi-Data-${b.id}.xlsx` : `mikumbi-backup-${b.id}.json.gz`);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
@@ -56,8 +57,8 @@ export default function BackupSettings() {
     <div style={{ padding: isMobile ? "16px 12px 32px" : "24px 16px 40px", maxWidth: 760, margin: "0 auto" }}>
       <h2 style={{ color: THEME.heading, fontSize: isMobile ? 17 : 20, marginBottom: 4 }}>Database Backup</h2>
       <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18, maxWidth: 620, lineHeight: 1.6 }}>
-        A full copy of the school's data is saved automatically every day, encrypted and stored outside the database.
-        The last {data?.keep || 14} backups are kept. Download one now and then and keep it somewhere safe (for example a flash disk in the office).
+        The system saves a full, protected copy of all school records every day, so nothing is lost if something goes wrong.
+        The last {data?.keep || 14} copies are kept.
       </p>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", background: stale ? THEME.dangerLight : THEME.successLight, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "12px 14px", marginBottom: 18 }}>
@@ -80,21 +81,27 @@ export default function BackupSettings() {
             <div key={b.id} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, padding: "11px 14px", borderTop: i ? `1px solid ${THEME.border}` : "none", fontSize: 13 }}>
               <div style={{ flex: 1, minWidth: 180 }}>
                 <div style={{ fontWeight: 700, color: THEME.text }}>{fmtDate(b.created_at)}</div>
-                <div style={{ color: THEME.muted, fontSize: 12 }}>{b.trigger === "manual" ? "Created manually" : "Automatic"} · {b.table_count} tables · {b.row_count.toLocaleString()} records · {fmtSize(b.file_size)}</div>
+                <div style={{ color: THEME.muted, fontSize: 12 }}>{b.trigger === "manual" ? "Created manually" : "Saved automatically"} · {b.row_count.toLocaleString()} records</div>
               </div>
-              <button type="button" onClick={() => download(b)} disabled={downloading === b.id} style={{ padding: "7px 14px", borderRadius: 4, border: `1px solid ${THEME.navy}`, background: THEME.surface, color: THEME.navy, fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>
-                {downloading === b.id ? "Downloading…" : "Download"}
-              </button>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button type="button" onClick={() => download(b, "excel")} disabled={downloading === `${b.id}-excel`} title="Open in Excel to read the records" style={{ padding: "7px 14px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>
+                  {downloading === `${b.id}-excel` ? "Preparing…" : "Excel (to read)"}
+                </button>
+                <button type="button" onClick={() => download(b, "full")} disabled={downloading === `${b.id}-full`} title="Complete copy for restoring the system" style={{ padding: "7px 14px", borderRadius: 4, border: `1px solid ${THEME.navy}`, background: THEME.surface, color: THEME.navy, fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>
+                  {downloading === `${b.id}-full` ? "Downloading…" : "Full copy"}
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      <p style={{ color: THEME.muted, fontSize: 12.5, marginTop: 16, lineHeight: 1.6 }}>
-        The downloaded file contains all school records (students, results, phone numbers). Keep it private.
-        Restoring a backup replaces the current data, so it is done by the system administrator with the
-        restore tool (backend/src/db/restore-backup.js), never from this page.
-      </p>
+      <div style={{ marginTop: 18, background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "14px 16px", fontSize: 13, lineHeight: 1.7, color: THEME.text }}>
+        <div style={{ fontWeight: 800, color: THEME.heading, marginBottom: 6 }}>Which one should I download?</div>
+        <div><b>Excel (to read):</b> opens in Excel or Google Sheets. Each kind of record (students, staff, contributions, hostel, results…) is on its own sheet. Passwords and other secrets are not included.</div>
+        <div style={{ marginTop: 6 }}><b>Full copy:</b> the complete copy of the system. You cannot read it yourself; keep it safe (for example on a flash disk in the office). If the system ever loses its data, give this file to the system administrator to put everything back.</div>
+        <div style={{ marginTop: 6, color: THEME.danger }}>Both files contain private school records. Do not share them.</div>
+      </div>
     </div>
   );
 }
