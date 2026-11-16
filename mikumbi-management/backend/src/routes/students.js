@@ -5,7 +5,7 @@ const {
   getStudents, getStudent, createStudent, updateStudent,
   deleteStudent, getStats, addCharge, markChargePaid, deleteCharge,
   getHistory, exportStudentPdf, exportStudentsListPdf, uploadPhoto, deletePhoto,
-  markTransferredOut, exportStudentReportPdf, promoteStudents, deleteOldGraduatedStudents,
+  markTransferredOut, setPremNo, exportStudentReportPdf, promoteStudents, deleteOldGraduatedStudents,
   previewStudentImport, commitStudentImport,
 } = require("../controllers/studentController");
 const { uploadStudentPhoto, uploadStudentRoster } = require("../middleware/upload");
@@ -29,6 +29,7 @@ router.post("/",         auth(["admin","second_master"]), createStudent);
 router.put("/:id",       auth(["admin","second_master"]), updateStudent);
 router.delete("/:id",    auth(["admin","second_master"]), deleteStudent);
 router.patch("/:id/transfer-out", auth(["admin","second_master"]), markTransferredOut);
+router.patch("/:id/prem-no", auth(["admin","second_master"]), setPremNo);
 router.post("/promote", auth(["admin","second_master"]), promoteStudents);
 router.delete("/graduated/cleanup", auth(["admin","second_master"]), deleteOldGraduatedStudents);
 

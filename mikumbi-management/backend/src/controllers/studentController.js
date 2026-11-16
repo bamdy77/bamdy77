@@ -637,6 +637,23 @@ const updateStudent = async (req, res, next) => {
 };
 
 // PATCH /api/students/:id/transfer-out - record where/when a student has transferred to
+// PATCH /api/students/:id/prem-no { prem_no } - Head Master / Second Master
+// type the student's PREM number by hand (empty clears it).
+const setPremNo = async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ success: false, message: "Invalid student." });
+    const raw = req.body ? req.body.prem_no : undefined;
+    if (raw !== null && raw !== undefined && typeof raw !== "string") return res.status(400).json({ success: false, message: "Invalid PREM number." });
+    const v = String(raw || "").trim();
+    if (v.length > 30) return res.status(400).json({ success: false, message: "PREM number is too long (30 characters max)." });
+    if (v && !/^[A-Za-z0-9/\- ]+$/.test(v)) return res.status(400).json({ success: false, message: "PREM number may contain only letters, numbers, / and -." });
+    const { rows } = await query(`UPDATE students SET prem_no = $1, updated_at = NOW() WHERE id = $2 RETURNING id, prem_no`, [v || null, id]);
+    if (!rows.length) return res.status(404).json({ success: false, message: "Student not found." });
+    res.json({ success: true, prem_no: rows[0].prem_no, message: v ? "PREM number saved." : "PREM number removed." });
+  } catch (err) { next(err); }
+};
+
 const markTransferredOut = async (req, res, next) => {
   try {
     const { dest_region, dest_district, dest_school, transfer_out_date } = req.body;
@@ -1524,7 +1541,7 @@ module.exports = {
   getStudents, getStudent, createStudent, updateStudent,
   deleteStudent, getStats, addCharge, markChargePaid, deleteCharge,
   getHistory, exportStudentPdf, exportStudentsListPdf, uploadPhoto, deletePhoto,
-  markTransferredOut, exportStudentReportPdf, genRegNo, promoteStudents,
+  markTransferredOut, setPremNo, exportStudentReportPdf, genRegNo, promoteStudents,
   renumberAutoRegNos, deleteOldGraduatedStudents,
   previewStudentImport, commitStudentImport,
 };

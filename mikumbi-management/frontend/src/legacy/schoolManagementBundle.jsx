@@ -882,6 +882,10 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
   const [success, setSuccess] = useState("");
   const [transferModal, setTransferModal] = useState(null); // student row being marked transferred out
   const [loginNoStudent, setLoginNoStudent] = useState(null); // student whose Results login number is shown
+  const [premStudent, setPremStudent] = useState(null); // student whose PREM number is being typed in (⋮ menu)
+  const [premValue, setPremValue] = useState("");
+  const [premBusy, setPremBusy] = useState(false);
+  const [premError, setPremError] = useState("");
   const [loginNoCopied, setLoginNoCopied] = useState(false);
   const [transferForm, setTransferForm] = useState({ dest_region:"", dest_district:"", dest_school:"", transfer_out_date:new Date().toISOString().slice(0,10) });
   const [reportModal, setReportModal] = useState(null); // student row for Admin bulk download
@@ -1190,7 +1194,6 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
               {r.photo_url ? <img src={photoSrc(r.photo_url)} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span style={{fontSize:12,fontWeight:700,color:C.muted}}>{(r.first_name?.[0]||"").toUpperCase()}</span>}
             </div>
           )},
-          {key:"prem_no",   label:"Prem No.",  render:r=>r.prem_no?digitsOnly(r.prem_no):<span style={{color:C.muted}}>-</span>},
           {key:"reg_no",    label:"Reg. No.", render:r=>r.reg_no||<span style={{color:C.muted}}>-</span>},
           {key:"name",      label:"Full Name", render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
           filterForm==="GRADUATED"
@@ -1212,6 +1215,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
             <ActionsMenu items={[
               { label:"Edit",     onClick:()=>{setForm({...r,dob:r.dob?.slice(0,10),admission_date:r.admission_date?.slice(0,10),_region:findRegionForDistrict(r.district)});setModal(r);} },
               { label:"Login No.", onClick:()=>{setLoginNoCopied(false);setLoginNoStudent(r);} },
+              { label:"Prem No.", onClick:()=>{setPremError("");setPremValue(r.prem_no||"");setPremStudent(r);} },
               { label:"Contributions", onClick:()=>openChargeModal(r) },
               ...(r.status!=="Transferred" ? [{ label:"Mark Transferred", onClick:()=>{setTransferForm({dest_region:"",dest_district:"",dest_school:"",transfer_out_date:new Date().toISOString().slice(0,10)});setTransferModal(r);} }] : []),
               { label:"Search Results", icon:SearchIcon, onClick:()=>setResultsModalStudent(r) },
@@ -1234,6 +1238,27 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
               <Btn variant="secondary" onClick={()=>{ try { navigator.clipboard.writeText(loginNoStudent.results_login_no); setLoginNoCopied(true); } catch { /* clipboard blocked */ } }}>{loginNoCopied ? "Copied" : "Copy"}</Btn>
             )}
             <Btn onClick={()=>setLoginNoStudent(null)}>Close</Btn>
+          </div>
+        </Modal>
+      )}
+
+      {premStudent && (
+        <Modal title="Prem No." onClose={()=>setPremStudent(null)}>
+          <div style={{fontSize:13,color:C.muted,marginBottom:10}}>{[premStudent.first_name,premStudent.middle_name,premStudent.last_name].filter(Boolean).join(" ")} · {premStudent.form}</div>
+          <Inp label="PREM number" value={premValue} onChange={v=>setPremValue(v)} placeholder="Type the PREM number (leave blank to remove)"/>
+          {premError && <div style={{color:C.danger,fontSize:13,marginTop:8}}>{premError}</div>}
+          <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:16}}>
+            <Btn variant="secondary" onClick={()=>setPremStudent(null)}>Cancel</Btn>
+            <Btn disabled={premBusy} onClick={async()=>{
+              setPremBusy(true); setPremError("");
+              try{
+                const r = await fetch(`${API_BASE}/students/${premStudent.id}/prem-no`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({prem_no:premValue})});
+                const d = await r.json();
+                if(!d.success) throw new Error(d.message);
+                setPremStudent(null); setSuccess(d.message); load();
+              }catch(e){ setPremError(e.message||"Failed to save PREM number."); }
+              finally{ setPremBusy(false); }
+            }}>{premBusy?"Saving...":"Save"}</Btn>
           </div>
         </Modal>
       )}
@@ -1354,7 +1379,6 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
 
           <SLabel>Identification Numbers (Prem &amp; Reg. No. are optional)</SLabel>
           <div style={gridCols(2)}>
-            <Inp label="Prem No. (optional)" value={form.prem_no||""} onChange={v=>setForm(p=>({...p,prem_no:v}))} placeholder="Leave blank if none"/>
             <Inp label="Reg. No. (optional, auto if blank)" value={form.reg_no||""} onChange={v=>setForm(p=>({...p,reg_no:v}))} placeholder={modal==="add"?"Auto-generated if blank":""}/>
           </div>
           <SLabel>Personal Details</SLabel>
