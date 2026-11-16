@@ -54,6 +54,8 @@ export function PrivacyPolicy() {
           { id: "security", title: "How it is protected", body: <ul style={ul}>
             <li style={li}>Encrypted connection (HTTPS), hashed passwords and a protected database; sensitive settings are encrypted.</li>
             <li style={li}>Accounts lock for 15 minutes after 8 wrong passwords. Changing a password signs out every other session.</li>
+            <li style={li}>Head Master and Second Master accounts need a code sent to their email when signing in from a new device.</li>
+            <li style={li}>The database is backed up automatically every day, encrypted, and kept outside the database.</li>
             <li style={li}>Request limits protect the system from automated attacks.</li>
             <li style={li}>QR codes on documents show full details only for genuine, school-issued documents.</li>
           </ul> },
@@ -101,6 +103,7 @@ export function SupportPage() {
             { q: "I forgot my password.", a: "Use \"Forgot Password\" on the login page and enter your registered email. If your account has no email yet, ask the Head Master or Second Master to add one in User Accounts." },
             { q: "My account is locked.", a: "After 8 wrong passwords the account locks for 15 minutes. Wait, then try again, or ask the Head Master to reset your password." },
             { q: "I was signed out suddenly.", a: "Your password was changed (by you or an administrator), which signs out other sessions. Sign in with the new password." },
+            { q: "Why am I asked for a login code?", a: "The Head Master and Second Master accounts must confirm a 6-digit code sent to their email when signing in from a new device. The device is then remembered for 60 days. Changing your password forgets all remembered devices." },
             { q: "I can't see a module.", a: "Modules depend on your role. Ask the Head Master or Second Master to check your role in User Accounts." },
           ] },
           { id: "tams", title: "Attendance (TAMS)", items: [

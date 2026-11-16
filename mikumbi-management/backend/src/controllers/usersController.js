@@ -373,6 +373,7 @@ const adminSetPassword = async (req, res, next) => {
     const hashed = await bcrypt.hash(new_password, BCRYPT_ROUNDS);
     // Unlock the account and end every existing session of that user.
     await query(`UPDATE users SET password = $1, password_changed_at = NOW(), failed_logins = 0, locked_until = NULL, updated_at = NOW() WHERE id = $2`, [hashed, req.params.id]);
+    await query(`DELETE FROM trusted_devices WHERE user_id = $1`, [req.params.id]); // re-verify devices after a reset
     res.json({ success: true, message: "Password updated." });
   } catch (err) { next(err); }
 };

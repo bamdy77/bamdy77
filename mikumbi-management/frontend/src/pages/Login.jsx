@@ -17,7 +17,9 @@ function useIsNarrow(breakpoint = 720) {
 }
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, verifyLoginCode } = useAuth();
+  const [twofa, setTwofa] = useState(null); // { challenge_id, email_hint } while waiting for the emailed code
+  const [code, setCode] = useState("");
   const navigate = useNavigate();
   const isNarrow = useIsNarrow();
   const [username, setUsername] = useState("");
@@ -30,13 +32,26 @@ export default function Login() {
     setError("");
     setBusy(true);
     try {
-      await login(username.trim(), password);
+      const r = await login(username.trim(), password);
+      if (r && r.twofa) { setTwofa(r.twofa); setCode(""); return; }
       navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Login failed.");
     } finally {
       setBusy(false);
     }
+  };
+
+  const submitCode = async (e) => {
+    e.preventDefault();
+    setError(""); setBusy(true);
+    try {
+      await verifyLoginCode(username.trim(), twofa.challenge_id, code.trim());
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.message || "Wrong code.");
+      if (err.expired) { setTwofa(null); setPassword(""); }
+    } finally { setBusy(false); }
   };
 
   return (
@@ -67,6 +82,25 @@ export default function Login() {
             Login with registered credentials
           </div>
 
+          {twofa ? (
+            <form onSubmit={submitCode}>
+              <div style={{ fontSize: 14, color: THEME.text, lineHeight: 1.6, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "10px 12px" }}>
+                New device: for your security, we sent a 6-digit code to <b>{twofa.email_hint}</b>. Enter it below. This device will then be remembered for 60 days.
+              </div>
+              <label style={labelStyle}>Login code</label>
+              <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code"
+                autoFocus placeholder="123456" aria-label="Login code" style={{ ...inputStyle, fontSize: 22, letterSpacing: 8, textAlign: "center" }} />
+              {error && <div style={{ color: THEME.danger, fontSize: 13, marginTop: 8 }}>{error}</div>}
+              <button type="submit" disabled={busy || code.length !== 6} style={{
+                width: "100%", marginTop: 20, padding: "12px 0", background: THEME.navy, color: "#fff",
+                border: "none", borderRadius: 4, fontWeight: 600, fontSize: 14.5, cursor: "pointer", opacity: busy || code.length !== 6 ? 0.7 : 1,
+              }}>{busy ? "Checking..." : "Verify and sign in"}</button>
+              <button type="button" onClick={() => { setTwofa(null); setError(""); setPassword(""); }}
+                style={{ width: "100%", marginTop: 10, background: "none", border: "none", color: THEME.navy, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
+                Didn't get the code? Sign in again to send a new one
+              </button>
+            </form>
+          ) : (
           <form onSubmit={submit}>
             <label style={labelStyle}>Username</label>
             <div style={{ position: "relative" }}>
@@ -92,6 +126,7 @@ export default function Login() {
               {busy ? <SpinnerIcon size={15} /> : <LoginIcon size={15} />}{busy ? "Signing in..." : "Login"}
             </button>
           </form>
+          )}
 
           <div style={{ textAlign: "center", marginTop: 16 }}>
             <Link to="/forgot-password" style={{ fontSize: 13, color: THEME.navy }}>Forgot Password?</Link>

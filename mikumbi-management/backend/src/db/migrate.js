@@ -1680,6 +1680,28 @@ async function migrate() {
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;`);
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_logins INTEGER NOT NULL DEFAULT 0;`);
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;`);
+  // Two-step verification (Head Master / Second Master): pending email codes
+  // and devices trusted for 60 days. Only hashes are stored.
+  await query(`
+    CREATE TABLE IF NOT EXISTS login_challenges (
+      id          VARCHAR(48) PRIMARY KEY,
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      code_hash   VARCHAR(64) NOT NULL,
+      attempts    INTEGER NOT NULL DEFAULT 0,
+      expires_at  TIMESTAMPTZ NOT NULL,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );`);
+  await query(`
+    CREATE TABLE IF NOT EXISTS trusted_devices (
+      id           SERIAL PRIMARY KEY,
+      user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash   VARCHAR(64) NOT NULL UNIQUE,
+      user_agent   VARCHAR(200),
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      last_used_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      expires_at   TIMESTAMPTZ NOT NULL
+    );`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_trusted_devices_user ON trusted_devices(user_id);`);
   // Interface font chooser: NULL = the system default font.
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_font VARCHAR(20);`);
   await query(`

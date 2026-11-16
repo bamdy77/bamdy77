@@ -29,19 +29,48 @@ export function AuthProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const login = useCallback(async (username, password) => {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.success) throw new Error(data.message || "Login failed.");
+  // Trusted-device tokens for 2-step verification, one per username, kept
+  // in this browser only (the server stores just a hash; 60 days).
+  const DEVICE_KEY = "mikumbi_trusted_devices";
+  const readDevices = () => { try { return JSON.parse(localStorage.getItem(DEVICE_KEY) || "{}") || {}; } catch { return {}; } };
+  const deviceKeyFor = (u) => String(u || "").trim().toLowerCase();
+
+  const finishLogin = (data) => {
     localStorage.setItem("mikumbi_token", data.token);
     localStorage.setItem("mikumbi_user", JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
     return data.user;
+  };
+
+  // Returns the user, or { twofa: { challenge_id, email_hint, message } }
+  // when the account must confirm a code sent to its email.
+  const login = useCallback(async (username, password) => {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password, device_token: readDevices()[deviceKeyFor(username)] }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "Login failed.");
+    if (data.twofa_required) return { twofa: data };
+    return finishLogin(data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const verifyLoginCode = useCallback(async (username, challengeId, code) => {
+    const res = await fetch(`${API_BASE}/auth/login/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ challenge_id: challengeId, code }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) { const e = new Error(data.message || "Wrong code."); e.expired = !!data.expired; throw e; }
+    if (data.device_token) {
+      try { localStorage.setItem(DEVICE_KEY, JSON.stringify({ ...readDevices(), [deviceKeyFor(username)]: data.device_token })); } catch { /* ignore */ }
+    }
+    return finishLogin(data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const logout = useCallback(() => {
@@ -99,7 +128,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, login, logout, updateUser, refreshUser, replaceToken }}>
+    <AuthContext.Provider value={{ token, user, loading, login, verifyLoginCode, logout, updateUser, refreshUser, replaceToken }}>
       {children}
     </AuthContext.Provider>
   );

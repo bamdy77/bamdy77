@@ -53,6 +53,97 @@ const login = async (req, res, next) => {
       await query(`UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = $1`, [user.id]);
     }
 
+    // Two-step verification for the Head Master and Second Master on a new
+    // device (see twoFactor below). Trusted devices skip it for 60 days.
+    const gate = await twoFactorGate(user, req.body && req.body.device_token);
+    if (gate) return res.json(gate);
+
+    return issueLogin(res, user);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── Two-step verification (2FA) ─────────────────────────────────────────
+// Head Master and Second Master accounts must confirm a 6-digit code sent to
+// their account email when signing in from a device not used before. The
+// device is then trusted for TRUST_DAYS. Codes live 10 minutes and allow 5
+// tries. Changing/resetting the password forgets every trusted device.
+const TWO_FACTOR_ROLES = ["admin", "second_master"];
+const TRUST_DAYS = 60;
+const CODE_MINUTES = 10;
+const MAX_CODE_TRIES = 5;
+const sha256 = (v) => crypto.createHash("sha256").update(String(v)).digest("hex");
+const maskEmail = (e) => String(e).replace(/^(.)(.*)(@.*)$/, (_m, a, b, c) => a + "*".repeat(Math.max(2, b.length)) + c);
+
+async function twoFactorGate(user, deviceToken) {
+  const roles = [user.role, ...(user.extra_roles || [])];
+  if (!roles.some((r) => TWO_FACTOR_ROLES.includes(r))) return null;
+  const { mailStatus } = require("../utils/mailer");
+  if (!user.email || !/^Brevo/.test(mailStatus())) {
+    // Cannot send a code (no email on the account, or email not set up on
+    // the server) - let them in rather than lock the school out, and say so.
+    console.warn(`[2FA] skipped for user ${user.id}: ${!user.email ? "no email on account" : "email not configured"}`);
+    return null;
+  }
+  if (typeof deviceToken === "string" && /^[a-f0-9]{64}$/.test(deviceToken)) {
+    const { rows } = await query(
+      `UPDATE trusted_devices SET last_used_at = NOW() WHERE user_id = $1 AND token_hash = $2 AND expires_at > NOW() RETURNING id`,
+      [user.id, sha256(deviceToken)]);
+    if (rows.length) return null; // known device
+  }
+  const code = String(crypto.randomInt(0, 1000000)).padStart(6, "0");
+  const challengeId = crypto.randomBytes(24).toString("hex");
+  await query(`DELETE FROM login_challenges WHERE user_id = $1 OR expires_at < NOW()`, [user.id]);
+  await query(
+    `INSERT INTO login_challenges (id, user_id, code_hash, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL '${CODE_MINUTES} minutes')`,
+    [challengeId, user.id, sha256(`${challengeId}:${code}`)]);
+  const { sendMail, esc } = require("../utils/mailer");
+  await sendMail({
+    to: user.email, toName: user.full_name, subject: `Login code: ${code} - Mikumbi Secondary School`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;border:1px solid #e0e0e0;border-radius:4px;">
+      <h2 style="color:#0c426f;margin:0 0 14px;">Mikumbi Secondary School</h2>
+      <p>Hello ${esc(user.full_name)},</p>
+      <p>Someone (hopefully you) is signing in to your account from a new device. Your login code is:</p>
+      <p style="font-size:30px;font-weight:800;letter-spacing:8px;text-align:center;margin:22px 0;color:#0c426f;">${code}</p>
+      <p style="font-size:13px;color:#555;">It expires in ${CODE_MINUTES} minutes. If this was not you, change your password immediately.</p></div>`,
+  });
+  return { success: true, twofa_required: true, challenge_id: challengeId, email_hint: maskEmail(user.email),
+    message: `A login code was sent to ${maskEmail(user.email)}.` };
+}
+
+// POST /api/auth/login/verify { challenge_id, code, remember }
+const verifyLoginCode = async (req, res, next) => {
+  try {
+    const { challenge_id: cid, code } = req.body || {};
+    if (typeof cid !== "string" || !/^[a-f0-9]{48}$/.test(cid) || typeof code !== "string" || !/^\d{6}$/.test(code.trim()))
+      return res.status(400).json({ success: false, message: "Enter the 6-digit code from your email." });
+    const { rows } = await query(`SELECT * FROM login_challenges WHERE id = $1`, [cid]);
+    const ch = rows[0];
+    if (!ch || new Date(ch.expires_at) < new Date() || ch.attempts >= MAX_CODE_TRIES)
+      return res.status(401).json({ success: false, expired: true, message: "This code has expired. Please sign in again to get a new code." });
+    const ok = crypto.timingSafeEqual(Buffer.from(ch.code_hash), Buffer.from(sha256(`${cid}:${code.trim()}`)));
+    if (!ok) {
+      await query(`UPDATE login_challenges SET attempts = attempts + 1 WHERE id = $1`, [cid]);
+      const left = MAX_CODE_TRIES - ch.attempts - 1;
+      return res.status(401).json({ success: false, expired: left <= 0,
+        message: left > 0 ? `Wrong code. ${left} attempt(s) left.` : "Too many wrong codes. Please sign in again." });
+    }
+    await query(`DELETE FROM login_challenges WHERE id = $1`, [cid]);
+    const uRes = await query(`SELECT * FROM users WHERE id = $1 AND is_active = true`, [ch.user_id]);
+    if (!uRes.rows.length) return res.status(401).json({ success: false, message: "Account not available." });
+    const deviceToken = crypto.randomBytes(32).toString("hex");
+    await query(
+      `INSERT INTO trusted_devices (user_id, token_hash, user_agent, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL '${TRUST_DAYS} days')`,
+      [ch.user_id, sha256(deviceToken), String(req.headers["user-agent"] || "").slice(0, 200)]);
+    return issueLogin(res, uRes.rows[0], { device_token: deviceToken });
+  } catch (err) { next(err); }
+};
+
+// Builds the normal login response (token + user) - shared by password
+// login and by the 2-step code check.
+async function issueLogin(res, user, extra = {}) {
+
     // Combined role list: primary role + any extra roles (e.g. an Academic
     // Master who is ALSO the Matron) — everything in this app that checks
     // permissions looks at this array, not the single `role` column.
@@ -83,11 +174,9 @@ const login = async (req, res, next) => {
         class_teacher_of: user.class_teacher_of || null, photo_url: user.photo_url || null,
         phone: user.phone || null, email: user.email || null, employment_type: user.employment_type || "Permanent",
         preferred_font: user.preferred_font || null },
+      ...extra,
     });
-  } catch (err) {
-    next(err);
-  }
-};
+}
 
 // GET /api/auth/me
 const me = async (req, res) => {
@@ -131,6 +220,7 @@ const changePassword = async (req, res, next) => {
     // password_changed_at logs out every OTHER session that used the old
     // password; this browser gets a fresh token below so it stays signed in.
     await query("UPDATE users SET password = $1, password_changed_at = NOW(), failed_logins = 0, locked_until = NULL, updated_at = NOW() WHERE id = $2", [hashed, req.user.id]);
+    await query("DELETE FROM trusted_devices WHERE user_id = $1", [req.user.id]); // new password = re-verify devices
     const freshToken = jwt.sign(
       { id: user.id, username: user.username, role: user.role, roles: Array.from(new Set([user.role, ...(user.extra_roles || [])])), full_name: user.full_name,
         subject_ids: user.subject_ids || [], assigned_forms: user.assigned_forms || [], class_teacher_of: user.class_teacher_of || null },
@@ -224,6 +314,7 @@ const resetPassword = async (req, res, next) => {
       "UPDATE users SET password = $1, reset_token_hash = NULL, reset_token_expires = NULL, password_changed_at = NOW(), failed_logins = 0, locked_until = NULL, updated_at = NOW() WHERE id = $2",
       [hashed, uid]
     );
+    await query("DELETE FROM trusted_devices WHERE user_id = $1", [uid]); // new password = re-verify devices
 
     res.json({ success: true, message: "Password has been reset successfully. You can now log in." });
   } catch (err) {
@@ -274,4 +365,5 @@ const removeAvatar = async (req, res, next) => {
 };
 
 module.exports = {
-  setPreferredFont, login, me, changePassword, forgotPassword, resetPassword, uploadAvatar, removeAvatar };
+  setPreferredFont,
+  verifyLoginCode, login, me, changePassword, forgotPassword, resetPassword, uploadAvatar, removeAvatar };
