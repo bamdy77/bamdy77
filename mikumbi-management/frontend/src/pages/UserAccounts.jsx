@@ -200,13 +200,13 @@ export default function UserAccounts() {
                 <input placeholder="e.g. MR.BEYANGA" required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={fieldInput} />
               </Field>
               <Field label="Full Name" required>
-                <input placeholder="e.g. Juma Mussa" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} style={fieldInput} />
+                <input placeholder="e.g. LINUS SAMORA MADAMA" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} style={fieldInput} />
               </Field>
               <Field label="Phone Number" hint="Shows under Communications → SMS Service automatically.">
-                <input type="tel" placeholder="e.g. 0754xxxxxx" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={fieldInput} />
+                <input type="tel" placeholder="e.g. 0677123443" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={fieldInput} />
               </Field>
               <Field label="Email" required hint="Used for Forgot Password and sign-in codes.">
-                <input type="email" placeholder="e.g. name@gmail.com" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={fieldInput} />
+                <input type="email" placeholder="e.g. shaibujuma@gmail.com" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={fieldInput} />
               </Field>
             </div>
           </FormSection>
@@ -472,7 +472,7 @@ function EditUserModal({ user, subjects, onClose, onSave, myRole }) {
           </div>
           <div>
             <label style={labelStyle}>Phone Number (for SMS Service)</label>
-            <input type="tel" placeholder="e.g. 0754xxxxxx" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} style={inputStyle} />
+            <input type="tel" placeholder="e.g. 0677123443" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} style={inputStyle} />
           </div>
           <EmploymentTypeCheckbox value={f.employment_type} onChange={(v) => setF({ ...f, employment_type: v })} />
           {isHeadMaster ? (
