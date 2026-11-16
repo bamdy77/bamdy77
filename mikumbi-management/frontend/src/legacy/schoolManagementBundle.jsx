@@ -1153,8 +1153,9 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:14}}>
         <StatCard label="Total Enrolled" value={total}  color={C.accent}/>
         <StatCard label="Active"         value={active} color={C.success}/>
-        <StatCard label="Male"           value={male}   color={C.boy}/>
-        <StatCard label="Female"         value={female} color={C.girl}/>
+        {/* Male/Female cards in the neutral text colour (no blue/purple), per school request. */}
+        <StatCard label="Male"           value={male}   color={C.text}/>
+        <StatCard label="Female"         value={female} color={C.text}/>
         <div onClick={()=>setFilterForm("GRADUATED")} style={{cursor:"pointer"}} title="View graduated students">
           <StatCard label="Graduated" value={graduated} color="#6366F1"/>
         </div>
@@ -1197,7 +1198,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
             : filterForm==="TRANSFERRED"
               ? {key:"transferred_to", label:"Transferred To", render:r=>r.dest_school ? <span>{r.dest_school}{r.dest_district?`, ${r.dest_district}`:""}{r.dest_region?`, ${r.dest_region}`:""}</span> : <span style={{color:C.muted}}>-</span>}
               : {key:"form", label:"Form"},
-          {key:"gender",    label:"Gender", render:r=><Badge color={r.gender==="Female"?"purple":"blue"}>{r.gender}</Badge>},
+          {key:"gender",    label:"Gender", render:r=>r.gender||"-"},
           {key:"registered_by", label:"Registered By", render:r=>r.registered_by||<span style={{color:C.muted}}>-</span>},
           filterForm==="GRADUATED"
             ? {key:"graduated_at", label:"Graduated On", render:r=>r.graduated_at?.slice(0,10)||"-"}
@@ -1767,7 +1768,7 @@ function ImportStudentsModal({ token, onClose, onDone }) {
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "baseline" }}>
                     <span style={{ fontWeight: 600 }}>{[r.parsed.first_name, r.parsed.middle_name, r.parsed.last_name].filter(Boolean).join(" ") || `Row ${r.row}`}</span>
                     <span style={{ color: C.muted, fontSize: 11.5 }}>Row {r.row}</span>
-                    {r.parsed.gender && <Badge color={r.parsed.gender === "Female" ? "purple" : "blue"}>{r.parsed.gender}</Badge>}
+                    {r.parsed.gender && <span>{r.parsed.gender}</span>}
                     {r.parsed.form && <Badge>{r.parsed.form}</Badge>}
                   </div>
                   {r.errors.length > 0 && <div style={{ color: C.danger, fontSize: 12, marginTop: 3 }}>{r.errors.join(" ")}</div>}

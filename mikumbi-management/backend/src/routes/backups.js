@@ -59,7 +59,24 @@ const SHEET_NAMES = {
 };
 // Sheets in the order of SHEET_NAMES (students first); the rest after, A-Z.
 const rank = (t) => { const i = Object.keys(SHEET_NAMES).indexOf(t); return i < 0 ? 999 : i; };
-const nice = (col) => col.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+// Plain column headings (Kiswahili + English) for the most common fields.
+const COL_NAMES = {
+  id: "Namba ya Mfumo (ID)", student_id: "ID ya Mwanafunzi", user_id: "ID ya Mtumishi", teacher_id: "ID ya Mwalimu",
+  reg_no: "Namba ya Usajili (Reg No)", admission_no: "Namba ya Kujiunga (Admission No)", prem_no: "Namba ya PREM",
+  entry_no: "Namba ya Kuingia Mtihani (Entry No)", results_login_no: "Namba ya Kuingia Matokeo",
+  first_name: "Jina la Kwanza", middle_name: "Jina la Kati", last_name: "Jina la Mwisho", full_name: "Jina Kamili",
+  gender: "Jinsia", dob: "Tarehe ya Kuzaliwa", form: "Kidato (Form)", stream: "Mkondo", district: "Wilaya", ward: "Kata",
+  village: "Kijiji/Mtaa", region: "Mkoa", status: "Hali (Status)", parent_name: "Jina la Mzazi/Mlezi",
+  parent_phone: "Simu ya Mzazi/Mlezi", phone: "Simu", email: "Barua Pepe", admission_date: "Tarehe ya Kujiunga",
+  username: "Jina la Kuingia (Username)", role: "Cheo (Role)", extra_roles: "Vyeo vya Ziada", is_active: "Anatumika?",
+  subject: "Somo", subject_name: "Somo", name: "Jina", code: "Kifupisho", marks: "Alama", grade: "Daraja",
+  amount: "Kiasi (TZS)", amount_paid: "Kiasi Kilicholipwa (TZS)", paid: "Amelipa?", month: "Mwezi", year: "Mwaka",
+  term: "Muhula", date: "Tarehe", note: "Maelezo", notes: "Maelezo", description: "Maelezo", title: "Kichwa",
+  exam_type: "Aina ya Mtihani", room_number: "Chumba", hostel_name: "Hosteli", capacity: "Uwezo",
+  created_at: "Iliundwa", updated_at: "Ilibadilishwa", graduated_at: "Alihitimu", exam_number: "Namba ya Mtihani (Std VII)",
+  exam_year: "Mwaka wa Kumaliza Std VII", time_str: "Muda", is_late: "Alichelewa?", late_reason: "Sababu ya Kuchelewa",
+};
+const nice = (col) => COL_NAMES[col] || col.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 router.get("/:id/excel", async (req, res, next) => {
   try {
@@ -90,7 +107,8 @@ router.get("/:id/excel", async (req, res, next) => {
       for (const r of rows) {
         ws.addRow(Object.fromEntries(cols.map((c) => {
           const v = r[c];
-          return [c, v === null || v === undefined ? "" : typeof v === "object" ? JSON.stringify(v) : v];
+          return [c, v === null || v === undefined ? "" : v === true ? "Ndiyo" : v === false ? "Hapana"
+            : Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v) : v];
         })));
       }
     }
