@@ -9,6 +9,7 @@ import { showSuccess } from "../components/SuccessModal";
 import { showError } from "../components/ErrorModal";
 import { PasswordInput } from "../components/PasswordInput";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import ExamTypesManager from "../components/ExamTypesManager";
 import { DotsVerticalIcon, EditIcon, KeyIcon, PauseCircleIcon, RefreshIcon, TrashIcon, BookIcon, SchoolIcon, ShieldIcon, ClockIcon, PlusCircleIcon, UserHistoryIcon, CheckIcon, CloseIcon, PersonSilhouetteIcon, SpinnerIcon } from "../components/icons";
 
 const ROLES = [
@@ -251,6 +252,10 @@ export default function UserAccounts() {
           <p style={{ fontSize: 12.5, color: result.ok ? THEME.success : THEME.danger }}>{result.text}</p>
         )}
       </form>
+
+      {[me?.role, ...(me?.roles || [])].some((r) => r === "admin" || r === "second_master") && (
+        <ExamTypesManager token={token} isMobile={isMobile} />
+      )}
 
       <div style={isCompactList ? { display: "grid", gap: 10 } : { background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
         {result && !result.ok && (

@@ -1680,6 +1680,38 @@ async function migrate() {
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;`);
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_logins INTEGER NOT NULL DEFAULT 0;`);
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;`);
+  // Exam types (Results Management). Managed by Head Master / Second Master
+  // in User Accounts; seeded once with the original fixed list.
+  await query(`
+    CREATE TABLE IF NOT EXISTS exam_types (
+      id         SERIAL PRIMARY KEY,
+      name       VARCHAR(120) NOT NULL,
+      name_sw    VARCHAR(160),
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      is_active  BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );`);
+  await query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_exam_types_name ON exam_types (LOWER(name));`);
+  await query(`
+    INSERT INTO exam_types (name, name_sw, sort_order) VALUES
+      ('Monthly Test', 'MTIHANI WA MWEZI', 1),
+      ('Mid-Term Examination', 'MTIHANI WA KATI WA MHULA', 2),
+      ('Terminal Examination', 'MTIHANI WA KUFUNGA MHULA', 3),
+      ('Mock Examination', 'MTIHANI WA MAJARIBIO', 4),
+      ('District Mock Examination', 'MTIHANI WA MAJARIBIO WA WILAYA', 5),
+      ('Annual Examination', 'MTIHANI WA MWAKA', 6),
+      ('School Examination', 'MTIHANI WA SHULE', 7),
+      ('Fitness Examination', 'MTIHANI WA UTAYARI', 8),
+      ('Good Neighborliness Examination Mikumbi & Mkoma', 'MTIHANI WA UJIRANI MWEMA MIKUMBI NA MKOMA', 9),
+      ('Good Neighborliness Examination Mikumbi & Chihangu', 'MTIHANI WA UJIRANI MWEMA MIKUMBI NA CHIHANGU', 10),
+      ('Good Neighborliness Examination Mikumbi & Mnyambe', 'MTIHANI WA UJIRANI MWEMA MIKUMBI NA MNYAMBE', 11)
+    ON CONFLICT DO NOTHING;`);
+  // Types already used in old results but missing from the list (kept hidden-safe: active).
+  await query(`
+    INSERT INTO exam_types (name, sort_order)
+    SELECT DISTINCT ap.exam_type, 100 FROM academic_periods ap
+    WHERE NOT EXISTS (SELECT 1 FROM exam_types et WHERE LOWER(et.name) = LOWER(ap.exam_type))
+    ON CONFLICT DO NOTHING;`);
   // Training videos for parents (files live on Cloudinary; only metadata here).
   await query(`
     CREATE TABLE IF NOT EXISTS parent_videos (

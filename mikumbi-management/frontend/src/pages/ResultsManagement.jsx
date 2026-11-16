@@ -1,3 +1,4 @@
+import { useExamTypes, DEFAULT_EXAM_TYPES } from "../hooks/useExamTypes";
 import { useState, useEffect, useCallback, useRef, Fragment } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../context/AuthContext";
@@ -9,7 +10,7 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { DotsVerticalIcon, RefreshIcon, KeyIcon, TrashIcon, CheckIcon, PauseCircleIcon, CalendarIcon, EditIcon, LayersIcon, CheckCircleIcon, MegaphoneIcon, ClockIcon, DownloadIcon, SaveIcon, LockIcon, SendIcon, ChevronRightIcon, TrophyIcon, TrendingDownIcon, SearchIcon, PrinterIcon, CloseIcon, SpinnerIcon, MessageIcon, InfoIcon, ChevronDownIcon } from "../components/icons";
 
 const FORMS = ["Form I", "Form II", "Form III", "Form IV"];
-const EXAM_TYPES = ["Monthly Test", "Mid-Term Examination", "Terminal Examination", "Mock Examination", "District Mock Examination", "Annual Examination", "School Examination", "Fitness Examination", "Good Neighborliness Examination Mikumbi & Mkoma", "Good Neighborliness Examination Mikumbi & Chihangu", "Good Neighborliness Examination Mikumbi & Mnyambe"];
+const EXAM_TYPES = DEFAULT_EXAM_TYPES; // initial value only - live list comes from useExamTypes()
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const SW_MONTHS_FRONT = ["Januari", "Februari", "Machi", "Aprili", "Mei", "Juni", "Julai", "Agosti", "Septemba", "Oktoba", "Novemba", "Desemba"];
 const MHULA_OPTIONS_FRONT = ["Nusu Mhula wa I", "Mhula Wa I", "Nusu Mhula wa II", "Mhula Wa II"];
@@ -21,6 +22,7 @@ export default function ResultsManagement() {
   const isCompact = isMobile || isTablet;
   const [subjects, setSubjects] = useState([]);
   const [period, setPeriod] = useState(null); // { id, form, exam_type, month, year }
+  const examTypes = useExamTypes(token);
   const [selection, setSelection] = useState({
     form: (user.assigned_forms && user.assigned_forms[0]) || (user.role === "class_teacher" && user.class_teacher_of) || "Form I", exam_type: EXAM_TYPES[0], month: MONTHS[new Date().getMonth()], year: new Date().getFullYear(),
   });
@@ -181,7 +183,7 @@ export default function ResultsManagement() {
           </Field>
           <Field label="Exam Type">
             <select value={selection.exam_type} onChange={(e) => setSelection({ ...selection, exam_type: e.target.value })} style={{ ...selectStyle, ...(isCompact ? { flex: 1, minWidth: 140 } : {}) }}>
-              {EXAM_TYPES.map((f) => <option key={f}>{f}</option>)}
+              {examTypes.map((f) => <option key={f}>{f}</option>)}
             </select>
           </Field>
         </div>
@@ -1709,6 +1711,7 @@ const RANGE_COLORS = { AC: { background: "#0EA5E9", color: "#FFFFFF" }, AD: { ba
 // subject's rank against every other subject sat in the same exam).
 function TeacherEvaluationModal({ token, onClose }) {
   const { isMobile } = useBreakpoint();
+  const evalExamTypes = useExamTypes(token);
   const [sel, setSel] = useState({ form: FORMS[0], exam_type: EXAM_TYPES[0], month: MONTHS[new Date().getMonth()], year: new Date().getFullYear() });
   const [teachers, setTeachers] = useState([]);
   const [loadingTeachers, setLoadingTeachers] = useState(false);
@@ -1798,7 +1801,7 @@ function TeacherEvaluationModal({ token, onClose }) {
           </Field>
           <Field label="Exam Type">
             <select value={sel.exam_type} onChange={(e) => setSel((p) => ({ ...p, exam_type: e.target.value }))} style={selectStyle}>
-              {EXAM_TYPES.map((f) => <option key={f}>{f}</option>)}
+              {evalExamTypes.map((f) => <option key={f}>{f}</option>)}
             </select>
           </Field>
           <Field label="Month">

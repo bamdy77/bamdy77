@@ -64,8 +64,16 @@ const EXAM_TYPE_SW = {
   "Good Neighborliness Examination Mikumbi & Chihangu": "MTIHANI WA UJIRANI MWEMA MIKUMBI NA CHIHANGU",
   "Good Neighborliness Examination Mikumbi & Mnyambe": "MTIHANI WA UJIRANI MWEMA MIKUMBI NA MNYAMBE",
 };
+// Kiswahili names typed in User Accounts → Exam Types win over the built-in list.
+let dbExamTypeSw = {};
+async function refreshExamTypeSw() {
+  try {
+    const { rows } = await query(`SELECT name, name_sw FROM exam_types WHERE name_sw IS NOT NULL AND name_sw <> ''`);
+    dbExamTypeSw = Object.fromEntries(rows.map((r) => [r.name, r.name_sw.toUpperCase()]));
+  } catch { /* table missing on an old database - keep the built-in list */ }
+}
 function examTypeSw(examType) {
-  return EXAM_TYPE_SW[examType] || `MTIHANI WA ${String(examType || "").toUpperCase()}`;
+  return dbExamTypeSw[examType] || EXAM_TYPE_SW[examType] || `MTIHANI WA ${String(examType || "").toUpperCase()}`;
 }
 
 // "Form III" → "Kidato III" - used only by the long Android Gateway
@@ -222,6 +230,7 @@ function buildVars(sheet, student, totalStudents, subjectScores) {
 // Parent Report PDF's subject table) so the SMS can list them the way a
 // parent would recognise from the printed report.
 async function loadResultsSmsContext(sheet_id) {
+  await refreshExamTypeSw();
   const sheetRes = await query(
     `SELECT ss.*, ap.exam_type, ap.month, ap.year FROM score_sheets ss JOIN academic_periods ap ON ap.id = ss.period_id WHERE ss.id = $1`,
     [sheet_id]

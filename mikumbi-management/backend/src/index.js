@@ -205,6 +205,7 @@ app.use("/api/chatbot",       chatbotRoutes);
 // public submit/download. Mounted last among API routes so nothing above
 // is ever shadowed by it.
 app.use("/api/backups",       require("./routes/backups"));
+app.use("/api/exam-types",    require("./routes/examTypes"));
 app.use("/api/videos",        require("./routes/videos").staff);
 app.use("/api/public/videos", require("./routes/videos").pub);
 app.use("/api/public",        publicRoutes);

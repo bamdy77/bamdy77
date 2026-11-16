@@ -165,6 +165,9 @@ const createOrFindPeriod = async (req, res, next) => {
   if (!form || !exam_type || !month || !year)
     return res.status(400).json({ error: "form, exam_type, month, year required." });
   try {
+    // Only exam types from the managed list (User Accounts → Exam Types).
+    const et = await query(`SELECT name FROM exam_types WHERE LOWER(name) = LOWER($1)`, [String(exam_type).trim()]);
+    if (!et.rows.length) return res.status(400).json({ error: "Unknown exam type. Ask the Head Master or Second Master to add it in User Accounts → Exam Types." });
     const existing = await query(
       `SELECT * FROM academic_periods WHERE form=$1 AND exam_type=$2 AND month=$3 AND year=$4`,
       [form, exam_type, month, year]
