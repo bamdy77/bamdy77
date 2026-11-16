@@ -6,7 +6,7 @@ import { siteConfig, toTelHref } from "../config/siteConfig";
 // Privacy / Terms / Support for the STAFF site (English). The parents'
 // versions are in pages/public/PublicLegal.jsx. Keep both in line with what
 // the system really does.
-const UPDATED = "15 November 2026";
+const UPDATED = "16 November 2026";
 const TABS = [
   { to: "/privacy", label: "Privacy Policy" },
   { to: "/terms", label: "Terms of Use" },
@@ -59,7 +59,7 @@ export function PrivacyPolicy() {
             <li style={li}>Request limits protect the system from automated attacks.</li>
             <li style={li}>QR codes on documents show full details only for genuine, school-issued documents.</li>
           </ul> },
-          { id: "retention", title: "How long records are kept", body: <P>Academic and attendance records are kept as official school records. Graduated students' records are removed automatically after the retention period set by the school.</P> },
+          { id: "retention", title: "How long records are kept", body: <P>Academic and attendance records are kept as official school records. Graduated students' records are removed automatically after the retention period set by the school. Encrypted daily backups are kept for 14 days and then deleted automatically.</P> },
           { id: "rights", title: "Corrections", body: <P>If any record about you or a student is wrong, ask the Head Master or Second Master to correct it.</P> },
           { id: "changes", title: "Changes", body: <P>This policy is updated when the system changes. The date at the top shows the current version.</P> },
         ]} />
@@ -85,7 +85,7 @@ export function TermsOfService() {
           </ul> },
           { id: "tams", title: "Attendance (TAMS)", body: <P>Check in truthfully, yourself, from your own registered device, inside the school area and within the registration window. Checking in for someone else or faking your location is a serious offence.</P> },
           { id: "results", title: "Results and documents", body: <P>Only authorized roles may enter, compile, publish or hide results. Publishing results to parents is a decision of the Head Master. Signatures and the stamp may be uploaded only by the person authorized to do so, and are applied automatically to official documents.</P> },
-          { id: "privacy", title: "Student privacy", body: <P>Treat every student record as confidential. Do not share results, phone numbers or photos on social media or with anyone not entitled to them.</P> },
+          { id: "privacy", title: "Student privacy", body: <P>Treat every student record as confidential. Do not share results, phone numbers or photos on social media or with anyone not entitled to them. A downloaded backup file contains all school records and must be kept private.</P> },
           { id: "breach", title: "Breaking these terms", body: <P>Misuse may lead to the account being suspended and to disciplinary action under the school's and the Government's rules.</P> },
           { id: "changes", title: "Changes", body: <P>The school may update these terms as the system evolves. Continuing to use the system means you accept the updated terms.</P> },
         ]} />
@@ -114,6 +114,11 @@ export function SupportPage() {
             { q: "A teacher can't enter scores.", a: "Check that the teacher's subjects and forms are set in User Accounts, and that the sheet is not locked." },
             { q: "The signature or stamp looks wrong on reports.", a: "Re-upload it in Settings → Signature & Stamp using a clear photo on plain white paper; the background is removed automatically." },
             { q: "Where is a student's Results Login Number?", a: "In Student Management, open the ⋮ menu on the student's row and choose \"Login No.\"." },
+          ] },
+          { id: "backup", title: "Backups", items: [
+            { q: "Is the school's data backed up?", a: "Yes. A full, encrypted copy is made automatically every day and the last 14 are kept outside the database. The Head Master can see them in Settings → Database Backup." },
+            { q: "How do I keep my own copy?", a: "Head Master: open Settings → Database Backup and press Download. Keep the file private (for example on a flash disk in the office); it contains all school records." },
+            { q: "Can a backup be restored from the website?", a: "No. Restoring replaces the current data, so it is done only by the system administrator with the restore tool, after checking the backup first." },
           ] },
           { id: "app", title: "App, theme and font", items: [
             { q: "How do I install the app?", a: "Open the staff site home page and tap \"Download the App\". On iPhone, use Safari's Share button → \"Add to Home Screen\"." },

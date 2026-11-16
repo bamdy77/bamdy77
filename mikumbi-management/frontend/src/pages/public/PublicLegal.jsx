@@ -7,7 +7,7 @@ import { SCHOOL } from "../../styles/theme";
 // Privacy / Terms / Support for the PARENTS' website (Kiswahili default,
 // full English when EN is chosen). The staff versions are in
 // pages/LegalPages.jsx. Keep both in line with what the system really does.
-const UPDATED = { sw: "15 Novemba 2026", en: "15 November 2026" };
+const UPDATED = { sw: "16 Novemba 2026", en: "16 November 2026" };
 
 const tabsFor = (sw) => [
   { to: "/privacy", label: sw ? "Sera ya Faragha" : "Privacy Policy" },
@@ -48,8 +48,9 @@ export function PublicPrivacy() {
       <li style={li}>Kuingia kwenye matokeo kunahitaji namba mbili; baada ya majaribio mengi yasiyo sahihi, kuingia husimamishwa kwa muda.</li>
       <li style={li}>Matokeo ni ya kusoma tu: hayapakuliwi wala kuchapishwa, na yana alama (watermark) ya namba ya mwanafunzi.</li>
       <li style={li}>QR code iliyo kwenye nyaraka za shule huonyesha taarifa kamili tu kwa nyaraka halisi iliyotolewa na shule.</li>
+      <li style={li}>Nakala ya akiba (backup) ya taarifa za shule hutengenezwa kila siku, husimbwa (encrypted) na kuhifadhiwa kwa usalama ili zisipotee.</li>
     </ul> },
-    { id: "muda", title: "Muda wa kuhifadhi", body: <p style={{ margin: 0 }}>Taarifa za maombi ya kujiunga huhifadhiwa kwa kipindi cha usajili wa mwaka husika. Kumbukumbu za matokeo huhifadhiwa kama sehemu ya kumbukumbu rasmi za shule.</p> },
+    { id: "muda", title: "Muda wa kuhifadhi", body: <p style={{ margin: 0 }}>Taarifa za maombi ya kujiunga huhifadhiwa kwa kipindi cha usajili wa mwaka husika. Kumbukumbu za matokeo huhifadhiwa kama sehemu ya kumbukumbu rasmi za shule. Nakala za akiba (backup) huhifadhiwa kwa siku 14 kisha hufutwa zenyewe.</p> },
     { id: "haki", title: "Haki zako", body: <p style={{ margin: 0 }}>Unaweza kuomba kuona au kusahihisha taarifa za mwanao kwa kuwasiliana na shule. Ukiona taarifa isiyo sahihi kwenye matokeo au Maelekezo ya Kujiunga, wasiliana nasi mara moja.</p> },
     { id: "watoto", title: "Taarifa za watoto", body: <p style={{ margin: 0 }}>Tovuti hii imeandaliwa kwa ajili ya wazazi na walezi. Taarifa za wanafunzi zinashughulikiwa kwa uangalifu maalum na zinaonyeshwa kwa mzazi/mlezi aliyethibitishwa tu.</p> },
     { id: "ramani", title: "Ramani", body: <p style={{ margin: 0 }}>Ramani iliyo kwenye ukurasa wa mwanzo inaonyeshwa na Google Maps. Ukiitumia, Google inaweza kupokea taarifa za kawaida za kivinjari kwa mujibu wa sera yake.</p> },
@@ -73,8 +74,9 @@ export function PublicPrivacy() {
       <li style={li}>Results need two numbers to open; after too many wrong attempts, logging in is paused for a while.</li>
       <li style={li}>Results are view-only: they cannot be downloaded or printed, and carry a watermark with the student's number.</li>
       <li style={li}>The QR code on school documents shows full details only for a genuine document issued by the school.</li>
+      <li style={li}>A backup copy of the school's records is made every day, encrypted and stored safely so nothing is lost.</li>
     </ul> },
-    { id: "keep", title: "How long we keep it", body: <p style={{ margin: 0 }}>Joining applications are kept for that year's admission period. Results are kept as part of the school's official records.</p> },
+    { id: "keep", title: "How long we keep it", body: <p style={{ margin: 0 }}>Joining applications are kept for that year's admission period. Results are kept as part of the school's official records. Backup copies are kept for 14 days and then deleted automatically.</p> },
     { id: "rights", title: "Your rights", body: <p style={{ margin: 0 }}>You may ask to see or correct your child's information by contacting the school. If you notice anything wrong in the results or the Joining Instructions, please contact us straight away.</p> },
     { id: "children", title: "Children's information", body: <p style={{ margin: 0 }}>This website is for parents and guardians. Students' information is handled with special care and shown only to a verified parent/guardian.</p> },
     { id: "map", title: "Map", body: <p style={{ margin: 0 }}>The map on the home page is provided by Google Maps. If you use it, Google may receive standard browser information under its own policy.</p> },
