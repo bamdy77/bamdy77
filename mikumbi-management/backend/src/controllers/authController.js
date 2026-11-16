@@ -54,7 +54,7 @@ const login = async (req, res, next) => {
     }
 
     // Two-step verification for the Head Master and Second Master on a new
-    // device (see twoFactor below). Trusted devices skip it for 60 days.
+    // device (see twoFactor below). Trusted devices skip it for 30 days.
     const gate = await twoFactorGate(user, req.body && req.body.device_token);
     if (gate) return res.json(gate);
 
@@ -65,12 +65,12 @@ const login = async (req, res, next) => {
 };
 
 // ── Two-step verification (2FA) ─────────────────────────────────────────
-// Head Master and Second Master accounts must confirm a 6-digit code sent to
+// Head Master, Second Master and Academic Master accounts must confirm a 6-digit code sent to
 // their account email when signing in from a device not used before. The
 // device is then trusted for TRUST_DAYS. Codes live 10 minutes and allow 5
 // tries. Changing/resetting the password forgets every trusted device.
-const TWO_FACTOR_ROLES = ["admin", "second_master"];
-const TRUST_DAYS = 60;
+const TWO_FACTOR_ROLES = ["admin", "second_master", "academic"];
+const TRUST_DAYS = 30;
 const CODE_MINUTES = 10;
 const MAX_CODE_TRIES = 5;
 const sha256 = (v) => crypto.createHash("sha256").update(String(v)).digest("hex");

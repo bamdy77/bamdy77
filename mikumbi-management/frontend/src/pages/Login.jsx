@@ -20,6 +20,7 @@ export default function Login() {
   const { login, verifyLoginCode } = useAuth();
   const [twofa, setTwofa] = useState(null); // { challenge_id, email_hint } while waiting for the emailed code
   const [code, setCode] = useState("");
+  const [verified, setVerified] = useState(false); // brief success tick before entering the dashboard
   const navigate = useNavigate();
   const isNarrow = useIsNarrow();
   const [username, setUsername] = useState("");
@@ -42,14 +43,19 @@ export default function Login() {
     }
   };
 
-  const submitCode = async (e) => {
-    e.preventDefault();
+  const submitCode = async (e, value) => {
+    e?.preventDefault?.();
+    const c = String(value ?? code).trim();
+    if (c.length !== 6 || busy) return;
     setError(""); setBusy(true);
     try {
-      await verifyLoginCode(username.trim(), twofa.challenge_id, code.trim());
+      await verifyLoginCode(username.trim(), twofa.challenge_id, c);
+      setVerified(true);
+      await new Promise((r) => setTimeout(r, 700));
       navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Wrong code.");
+      setCode(""); // wrong code: clear the box so the next 6 digits are checked again
       if (err.expired) { setTwofa(null); setPassword(""); }
     } finally { setBusy(false); }
   };
@@ -85,16 +91,27 @@ export default function Login() {
           {twofa ? (
             <form onSubmit={submitCode}>
               <div style={{ fontSize: 14, color: THEME.text, lineHeight: 1.6, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "10px 12px" }}>
-                New device: for your security, we sent a 6-digit code to <b>{twofa.email_hint}</b>. Enter it below. This device will then be remembered for 60 days.
+                New device: for your security, we sent a 6-digit code to <b>{twofa.email_hint}</b>. Enter it below. This device will then be remembered for 30 days.
               </div>
               <label style={labelStyle}>Login code</label>
-              <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code"
-                autoFocus placeholder="123456" aria-label="Login code" style={{ ...inputStyle, fontSize: 22, letterSpacing: 8, textAlign: "center" }} />
+              {/* Checks automatically as soon as the 6th digit is entered (typed or pasted). */}
+              <input value={code} onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setCode(v); if (v.length === 6) submitCode(null, v); }}
+                disabled={busy} inputMode="numeric" autoComplete="one-time-code"
+                autoFocus placeholder="123456" aria-label="Login code" className={busy && !verified ? "mk-code-checking" : ""}
+                style={{ ...inputStyle, fontSize: 22, letterSpacing: 8, textAlign: "center", transition: "border-color .2s, box-shadow .2s",
+                  ...(code.length === 6 ? { borderColor: THEME.navy, boxShadow: `0 0 0 3px ${THEME.navy}22` } : {}) }} />
+              <style>{`@keyframes mkCodePulse { 0%,100% { box-shadow: 0 0 0 3px rgba(12,66,111,.15); } 50% { box-shadow: 0 0 0 7px rgba(12,66,111,.32); } }
+                .mk-code-checking { animation: mkCodePulse 0.9s ease-in-out infinite; }
+                @keyframes mkCodeOk { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                .mk-code-ok { display: inline-block; animation: mkCodeOk .35s ease-out; }
+                @media (prefers-reduced-motion: reduce) { .mk-code-checking { animation: none; } }`}</style>
               {error && <div style={{ color: THEME.danger, fontSize: 13, marginTop: 8 }}>{error}</div>}
               <button type="submit" disabled={busy || code.length !== 6} style={{
                 width: "100%", marginTop: 20, padding: "12px 0", background: THEME.navy, color: "#fff",
                 border: "none", borderRadius: 4, fontWeight: 600, fontSize: 14.5, cursor: "pointer", opacity: busy || code.length !== 6 ? 0.7 : 1,
-              }}>{busy ? "Checking..." : "Verify and sign in"}</button>
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                ...(verified ? { background: THEME.success, opacity: 1 } : {}),
+              }}>{verified ? <span className="mk-code-ok">✓ Verified</span> : busy ? <><SpinnerIcon size={15} />Verifying…</> : "Verify and sign in"}</button>
               <button type="button" onClick={() => { setTwofa(null); setError(""); setPassword(""); }}
                 style={{ width: "100%", marginTop: 10, background: "none", border: "none", color: THEME.navy, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
                 Didn't get the code? Sign in again to send a new one

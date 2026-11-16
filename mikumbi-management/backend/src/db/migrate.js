@@ -1702,6 +1702,8 @@ async function migrate() {
       expires_at   TIMESTAMPTZ NOT NULL
     );`);
   await query(`CREATE INDEX IF NOT EXISTS idx_trusted_devices_user ON trusted_devices(user_id);`);
+  // Trust period shortened from 60 to 30 days: cap devices trusted earlier.
+  await query(`UPDATE trusted_devices SET expires_at = created_at + INTERVAL '30 days' WHERE expires_at > created_at + INTERVAL '30 days';`);
   // Interface font chooser: NULL = the system default font.
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_font VARCHAR(20);`);
   await query(`
