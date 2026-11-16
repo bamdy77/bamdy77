@@ -89,7 +89,7 @@ export default function ParentVideosTab({ isMobile }) {
     <div style={{ maxWidth: 820 }}>
       {ConfirmDialogPortal}
       <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 16, lineHeight: 1.6 }}>
-        Videos added here appear on the parents' website under "Video kwa Wazazi", where parents can watch or download them. Maximum 100 MB per video.
+        Videos added here appear on the parents' website under "Ujumbe kwa Mzazi/Mlezi", where parents can watch or download them. Maximum 100 MB per video.
       </p>
 
       <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 14 : 18, marginBottom: 22 }}>
