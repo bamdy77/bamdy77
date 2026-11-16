@@ -5,21 +5,20 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import { CloseIcon as SharedCloseIcon } from "./icons";
+import { useLang } from "../i18n";
 
-const WELCOME = {
-  en: "Hello! I'm the System Assistant. Ask me anything about how to use the system.",
+// The welcome line and the error messages come from the language catalog
+// (i18n/strings/staff.js, keys "chat.*"), so they follow EN | SW.
+// When Gemini cannot answer, the server says WHY (reason) and the widget
+// shows a matching message instead of a vague "network problem":
+const REASON_KEYS = {
+  not_configured: "chat.err.notConfigured", invalid_key: "chat.err.invalidKey", quota: "chat.err.quota",
+  timeout: "chat.err.timeout", model_unavailable: "chat.err.model", blocked: "chat.err.blocked",
+  rate_limited: "chat.err.rateLimited", network: "chat.err.network", error: "chat.err.generic",
 };
-
-// Shown ONLY when the request to Gemini itself failed to complete (network
-// down, backend unreachable/cold-starting, request timeout, etc) - a real
-// technical problem, not a real answer. Deliberately NOT the "this question
-// isn't about the system" wording - that would be actively misleading here,
-// since the question may well have been a perfectly on-topic system
-// question that never even reached Gemini. Shown in both languages since
-// there's no local engine left to detect which one the person is using.
-const NETWORK_ERROR_MSG =
-  "Samahani, kuna tatizo la mtandao/kiufundi kwa sasa na sikuweza kupata jibu. Tafadhali jaribu tena baada ya muda kidogo.\n" +
-  "Sorry, there's a network/technical problem right now and I couldn't get an answer. Please try again in a moment.";
+// Only the Head Master / Second Master can fix a missing or wrong key on
+// Render, so only they see the "how to fix" line.
+const ADMIN_FIX = { not_configured: "chat.fix.key", invalid_key: "chat.fix.key", quota: "chat.fix.quota", model_unavailable: "chat.fix.model" };
 
 // Maps a /dashboard/<segment> route to the exact module label the backend
 // (chatbotController.js MODULES_INFO) knows about, so Gemini can be told
@@ -52,9 +51,12 @@ const formatBotText = (text) => text.replace(/(\S)\s+(\d{1,2}\.\s)/g, "$1\n$2");
 
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([{ from: "bot", text: WELCOME.en }]);
+  const { t } = useLang();
+  // The first message is the welcome key, shown in the current language.
+  const [messages, setMessages] = useState([{ from: "bot", key: "chat.welcome" }]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
+  const [slow, setSlow] = useState(false); // a long answer is still being written
   const bottomRef = useRef(null);
   const { isMobile, isTablet } = useBreakpoint();
   // Tablet was never handled here before - only isMobile (<640px) got the
@@ -64,7 +66,8 @@ export default function ChatBot() {
   // opening. Treating tablet the same as mobile for this widget's own
   // layout (it's a small floating widget, not the main page grid) fixes it.
   const compact = isMobile || isTablet;
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const isManager = [user?.role, ...(user?.roles || [])].some((r) => r === "admin" || r === "second_master");
   const location = useLocation();
 
   // e.g. "/dashboard/tams" -> "tams" -> "TAMS (Mahudhurio)". Anything
@@ -164,6 +167,8 @@ export default function ChatBot() {
     setMessages((m) => [...m, { from: "user", text }]);
     setInput("");
     setTyping(true);
+    setSlow(false);
+    const slowTimer = setTimeout(() => setSlow(true), 8000);
 
     const minDelay = new Promise((resolve) => setTimeout(resolve, 450 + Math.random() * 250));
 
@@ -174,15 +179,18 @@ export default function ChatBot() {
     // reason, so the UI never shows a made-up "not part of the system"
     // answer when the real problem was connectivity.
     const askGemini = token
-      ? apiFetch("/chatbot/ask", { method: "POST", body: JSON.stringify({ message: text, history: messages.slice(-8).map((m) => ({ from: m.from, text: m.text })), page: currentPage }) }, token)
-          .then((result) => (result && result.ok && result.answer ? { failed: false, answer: result.answer } : { failed: true }))
-          .catch(() => ({ failed: true }))
-      : Promise.resolve({ failed: true });
+      ? apiFetch("/chatbot/ask", { method: "POST", body: JSON.stringify({ message: text, history: messages.filter((m) => !m.key && !m.error).slice(-10).map((m) => ({ from: m.from, text: m.text })), page: currentPage }) }, token)
+          .then((result) => (result && result.ok && result.answer ? { failed: false, answer: result.answer } : { failed: true, reason: result?.reason || "error" }))
+          .catch(() => ({ failed: true, reason: "network" }))
+      : Promise.resolve({ failed: true, reason: "network" });
 
     Promise.all([askGemini, minDelay]).then(([result]) => {
       setTyping(false);
-      const answer = result.failed ? NETWORK_ERROR_MSG : result.answer;
-      setMessages((m) => [...m, { from: "bot", text: answer }]);
+      clearTimeout(slowTimer); setSlow(false);
+      if (!result.failed) { setMessages((m) => [...m, { from: "bot", text: result.answer }]); return; }
+      const reason = REASON_KEYS[result.reason] ? result.reason : "error";
+      const fix = isManager && ADMIN_FIX[reason] ? `\n\n${t(ADMIN_FIX[reason])}` : "";
+      setMessages((m) => [...m, { from: "bot", error: true, text: t(REASON_KEYS[reason]) + fix }]);
     });
   };
 
@@ -236,9 +244,9 @@ export default function ChatBot() {
               <BotIcon />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>Msaidizi wa Mfumo</div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{t("chat.title")}</div>
             </div>
-            <button onClick={() => setOpen(false)} aria-label="Funga" style={{
+            <button onClick={() => setOpen(false)} aria-label={t("common.close")} style={{
               background: "none", border: "none", color: "#fff", cursor: "pointer", lineHeight: 1, display: "flex", alignItems: "center",
             }}><SharedCloseIcon size={18} /></button>
           </div>
@@ -257,12 +265,13 @@ export default function ChatBot() {
                 fontSize: 13.5, lineHeight: 1.45, whiteSpace: "pre-wrap",
                 boxShadow: m.from === "bot" ? "0 1px 2px rgba(15,23,42,0.08)" : "none",
               }}>
-                {m.from === "bot" ? formatBotText(m.text) : m.text}
+                {m.key ? t(m.key) : m.from === "bot" && !m.error ? formatBotText(m.text) : m.text}
               </div>
             ))}
             {typing && (
               <div style={{ alignSelf: "flex-start", background: THEME.surface, borderRadius: 4, borderBottomLeftRadius: 4, padding: "10px 14px", boxShadow: "0 1px 2px rgba(15,23,42,0.08)" }}>
                 <TypingDots />
+                {slow && <div style={{ fontSize: 12, color: THEME.muted, marginTop: 6 }}>{t("chat.slow")}</div>}
               </div>
             )}
             <div ref={bottomRef} />
@@ -274,7 +283,7 @@ export default function ChatBot() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type your question..."
+              placeholder={t("chat.placeholder")}
               style={{
                 flex: 1, border: `1px solid ${THEME.border}`, borderRadius: 4,
                 padding: "9px 14px", fontSize: 13.5, outline: "none",
@@ -284,7 +293,7 @@ export default function ChatBot() {
               background: THEME.navy, color: "#fff", border: "none", borderRadius: "50%",
               width: 36, height: 36, cursor: input.trim() && !typing ? "pointer" : "default",
               opacity: input.trim() && !typing ? 1 : 0.5, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }} aria-label="Tuma">
+            }} aria-label={t("chat.send")}>
               <SendIcon />
             </button>
           </div>
@@ -295,7 +304,7 @@ export default function ChatBot() {
         onClick={onToggleClick}
         onMouseDown={onDragStart}
         onTouchStart={onDragStart}
-        aria-label="Fungua Msaidizi wa Mfumo - bonyeza na ushikilie kuisogeza"
+        aria-label={t("chat.open")}
         style={{
           width: 58, height: 58, borderRadius: "50%", background: THEME.navy, border: "none",
           boxShadow: "0 8px 20px rgba(42,60,127,0.4)", cursor: "grab",

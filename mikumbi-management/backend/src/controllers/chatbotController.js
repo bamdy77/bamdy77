@@ -16,9 +16,18 @@
 //      or leaking a raw error.
 const axios = require("axios");
 
-const GEMINI_MODEL = "gemini-3.5-flash";
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-const REQUEST_TIMEOUT_MS = 12000;
+// Model and endpoint. GEMINI_MODEL can change the model on Render without a
+// code change. If Google answers "model not found", the next name in the
+// list is tried (Google retires and renames models from time to time).
+const API_BASE = () => (process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com").replace(/\/+$/, "");
+const MODELS = () => Array.from(new Set([process.env.GEMINI_MODEL, "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash"].filter(Boolean)));
+// Gemini 3 models "think" before answering; a long step-by-step answer can
+// take well over 12 seconds, which used to cut every long answer off.
+const REQUEST_TIMEOUT_MS = 55000;
+const MAX_OUTPUT_TOKENS = 8192;
+// A cut-off answer is continued automatically (up to this many extra calls),
+// so the person always receives the whole answer.
+const MAX_CONTINUATIONS = 2;
 
 // Mirrors frontend/src/components/Layout.jsx's MODULES list (roles + what
 // each one is for), but goes one level deeper than a plain summary: every
@@ -37,9 +46,10 @@ const MODULES_INFO = [
   { roles: ["admin", "second_master", "academic", "class_teacher"], label: "Contributions Management", desc: "Sehemu tatu: Part-Time Teachers (TZS 2,000/mwezi, inakusanywa na Class Teacher kwa darasa lake pekee), Ream, na Other Expenses - kila moja ina fomu ya kuongeza malipo na kitufe 'Submit'. Mkuu wa Shule, Makamu, na Academic Master wanaona muhtasari wa madarasa yote; Class Teacher anaona darasa lake pekee." },
   { roles: ["admin", "second_master", "food_teacher"], label: "Manage Foods", desc: "Sehemu mbili: Boarding Students na Day Students, pamoja na tab ya History kwa kila mwaka." },
   { roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], label: "TAMS (Mahudhurio)", desc: "Kitufe 'Check In' kinatumika ukiwa shuleni - andika majina yako matatu na password kama yalivyosajiliwa, kisha simu inatuma GPS. Lazima uwe ndani ya mita 50 kutoka shuleni, kati ya saa 12:00-2:00 asubuhi (6:00-8:00 AM); baada ya saa 1:30 (7:30 AM) ni kuchelewa (Late). Ukurasa una vitufe/tabo vya 'Today', 'Week', 'Month', 'Custom' kuchuja tarehe, stat cards za Present/On Time/Late/Absent, na kitufe 'Export PDF' juu kulia kupakua ripoti." },
-  { roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], label: "Analytics Dashboard", desc: "Muhtasari wa takwimu za shule (chati na namba) kulingana na taarifa unazoruhusiwa kuziona kutokana na role yako." },
+  { roles: ["admin", "second_master", "academic", "teacher"], label: "Analytics Dashboard", desc: "Muhtasari wa takwimu za shule (chati na namba) kulingana na taarifa unazoruhusiwa kuziona kutokana na role yako. Mkuu wa Shule na Second Master pia wanaona sehemu 'Parents' Website Visitors' (Wageni wa Tovuti ya Wazazi): wageni wa leo, siku 7, siku 30, na kitufe 'Choose dates' (Chagua tarehe) cha kuchagua kuanzia tarehe gani hadi gani, pamoja na kurasa zilizotembelewa zaidi na simu/kompyuta. Hakuna mgeni anayetambulishwa." },
+  { roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], label: "Settings (gear icon)", desc: "Kitufe cha gia (Settings/Mipangilio) juu kwenye menyu: 'Change Password', 'Font' (aina ya herufi), 'Language' (EN | SW - lugha ya mfumo, inahifadhiwa kwenye akaunti), na 'Theme' (mandhari). Picha ya wasifu (avatar) ina menyu ya 'Profile', 'View Profile Photo', 'Change/Upload Photo' na 'Log Out'. Mfumo humtoa mtu baada ya dakika 30 bila kutumika au baada ya saa 12." },
   { roles: ["admin", "second_master"], label: "Communications", desc: "SMS Service (tab moja) - kutuma ujumbe mfupi kwa wazazi, walimu(staff) wote, au mtu mmoja mmoja, ukifuata fomu iliyopo. Online Announcements (tab nyingine) - kuandika tangazo linaloonekana kwenye landing page ya umma. Zote mbili ni Mkuu wa Shule/Second Master pekee." },
-  { roles: ["admin", "second_master"], label: "User Accounts", desc: "Kitufe cha kuongeza akaunti mpya ya mwalimu, kupanga role yake kuu na 'Additional Role(s)' endapo ana zaidi ya role moja (mfano Academic Master na pia Matron - ataona kila kitu roles zake zote zinamruhusu). Kila akaunti ina menyu ya Edit/Reset/Deactivate." },
+  { roles: ["admin", "second_master"], label: "User Accounts", desc: "Fomu 'Create New Account' yenye sehemu tatu: 'Account Details' (Username, Full Name, Phone Number, Email), 'Role & Employment' (Main Role, Employment, 'Additional Roles' endapo mwalimu ana zaidi ya role moja - mfano Academic Master na pia Matron) na 'Teaching' (Subjects, 'Subject missing? Add it here', Classes / Forms Taught, Class Teacher Of), kisha kitufe 'Create Account'. Kila akaunti kwenye orodha ina menyu ya dots tatu (⋮) yenye Edit/Reset/Deactivate. Chini ya fomu kuna sehemu 'Exam Types': kuongeza aina mpya ya mtihani (jina la Kiingereza na la Kiswahili kwa SMS), na menyu ⋮ ya kila mtihani yenye 'Edit', 'Hide/Show' na 'Delete' (Delete inaonekana tu kwa mtihani ambao bado haujatumika)." },
   { roles: ["admin", "second_master"], label: "Audit Log", desc: "Orodha ya historia ya matendo yaliyofanyika kwenye mfumo (nani alifanya nini na lini) - inaweza kuchujwa kwa tarehe au mtumiaji." },
   { roles: ["admin", "second_master", "academic", "class_teacher"], label: "Signature & Stamp / SMS Gateway Settings", desc: "Kupakia Sahihi ya Mkuu wa Shule (inatumika kwa Identity Card pekee), Mhuri wa Shule (kwa Parent Report), sahihi za Class Teacher, na kuchagua Provider ya SMS (kwa kubonyeza dropdown na kujaza vigezo vyake)." },
 ];
@@ -81,76 +91,140 @@ function buildSystemPrompt(user, page) {
   return prompt;
 }
 
-// POST /api/chatbot/ask  { message }
-const askChatbot = async (req, res, next) => {
+// One call to Gemini. Returns { text, finishReason } or throws an Error with
+// .reason set to one of: invalid_key | quota | model_unavailable | timeout |
+// blocked | error.
+async function callGemini(model, systemPrompt, contents, apiKey, withThinkingConfig) {
+  const generationConfig = { temperature: 0.3, maxOutputTokens: MAX_OUTPUT_TOKENS };
+  // Keep the "thinking" short so it does not eat the answer's budget or time.
+  if (withThinkingConfig && /^gemini-3/.test(model)) generationConfig.thinkingConfig = { thinkingLevel: "low" };
   try {
-    const message = (req.body && req.body.message ? String(req.body.message) : "").trim().slice(0, 500);
-    if (!message) return res.json({ ok: false, reason: "empty" });
-
-    // Which screen the widget was opened/used from (see Context ya
-    // ukurasa above) - validated inside buildSystemPrompt against the
-    // asking user's own accessible module list, so an arbitrary/forged
-    // value here just fails to match anything instead of being trusted.
-    const page = req.body && req.body.page ? String(req.body.page).trim().slice(0, 120) : null;
-
-    // Prior turns from the widget's own message list, so a short reply
-    // like "ndio" to Gemini's own follow-up question still makes sense.
-    // Trusted only as conversation text, never as instructions - capped
-    // in count/length and always placed as contents, never merged into
-    // the system_instruction.
-    const rawHistory = Array.isArray(req.body?.history) ? req.body.history.slice(-8) : [];
-    let history = rawHistory
-      .filter((h) => h && (h.from === "user" || h.from === "bot") && typeof h.text === "string")
-      .map((h) => ({
-        role: h.from === "user" ? "user" : "model",
-        parts: [{ text: h.text.trim().slice(0, 500) }],
-      }))
-      .filter((h) => h.parts[0].text);
-    // Gemini expects the turn sequence to start with "user" - drop any
-    // leading bot turn (e.g. the widget's own static welcome message).
-    while (history.length && history[0].role === "model") history.shift();
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return res.json({ ok: false, reason: "not_configured" });
-
-    const systemPrompt = buildSystemPrompt(req.user, page);
-
     const response = await axios.post(
-      `${GEMINI_URL}?key=${apiKey}`,
+      `${API_BASE()}/v1beta/models/${encodeURIComponent(model)}:generateContent`,
       {
         system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: [...history, { role: "user", parts: [{ text: message }] }],
-        // maxOutputTokens was 1200 - too small once rule 6 asks for a deep,
-        // numbered, step-by-step walkthrough (Kiswahili text also runs more
-        // tokens per word than English), so longer answers were being cut
-        // off mid-sentence by Gemini itself (finishReason MAX_TOKENS) with
-        // no indication to the person that the answer was incomplete.
-        generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
+        contents,
+        generationConfig,
         safetySettings: [
           { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
           { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
         ],
       },
-      { timeout: REQUEST_TIMEOUT_MS, headers: { "Content-Type": "application/json" } }
+      // The key goes in a header, never in the URL (URLs end up in logs).
+      { timeout: REQUEST_TIMEOUT_MS, headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey } }
     );
-
     const candidate = response.data?.candidates?.[0];
-    let text = candidate?.content?.parts?.map((p) => p.text || "").join("").trim();
-    if (!text) return res.json({ ok: false, reason: candidate?.finishReason || "empty_response" });
-
-    // Even with the larger budget above, flag it plainly rather than
-    // shipping a sentence that just stops mid-word with no explanation.
-    if (candidate?.finishReason === "MAX_TOKENS") {
-      text += "\n\n(Jibu ni refu - andika \"endelea\" kuona sehemu iliyobaki. / Answer was long - type \"continue\" to see the rest.)";
+    const text = (candidate?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || "").join("").trim();
+    if (!text) {
+      const e = new Error("empty answer");
+      e.reason = response.data?.promptFeedback?.blockReason || candidate?.finishReason === "SAFETY" ? "blocked" : "error";
+      throw e;
     }
-
-    res.json({ ok: true, answer: text });
+    return { text, finishReason: candidate?.finishReason };
   } catch (err) {
-    // Never let a Gemini/network failure surface as a raw 500 to the
-    // chat widget - the frontend just falls back to the local FAQ engine.
-    console.error("Chatbot (Gemini) error:", err.response?.data || err.message);
-    res.json({ ok: false, reason: "error" });
+    if (err.reason) throw err;
+    const status = err.response?.status;
+    const data = err.response?.data?.error || {};
+    const detail = JSON.stringify(data.details || "") + " " + (data.message || "");
+    const e = new Error(data.message || err.message);
+    e.status = status;
+    if (err.code === "ECONNABORTED" || /timeout/i.test(err.message)) e.reason = "timeout";
+    else if (/API_KEY_INVALID|API key not valid|API_KEY/i.test(detail) || status === 401 || status === 403) e.reason = "invalid_key";
+    else if (status === 429) e.reason = "quota";
+    else if (status === 404 || /not found|is not supported/i.test(detail)) e.reason = "model_unavailable";
+    else if (status === 400 && /thinking/i.test(detail)) e.reason = "bad_thinking_config";
+    else e.reason = "error";
+    throw e;
+  }
+}
+
+// Tries each model name until one answers; returns { text, finishReason, model }.
+async function askAnyModel(systemPrompt, contents, apiKey) {
+  let last;
+  for (const model of MODELS()) {
+    try {
+      return { ...(await callGemini(model, systemPrompt, contents, apiKey, true)), model };
+    } catch (err) {
+      if (err.reason === "bad_thinking_config") {
+        try { return { ...(await callGemini(model, systemPrompt, contents, apiKey, false)), model }; } catch (e2) { err = e2; }
+      }
+      last = err;
+      if (err.reason !== "model_unavailable") throw err; // only a missing model is worth trying another name
+    }
+  }
+  throw last;
+}
+
+// POST /api/chatbot/ask  { message, history, page }
+// Reply: { ok: true, answer } or { ok: false, reason } where reason tells the
+// widget what went wrong (not_configured, invalid_key, quota, timeout, ...).
+const askChatbot = async (req, res) => {
+  try {
+    const message = (req.body && req.body.message ? String(req.body.message) : "").trim().slice(0, 2000);
+    if (!message) return res.json({ ok: false, reason: "empty" });
+
+    // Which screen the widget was opened/used from - validated inside
+    // buildSystemPrompt against the asking user's own accessible modules.
+    const page = req.body && req.body.page ? String(req.body.page).trim().slice(0, 120) : null;
+
+    // Prior turns, so "ndio" / "endelea" still make sense. Trusted only as
+    // conversation text, never as instructions. Earlier answers are kept long
+    // enough (6000 characters) for "continue" to know where it stopped.
+    const rawHistory = Array.isArray(req.body?.history) ? req.body.history.slice(-10) : [];
+    const history = rawHistory
+      .filter((h) => h && (h.from === "user" || h.from === "bot") && typeof h.text === "string")
+      .map((h) => ({
+        role: h.from === "user" ? "user" : "model",
+        parts: [{ text: h.text.trim().slice(0, h.from === "user" ? 2000 : 6000) }],
+      }))
+      .filter((h) => h.parts[0].text);
+    // Gemini expects the turns to start with "user" and to alternate.
+    while (history.length && history[0].role === "model") history.shift();
+    const turns = [];
+    for (const h of history) {
+      if (turns.length && turns[turns.length - 1].role === h.role) turns[turns.length - 1].parts[0].text += "\n\n" + h.parts[0].text;
+      else turns.push(h);
+    }
+    if (turns.length && turns[turns.length - 1].role === "user") turns.pop(); // the new message is added below
+
+    const apiKey = (process.env.GEMINI_API_KEY || "").trim();
+    if (!apiKey) return res.json({ ok: false, reason: "not_configured" });
+
+    const systemPrompt = buildSystemPrompt(req.user, page);
+    let contents = [...turns, { role: "user", parts: [{ text: message }] }];
+
+    let { text, finishReason, model } = await askAnyModel(systemPrompt, contents, apiKey);
+    // Cut off by the length limit? Ask Gemini to carry on from where it
+    // stopped and join the parts, so the person gets the complete answer.
+    for (let i = 0; finishReason === "MAX_TOKENS" && i < MAX_CONTINUATIONS; i++) {
+      contents = [...contents, { role: "model", parts: [{ text }] },
+        { role: "user", parts: [{ text: "Continue exactly where you stopped, in the same language. Do not repeat anything already written." }] }];
+      try {
+        const more = await callGemini(model, systemPrompt, contents, apiKey, true);
+        text = `${text}${/\s$/.test(text) ? "" : " "}${more.text}`;
+        finishReason = more.finishReason;
+      } catch { break; }
+    }
+    res.json({ ok: true, answer: text, complete: finishReason !== "MAX_TOKENS" });
+  } catch (err) {
+    // Never a raw 500 to the chat widget; the reason is enough for it to
+    // show a clear message. Details go to the server log (never the key).
+    console.error("Chatbot (Gemini) error:", err.reason || "error", err.status || "", err.message);
+    res.json({ ok: false, reason: err.reason || "error" });
   }
 };
 
-module.exports = { askChatbot };
+// GET /api/chatbot/status - Head Master / Second Master: is the assistant
+// working? Sends one tiny question and reports the result (never the key).
+const chatbotStatus = async (req, res) => {
+  const apiKey = (process.env.GEMINI_API_KEY || "").trim();
+  if (!apiKey) return res.json({ ok: false, reason: "not_configured" });
+  try {
+    const r = await askAnyModel("Reply with the single word OK.", [{ role: "user", parts: [{ text: "Ping" }] }], apiKey);
+    res.json({ ok: true, model: r.model });
+  } catch (err) {
+    res.json({ ok: false, reason: err.reason || "error" });
+  }
+};
+
+module.exports = { askChatbot, chatbotStatus };

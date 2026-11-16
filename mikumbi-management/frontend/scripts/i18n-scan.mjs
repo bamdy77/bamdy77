@@ -28,7 +28,7 @@ export const DONE = [
   "src/components/ConfirmDialog.jsx", "src/components/ErrorModal.jsx", "src/components/SuccessModal.jsx",
   "src/components/ErrorBoundary.jsx", "src/components/WakingUp.jsx", "src/components/ImageCropModal.jsx",
   "src/components/FontChooser.jsx", "src/components/PasswordInput.jsx", "src/components/InstallAppButton.jsx",
-  "src/components/ActionMenu.jsx", "src/pages/DashboardHome.jsx", "src/components/VisitorStats.jsx",
+  "src/components/ActionMenu.jsx", "src/pages/DashboardHome.jsx", "src/components/VisitorStats.jsx", "src/components/ChatBot.jsx",
 ];
 // Never visible text (icons, data, generated files).
 const IGNORE = ["src/components/icons.jsx", "src/data/locations.js", "src/components/FeatureIcons.jsx"];
