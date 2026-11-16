@@ -20,6 +20,8 @@ export default function Login() {
   const { login, verifyLoginCode } = useAuth();
   const [twofa, setTwofa] = useState(null); // { challenge_id, email_hint } while waiting for the emailed code
   const [code, setCode] = useState("");
+  // Example digits shown in the empty code box - a different random number each time.
+  const [codeHint] = useState(() => String(Math.floor(Math.random() * 1000000)).padStart(6, "0"));
   const [verified, setVerified] = useState(false); // brief success tick before entering the dashboard
   const navigate = useNavigate();
   const isNarrow = useIsNarrow();
@@ -97,7 +99,7 @@ export default function Login() {
               {/* Checks automatically as soon as the 6th digit is entered (typed or pasted). */}
               <input value={code} onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setCode(v); if (v.length === 6) submitCode(null, v); }}
                 disabled={busy} inputMode="numeric" autoComplete="one-time-code"
-                autoFocus placeholder="123456" aria-label="Login code" className={busy && !verified ? "mk-code-checking" : ""}
+                autoFocus placeholder={codeHint} aria-label="Login code" className={busy && !verified ? "mk-code-checking" : ""}
                 style={{ ...inputStyle, fontSize: 22, letterSpacing: 8, textAlign: "center", transition: "border-color .2s, box-shadow .2s",
                   ...(code.length === 6 ? { borderColor: THEME.navy, boxShadow: `0 0 0 3px ${THEME.navy}22` } : {}) }} />
               <style>{`@keyframes mkCodePulse { 0%,100% { box-shadow: 0 0 0 3px rgba(12,66,111,.15); } 50% { box-shadow: 0 0 0 7px rgba(12,66,111,.32); } }
