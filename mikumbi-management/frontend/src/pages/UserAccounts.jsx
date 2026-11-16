@@ -185,72 +185,102 @@ export default function UserAccounts() {
         </div>
       )}
 
-      <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 16 : 18, marginBottom: 28, maxWidth: isMobile ? "100%" : isTablet ? 560 : 480, display: "grid", gap: 10 }}>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
-          <input placeholder="Username" required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={inputStyle} />
-          <input placeholder="Full Name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} style={inputStyle} />
+      {/* Create account: one card, three clear sections (details, role, teaching).
+          Two columns on tablet/desktop, one column on phones. */}
+      <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 6, marginBottom: 28, maxWidth: PANEL_MAX, boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
+        <div style={{ padding: isMobile ? "14px 16px" : "16px 22px", borderBottom: `1px solid ${THEME.border}` }}>
+          <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading }}>Create New Account</h3>
+          <p style={{ margin: "4px 0 0", fontSize: 12.5, color: THEME.muted }}>Fill in the staff member's details, choose their role, then press Create Account.</p>
         </div>
-        <div>
-          <input type="tel" placeholder="Phone Number, e.g. 0754xxxxxx" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={{ ...inputStyle, width: "100%" }} />
-          <p style={{ fontSize: 11, color: THEME.muted, margin: "4px 0 0" }}>Used for SMS Service - this account's name and number will show up under Communications → SMS Service automatically.</p>
-        </div>
-        <EmploymentTypeCheckbox value={form.employment_type} onChange={(v) => setForm({ ...form, employment_type: v })} />
-        <select value={form.role} onChange={(e) => {
-          const newRole = e.target.value;
-          setForm((f) => ({ ...f, role: newRole, extra_roles: f.extra_roles.filter((x) => x !== newRole) }));
-        }} style={inputStyle}>
-          {ROLES.filter((r) => r.value !== "second_master" || me.role === "admin").map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-        </select>
-        <div>
-          <label style={labelStyle}>Additional Roles (optional) - a teacher can hold more than one Role at once</label>
-          <div style={chipsBox}>
-            {ROLES.filter((r) => r.value !== form.role && (r.value !== "second_master" || me.role === "admin")).map((r) => (
-              <Chip key={r.value} active={form.extra_roles.includes(r.value)} onClick={() => toggleExtraRole(r.value)}>{r.label}</Chip>
-            ))}
-          </div>
-        </div>
-        <input type="email" placeholder="Gmail (for Forgot Password)" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inputStyle} />
-        {needsTeachingFields(form.role, form.extra_roles) && (
-          <>
-            <div>
-              <label style={labelStyle}>Subjects (a teacher may teach more than one)</label>
-              <div style={chipsBox}>
-                {subjects.map((s) => (
-                  <Chip key={s.id} active={form.subject_ids.includes(s.id)} onClick={() => toggleSubject(s.id)}>{s.name}</Chip>
-                ))}
-              </div>
-              <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 6, marginTop: 8 }}>
-                <input placeholder="Subject missing? Type full name here" value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} style={{ ...inputStyle, flex: 2, fontSize: 12, width: isMobile ? "100%" : undefined }} />
-                <input placeholder="Abbreviation (e.g. B/MATH)" value={newSubjectCode} onChange={(e) => setNewSubjectCode(e.target.value)} style={{ ...inputStyle, flex: 1, fontSize: 12, width: isMobile ? "100%" : undefined }} />
-                <button type="button" onClick={addSubject} disabled={!newSubjectName.trim() || !newSubjectCode.trim()} style={{ padding: isMobile ? "9px 12px" : "0 12px", background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 12, cursor: "pointer", width: isMobile ? "100%" : undefined, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5 }}><PlusCircleIcon size={13} />Add</button>
-              </div>
-              <p style={{ fontSize: 10.5, color: THEME.muted, marginTop: 4 }}>Both the full subject name and its abbreviation are required - the abbreviation is what appears in Results Management.</p>
+
+        <div style={{ padding: isMobile ? 16 : 22, display: "grid", gap: isMobile ? 20 : 24 }}>
+          <FormSection title="Account Details" isMobile={isMobile}>
+            <div style={grid2(isMobile)}>
+              <Field label="Username" required>
+                <input placeholder="e.g. jmussa" required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={fieldInput} />
+              </Field>
+              <Field label="Full Name" required>
+                <input placeholder="e.g. Juma Mussa" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} style={fieldInput} />
+              </Field>
+              <Field label="Phone Number" hint="Shows under Communications → SMS Service automatically.">
+                <input type="tel" placeholder="e.g. 0754xxxxxx" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={fieldInput} />
+              </Field>
+              <Field label="Email" required hint="Used for Forgot Password and sign-in codes.">
+                <input type="email" placeholder="e.g. name@gmail.com" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={fieldInput} />
+              </Field>
             </div>
-            <div>
-              <label style={labelStyle}>Classes / Forms Taught (determines which class's results/subjects this account can enter in Results Management)</label>
-              <div style={chipsBox}>
-                {FORMS.map((f) => (
-                  <Chip key={f} active={form.assigned_forms.includes(f)} onClick={() => toggleForm(f)}>{f}</Chip>
-                ))}
-              </div>
-            </div>
-            {isClassTeacherRole(form.role, form.extra_roles) && (
-              <div>
-                <label style={labelStyle}>Class Teacher Of - the ONE class whose students appear automatically in Contribution Management</label>
-                <select value={form.class_teacher_of} onChange={(e) => setForm({ ...form, class_teacher_of: e.target.value })} style={inputStyle}>
-                  <option value="">- Select class -</option>
-                  {FORMS.map((f) => <option key={f} value={f}>{f}</option>)}
+          </FormSection>
+
+          <FormSection title="Role & Employment" isMobile={isMobile}>
+            <div style={{ ...grid2(isMobile), alignItems: "start" }}>
+              <Field label="Main Role" required>
+                <select value={form.role} onChange={(e) => {
+                  const newRole = e.target.value;
+                  setForm((f) => ({ ...f, role: newRole, extra_roles: f.extra_roles.filter((x) => x !== newRole) }));
+                }} style={{ ...fieldInput, background: THEME.surface }}>
+                  {ROLES.filter((r) => r.value !== "second_master" || me.role === "admin").map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
+              </Field>
+              <Field label="Employment">
+                <EmploymentTypeCheckbox value={form.employment_type} onChange={(v) => setForm({ ...form, employment_type: v })} />
+              </Field>
+            </div>
+            <Field label="Additional Roles (optional)" hint="A teacher can hold more than one role at once.">
+              <div style={chipsBox}>
+                {ROLES.filter((r) => r.value !== form.role && (r.value !== "second_master" || me.role === "admin")).map((r) => (
+                  <Chip key={r.value} active={form.extra_roles.includes(r.value)} onClick={() => toggleExtraRole(r.value)}>{r.label}</Chip>
+                ))}
               </div>
-            )}
-          </>
-        )}
-        <button disabled={busy} style={{ padding: "10px 0", background: THEME.navy, color: "#fff", border: "none", borderRadius: 4, fontWeight: 600, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-          {busy ? <SpinnerIcon size={14} /> : <UserHistoryIcon size={14} />}{busy ? "Creating..." : "Create Account"}
-        </button>
-        {result && (
-          <p style={{ fontSize: 12.5, color: result.ok ? THEME.success : THEME.danger }}>{result.text}</p>
-        )}
+            </Field>
+          </FormSection>
+
+          {needsTeachingFields(form.role, form.extra_roles) && (
+            <FormSection title="Teaching" isMobile={isMobile}>
+              <Field label="Subjects" hint="A teacher may teach more than one subject.">
+                <div style={chipsBox}>
+                  {subjects.map((s) => (
+                    <Chip key={s.id} active={form.subject_ids.includes(s.id)} onClick={() => toggleSubject(s.id)}>{s.name}</Chip>
+                  ))}
+                </div>
+              </Field>
+              <div style={{ background: THEME.bg, border: `1px dashed ${THEME.border}`, borderRadius: 4, padding: 12 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: THEME.text, marginBottom: 8 }}>Subject missing? Add it here</div>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr auto", gap: 8 }}>
+                  <input placeholder="Full subject name" value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} style={{ ...fieldInput, background: THEME.surface }} aria-label="New subject name" />
+                  <input placeholder="Abbreviation (e.g. B/MATH)" value={newSubjectCode} onChange={(e) => setNewSubjectCode(e.target.value)} style={{ ...fieldInput, background: THEME.surface }} aria-label="New subject abbreviation" />
+                  <button type="button" onClick={addSubject} disabled={!newSubjectName.trim() || !newSubjectCode.trim()} style={{ padding: "9px 16px", background: THEME.surface, color: THEME.navy, border: `1px solid ${THEME.navy}`, borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: !newSubjectName.trim() || !newSubjectCode.trim() ? 0.5 : 1 }}><PlusCircleIcon size={13} />Add</button>
+                </div>
+                <p style={{ fontSize: 11.5, color: THEME.muted, margin: "6px 0 0" }}>Both are required. The abbreviation is what appears in Results Management.</p>
+              </div>
+              <div style={{ ...grid2(isMobile), alignItems: "start" }}>
+                <Field label="Classes / Forms Taught" hint="Decides which classes' results this account can enter.">
+                  <div style={chipsBox}>
+                    {FORMS.map((f) => (
+                      <Chip key={f} active={form.assigned_forms.includes(f)} onClick={() => toggleForm(f)}>{f}</Chip>
+                    ))}
+                  </div>
+                </Field>
+                {isClassTeacherRole(form.role, form.extra_roles) && (
+                  <Field label="Class Teacher Of" hint="Its students appear automatically in Contributions Management.">
+                    <select value={form.class_teacher_of} onChange={(e) => setForm({ ...form, class_teacher_of: e.target.value })} style={{ ...fieldInput, background: THEME.surface }}>
+                      <option value="">- Select class -</option>
+                      {FORMS.map((f) => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </Field>
+                )}
+              </div>
+            </FormSection>
+          )}
+        </div>
+
+        <div style={{ padding: isMobile ? "14px 16px" : "14px 22px", borderTop: `1px solid ${THEME.border}`, background: THEME.bg, display: "flex", flexDirection: isMobile ? "column-reverse" : "row", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between", gap: 10, borderRadius: "0 0 6px 6px" }}>
+          <div style={{ fontSize: 12.5, color: result ? (result.ok ? THEME.success : THEME.danger) : THEME.muted }}>
+            {result ? result.text : <>Fields marked <span style={{ color: THEME.danger }}>*</span> are required.</>}
+          </div>
+          <button disabled={busy} style={{ padding: "10px 22px", minWidth: isMobile ? undefined : 190, background: THEME.navy, color: "#fff", border: "none", borderRadius: 4, fontWeight: 700, fontSize: 13.5, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+            {busy ? <SpinnerIcon size={14} /> : <UserHistoryIcon size={14} />}{busy ? "Creating..." : "Create Account"}
+          </button>
+        </div>
       </form>
 
       {[me?.role, ...(me?.roles || [])].some((r) => r === "admin" || r === "second_master") && (
@@ -617,5 +647,29 @@ function roleLabel(role) {
 }
 
 const inputStyle = { padding: "9px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13 };
+// Create-account form layout helpers.
+const PANEL_MAX = 900;
+const fieldInput = { ...inputStyle, width: "100%", boxSizing: "border-box", fontSize: 13.5, padding: "10px 12px", color: THEME.text, background: THEME.surface };
+const grid2 = (isMobile) => ({ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 14 : "14px 18px" });
+function FormSection({ title, isMobile, children }) {
+  return (
+    <section style={{ display: "grid", gap: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: 0.6, textTransform: "uppercase", color: THEME.navy, whiteSpace: "nowrap" }}>{title}</span>
+        {!isMobile && <span style={{ flex: 1, height: 1, background: THEME.border }} />}
+      </div>
+      {children}
+    </section>
+  );
+}
+function Field({ label, required, hint, children }) {
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: THEME.text, marginBottom: 6 }}>{label}{required && <span style={{ color: THEME.danger }}> *</span>}</div>
+      {children}
+      {hint && <div style={{ fontSize: 11.5, color: THEME.muted, marginTop: 5, lineHeight: 1.45 }}>{hint}</div>}
+    </div>
+  );
+}
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6 };
 const chipsBox = { display: "flex", flexWrap: "wrap", gap: 6 };

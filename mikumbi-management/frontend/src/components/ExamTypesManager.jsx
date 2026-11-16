@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
 import { showError } from "./ErrorModal";
+import { showSuccess } from "./SuccessModal";
 import { useConfirm } from "./ConfirmDialog";
 import { ActionMenu, MenuItem } from "./ActionMenu";
 import { SpinnerIcon, PlusCircleIcon, EditIcon, EyeIcon, PauseCircleIcon, TrashIcon } from "./icons";
@@ -34,28 +35,38 @@ export default function ExamTypesManager({ token, isMobile }) {
     setBusy(true); setMsg(null);
     try {
       const d = await apiFetch("/exam-types", { method: "POST", body: JSON.stringify({ name, name_sw: nameSw }) }, token);
-      setMsg({ ok: true, text: d.message || "Exam type added." }); setName(""); setNameSw(""); load();
+      showSuccess("Exam Types", d.message === "Exam type added." || !d.message ? `"${name.trim()}" has been added. Teachers can now choose it in Results Management.` : d.message);
+      setName(""); setNameSw(""); load();
     } catch (err) { setMsg({ ok: false, text: err.message }); } finally { setBusy(false); }
   };
-  const patch = async (id, body) => {
-    try { await apiFetch(`/exam-types/${id}`, { method: "PATCH", body: JSON.stringify(body) }, token); load(); return true; }
-    catch (err) { showError(err.message); return false; }
+  const patch = async (id, body, okText) => {
+    try {
+      await apiFetch(`/exam-types/${id}`, { method: "PATCH", body: JSON.stringify(body) }, token);
+      load();
+      if (okText) showSuccess("Exam Types", okText);
+      return true;
+    }
+    catch (err) { showError("Exam Types", err.message); return false; }
   };
   const saveEdit = async () => {
-    if (edit.name.trim().length < 3) return showError("Please type the exam type name (at least 3 letters).");
+    if (edit.name.trim().length < 3) return showError("Exam Types", "Please type the exam type name (at least 3 letters).");
     setSaving(true);
     const body = { name_sw: edit.name_sw };
     if (!edit.used) body.name = edit.name;
-    const ok = await patch(edit.id, body);
+    const ok = await patch(edit.id, body, "Exam type updated.");
     setSaving(false);
     if (ok) setEdit(null);
   };
   const del = (r) => confirm(`Delete the exam type "${r.name}"? This cannot be undone.`, async () => {
-    try { await apiFetch(`/exam-types/${r.id}`, { method: "DELETE" }, token); load(); } catch (err) { showError(err.message); }
+    try {
+      await apiFetch(`/exam-types/${r.id}`, { method: "DELETE" }, token);
+      load();
+      showSuccess("Exam Types", `"${r.name}" has been deleted.`);
+    } catch (err) { showError("Exam Types", err.message); }
   }, { confirmLabel: "Delete", cancelLabel: "Cancel" });
 
   return (
-    <section style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 14 : 18, marginBottom: 28, maxWidth: 760 }}>
+    <section style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 6, padding: isMobile ? 16 : 22, marginBottom: 28, maxWidth: 900, boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
       <h3 style={{ margin: "0 0 4px", fontSize: 16, color: THEME.heading }}>Exam Types</h3>
       <p style={{ margin: "0 0 14px", fontSize: 12.5, color: THEME.muted, lineHeight: 1.6 }}>
         The exam types teachers can choose in Results Management. Add a new one when an exam is missing. The Kiswahili name is used in results SMS to parents.
@@ -105,7 +116,7 @@ export default function ExamTypesManager({ token, isMobile }) {
                   </div>
                   <ActionMenu>
                     <MenuItem icon={<EditIcon size={14} />} onClick={() => setEdit({ id: r.id, name: r.name, name_sw: r.name_sw || "", used: r.used })}>Edit</MenuItem>
-                    <MenuItem icon={r.is_active ? <PauseCircleIcon size={14} /> : <EyeIcon size={14} />} onClick={() => patch(r.id, { is_active: !r.is_active })}>{r.is_active ? "Hide" : "Show"}</MenuItem>
+                    <MenuItem icon={r.is_active ? <PauseCircleIcon size={14} /> : <EyeIcon size={14} />} onClick={() => patch(r.id, { is_active: !r.is_active }, r.is_active ? `"${r.name}" is now hidden. Teachers will not see it in Results Management.` : `"${r.name}" is shown again in Results Management.`)}>{r.is_active ? "Hide" : "Show"}</MenuItem>
                     {r.used === 0 && <MenuItem danger icon={<TrashIcon size={14} />} onClick={() => del(r)}>Delete</MenuItem>}
                   </ActionMenu>
                 </div>
