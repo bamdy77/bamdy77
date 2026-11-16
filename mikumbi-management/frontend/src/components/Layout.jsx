@@ -14,7 +14,7 @@ import NotificationBell from "./NotificationBell";
 import FontChooser from "./FontChooser";
 import { useFont } from "../context/FontContext";
 import { apiFetch } from "../utils/api";
-import { SettingsIcon, LockIcon, PaletteIcon, ChevronDownIcon, CheckIcon, MenuIcon, CloseIcon, GraduationCapIcon, CoinsIcon, UtensilsIcon, TableIcon, BedIcon, BarChartIcon, ClockIcon, MessageIcon, UsersIcon, LogoutIcon, CameraIcon, TrashIcon, UserCircleIcon, EyeIcon, SpinnerIcon, FileClockIcon, EditIcon } from "./icons";
+import { ShieldIcon, SettingsIcon, LockIcon, PaletteIcon, ChevronDownIcon, CheckIcon, MenuIcon, CloseIcon, GraduationCapIcon, CoinsIcon, UtensilsIcon, TableIcon, BedIcon, BarChartIcon, ClockIcon, MessageIcon, UsersIcon, LogoutIcon, CameraIcon, TrashIcon, UserCircleIcon, EyeIcon, SpinnerIcon, FileClockIcon, EditIcon } from "./icons";
 
 // Module visibility, exactly per spec:
 //  - admin (Head Master) + second_master: everything
@@ -569,6 +569,7 @@ function SettingsMenu({ navigate, user }) {
   const myRoles = user?.roles?.length ? user.roles : [user?.role];
   const canManageSignature = myRoles.some((r) => ["admin", "second_master", "academic", "class_teacher"].includes(r));
   const canManageSms = myRoles.some((r) => ["admin", "second_master", "academic"].includes(r));
+  const isHeadMaster = myRoles.includes("admin");
 
   useEffect(() => {
     if (!open) return;
@@ -627,6 +628,12 @@ function SettingsMenu({ navigate, user }) {
           {canManageSms && (
             <SettingsItem icon={<MessageIcon />} onClick={() => { setOpen(false); navigate("/dashboard/sms-gateway"); }}>
               SMS Gateway
+            </SettingsItem>
+          )}
+
+          {isHeadMaster && (
+            <SettingsItem icon={<ShieldIcon />} onClick={() => { setOpen(false); navigate("/dashboard/backups"); }}>
+              Database Backup
             </SettingsItem>
           )}
 

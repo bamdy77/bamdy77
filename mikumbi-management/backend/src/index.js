@@ -86,6 +86,7 @@ app.use(cors({
   origin: corsOrigin,
   methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
   allowedHeaders: ["Content-Type","Authorization"],
+  exposedHeaders: ["Content-Disposition"], // lets the browser read download file names
 }));
 
 // Security headers on every response (what the 'helmet' package would set,
@@ -203,6 +204,7 @@ app.use("/api/chatbot",       chatbotRoutes);
 // Public (no login) — parent/student Results portal + Joining Instructions
 // public submit/download. Mounted last among API routes so nothing above
 // is ever shadowed by it.
+app.use("/api/backups",       require("./routes/backups"));
 app.use("/api/public",        publicRoutes);
 
 // ── Serve the built frontend (single-service deployment) ───────────────────
@@ -303,6 +305,7 @@ app.listen(PORT, () => {
   console.log(`  Timezone    : Africa/Dar_es_Salaam`);
   console.log(`  Health check: http://localhost:${PORT}/api/health`);
   console.log(`  Email       : ${require("./utils/mailer").mailStatus()}`);
+  require("./utils/backup").startAutoBackups();
   // Make result PDFs stored before the privacy change private (background, best-effort).
   setTimeout(() => {
     require("./middleware/upload").securePublicResultPdfs(require("./db/db").query)
