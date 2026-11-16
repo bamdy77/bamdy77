@@ -28,11 +28,12 @@ export default function PublicHome() {
       <Hero />
       <QuickAccess />
       <NewsSection />
-      <VideosSection />
       <About />
       <Boarding />
       <Gallery />
       <Contact />
+      {/* Below the map, right above the footer. */}
+      <VideosSection />
     </PublicLayout>
   );
 }

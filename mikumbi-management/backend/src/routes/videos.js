@@ -32,8 +32,15 @@ function sign(params, secret) {
 }
 const withFlag = (url, flag) => String(url).replace("/upload/", `/upload/${flag}/`);
 const posterOf = (url) => withFlag(url, "so_auto,w_640,c_limit").replace(/\.[a-z0-9]+$/i, ".jpg");
+// Light version for slow rural networks and low-cost phones: at most 640px
+// wide (~360p), H.264/AAC (plays everywhere), economical quality and a
+// capped bitrate. It is prepared right after upload (eager) so the first
+// parent does not wait for it to be made. Parents stream AND download this
+// version; the original stays in storage.
+const LIGHT = "c_limit,w_640,q_auto:eco,vc_h264,ac_aac,br_450k";
+const lightOf = (url) => withFlag(url, LIGHT).replace(/\.[a-z0-9]+$/i, ".mp4");
 const publicShape = (v) => ({
-  id: v.id, title: v.title, description: v.description || "", url: v.video_url,
+  id: v.id, title: v.title, description: v.description || "", url: lightOf(v.video_url),
   poster: posterOf(v.video_url), duration: v.duration != null ? Number(v.duration) : null,
   bytes: v.bytes != null ? Number(v.bytes) : null, created_at: v.created_at,
 });
@@ -46,10 +53,12 @@ staff.get("/upload-signature", auth(MANAGERS), (_req, res) => {
   const c = cfg();
   if (!c) return res.status(503).json({ message: NOT_SET });
   const timestamp = Math.floor(Date.now() / 1000);
-  const params = { folder: FOLDER, timestamp };
+  // eager: Cloudinary prepares the light (and poster) versions in the background right after upload.
+  const eager = `${LIGHT}/mp4|so_auto,w_640,c_limit/jpg`;
+  const params = { eager, eager_async: "true", folder: FOLDER, timestamp };
   res.json({
     upload_url: `${apiBase()}/v1_1/${c.cloud}/video/upload`,
-    api_key: c.key, timestamp, folder: FOLDER, signature: sign(params, c.secret), max_bytes: MAX_BYTES,
+    api_key: c.key, timestamp, folder: FOLDER, eager, eager_async: "true", signature: sign(params, c.secret), max_bytes: MAX_BYTES,
   });
 });
 
@@ -138,7 +147,7 @@ pub.get("/:id/download", async (req, res, next) => {
     const { rows } = await query(`SELECT title, video_url FROM parent_videos WHERE id = $1 AND is_active = true`, [id]);
     if (!rows.length) return res.status(404).json({ message: "Video haikupatikana." });
     const name = rows[0].title.replace(/[^A-Za-z0-9 _-]/g, "").trim().replace(/\s+/g, "-").slice(0, 60) || "video";
-    res.redirect(302, withFlag(rows[0].video_url, `fl_attachment:${name}`));
+    res.redirect(302, withFlag(lightOf(rows[0].video_url), `fl_attachment:${name}`));
   } catch (err) { next(err); }
 });
 

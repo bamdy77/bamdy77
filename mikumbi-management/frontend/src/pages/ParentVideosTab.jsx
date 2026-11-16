@@ -5,7 +5,7 @@ import { THEME } from "../styles/theme";
 import { useConfirm } from "../components/ConfirmDialog";
 import { showSuccess } from "../components/SuccessModal";
 import { showError } from "../components/ErrorModal";
-import { SpinnerIcon } from "../components/icons";
+import { SpinnerIcon, DotsVerticalIcon, EditIcon, TrashIcon, EyeIcon } from "../components/icons";
 
 // Communications → "Parent Videos" (Head Master / Second Master).
 // The file goes straight from this browser to Cloudinary (signed by our
@@ -27,6 +27,27 @@ export default function ParentVideosTab({ isMobile }) {
   const [error, setError] = useState("");
   const fileRef = useRef(null);
   const xhrRef = useRef(null);
+  const [menuFor, setMenuFor] = useState(null);   // id of the video whose ⋮ menu is open
+  const [editing, setEditing] = useState(null);   // { id, title, description }
+  const [editBusy, setEditBusy] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  useEffect(() => {
+    if (menuFor === null) return undefined;
+    const close = (e) => { if (!e.target.closest?.("[data-video-menu]")) setMenuFor(null); };
+    const esc = (e) => { if (e.key === "Escape") setMenuFor(null); };
+    document.addEventListener("mousedown", close); document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", esc); };
+  }, [menuFor]);
+
+  const saveEdit = async () => {
+    if (!editing.title.trim()) return setEditError("Title cannot be empty.");
+    setEditBusy(true); setEditError("");
+    try {
+      await apiFetch(`/videos/${editing.id}`, { method: "PATCH", body: JSON.stringify({ title: editing.title, description: editing.description }) }, token);
+      setEditing(null); showSuccess("Parent Videos", "Video details updated."); load();
+    } catch (e) { setEditError(e.message); } finally { setEditBusy(false); }
+  };
 
   const load = useCallback(() => {
     apiFetch("/videos", {}, token).then((d) => setVideos(d.videos || [])).catch((e) => { setVideos([]); setError(e.message); });
@@ -47,6 +68,8 @@ export default function ParentVideosTab({ isMobile }) {
     form.append("api_key", sig.api_key);
     form.append("timestamp", sig.timestamp);
     form.append("folder", sig.folder);
+    form.append("eager", sig.eager);
+    form.append("eager_async", sig.eager_async);
     form.append("signature", sig.signature);
 
     setProgress(0);
@@ -126,14 +149,53 @@ export default function ParentVideosTab({ isMobile }) {
                 <img src={v.poster} alt="" width="120" height="68" style={{ width: 120, height: 68, objectFit: "cover", borderRadius: 4, background: "#0f172a" }} onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} />
                 <div style={{ flex: 1, minWidth: 180 }}>
                   <div style={{ fontWeight: 700, fontSize: 14, color: THEME.text }}>{v.title}</div>
-                  <div style={{ fontSize: 12, color: THEME.muted }}>{[fmtDur(v.duration), v.bytes ? fmtSize(v.bytes) : "", v.is_active ? "Visible to parents" : "Hidden"].filter(Boolean).join(" · ")}</div>
+                  {v.description && <div style={{ fontSize: 12.5, color: THEME.text, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{v.description}</div>}
+                  <div style={{ fontSize: 12, color: THEME.muted, marginTop: 2 }}>{[fmtDur(v.duration), v.bytes ? fmtSize(v.bytes) : "", v.is_active ? "Visible to parents" : "Hidden"].filter(Boolean).join(" · ")}</div>
                 </div>
-                <button type="button" onClick={() => toggle(v)} style={{ padding: "7px 12px", borderRadius: 4, border: `1px solid ${THEME.navy}`, background: THEME.surface, color: THEME.navy, fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>{v.is_active ? "Hide" : "Show"}</button>
-                <button type="button" onClick={() => remove(v)} style={{ padding: "7px 12px", borderRadius: 4, border: `1px solid ${THEME.danger}`, background: THEME.surface, color: THEME.danger, fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>Delete</button>
+                <div data-video-menu style={{ position: "relative" }}>
+                  <button type="button" aria-label={`Actions for ${v.title}`} aria-haspopup="menu" aria-expanded={menuFor === v.id}
+                    onClick={() => setMenuFor(menuFor === v.id ? null : v.id)}
+                    style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, cursor: "pointer" }}>
+                    <DotsVerticalIcon size={16} />
+                  </button>
+                  {menuFor === v.id && (
+                    <div role="menu" style={{ position: "absolute", right: 0, top: 38, zIndex: 50, minWidth: 170, background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, boxShadow: "0 8px 24px rgba(0,0,0,0.14)", overflow: "hidden" }}>
+                      {[
+                        { label: "Edit", icon: <EditIcon size={14} />, on: () => { setEditError(""); setEditing({ id: v.id, title: v.title, description: v.description || "" }); } },
+                        { label: v.is_active ? "Hide from parents" : "Show to parents", icon: <EyeIcon size={14} />, on: () => toggle(v) },
+                        { label: "Delete", icon: <TrashIcon size={14} />, on: () => remove(v), danger: true },
+                      ].map((it) => (
+                        <button key={it.label} role="menuitem" type="button" onClick={() => { setMenuFor(null); it.on(); }}
+                          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", padding: "10px 14px", background: "none", border: "none", cursor: "pointer", fontSize: 13, color: it.danger ? THEME.danger : THEME.text }}>
+                          {it.icon}{it.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
+      {editing && (
+        <div onMouseDown={(e) => { if (e.target === e.currentTarget && !editBusy) setEditing(null); }}
+          style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(15,23,42,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div role="dialog" aria-modal="true" aria-label="Edit video" style={{ width: "100%", maxWidth: 480, background: THEME.surface, borderRadius: 4, padding: 18, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <h3 style={{ margin: "0 0 12px", fontSize: 16, color: THEME.heading }}>Edit video</h3>
+            <label style={label}>Title *</label>
+            <input value={editing.title} maxLength={150} autoFocus onChange={(e) => setEditing((x) => ({ ...x, title: e.target.value }))} style={{ ...inputStyle, marginBottom: 12 }} />
+            <label style={label}>Short description</label>
+            <textarea value={editing.description} maxLength={1000} rows={3} onChange={(e) => setEditing((x) => ({ ...x, description: e.target.value }))} style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit" }} />
+            {editError && <div style={{ color: THEME.danger, fontSize: 13, marginTop: 8 }}>{editError}</div>}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 14 }}>
+              <button type="button" onClick={() => setEditing(null)} disabled={editBusy} style={{ padding: "9px 16px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontSize: 13.5, cursor: "pointer" }}>Cancel</button>
+              <button type="button" onClick={saveEdit} disabled={editBusy} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}>
+                {editBusy && <SpinnerIcon size={14} />}{editBusy ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
