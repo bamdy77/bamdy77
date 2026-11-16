@@ -8,7 +8,6 @@ import { SectionTitle } from "./NewsSection";
 // the school (Communications → Parent Videos). Watch in place or download.
 // The whole section is hidden while there are no videos.
 const NAVY = "#0c426f";
-const fmtDur = (s) => (s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}` : "");
 
 export default function VideosSection() {
   const { t } = useLang();
@@ -38,8 +37,7 @@ export default function VideosSection() {
               <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
                 <h3 style={{ color: NAVY, fontSize: 18, fontWeight: 800, margin: 0 }}>{v.title}</h3>
                 {v.description && <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.6, margin: 0 }}>{v.description}</p>}
-                <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 13.5, color: "#64748B" }}>{fmtDur(v.duration)}</span>
+                <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
                   <a href={`${API_BASE}/public/videos/${v.id}/download`} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 4, background: NAVY, color: "#fff", fontWeight: 700, fontSize: 14, textDecoration: "none" }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>
                     {t("videos.download")}
