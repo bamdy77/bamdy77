@@ -104,7 +104,45 @@ function deleteCloudinaryImage(publicId) {
 // never blocks whatever DB delete triggered it.
 function deleteCloudinaryAsset(publicId, resourceType = "image") {
   if (!publicId) return Promise.resolve();
-  return cloudinary.uploader.destroy(publicId, { resource_type: resourceType }).catch(() => {});
+  // Result PDFs may be stored either public ("upload") or private
+  // ("authenticated") - try both so nothing is left behind.
+  return Promise.all(["upload", "authenticated"].map((type) =>
+    cloudinary.uploader.destroy(publicId, { resource_type: resourceType, type }).catch(() => {})));
+}
+
+// ── Private result PDFs ───────────────────────────────────────────────
+// Result PDFs are uploaded as type "authenticated": their stored URL does
+// NOT open on its own (Cloudinary answers 401), so a leaked link is useless.
+// The server fetches them with a short-lived signed URL and streams them to
+// a logged-in staff member.
+const PRIVATE_RAW = { resource_type: "raw", type: "authenticated" };
+
+function signedPrivateUrl(storedUrl, publicId) {
+  if (!storedUrl || !/\/authenticated\//.test(storedUrl) || !publicId) return storedUrl; // older public file
+  return cloudinary.utils.private_download_url(publicId, "", {
+    resource_type: "raw", type: "authenticated", expires_at: Math.floor(Date.now() / 1000) + 300,
+  });
+}
+
+// One-time background job: moves result PDFs uploaded before this change
+// from public to private. Safe to run on every start (does nothing once done).
+async function securePublicResultPdfs(query) {
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) return;
+  for (const table of ["published_results", "student_result_pdfs"]) {
+    let rows = [];
+    try {
+      ({ rows } = await query(`SELECT id, public_id FROM ${table} WHERE public_id IS NOT NULL AND pdf_url NOT LIKE '%/authenticated/%' LIMIT 500`));
+    } catch { continue; }
+    for (const r of rows) {
+      try {
+        const moved = await cloudinary.uploader.rename(r.public_id, r.public_id, { resource_type: "raw", type: "upload", to_type: "authenticated", overwrite: true });
+        await query(`UPDATE ${table} SET pdf_url = $1 WHERE id = $2`, [moved.secure_url, r.id]);
+      } catch (e) {
+        console.error(`[PDF] could not make ${table} #${r.id} private:`, e.message || e);
+      }
+    }
+    if (rows.length) console.log(`[PDF] ${table}: ${rows.length} older result PDF(s) checked for privacy.`);
+  }
 }
 
 // Derives the Cloudinary public_id back out of a stored secure_url, so we can
@@ -151,4 +189,4 @@ function publicIdFromBrandingUrl(url) {
   return match ? `mikumbi/branding/${match[1]}` : null;
 }
 
-module.exports = { uploadStudentPhoto, uploadResultsPdf, uploadStudentRoster, uploadBrandingImage, uploadBufferToCloudinary, deleteCloudinaryImage, deleteCloudinaryAsset, publicIdFromUrl, publicIdFromUserPhotoUrl, publicIdFromBrandingUrl, cloudinaryResized };
+module.exports = { PRIVATE_RAW, signedPrivateUrl, securePublicResultPdfs, uploadStudentPhoto, uploadResultsPdf, uploadStudentRoster, uploadBrandingImage, uploadBufferToCloudinary, deleteCloudinaryImage, deleteCloudinaryAsset, publicIdFromUrl, publicIdFromUserPhotoUrl, publicIdFromBrandingUrl, cloudinaryResized };

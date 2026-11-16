@@ -303,6 +303,11 @@ app.listen(PORT, () => {
   console.log(`  Timezone    : Africa/Dar_es_Salaam`);
   console.log(`  Health check: http://localhost:${PORT}/api/health`);
   console.log(`  Email       : ${require("./utils/mailer").mailStatus()}`);
+  // Make result PDFs stored before the privacy change private (background, best-effort).
+  setTimeout(() => {
+    require("./middleware/upload").securePublicResultPdfs(require("./db/db").query)
+      .catch((e) => console.error("[PDF] privacy job failed:", e.message));
+  }, 15000);
   if (!process.env.FRONTEND_URL) console.log("  WARNING     : FRONTEND_URL is not set - password reset links fall back to the requesting site.");
   console.log("─────────────────────────────────────────────────");
 });

@@ -5,7 +5,8 @@ const c = require("../controllers/resultsController");
 
 // ── Public (no login) — for the landing page "Publications" section ──
 router.get("/public", c.publicResults);
-router.get("/published/:id/file", c.downloadPublishedResult);
+// Staff only - this used to be open to anyone who guessed an id.
+router.get("/published/:id/file", auth(["admin", "second_master", "academic", "teacher", "class_teacher", "patron", "matron", "food_teacher"]), c.downloadPublishedResult);
 
 // Everything below requires login. Admin (Head Master) and Academic Master
 // administer periods/sheets/publishing; Teachers can only touch their own

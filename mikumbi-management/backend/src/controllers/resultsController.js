@@ -1500,6 +1500,7 @@ const exportStudentResultPdf = async (req, res, next) => {
       const uploaded = await uploadBufferToCloudinary(pdfBuffer, {
         folder: "mikumbi/student-results",
         resource_type: "raw",
+        type: "authenticated", // private - see upload.js signedPrivateUrl
         // See the .pdf note in publishResult() below - raw uploads need
         // the extension in public_id or the delivered file won't open.
         public_id: `student-${student_id}-sheet-${sheet_id}.pdf`,
@@ -2140,7 +2141,8 @@ const getFullExcel = async (req, res, next) => {
 const publicResults = async (req, res, next) => {
   const { form, year } = req.query;
   try {
-    let q = `SELECT id, form, exam_type, month, year, title, pdf_url, file_size, created_at FROM published_results WHERE is_active = TRUE`;
+    // pdf_url is never sent to the browser - files are fetched through /published/:id/file.
+    let q = `SELECT id, form, exam_type, month, year, title, file_size, created_at FROM published_results WHERE is_active = TRUE`;
     const params = [];
     if (form) { params.push(form); q += ` AND form = $${params.length}`; }
     if (year) { params.push(Number(year)); q += ` AND year = $${params.length}`; }
@@ -2175,6 +2177,7 @@ const publishResult = async (req, res, next) => {
     const uploaded = await uploadBufferToCloudinary(req.file.buffer, {
       folder: "mikumbi/results",
       resource_type: "raw",
+      type: "authenticated", // private - see upload.js signedPrivateUrl
       // Cloudinary "raw" uploads store the file exactly as given and do
       // NOT auto-detect/append a format the way image uploads do - the
       // public_id (and therefore the delivered secure_url) must include
@@ -2217,6 +2220,7 @@ const publishResultFromSheet = async (req, res, next) => {
     const uploaded = await uploadBufferToCloudinary(pdfBuffer, {
       folder: "mikumbi/results",
       resource_type: "raw",
+      type: "authenticated", // private - see upload.js signedPrivateUrl
       // Same public_id convention as the manual-upload path - see the
       // comment on publishResult() above for why the .pdf extension must
       // be baked into the public_id for Cloudinary "raw" uploads.
@@ -2262,15 +2266,16 @@ const publishResultFromSheet = async (req, res, next) => {
 const downloadPublishedResult = async (req, res, next) => {
   try {
     const { rows } = await query(
-      `SELECT title, pdf_url FROM published_results WHERE id = $1 AND is_active = TRUE`,
+      `SELECT title, pdf_url, public_id FROM published_results WHERE id = $1 AND is_active = TRUE`,
       [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: "This result is not available - it may have been removed or unpublished." });
-    const { title, pdf_url } = rows[0];
+    const { title, pdf_url, public_id } = rows[0];
+    const { signedPrivateUrl } = require("../middleware/upload");
 
     let upstream;
     try {
-      upstream = await fetch(pdf_url);
+      upstream = await fetch(signedPrivateUrl(pdf_url, public_id));
     } catch {
       return res.status(502).json({ error: "Could not reach the file storage service. Please try again shortly." });
     }
@@ -2281,6 +2286,7 @@ const downloadPublishedResult = async (req, res, next) => {
     const safeName = (title || "result").replace(/[^a-zA-Z0-9 _-]/g, "").trim() || "result";
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="${safeName}.pdf"`);
+    res.setHeader("Cache-Control", "private, no-store");
     const buf = Buffer.from(await upstream.arrayBuffer());
     res.send(buf);
   } catch (err) { next(err); }
@@ -2305,19 +2311,8 @@ const deleteResult = async (req, res, next) => {
     const { rows } = await query(`SELECT public_id, title, form, exam_type, month, year FROM published_results WHERE id = $1`, [req.params.id]);
     if (!rows.length) return res.status(404).json({ error: "Result not found." });
 
-    const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = process.env;
     const publicId = rows[0].public_id;
-    if (publicId && CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET) {
-      try {
-        const timestamp = Math.floor(Date.now() / 1000);
-        const toSign = `public_id=${publicId}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`;
-        const signature = crypto.createHash("sha1").update(toSign).digest("hex");
-        const form = new URLSearchParams({ public_id: publicId, timestamp: String(timestamp), api_key: CLOUDINARY_API_KEY, signature });
-        await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/destroy`, { method: "POST", body: form });
-      } catch (cloudErr) {
-        console.error("Cloudinary destroy failed:", cloudErr.message);
-      }
-    }
+    if (publicId) await require("../middleware/upload").deleteCloudinaryAsset(publicId, "raw");
     await query(`DELETE FROM published_results WHERE id = $1`, [req.params.id]);
     res.json({ message: "Result deleted." });
     recordAudit({
