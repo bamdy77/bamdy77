@@ -29,10 +29,13 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Why the person was signed out (inactivity, 12-hour limit...), set by AuthContext.
+  const [notice, setNotice] = useState(() => { try { return sessionStorage.getItem("mikumbi_logout_reason") || ""; } catch { return ""; } });
+  useEffect(() => { try { sessionStorage.removeItem("mikumbi_logout_reason"); } catch { /* ignore */ } }, []);
 
   const submit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError(""); setNotice("");
     setBusy(true);
     try {
       const r = await login(username.trim(), password);
@@ -135,6 +138,7 @@ export default function Login() {
             <label style={labelStyle}>Password</label>
             <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="" />
 
+            {notice && !error && <div role="status" style={{ color: THEME.navy, background: "#eef4fb", border: "1px solid #c9dcf0", borderRadius: 4, padding: "8px 10px", fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>{notice}</div>}
             {error && <div style={{ color: THEME.danger, fontSize: 13, marginTop: 8 }}>{error}</div>}
 
             <button type="submit" disabled={busy} style={{

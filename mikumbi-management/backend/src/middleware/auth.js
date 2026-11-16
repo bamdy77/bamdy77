@@ -13,7 +13,7 @@ const auth = (roles = []) => {
       token = req.query.token;
     }
     if (!token) {
-      return res.status(401).json({ success: false, message: "Access denied. No token provided." });
+      return res.status(401).json({ success: false, session_expired: true, message: "Access denied. No token provided." });
     }
 
     try {
@@ -31,7 +31,7 @@ const auth = (roles = []) => {
         FROM users u WHERE u.id = $1
       `, [decoded.id]);
       if (!result.rows.length || !result.rows[0].is_active) {
-        return res.status(401).json({ success: false, message: "This account has been deactivated. Contact the Head Master." });
+        return res.status(401).json({ success: false, session_expired: true, message: "This account has been deactivated. Contact the Head Master." });
       }
 
       const liveRow = result.rows[0];
@@ -39,7 +39,7 @@ const auth = (roles = []) => {
       // valid - this is what actually signs out a stolen/old session.
       if (liveRow.password_changed_at && decoded.iat &&
           decoded.iat * 1000 < new Date(liveRow.password_changed_at).getTime() - 2000) {
-        return res.status(401).json({ success: false, message: "Your password was changed. Please sign in again." });
+        return res.status(401).json({ success: false, session_expired: true, message: "Your password was changed. Please sign in again." });
       }
       const liveRoles = Array.from(new Set([liveRow.role, ...(liveRow.extra_roles || [])]));
       req.user = {
@@ -57,7 +57,11 @@ const auth = (roles = []) => {
       }
       next();
     } catch (err) {
-      return res.status(401).json({ success: false, message: "Invalid or expired token." });
+      // Only a bad/expired token means "sign in again". A database hiccup is
+      // a server error and must not throw the person out of the system.
+      if (err && (err.name === "TokenExpiredError" || err.name === "JsonWebTokenError" || err.name === "NotBeforeError"))
+        return res.status(401).json({ success: false, session_expired: true, message: "Your session has ended. Please sign in again." });
+      return next(err);
     }
   };
 };

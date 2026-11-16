@@ -1,5 +1,14 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+// Staff sessions last at most 12 hours (one working day); the browser also
+// signs out after 30 minutes without activity (see AuthContext).
+// JWT_EXPIRES_IN can only make it SHORTER, never longer than 12 hours.
+const SESSION_TTL = (() => {
+  const v = String(process.env.JWT_EXPIRES_IN || "").trim();
+  const m = /^(\d+)\s*([smh])$/.exec(v);
+  const secs = m ? Number(m[1]) * { s: 1, m: 60, h: 3600 }[m[2]] : Infinity;
+  return Math.min(secs, 12 * 3600);
+})();
 const crypto = require("crypto");
 const { passwordProblem, BCRYPT_ROUNDS } = require("../utils/passwordPolicy");
 
@@ -163,7 +172,7 @@ async function issueLogin(res, user, extra = {}) {
         subject_ids: user.subject_ids || [], assigned_forms: user.assigned_forms || [],
         class_teacher_of: user.class_teacher_of || null },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      { expiresIn: SESSION_TTL }
     );
 
     res.json({
@@ -225,7 +234,7 @@ const changePassword = async (req, res, next) => {
       { id: user.id, username: user.username, role: user.role, roles: Array.from(new Set([user.role, ...(user.extra_roles || [])])), full_name: user.full_name,
         subject_ids: user.subject_ids || [], assigned_forms: user.assigned_forms || [], class_teacher_of: user.class_teacher_of || null },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      { expiresIn: SESSION_TTL }
     );
     return res.json({ success: true, message: "Password changed successfully.", token: freshToken });
   } catch (err) {

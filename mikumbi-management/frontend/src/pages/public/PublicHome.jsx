@@ -213,20 +213,23 @@ const GALLERY_ITEMS = [
   ...[1, 2, 3, 4].map((n) => ({ src: `/assets/gallery-sports-${n}.jpg`, cat: "sports" })),
 ];
 const GALLERY = GALLERY_ITEMS.map((g) => g.src);
-// "Zote" (all) is selected first, but no photo is shown until the visitor
-// asks to see them - keeps the page light and uncluttered.
-const GALLERY_CATS = ["all", "students", "learning", "leaders", "farm", "hostel", "sports", "grounds"];
+// No photo shows until the visitor presses "Tazama Picha". With no section
+// chosen it shows every section (each under its own heading); after choosing
+// a section it shows only that section. Changing section hides them again.
+const GALLERY_CATS = ["students", "learning", "leaders", "farm", "hostel", "sports", "grounds"];
 
 function Gallery() {
   const { isMobile, isTablet } = useBreakpoint();
   const { t } = useLang();
   const available = useLoadedImages(GALLERY);
-  const cats = GALLERY_CATS.filter((c) => c === "all" || GALLERY_ITEMS.some((g) => g.cat === c && available.includes(g.src)));
-  const [picked, setPicked] = useState("all");
-  const [shown, setShown] = useState(false); // photos stay hidden until the visitor chooses to view them
-  const setCat = (c) => { setPicked(c); setShown(true); };
-  const cat = cats.includes(picked) ? picked : "all";
-  const items = GALLERY_ITEMS.filter((g) => available.includes(g.src) && (cat === "all" || g.cat === cat));
+  const cats = GALLERY_CATS.filter((c) => GALLERY_ITEMS.some((g) => g.cat === c && available.includes(g.src)));
+  const [picked, setPicked] = useState(null); // null = no section chosen
+  const [shown, setShown] = useState(false); // photos stay hidden until "Tazama" is pressed
+  const cat = cats.includes(picked) ? picked : null;
+  const items = GALLERY_ITEMS
+    .filter((g) => available.includes(g.src) && (!cat || g.cat === cat))
+    .sort((x, y) => GALLERY_CATS.indexOf(x.cat) - GALLERY_CATS.indexOf(y.cat));
+  const groups = (cat ? [cat] : cats).map((c) => ({ c, list: items.map((g, i) => ({ ...g, i })).filter((g) => g.cat === c) })).filter((g) => g.list.length);
   const loaded = items.map((g) => g.src);
   const [open, setOpen] = useState(null); // index into `loaded`
 
@@ -251,7 +254,7 @@ function Gallery() {
         <SectionTitle title={t("gallery.title")} subtitle={t("gallery.subtitle")} />
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, marginBottom: 20 }}>
           {cats.map((c) => (
-            <button key={c} type="button" onClick={() => { setCat(c); setOpen(null); }} aria-pressed={cat === c}
+            <button key={c} type="button" onClick={() => { setPicked(c === cat ? null : c); setShown(false); setOpen(null); }} aria-pressed={cat === c}
               style={{ padding: "8px 16px", borderRadius: 4, fontSize: 15, fontWeight: 700, cursor: "pointer",
                 border: `1px solid ${cat === c ? NAVY : "#cbd5e1"}`, background: cat === c ? NAVY : "#fff", color: cat === c ? "#fff" : NAVY }}
               aria-controls="gallery-grid">
@@ -261,25 +264,38 @@ function Gallery() {
         </div>
         {!shown ? (
           <div style={{ textAlign: "center", padding: "10px 0 4px" }}>
-            <button type="button" className="pub-btn" onClick={() => setShown(true)} aria-controls="gallery-grid"
+            <button type="button" className="pub-btn" onClick={() => setShown(true)} aria-controls="gallery-grid" aria-expanded="false"
               style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 4, border: "none", background: NAVY, color: "#fff", fontSize: 16, fontWeight: 800, cursor: "pointer" }}>
-              {t("gallery.show", { n: available.length })}
+              {cat ? t("gallery.showCat", { cat: t(`gallery.cat.${cat}`), n: items.length }) : t("gallery.show", { n: items.length })}
             </button>
           </div>
         ) : (
-        <div id="gallery-grid" style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : isTablet ? "repeat(3, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 16 }}>
-          {items.map(({ src, caption }, i) => (
-            <button key={src} type="button" className="pub-lift" onClick={() => setOpen(i)} aria-label={t("gallery.open", { n: i + 1 })}
-              style={{ position: "relative", padding: 0, border: "none", borderRadius: 4, overflow: "hidden", cursor: "zoom-in", background: "#dbe4ee", aspectRatio: "4 / 3" }}>
-              <img src={src} alt={t("gallery.photo", { n: i + 1 })} loading="lazy" decoding="async" width="400" height="300" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 35%", display: "block" }} />
-              {caption && (
-                <span style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "22px 12px 10px", textAlign: "center",
-                  background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.72) 100%)", color: "#fff", fontSize: isMobile ? 13.5 : 16, fontWeight: 800 }}>
-                  {t(caption)}
-                </span>
-              )}
-            </button>
+        <div id="gallery-grid">
+          {groups.map(({ c, list }) => (
+            <div key={c} style={{ marginBottom: 26 }}>
+              {!cat && <h3 style={{ color: NAVY, fontSize: isMobile ? 18 : 20, fontWeight: 800, margin: "0 0 12px", textAlign: "center" }}>{t(`gallery.cat.${c}`)}</h3>}
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : isTablet ? "repeat(3, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? 10 : 16 }}>
+                {list.map(({ src, caption, i }) => (
+                  <button key={src} type="button" className="pub-lift" onClick={() => setOpen(i)} aria-label={t("gallery.open", { n: i + 1 })}
+                    style={{ position: "relative", padding: 0, border: "none", borderRadius: 4, overflow: "hidden", cursor: "zoom-in", background: "#dbe4ee", aspectRatio: "4 / 3" }}>
+                    <img src={src} alt={t("gallery.photo", { n: i + 1 })} loading="lazy" decoding="async" width="400" height="300" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 35%", display: "block" }} />
+                    {caption && (
+                      <span style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "22px 12px 10px", textAlign: "center",
+                        background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.72) 100%)", color: "#fff", fontSize: isMobile ? 13.5 : 16, fontWeight: 800 }}>
+                        {t(caption)}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
+          <div style={{ textAlign: "center" }}>
+            <button type="button" onClick={() => { setShown(false); document.getElementById("gallery")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} aria-controls="gallery-grid" aria-expanded="true"
+              style={{ padding: "10px 22px", borderRadius: 4, border: `1px solid ${NAVY}`, background: "#fff", color: NAVY, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+              {t("gallery.hide")}
+            </button>
+          </div>
         </div>
         )}
       </div>

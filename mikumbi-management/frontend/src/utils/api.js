@@ -31,6 +31,11 @@ export async function apiFetch(path, options = {}, token) {
   const data = await res.json();
 
   if (!res.ok) {
+    // The server says this sign-in is no longer valid (expired, password
+    // changed, account deactivated): AuthContext signs the person out.
+    if (res.status === 401 && token && data && data.session_expired) {
+      window.dispatchEvent(new CustomEvent("mikumbi:session-ended", { detail: data.message }));
+    }
     const message = (data && (data.message || data.error)) || `Request failed (${res.status})`;
     throw new Error(message);
   }
