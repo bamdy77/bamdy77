@@ -114,6 +114,8 @@ export function AuthProvider({ children }) {
     if (typeof reason === "string" && reason) { try { sessionStorage.setItem(REASON_KEY, reason); } catch { /* ignore */ } }
     localStorage.removeItem("mikumbi_token");
     localStorage.removeItem("mikumbi_user");
+    // The assistant's saved conversation goes with the session.
+    try { Object.keys(sessionStorage).filter((k) => k.startsWith("mikumbi_chat_")).forEach((k) => sessionStorage.removeItem(k)); } catch { /* ignore */ }
     setToken(null);
     setUser(null);
   }, []);

@@ -61,10 +61,12 @@ function unsafeAnswer(text) {
 // code change. If Google answers "model not found", the next name in the
 // list is tried (Google retires and renames models from time to time).
 const API_BASE = () => (process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com").replace(/\/+$/, "");
-const MODELS = () => Array.from(new Set([process.env.GEMINI_MODEL, "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash"].filter(Boolean)));
-// Gemini 3 models "think" before answering; a long step-by-step answer can
-// take well over 12 seconds, which used to cut every long answer off.
-const REQUEST_TIMEOUT_MS = 55000;
+const MODELS = () => Array.from(new Set([process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash", "gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"].filter(Boolean)));
+// One model gets this long; if it is slow or overloaded the next model in
+// the list is tried, all within TOTAL_DEADLINE_MS so the widget never waits
+// for nothing. (A busy model can sit on a request for over a minute.)
+const REQUEST_TIMEOUT_MS = 22000;
+const TOTAL_DEADLINE_MS = 50000;
 const MAX_OUTPUT_TOKENS = 8192;
 // A cut-off answer is continued automatically (up to this many extra calls),
 // so the person always receives the whole answer.
@@ -142,10 +144,11 @@ function buildSystemPrompt(user, page) {
 // One call to Gemini. Returns { text, finishReason } or throws an Error with
 // .reason set to one of: invalid_key | quota | model_unavailable | timeout |
 // blocked | error.
-async function callGemini(model, systemPrompt, contents, apiKey, withThinkingConfig) {
+async function callGemini(model, systemPrompt, contents, apiKey, withThinkingConfig, timeoutMs = REQUEST_TIMEOUT_MS) {
   const generationConfig = { temperature: 0.3, maxOutputTokens: MAX_OUTPUT_TOKENS };
   // Keep the "thinking" short so it does not eat the answer's budget or time.
-  if (withThinkingConfig && /^gemini-3/.test(model)) generationConfig.thinkingConfig = { thinkingLevel: "low" };
+  if (withThinkingConfig && (/^gemini-3/.test(model) || /-latest$/.test(model))) generationConfig.thinkingConfig = { thinkingLevel: "low" };
+  else if (withThinkingConfig && /^gemini-2\.5-flash/.test(model)) generationConfig.thinkingConfig = { thinkingBudget: 0 };
   try {
     const response = await axios.post(
       `${API_BASE()}/v1beta/models/${encodeURIComponent(model)}:generateContent`,
@@ -159,7 +162,7 @@ async function callGemini(model, systemPrompt, contents, apiKey, withThinkingCon
         ],
       },
       // The key goes in a header, never in the URL (URLs end up in logs).
-      { timeout: REQUEST_TIMEOUT_MS, headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey } }
+      { timeout: Math.max(timeoutMs, 3000), headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey } }
     );
     const candidate = response.data?.candidates?.[0];
     const text = (candidate?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || "").join("").trim();
@@ -179,6 +182,7 @@ async function callGemini(model, systemPrompt, contents, apiKey, withThinkingCon
     if (err.code === "ECONNABORTED" || /timeout/i.test(err.message)) e.reason = "timeout";
     else if (/API_KEY_INVALID|API key not valid|API_KEY/i.test(detail) || status === 401 || status === 403) e.reason = "invalid_key";
     else if (status === 429) e.reason = "quota";
+    else if (status === 500 || status === 503 || status === 504) e.reason = "overloaded";
     else if (status === 404 || /not found|is not supported/i.test(detail)) e.reason = "model_unavailable";
     else if (status === 400 && /thinking/i.test(detail)) e.reason = "bad_thinking_config";
     else e.reason = "error";
@@ -187,20 +191,30 @@ async function callGemini(model, systemPrompt, contents, apiKey, withThinkingCon
 }
 
 // Tries each model name until one answers; returns { text, finishReason, model }.
+// A missing, slow or overloaded model is skipped; a bad key or a used-up
+// quota stops at once (another model would fail the same way).
 async function askAnyModel(systemPrompt, contents, apiKey) {
   let last;
+  const deadline = Date.now() + TOTAL_DEADLINE_MS;
   for (const model of MODELS()) {
+    const left = deadline - Date.now();
+    if (left < 5000) break;
+    const started = Date.now();
     try {
-      return { ...(await callGemini(model, systemPrompt, contents, apiKey, true)), model };
+      const r = await callGemini(model, systemPrompt, contents, apiKey, true, Math.min(REQUEST_TIMEOUT_MS, left));
+      console.log(`Chatbot: answered by ${model} in ${Date.now() - started} ms`);
+      return { ...r, model };
     } catch (err) {
       if (err.reason === "bad_thinking_config") {
-        try { return { ...(await callGemini(model, systemPrompt, contents, apiKey, false)), model }; } catch (e2) { err = e2; }
+        try { return { ...(await callGemini(model, systemPrompt, contents, apiKey, false, Math.min(REQUEST_TIMEOUT_MS, deadline - Date.now()))), model }; } catch (e2) { err = e2; }
       }
+      console.warn(`Chatbot: ${model} failed (${err.reason}${err.status ? " " + err.status : ""}) after ${Date.now() - started} ms`);
       last = err;
-      if (err.reason !== "model_unavailable") throw err; // only a missing model is worth trying another name
+      if (!["model_unavailable", "timeout", "overloaded"].includes(err.reason)) throw err;
     }
   }
-  throw last;
+  if (last && last.reason === "overloaded") last.reason = "timeout";
+  throw last || Object.assign(new Error("no model answered"), { reason: "timeout" });
 }
 
 // POST /api/chatbot/ask  { message, history, page }

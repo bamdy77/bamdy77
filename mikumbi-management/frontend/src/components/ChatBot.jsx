@@ -83,6 +83,24 @@ export default function ChatBot() {
   }, []);
   const { token, user } = useAuth();
   const isManager = [user?.role, ...(user?.roles || [])].some((r) => r === "admin" || r === "second_master");
+
+  // Keep the conversation for this browser tab, so a page reload (common on
+  // weak mobile networks) does not wipe it. Per account; cleared on sign-out
+  // with the tab's session storage.
+  const chatStoreKey = user?.id ? `mikumbi_chat_${user.id}` : null;
+  const restored = useRef(null);
+  useEffect(() => {
+    if (!chatStoreKey || restored.current === chatStoreKey) return;
+    restored.current = chatStoreKey;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(chatStoreKey) || "null");
+      if (Array.isArray(saved) && saved.length) setMessages(saved);
+    } catch { /* storage blocked or bad data: start fresh */ }
+  }, [chatStoreKey]);
+  useEffect(() => {
+    if (!chatStoreKey || restored.current !== chatStoreKey) return;
+    try { sessionStorage.setItem(chatStoreKey, JSON.stringify(messages.slice(-30))); } catch { /* ignore */ }
+  }, [messages, chatStoreKey]);
   const location = useLocation();
 
   // e.g. "/dashboard/tams" -> "tams" -> "TAMS (Mahudhurio)". Anything
@@ -205,8 +223,18 @@ export default function ChatBot() {
       if (!result.failed) { setMessages((m) => [...m, { from: "bot", text: result.answer, sig: result.sig }]); return; }
       const reason = REASON_KEYS[result.reason] ? result.reason : "error";
       const fix = isManager && ADMIN_FIX[reason] ? `\n\n${t(ADMIN_FIX[reason])}` : "";
-      setMessages((m) => [...m, { from: "bot", error: true, text: t(REASON_KEYS[reason]) + fix }]);
+      // Network or slowness: offer a one-tap retry of the same question.
+      const canRetry = ["network", "timeout", "error"].includes(reason);
+      setMessages((m) => [...m, { from: "bot", error: true, text: t(REASON_KEYS[reason]) + fix, retry: canRetry ? text : undefined }]);
     });
+  };
+
+  // Drops the failed question and its error, then asks it again.
+  const retry = (i) => {
+    const q = messages[i]?.retry;
+    if (!q || typing) return;
+    setMessages((m) => m.filter((_, k) => k !== i && !(k === i - 1 && m[k].from === "user" && m[k].text === q)));
+    send(q);
   };
 
   const handleKeyDown = (e) => {
@@ -287,6 +315,14 @@ export default function ChatBot() {
                 boxShadow: m.from === "bot" ? "0 1px 2px rgba(15,23,42,0.08)" : "none",
               }}>
                 {m.key ? t(m.key) : m.from === "bot" && !m.error ? formatBotText(m.text) : m.text}
+                {m.retry && i === messages.length - 1 && (
+                  <div style={{ marginTop: 8 }}>
+                    <button type="button" onClick={() => retry(i)} disabled={typing}
+                      style={{ padding: "5px 12px", borderRadius: 4, border: `1px solid ${THEME.navy}`, background: THEME.surface, color: THEME.link, fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>
+                      {t("chat.retry")}
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
             {typing && (

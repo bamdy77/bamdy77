@@ -229,6 +229,7 @@ const STAFF_STRINGS = {
   "chat.send": { en: "Send", sw: "Tuma" },
   "chat.open": { en: "Open the System Assistant - press and hold to move it", sw: "Fungua Msaidizi wa Mfumo - bonyeza na ushikilie kuisogeza" },
   "chat.slow": { en: "Still preparing a full answer…", sw: "Bado ninaandaa jibu kamili…" },
+  "chat.retry": { en: "Try again", sw: "Jaribu tena" },
   "chat.err.notConfigured": { en: "The System Assistant is not set up yet, so it cannot answer right now.", sw: "Msaidizi wa Mfumo bado haujawekwa tayari, kwa hiyo hauwezi kujibu kwa sasa." },
   "chat.err.invalidKey": { en: "The System Assistant cannot work right now because of a technical problem.", sw: "Msaidizi wa Mfumo hauwezi kufanya kazi kwa sasa kwa sababu ya tatizo la kiufundi." },
   "chat.err.quota": { en: "The System Assistant has reached its usage limit for now. Please try again later.", sw: "Msaidizi wa Mfumo umefikia kikomo cha matumizi kwa sasa. Tafadhali jaribu tena baadaye." },
