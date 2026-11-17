@@ -1692,20 +1692,37 @@ async function migrate() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );`);
   await query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_exam_types_name ON exam_types (LOWER(name));`);
-  await query(`
-    INSERT INTO exam_types (name, name_sw, sort_order) VALUES
-      ('Monthly Test', 'MTIHANI WA MWEZI', 1),
-      ('Mid-Term Examination', 'MTIHANI WA KATI WA MHULA', 2),
-      ('Terminal Examination', 'MTIHANI WA KUFUNGA MHULA', 3),
-      ('Mock Examination', 'MTIHANI WA MAJARIBIO', 4),
-      ('District Mock Examination', 'MTIHANI WA MAJARIBIO WA WILAYA', 5),
-      ('Annual Examination', 'MTIHANI WA MWAKA', 6),
-      ('School Examination', 'MTIHANI WA SHULE', 7),
-      ('Fitness Examination', 'MTIHANI WA UTAYARI', 8),
-      ('Good Neighborliness Examination Mikumbi & Mkoma', 'MTIHANI WA UJIRANI MWEMA MIKUMBI NA MKOMA', 9),
-      ('Good Neighborliness Examination Mikumbi & Chihangu', 'MTIHANI WA UJIRANI MWEMA MIKUMBI NA CHIHANGU', 10),
-      ('Good Neighborliness Examination Mikumbi & Mnyambe', 'MTIHANI WA UJIRANI MWEMA MIKUMBI NA MNYAMBE', 11)
-    ON CONFLICT DO NOTHING;`);
+  // One-time steps are remembered in app_flags so they never run again: a
+  // default exam type that the Head Master deletes must NOT come back on the
+  // next deploy (the old seed re-added every deleted default each time).
+  await query(`CREATE TABLE IF NOT EXISTS app_flags (key VARCHAR(80) PRIMARY KEY, set_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
+  const flagged = async (key) => (await query(`SELECT 1 FROM app_flags WHERE key = $1`, [key])).rows.length > 0;
+  const setFlag = (key) => query(`INSERT INTO app_flags (key) VALUES ($1) ON CONFLICT DO NOTHING`, [key]);
+  if (!(await flagged("exam_types_seeded"))) {
+    await query(`
+      INSERT INTO exam_types (name, name_sw, sort_order) VALUES
+        ('Monthly Test', 'MTIHANI WA MWEZI', 1),
+        ('Mid-Term Examination', 'MTIHANI WA KATI WA MHULA', 2),
+        ('Terminal Examination', 'MTIHANI WA KUFUNGA MHULA', 3),
+        ('Annual Examination', 'MTIHANI WA MWAKA', 4),
+        ('Fitness Examination', 'MTIHANI WA UTAYARI', 5),
+        ('Good Neighborliness Examination Mikumbi & Mkoma', 'MTIHANI WA UJIRANI MWEMA MIKUMBI NA MKOMA', 6),
+        ('Good Neighborliness Examination Mikumbi & Chihangu', 'MTIHANI WA UJIRANI MWEMA MIKUMBI NA CHIHANGU', 7)
+      ON CONFLICT DO NOTHING;`);
+    await setFlag("exam_types_seeded");
+  }
+  // Once only (Nov 2026): the school asked to remove these four from the
+  // list. Unused ones are deleted; one that already has results is hidden
+  // instead, so old results stay readable. Re-adding them later in User
+  // Accounts -> Exam Types works and they will not be removed again.
+  if (!(await flagged("exam_types_removed_2026_11"))) {
+    const REMOVED = ["School Examination", "Good Neighborliness Examination Mikumbi & Mnyambe", "Mock Examination", "District Mock Examination"];
+    await query(`
+      DELETE FROM exam_types et WHERE LOWER(et.name) = ANY($1::text[])
+        AND NOT EXISTS (SELECT 1 FROM academic_periods ap WHERE LOWER(ap.exam_type) = LOWER(et.name));`, [REMOVED.map((n) => n.toLowerCase())]);
+    await query(`UPDATE exam_types SET is_active = false WHERE LOWER(name) = ANY($1::text[]);`, [REMOVED.map((n) => n.toLowerCase())]);
+    await setFlag("exam_types_removed_2026_11");
+  }
   // Types already used in old results but missing from the list (kept hidden-safe: active).
   await query(`
     INSERT INTO exam_types (name, sort_order)
