@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLang } from "../i18n";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
@@ -13,6 +14,7 @@ const smsInputStyle = { width: "100%", padding: "9px 12px", borderRadius: 4, bor
 const smsLabelStyle = { display: "block", fontSize: 12, fontWeight: 600, color: THEME.text, marginBottom: 5 };
 
 export default function SmsGatewaySettings() {
+  const { t } = useLang();
   const { user, token } = useAuth();
   const { isMobile } = useBreakpoint();
   const { confirm, ConfirmDialogPortal } = useConfirm();
@@ -25,17 +27,17 @@ export default function SmsGatewaySettings() {
   if (!isAdminTier) {
     return (
       <div style={{ padding: 40, maxWidth: 560 }}>
-        <h2 style={{ color: THEME.heading, fontSize: 20, marginBottom: 8 }}>SMS Gateway</h2>
-        <p style={{ color: THEME.muted, fontSize: 13.5 }}>This page is only available to Admin, Second Master, and Academic accounts.</p>
+        <h2 style={{ color: THEME.heading, fontSize: 20, marginBottom: 8 }}>{t("set.sms")}</h2>
+        <p style={{ color: THEME.muted, fontSize: 13.5 }}>{t("smsgw.onlyManagers")}</p>
       </div>
     );
   }
 
   return (
     <div style={{ padding: isMobile ? "16px 12px 32px" : "24px 16px 40px", maxWidth: 700, margin: "0 auto" }}>
-      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 17 : 20, marginBottom: 4 }}>SMS Gateway</h2>
+      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 17 : 20, marginBottom: 4 }}>{t("set.sms")}</h2>
       <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 24, maxWidth: 560 }}>
-        Choose which provider Results → Send Results via SMS uses. NextSMS is the school's paid gateway (billed per SMS). Android SMS Gateway sends from a phone the school owns, using its own SIM.
+        {t("smsgw.intro")}
       </p>
 
       <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "18px 18px 22px" }}>
@@ -48,6 +50,7 @@ export default function SmsGatewaySettings() {
 }
 
 function SmsGatewaySection({ token, confirm }) {
+  const { t } = useLang();
   const [settings, setSettings] = useState(null);
   const [provider, setProvider] = useState("nextsms");
   const [gwUrl, setGwUrl] = useState("");
@@ -70,24 +73,24 @@ function SmsGatewaySection({ token, confirm }) {
 
   const save = () => {
     setError(""); setMsg("");
-    confirm("Hifadhi mabadiliko ya SMS Gateway?", async () => {
+    confirm(t("smsgw.saveConfirm"), async () => {
       setBusy(true);
       try {
         const body = { sms_provider: provider, android_sms_gateway_url: gwUrl, android_sms_gateway_username: gwUsername };
         if (gwPassword) body.android_sms_gateway_password = gwPassword;
         await apiFetch("/settings/sms", { method: "PUT", body: JSON.stringify(body) }, token);
-        setMsg("Mipangilio ya SMS Gateway imehifadhiwa.");
+        setMsg(t("smsgw.saved"));
         setGwPassword("");
         load();
       } catch (err) { setError(err.message); } finally { setBusy(false); }
     }, { danger: false });
   };
 
-  if (!settings) return <p style={{ fontSize: 12.5, color: THEME.muted }}><SpinnerIcon size={13} /> Loading…</p>;
+  if (!settings) return <p style={{ fontSize: 12.5, color: THEME.muted }}><SpinnerIcon size={13} /> {t("common.loading")}</p>;
 
   return (
     <div>
-      <label style={smsLabelStyle}>Provider ya Kutuma Matokeo (Results SMS)</label>
+      <label style={smsLabelStyle}>{t("smsgw.provider")}</label>
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         {[["nextsms", "NEXTSMS"], ["android_gateway", "Android SMS Gateway"]].map(([val, label]) => (
           <label key={val} style={{
@@ -104,19 +107,19 @@ function SmsGatewaySection({ token, confirm }) {
       {provider === "android_gateway" && (
         <div style={{ display: "grid", gap: 12, marginBottom: 6, maxWidth: 420 }}>
           <p style={{ fontSize: 11.5, color: THEME.muted, margin: 0 }}>
-            Kutoka programu ya "SMS Gateway for Android" kwenye simu ya shule: nakili URL, Username, na Password vilivyoonyeshwa hapo, kisha viweke hapa.
+            {t("smsgw.androidHelp")}
           </p>
           <div>
-            <label style={smsLabelStyle}>Gateway URL</label>
+            <label style={smsLabelStyle}>{t("smsgw.url")}</label>
             <input value={gwUrl} onChange={(e) => setGwUrl(e.target.value)} placeholder="http://192.168.1.20:8080" style={smsInputStyle} />
           </div>
           <div>
-            <label style={smsLabelStyle}>Username</label>
+            <label style={smsLabelStyle}>{t("login.username")}</label>
             <input value={gwUsername} onChange={(e) => setGwUsername(e.target.value)} style={smsInputStyle} />
           </div>
           <div>
-            <label style={smsLabelStyle}>Password {settings.android_sms_gateway_password_set && <span style={{ color: THEME.muted, fontWeight: 400 }}>(imeshawekwa — acha wazi kama hutaki kubadilisha)</span>}</label>
-            <PasswordInput value={gwPassword} onChange={(e) => setGwPassword(e.target.value)} placeholder="Password" required={false} style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13 }} />
+            <label style={smsLabelStyle}>{t("login.password")} {settings.android_sms_gateway_password_set && <span style={{ color: THEME.muted, fontWeight: 400 }}>({t("smsgw.pwSet")})</span>}</label>
+            <PasswordInput value={gwPassword} onChange={(e) => setGwPassword(e.target.value)} placeholder={t("login.password")} required={false} style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13 }} />
           </div>
         </div>
       )}
@@ -126,7 +129,7 @@ function SmsGatewaySection({ token, confirm }) {
       <button onClick={save} disabled={busy} style={{
         marginTop: 12, padding: "9px 18px", borderRadius: 4, border: "none",
         background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer",
-      }}>{busy ? "Inahifadhi..." : "Hifadhi"}</button>
+      }}>{busy ? t("common.saving") : t("common.save")}</button>
     </div>
   );
 }
