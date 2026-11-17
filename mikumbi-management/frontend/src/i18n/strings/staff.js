@@ -145,6 +145,8 @@ const STAFF_STRINGS = {
   "crop.use": { en: "Use this crop", sw: "Tumia hii" },
   "errb.title": { en: "Something went wrong", sw: "Hitilafu imetokea" },
   "errb.text": { en: "This page hit an unexpected error. Try reloading - if it keeps happening, please tell the Head Master what you were doing when it appeared.", sw: "Ukurasa huu umepata hitilafu isiyotarajiwa. Jaribu kuufungua upya. Ikiendelea, tafadhali mweleze Mkuu wa Shule ulichokuwa ukifanya ilipotokea." },
+  "errb.netTitle": { en: "Connection problem", sw: "Tatizo la mtandao" },
+  "errb.netText": { en: "Part of the page could not be downloaded because the internet connection dropped or changed. Check your connection, then press Reload.", sw: "Sehemu ya ukurasa haikuweza kupakuliwa kwa sababu mtandao ulikatika au ulibadilika. Angalia mtandao wako, kisha bonyeza Fungua upya." },
   "errb.reload": { en: "Reload", sw: "Fungua upya" },
   "wake.slow": { en: "This is taking longer than usual to start up. Please check your internet connection, then try refreshing the page.", sw: "Inachukua muda mrefu kuliko kawaida kuanza. Tafadhali angalia mtandao wako, kisha ufungue ukurasa upya." },
   "wake.starting": { en: "Starting up, please wait…", sw: "Inaanza, tafadhali subiri…" },

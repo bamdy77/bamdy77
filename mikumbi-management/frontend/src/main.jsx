@@ -7,6 +7,11 @@ import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { FontProvider } from "./context/FontContext.jsx";
 import "./index.css";
 import "./styles/fonts.css";
+import { reloadOnceForNewVersion } from "./utils/lazyWithRetry";
+
+// A file the page needs could not be loaded (network changed, or a new
+// version replaced it): reload once instead of breaking the page.
+window.addEventListener("vite:preloadError", (e) => { if (reloadOnceForNewVersion()) e.preventDefault(); });
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

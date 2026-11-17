@@ -1,4 +1,5 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
+import { lazyWithRetry } from "./utils/lazyWithRetry";
 import { getSiteMode } from "./utils/siteMode";
 import MikumbiLoader from "./components/MikumbiLoader";
 
@@ -6,8 +7,8 @@ import MikumbiLoader from "./components/MikumbiLoader";
 // PUBLIC site never download the staff dashboard code (and vice versa).
 //   PublicApp -> parents / students / visitors (yourdomain.com)
 //   StaffApp  -> teachers / management        (staff.yourdomain.com)
-const PublicApp = lazy(() => import("./PublicApp"));
-const StaffApp = lazy(() => import("./StaffApp"));
+const PublicApp = lazyWithRetry(() => import("./PublicApp"));
+const StaffApp = lazyWithRetry(() => import("./StaffApp"));
 
 const mode = getSiteMode();
 
