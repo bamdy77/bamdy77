@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useLang, STRINGS } from "../i18n";
+import { formatDate, formLabel } from "../i18n/display";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
@@ -10,20 +12,21 @@ import { ChevronDownIcon, MegaphoneIcon, MessageIcon, SendIcon, PlusCircleIcon, 
 
 export default function Communications() {
   const { user } = useAuth();
+  const { t } = useLang();
   const { isMobile, isTablet } = useBreakpoint();
   const [tab, setTab] = useState("announcements");
   if (!user) return null; // guards the brief moment during a route/auth transition before `user` is populated
 
   return (
     <div style={{ padding: isMobile ? "16px 12px" : isTablet ? "24px 20px" : 40 }}>
-      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : isTablet ? 18 : 20, marginBottom: 16 }}>Communications</h2>
+      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : isTablet ? 18 : 20, marginBottom: 16 }}>{t("menu.communications")}</h2>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
-        <TabBtn active={tab === "announcements"} isMobile={isMobile} onClick={() => setTab("announcements")}><MegaphoneIcon size={14} />Online Announcement</TabBtn>
+        <TabBtn active={tab === "announcements"} isMobile={isMobile} onClick={() => setTab("announcements")}><MegaphoneIcon size={14} />{t("comm.tabAnn")}</TabBtn>
         {(user.role === "admin" || user.role === "second_master") && (
-          <TabBtn active={tab === "sms"} isMobile={isMobile} onClick={() => setTab("sms")}><MessageIcon size={14} />SMS Service</TabBtn>
+          <TabBtn active={tab === "sms"} isMobile={isMobile} onClick={() => setTab("sms")}><MessageIcon size={14} />{t("comm.tabSms")}</TabBtn>
         )}
         {(user.role === "admin" || user.role === "second_master") && (
-          <TabBtn active={tab === "videos"} isMobile={isMobile} onClick={() => setTab("videos")}><span aria-hidden="true">▶</span>Parent Videos</TabBtn>
+          <TabBtn active={tab === "videos"} isMobile={isMobile} onClick={() => setTab("videos")}><span aria-hidden="true">▶</span>{t("vid.title")}</TabBtn>
         )}
       </div>
       {tab === "announcements" ? <AnnouncementsTab isMobile={isMobile} />
@@ -47,6 +50,7 @@ function TabBtn({ active, onClick, children, isMobile }) {
 // ══════════════════ ANNOUNCEMENTS ══════════════════
 function AnnouncementsTab({ isMobile }) {
   const { token } = useAuth();
+  const { t, lang } = useLang();
   const [list, setList] = useState([]);
   const [title, setTitle] = useState("");
   const [msg, setMsg] = useState("");
@@ -62,21 +66,21 @@ function AnnouncementsTab({ isMobile }) {
 
   const load = () => apiFetch("/communications/announcements", {}, token)
     .then((d) => { setList(d.announcements || []); setLoadError(""); })
-    .catch((err) => setLoadError(err.message || "Failed to load announcements."));
+    .catch((err) => setLoadError(err.message || t("comm.loadAnnFailed")));
   useEffect(() => { load(); }, [token]);
 
   const submit = async (e) => {
     e.preventDefault();
     if (!title.trim() || !msg.trim()) return;
-    if (!audience) { setLoadError("Please choose who this announcement is for (Staff, Parents & public, or Both)."); return; }
-    if (duration === "date" && !endDate) { setLoadError("Please choose the date this announcement should end."); return; }
+    if (!audience) { setLoadError(t("comm.chooseAudience")); return; }
+    if (duration === "date" && !endDate) { setLoadError(t("comm.chooseEnd")); return; }
     const expiry = duration === "never" ? { expiry_type: "never" }
       : duration === "date" ? { expiry_type: "date", expiry_date: endDate }
       : { expiry_type: "days", expiry_days: Number(duration) };
     setBusy(true);
     try {
       await apiFetch("/communications/announcements", { method: "POST", body: JSON.stringify({ title, message: msg, audience, ...expiry }) }, token);
-      showSuccess("Announcement", "Announcement Successfully Posted.");
+      showSuccess(t("comm.ann"), t("comm.posted"));
       setTitle(""); setMsg(""); setAudience(""); setDuration("3"); setEndDate(""); setLoadError("");
       load();
     } catch (err) {
@@ -84,10 +88,10 @@ function AnnouncementsTab({ isMobile }) {
     } finally { setBusy(false); }
   };
 
-  const remove = (id) => confirm("Are you sure you want to delete this announcement?", async () => {
+  const remove = (id) => confirm(t("comm.deleteConfirm"), async () => {
     try {
       await apiFetch(`/communications/announcements/${id}`, { method: "DELETE" }, token);
-      showSuccess("Announcement", "Announcement Successfully Deleted.");
+      showSuccess(t("comm.ann"), t("comm.deleted"));
       load();
     } catch (err) { setLoadError(err.message); }
   });
@@ -95,11 +99,11 @@ function AnnouncementsTab({ isMobile }) {
   return (
     <div>
       <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 14 : 18, marginBottom: 24, maxWidth: isMobile ? "100%" : 520 }}>
-        <input placeholder="Announcement title" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} />
-        <textarea placeholder="Message..." value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} style={{ ...inputStyle, marginTop: 10, resize: "vertical" }} />
+        <input placeholder={t("comm.annTitlePh")} value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} />
+        <textarea placeholder={t("comm.msgPh")} value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} style={{ ...inputStyle, marginTop: 10, resize: "vertical" }} />
 
         <fieldset style={{ border: "none", padding: 0, margin: "14px 0 4px" }}>
-          <legend style={{ fontSize: 12.5, fontWeight: 700, color: THEME.heading, padding: 0, marginBottom: 8 }}>Send to: <span style={{ color: THEME.danger }}>*</span></legend>
+          <legend style={{ fontSize: 12.5, fontWeight: 700, color: THEME.heading, padding: 0, marginBottom: 8 }}>{t("comm.sendTo")}: <span style={{ color: THEME.danger }}>*</span></legend>
           <div style={{ display: "grid", gap: 8 }}>
             {AUDIENCE_OPTIONS.map((o) => (
               <label key={o.value} style={{
@@ -109,8 +113,8 @@ function AnnouncementsTab({ isMobile }) {
               }}>
                 <input type="radio" name="announcement-audience" value={o.value} checked={audience === o.value} onChange={() => setAudience(o.value)} style={{ marginTop: 3 }} />
                 <span>
-                  <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, color: THEME.text }}>{o.label}</span>
-                  <span style={{ display: "block", fontSize: 11.5, color: THEME.muted, marginTop: 1 }}>{o.hint}</span>
+                  <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, color: THEME.text }}>{t(o.label)}</span>
+                  <span style={{ display: "block", fontSize: 11.5, color: THEME.muted, marginTop: 1 }}>{t(o.hint)}</span>
                 </span>
               </label>
             ))}
@@ -118,24 +122,24 @@ function AnnouncementsTab({ isMobile }) {
         </fieldset>
 
         <div style={{ margin: "14px 0 4px" }}>
-          <label htmlFor="announcement-duration" style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: THEME.heading, marginBottom: 8 }}>Show this announcement for:</label>
+          <label htmlFor="announcement-duration" style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: THEME.heading, marginBottom: 8 }}>{t("comm.showFor")}:</label>
           <select id="announcement-duration" value={duration} onChange={(e) => setDuration(e.target.value)} style={{ ...inputStyle, background: THEME.surface, color: THEME.text }}>
-            {DURATION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {DURATION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
           </select>
           {duration === "date" && (
-            <input type="date" aria-label="Announcement end date" value={endDate} min={todayInTz()} onChange={(e) => setEndDate(e.target.value)} style={{ ...inputStyle, marginTop: 8, background: THEME.surface, color: THEME.text }} />
+            <input type="date" aria-label={t("comm.endDate")} value={endDate} min={todayInTz()} onChange={(e) => setEndDate(e.target.value)} style={{ ...inputStyle, marginTop: 8, background: THEME.surface, color: THEME.text }} />
           )}
           <p style={{ fontSize: 11.5, color: THEME.muted, marginTop: 6 }}>
             {duration === "never"
-              ? "It stays visible until you delete it yourself."
+              ? t("comm.hintNever")
               : duration === "date"
-                ? "It stays visible until the end of the chosen day, then disappears automatically."
-                : "It disappears automatically when this time is over. You can still delete it earlier."}
+                ? t("comm.hintDate")
+                : t("comm.hintDays")}
           </p>
         </div>
 
-        <button disabled={busy} style={{ ...btnStyle, display: "inline-flex", alignItems: "center", gap: 7 }}>{busy ? <SpinnerIcon size={14} /> : <MegaphoneIcon size={14} />}{busy ? "Sending..." : "Post Announcement"}</button>
-        <p style={{ fontSize: 11.5, color: THEME.muted, marginTop: 8 }}>It is shown only on the site(s) you choose above.</p>
+        <button disabled={busy} style={{ ...btnStyle, display: "inline-flex", alignItems: "center", gap: 7 }}>{busy ? <SpinnerIcon size={14} /> : <MegaphoneIcon size={14} />}{busy ? t("pw.sending") : t("comm.post")}</button>
+        <p style={{ fontSize: 11.5, color: THEME.muted, marginTop: 8 }}>{t("comm.shownOnly")}</p>
       </form>
 
       <div style={{ display: "grid", gap: 10, maxWidth: isMobile ? "100%" : 640 }}>
@@ -152,14 +156,14 @@ function AnnouncementsTab({ isMobile }) {
                 <b style={{ fontSize: 14, overflowWrap: "anywhere" }}>{a.title}</b>
                 <AudienceBadge audience={a.audience} />
               </span>
-              <button onClick={() => remove(a.id)} style={{ background: "none", border: "none", color: THEME.danger, cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 4 }}><TrashIcon size={12} />Delete</button>
+              <button onClick={() => remove(a.id)} style={{ background: "none", border: "none", color: THEME.danger, cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 4 }}><TrashIcon size={12} />{t("common.delete")}</button>
             </div>
             <p style={{ fontSize: 13, color: THEME.text, margin: "6px 0", overflowWrap: "anywhere" }}>{a.message}</p>
             <div style={{ fontSize: 11, color: THEME.muted }}>
-              {a.created_at ? new Date(a.created_at).toLocaleString("en-GB", { timeZone: "Africa/Dar_es_Salaam" }) : ""} · {a.created_by_name}
+              {a.created_at ? formatDate(lang, a.created_at, { withTime: true }) : ""} · {a.created_by_name}
             </div>
             <div style={{ fontSize: 11, marginTop: 3, fontWeight: 700, color: !a.expires_at ? "#166534" : isLive(a) ? THEME.muted : THEME.danger }}>
-              {expiryText(a)}
+              {expiryText(a, t, lang)}
             </div>
           </div>
         ))}
@@ -170,39 +174,40 @@ function AnnouncementsTab({ isMobile }) {
 }
 
 const DURATION_OPTIONS = [
-  { value: "1", label: "1 day" },
-  { value: "3", label: "3 days" },
-  { value: "7", label: "1 week" },
-  { value: "14", label: "2 weeks" },
-  { value: "30", label: "1 month" },
-  { value: "date", label: "Until a date I choose…" },
-  { value: "never", label: "Forever – until I delete it" },
+  { value: "1", label: "comm.dur.1" },
+  { value: "3", label: "comm.dur.3" },
+  { value: "7", label: "comm.dur.7" },
+  { value: "14", label: "comm.dur.14" },
+  { value: "30", label: "comm.dur.30" },
+  { value: "date", label: "comm.dur.date" },
+  { value: "never", label: "comm.dur.never" },
 ];
 const TZ = "Africa/Dar_es_Salaam";
 // Today's date as YYYY-MM-DD in Tanzania time (for the date picker's minimum).
 const todayInTz = () => new Date().toLocaleDateString("en-CA", { timeZone: TZ });
 // Visible right now? (no expiry date at all = never expires)
 const isLive = (a) => a.is_active && (!a.expires_at || new Date(a.expires_at) > new Date());
-const expiryText = (a) => {
-  if (!a.expires_at) return "Never expires – stays until deleted";
-  const when = new Date(a.expires_at).toLocaleString("en-GB", { timeZone: TZ, dateStyle: "medium", timeStyle: "short" });
-  return new Date(a.expires_at) > new Date() ? `Expires ${when}` : `Expired ${when}`;
+const expiryText = (a, t, lang) => {
+  if (!a.expires_at) return t("comm.neverExpires");
+  const when = formatDate(lang, a.expires_at, { withTime: true });
+  return new Date(a.expires_at) > new Date() ? t("comm.expires", { when }) : t("comm.expired", { when });
 };
 
 const AUDIENCE_OPTIONS = [
-  { value: "staff", label: "Staff only", hint: "Shown to teachers after they log in to the staff site." },
-  { value: "public", label: "Parents & public", hint: "Shown on the public school website (news section)." },
-  { value: "both", label: "Both", hint: "Shown to staff and on the public school website." },
+  { value: "staff", label: "comm.aud.staff", hint: "comm.aud.staffHint" },
+  { value: "public", label: "comm.aud.public", hint: "comm.aud.publicHint" },
+  { value: "both", label: "comm.aud.both", hint: "comm.aud.bothHint" },
 ];
 const AUDIENCE_BADGE = {
-  staff: { text: "Staff", bg: "#E0ECFF", color: "#1E40AF" },
-  public: { text: "Parents & public", bg: "#FFEDD5", color: "#9A3412" },
-  both: { text: "Staff + Parents", bg: "#DCFCE7", color: "#166534" },
+  staff: { text: "comm.badge.staff", bg: "#E0ECFF", color: "#1E40AF" },
+  public: { text: "comm.aud.public", bg: "#FFEDD5", color: "#9A3412" },
+  both: { text: "comm.badge.both", bg: "#DCFCE7", color: "#166534" },
 };
 function AudienceBadge({ audience }) {
+  const { t } = useLang();
   const b = AUDIENCE_BADGE[audience];
   if (!b) return null;
-  return <span style={{ background: b.bg, color: b.color, fontSize: 10.5, fontWeight: 800, padding: "2px 9px", borderRadius: 4, whiteSpace: "nowrap" }}>{b.text}</span>;
+  return <span style={{ background: b.bg, color: b.color, fontSize: 10.5, fontWeight: 800, padding: "2px 9px", borderRadius: 4, whiteSpace: "nowrap" }}>{t(b.text)}</span>;
 }
 
 // ══════════════════ SMS SERVICE (Admin / Second Master only) ══════════════════
@@ -211,18 +216,18 @@ function AudienceBadge({ audience }) {
 const FORMS = ["Form I", "Form II", "Form III", "Form IV"];
 
 const RECIPIENT_GROUPS = [
-  { group: "Send to Everyone in a Group", options: [
-    { value: "all_staff", label: "All Staff" },
-    { value: "all_parents", label: "All Parents" },
-    { value: "parents_by_class", label: "Parents of a Specific Class" },
+  { group: "comm.grp.everyone", options: [
+    { value: "all_staff", label: "comm.rcp.all_staff" },
+    { value: "all_parents", label: "comm.rcp.all_parents" },
+    { value: "parents_by_class", label: "comm.rcp.parents_by_class" },
   ] },
-  { group: "Send to Selected People", options: [
-    { value: "selected_staff", label: "Select Staff (one, several, or all)" },
-    { value: "selected_parents", label: "Select Parents (one, several, or all)" },
-    { value: "selected_individuals", label: "Select Individuals (one, several, or all)" },
+  { group: "comm.grp.selected", options: [
+    { value: "selected_staff", label: "comm.rcp.selected_staff" },
+    { value: "selected_parents", label: "comm.rcp.selected_parents" },
+    { value: "selected_individuals", label: "comm.rcp.selected_individuals" },
   ] },
-  { group: "Other", options: [
-    { value: "individual", label: "One-off Phone Number (not saved)" },
+  { group: "comm.grp.other", options: [
+    { value: "individual", label: "comm.rcp.individual" },
   ] },
 ];
 
@@ -233,6 +238,7 @@ const RECIPIENT_GROUPS = [
 // popup. Building it ourselves guarantees the same clean, readable layout
 // on every screen size.
 function RecipientSelect({ value, onChange, isMobile }) {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
   const current = RECIPIENT_GROUPS.flatMap((g) => g.options).find((o) => o.value === value);
@@ -254,7 +260,7 @@ function RecipientSelect({ value, onChange, isMobile }) {
         ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
         background: THEME.surface, cursor: "pointer", textAlign: "left", color: THEME.text,
       }}>
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{current ? current.label : "Select recipients…"}</span>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{current ? t(current.label) : t("comm.selectRecipients")}</span>
         <ChevronDownIcon size={14} style={{ flexShrink: 0, color: THEME.muted, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
       </button>
       {open && (
@@ -265,13 +271,13 @@ function RecipientSelect({ value, onChange, isMobile }) {
         }}>
           {RECIPIENT_GROUPS.map((g, gi) => (
             <div key={g.group} style={{ borderTop: gi > 0 ? `1px solid ${THEME.border}` : "none" }}>
-              <div style={{ padding: "8px 12px 4px", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: THEME.muted }}>{g.group}</div>
+              <div style={{ padding: "8px 12px 4px", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: THEME.muted }}>{t(g.group)}</div>
               {g.options.map((o) => (
                 <button type="button" key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{
                   display: "block", width: "100%", textAlign: "left", padding: isMobile ? "10px 12px" : "9px 12px",
                   fontSize: isMobile ? 12.5 : 13, lineHeight: 1.4, whiteSpace: "normal", wordBreak: "break-word",
                   background: o.value === value ? THEME.bg : "transparent", border: "none", cursor: "pointer", color: THEME.text,
-                }}>{o.label}</button>
+                }}>{t(o.label)}</button>
               ))}
             </div>
           ))}
@@ -283,6 +289,7 @@ function RecipientSelect({ value, onChange, isMobile }) {
 
 function SmsTab({ isMobile, isTablet }) {
   const { token } = useAuth();
+  const { t, lang } = useLang();
   const [category, setCategory] = useState("all_staff");
   const [message, setMessage] = useState("");
   const [className, setClassName] = useState("");
@@ -310,7 +317,7 @@ function SmsTab({ isMobile, isTablet }) {
 
   const loadHistory = () => apiFetch("/communications/sms/history?limit=20", {}, token)
     .then((d) => { setHistory(d.logs || []); setHistoryError(""); })
-    .catch((err) => setHistoryError(err.message || "Failed to load message history."));
+    .catch((err) => setHistoryError(err.message || t("comm.loadHistoryFailed")));
 
   const loadContacts = () => Promise.all([
     apiFetch("/communications/sms/contacts/staff", {}, token),
@@ -321,7 +328,7 @@ function SmsTab({ isMobile, isTablet }) {
     setParentContacts(p.contacts || []);
     setIndividualContacts(i.contacts || []);
     setContactsError("");
-  }).catch((err) => setContactsError(err.message || "Failed to load contacts."));
+  }).catch((err) => setContactsError(err.message || t("comm.loadContactsFailed")));
 
   useEffect(() => { loadHistory(); loadContacts(); }, [token]);
 
@@ -333,10 +340,10 @@ function SmsTab({ isMobile, isTablet }) {
     setClearingFailed(true);
     try {
       const data = await apiFetch("/communications/sms/history/failed", { method: "DELETE" }, token);
-      showSuccess("Message History", data.message || "Failed messages removed.");
+      showSuccess(t("comm.history"), data.message || t("comm.failedRemoved"));
       loadHistory();
     } catch (err) {
-      setHistoryError(err.message || "Failed to remove failed messages.");
+      setHistoryError(err.message || t("comm.failedRemoveErr"));
     } finally { setClearingFailed(false); }
   };
 
@@ -352,7 +359,7 @@ function SmsTab({ isMobile, isTablet }) {
       if (category === "selected_individuals") body.individual_ids = selectedIndividualIds;
       const data = await apiFetch("/communications/sms/send", { method: "POST", body: JSON.stringify(body) }, token);
       setStatus({ ok: true, text: data.message });
-      showSuccess("Message", data.message || "Message Successfully Sent.");
+      showSuccess(t("comm.message"), data.message || t("comm.sent"));
       setMessage("");
       if (category === "selected_staff") setSelectedStaffIds([]);
       if (category === "selected_parents") setSelectedParentIds([]);
@@ -375,17 +382,17 @@ function SmsTab({ isMobile, isTablet }) {
   return (
     <div>
       <form onSubmit={send} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 14 : 18, marginBottom: 24, maxWidth: isMobile ? "100%" : 560 }}>
-        <label style={labelStyle}>Recipients</label>
+        <label style={labelStyle}>{t("comm.recipients")}</label>
         <RecipientSelect value={category} onChange={setCategory} isMobile={isMobile} />
 
         {category === "parents_by_class" && (
           <select value={className} onChange={(e) => setClassName(e.target.value)} style={{ ...inputStyle, marginTop: 10 }}>
-            <option value="">Select a class...</option>
-            {FORMS.map((f) => <option key={f} value={f}>{f}</option>)}
+            <option value="">{t("comm.selectClass")}</option>
+            {FORMS.map((f) => <option key={f} value={f}>{formLabel(lang, f)}</option>)}
           </select>
         )}
         {category === "individual" && (
-          <input placeholder="Phone number, e.g. 0754xxxxxx" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ ...inputStyle, marginTop: 10 }} />
+          <input placeholder={t("comm.phonePh")} value={phone} onChange={(e) => setPhone(e.target.value)} style={{ ...inputStyle, marginTop: 10 }} />
         )}
         {category === "selected_individuals" && (
           <>
@@ -397,7 +404,7 @@ function SmsTab({ isMobile, isTablet }) {
               error={contactsError}
               nameKey="name"
               renderLine={() => null}
-              emptyText="No individual contacts yet - register one above."
+              emptyText={t("comm.noIndividuals")}
               isMobile={isMobile}
               onDelete={async (id) => {
                 await apiFetch(`/communications/sms/contacts/individuals/${id}`, { method: "DELETE" }, token);
@@ -415,7 +422,7 @@ function SmsTab({ isMobile, isTablet }) {
             error={contactsError}
             nameKey="name"
             renderLine={(c) => c.position}
-            emptyText="No staff phone numbers yet - add a phone number when creating or editing an account in User Accounts."
+            emptyText={t("comm.noStaff")}
             isMobile={isMobile}
           />
         )}
@@ -427,29 +434,29 @@ function SmsTab({ isMobile, isTablet }) {
             error={contactsError}
             nameKey="parent_name"
             renderLine={(c) => `${c.student_name} · ${c.class_name}`}
-            emptyText="No parent contacts yet - they're added automatically when a student is registered in Student Management."
+            emptyText={t("comm.noParents")}
             isMobile={isMobile}
           />
         )}
 
-        <label style={labelStyle}>Message</label>
+        <label style={labelStyle}>{t("comm.message")}</label>
         <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} style={{ ...inputStyle, resize: "vertical" }} />
 
         {status && (
           <div style={{ marginTop: 10, fontSize: 13, color: status.ok ? THEME.success : THEME.danger }}>{status.text}</div>
         )}
         <button disabled={!canSend} style={{ ...btnStyle, opacity: canSend ? 1 : 0.55, cursor: canSend ? "pointer" : "not-allowed", display: "inline-flex", alignItems: "center", gap: 7 }}>
-          <SendIcon size={14} />{busy ? "Sending..." : "Send SMS"}
+          <SendIcon size={14} />{busy ? t("pw.sending") : t("comm.sendSms")}
         </button>
       </form>
 
       <ContactsDirectory staffContacts={staffContacts} parentContacts={parentContacts} error={contactsError} isMobile={isMobile} />
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, gap: 8, flexWrap: "wrap" }}>
-        <h3 style={{ fontSize: 14, margin: 0 }}>Message History</h3>
+        <h3 style={{ fontSize: 14, margin: 0 }}>{t("comm.history")}</h3>
         {history.some((h) => h.status === "failed") && (
           <button type="button" onClick={clearFailed} disabled={clearingFailed} style={{ ...linkBtnStyle, color: THEME.danger, opacity: clearingFailed ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: 5 }}>
-            <TrashIcon size={12} />{clearingFailed ? "Removing…" : "Delete failed messages"}
+            <TrashIcon size={12} />{clearingFailed ? t("acct.removing") : t("comm.deleteFailed")}
           </button>
         )}
       </div>
@@ -461,12 +468,12 @@ function SmsTab({ isMobile, isTablet }) {
           <div key={h.id} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "10px 14px", fontSize: 12.5 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
               <b>{h.recipients}</b>
-              <span style={{ color: h.status === "sent" ? THEME.success : h.status === "partial" ? THEME.warning : THEME.danger, fontWeight: 600 }}>{h.status}</span>
+              <span style={{ color: h.status === "sent" ? THEME.success : h.status === "partial" ? THEME.warning : THEME.danger, fontWeight: 600 }}>{STRINGS[`comm.status.${h.status}`] ? t(`comm.status.${h.status}`) : h.status}</span>
             </div>
             <div style={{ color: THEME.muted, marginTop: 2, overflowWrap: "anywhere" }}>{h.message}</div>
             {h.recipient_numbers && (
               <details style={{ marginTop: 4 }}>
-                <summary style={{ cursor: "pointer", fontSize: 11, color: THEME.muted }}>Sent to which numbers?</summary>
+                <summary style={{ cursor: "pointer", fontSize: 11, color: THEME.muted }}>{t("comm.whichNumbers")}</summary>
                 <div style={{ marginTop: 4, fontSize: 11, color: THEME.muted, fontVariantNumeric: "tabular-nums", overflowWrap: "anywhere" }}>{h.recipient_numbers}</div>
               </details>
             )}
@@ -481,15 +488,16 @@ function SmsTab({ isMobile, isTablet }) {
 // shown here come straight from User Accounts / Student Management and
 // can't be typed or added from this screen.
 function ContactPicker({ contacts, selectedIds, onToggle, onSelectAll, onClear, error, nameKey, renderLine, emptyText, isMobile, onDelete }) {
+  const { t } = useLang();
   const nameSize = isMobile ? 12 : 12.5;
   const lineSize = isMobile ? 10.5 : 11;
   return (
     <div style={{ marginTop: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, gap: 8, flexWrap: "wrap" }}>
-        <span style={{ fontSize: isMobile ? 11 : 11.5, color: THEME.muted }}>{selectedIds.length} of {contacts.length} selected</span>
+        <span style={{ fontSize: isMobile ? 11 : 11.5, color: THEME.muted }}>{t("comm.nOfM", { n: selectedIds.length, m: contacts.length })}</span>
         <div style={{ display: "flex", gap: 12 }}>
-          <button type="button" onClick={onSelectAll} style={{ ...linkBtnStyle, display: "inline-flex", alignItems: "center", gap: 4 }}><CheckIcon size={11} />Select all</button>
-          <button type="button" onClick={onClear} style={{ ...linkBtnStyle, display: "inline-flex", alignItems: "center", gap: 4 }}><CloseIcon size={11} />Clear</button>
+          <button type="button" onClick={onSelectAll} style={{ ...linkBtnStyle, display: "inline-flex", alignItems: "center", gap: 4 }}><CheckIcon size={11} />{t("comm.selectAll")}</button>
+          <button type="button" onClick={onClear} style={{ ...linkBtnStyle, display: "inline-flex", alignItems: "center", gap: 4 }}><CloseIcon size={11} />{t("comm.clear")}</button>
         </div>
       </div>
       {error && <div style={{ fontSize: 12, color: THEME.danger, marginBottom: 6 }}>⚠ {error}</div>}
@@ -512,7 +520,7 @@ function ContactPicker({ contacts, selectedIds, onToggle, onSelectAll, onClear, 
               </span>
               {onDelete && (
                 <button type="button" onClick={(e) => { e.preventDefault(); onDelete(c.id); }} style={{ ...linkBtnStyle, color: THEME.danger, flexShrink: 0, marginTop: 2, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                  <TrashIcon size={11} />Remove
+                  <TrashIcon size={11} />{t("sig.remove")}
                 </button>
               )}
             </label>
@@ -528,6 +536,7 @@ function ContactPicker({ contacts, selectedIds, onToggle, onSelectAll, onClear, 
 // saved once here, then reusable from the "Select Individuals" picker for
 // any future message instead of retyping the number every time.
 function IndividualContactForm({ token, onAdded, isMobile }) {
+  const { t } = useLang();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
@@ -542,18 +551,18 @@ function IndividualContactForm({ token, onAdded, isMobile }) {
       setName(""); setPhone("");
       onAdded();
     } catch (e2) {
-      setErr(e2.message || "Failed to add contact.");
+      setErr(e2.message || t("comm.addFailed"));
     } finally { setBusy(false); }
   };
 
   return (
     <div style={{ marginTop: 10, padding: isMobile ? 10 : 12, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
-      <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 8 }}>Register a new individual contact</div>
+      <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 8 }}>{t("comm.registerIndividual")}</div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} style={{ ...inputStyle, flex: "1 1 160px" }} />
-        <input placeholder="Phone, e.g. 0754xxxxxx" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ ...inputStyle, flex: "1 1 160px" }} />
+        <input placeholder={t("acct.fullName")} value={name} onChange={(e) => setName(e.target.value)} style={{ ...inputStyle, flex: "1 1 160px" }} />
+        <input placeholder={t("comm.phonePh")} value={phone} onChange={(e) => setPhone(e.target.value)} style={{ ...inputStyle, flex: "1 1 160px" }} />
         <button type="button" onClick={add} disabled={busy || !name.trim() || !phone.trim()} style={{ ...btnStyle, marginTop: 0, padding: "10px 16px", opacity: busy ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: 6 }}>
-          {busy ? <SpinnerIcon size={14} /> : <PlusCircleIcon size={14} />}{busy ? "Adding…" : "Add"}
+          {busy ? <SpinnerIcon size={14} /> : <PlusCircleIcon size={14} />}{busy ? t("comm.adding") : t("common.add")}
         </button>
       </div>
       {err && <div style={{ fontSize: 11.5, color: THEME.danger, marginTop: 6 }}>⚠ {err}</div>}
@@ -567,22 +576,23 @@ function IndividualContactForm({ token, onAdded, isMobile }) {
 // Accounts, and a Parent contact only appears once the student is
 // registered in Student Management.
 function ContactsDirectory({ staffContacts, parentContacts, error, isMobile }) {
+  const { t } = useLang();
   const [tab, setTab] = useState("staff");
   const list = tab === "staff" ? staffContacts : parentContacts;
   return (
     <div style={{ marginBottom: 24, maxWidth: isMobile ? "100%" : 640 }}>
       <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-        <TabBtn active={tab === "staff"} isMobile={isMobile} onClick={() => setTab("staff")}>Staff Directory ({staffContacts.length})</TabBtn>
-        <TabBtn active={tab === "parents"} isMobile={isMobile} onClick={() => setTab("parents")}>Parents Directory ({parentContacts.length})</TabBtn>
+        <TabBtn active={tab === "staff"} isMobile={isMobile} onClick={() => setTab("staff")}>{t("comm.staffDir", { n: staffContacts.length })}</TabBtn>
+        <TabBtn active={tab === "parents"} isMobile={isMobile} onClick={() => setTab("parents")}>{t("comm.parentsDir", { n: parentContacts.length })}</TabBtn>
       </div>
       <p style={{ fontSize: 11.5, color: THEME.muted, margin: "0 0 8px" }}>
         {tab === "staff"
-          ? "Synced automatically from User Accounts - add or edit a phone number there to change this list."
-          : "Synced automatically from Student Management - register or edit the student there to change this list."}
+          ? t("comm.staffSync")
+          : t("comm.parentsSync")}
       </p>
       {error && <div style={{ fontSize: 12, color: THEME.danger, marginBottom: 8 }}>⚠ {error}</div>}
       <div style={{ maxHeight: 260, overflowY: "auto", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
-        {list.length === 0 && <div style={{ padding: 14, fontSize: 12.5, color: THEME.muted }}>No contacts yet.</div>}
+        {list.length === 0 && <div style={{ padding: 14, fontSize: 12.5, color: THEME.muted }}>{t("comm.noContacts")}</div>}
         {list.map((c, i) => (
           <div key={c.id} style={{
             padding: "9px 14px", borderTop: i > 0 ? `1px solid ${THEME.border}` : "none", fontSize: 12.5,

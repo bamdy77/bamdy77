@@ -32,22 +32,22 @@ import { ShieldIcon, SettingsIcon, LockIcon, PaletteIcon, ChevronDownIcon, Check
 // A user can hold MULTIPLE roles at once (e.g. Academic Master + Matron) -
 // they see the UNION of every module any of their roles unlocks.
 const MODULES = [
-  { key: "students",       label: "Student Management",      path: "/dashboard/students",       roles: ["admin", "second_master"], Icon: GraduationCapIcon },
-  { key: "contributions",  label: "Contributions Management", path: "/dashboard/contributions",  roles: ["admin", "second_master", "academic", "class_teacher"], Icon: CoinsIcon },
-  { key: "food",           label: "Manage Foods",             path: "/dashboard/food",           roles: ["admin", "second_master", "food_teacher"], Icon: UtensilsIcon },
-  { key: "timetable",      label: "Timetable",                path: "/dashboard/timetable",      roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: TableIcon },
-  { key: "hostel",         label: "Hostel Management",        path: "/dashboard/hostel",         roles: ["admin", "second_master", "patron", "matron"], Icon: BedIcon },
-  { key: "results",        label: "Results Management",       path: "/dashboard/results",        roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: BarChartIcon },
-  { key: "tams",           label: "TAMS",                     path: "/dashboard/tams",           roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: ClockIcon },
+  { key: "students",       path: "/dashboard/students",       roles: ["admin", "second_master"], Icon: GraduationCapIcon },
+  { key: "contributions",  path: "/dashboard/contributions",  roles: ["admin", "second_master", "academic", "class_teacher"], Icon: CoinsIcon },
+  { key: "food",           path: "/dashboard/food",           roles: ["admin", "second_master", "food_teacher"], Icon: UtensilsIcon },
+  { key: "timetable",      path: "/dashboard/timetable",      roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: TableIcon },
+  { key: "hostel",         path: "/dashboard/hostel",         roles: ["admin", "second_master", "patron", "matron"], Icon: BedIcon },
+  { key: "results",        path: "/dashboard/results",        roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: BarChartIcon },
+  { key: "tams",           path: "/dashboard/tams",           roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: ClockIcon },
   // Head Master / Second Master oversight tools - multi-period results &
   // attendance trends, and the security audit trail. The Academic Master
   // now ALSO gets this entry, but only the one-student trend panel inside
   // renders for them - AnalyticsDashboard.jsx itself hides the school-wide
   // Form/TAMS sections for that role.
-  { key: "analytics",      label: "Analytics Dashboard",      path: "/dashboard/analytics",      roles: ["admin", "second_master", "academic", "teacher"], Icon: BarChartIcon },
-  { key: "audit-log",      label: "Audit Log",                path: "/dashboard/audit-log",      roles: ["admin", "second_master", "academic"], Icon: FileClockIcon },
-  { key: "communications", label: "Communications",           path: "/dashboard/communications", roles: ["admin", "second_master"], Icon: MessageIcon },
-  { key: "users",          label: "User Accounts",            path: "/dashboard/users",          roles: ["admin", "second_master"], Icon: UsersIcon },
+  { key: "analytics",      path: "/dashboard/analytics",      roles: ["admin", "second_master", "academic", "teacher"], Icon: BarChartIcon },
+  { key: "audit-log",      path: "/dashboard/audit-log",      roles: ["admin", "second_master", "academic"], Icon: FileClockIcon },
+  { key: "communications", path: "/dashboard/communications", roles: ["admin", "second_master"], Icon: MessageIcon },
+  { key: "users",          path: "/dashboard/users",          roles: ["admin", "second_master"], Icon: UsersIcon },
 ];
 
 // Account-header avatar for the logged-in account (e.g. Teacher, Head
