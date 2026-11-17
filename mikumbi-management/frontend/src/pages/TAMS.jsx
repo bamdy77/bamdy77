@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { openDownload } from "../utils/openDownload";
+import { showError } from "../components/ErrorModal";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch, API_BASE } from "../utils/api";
 import { getDeviceFingerprint } from "../utils/deviceFingerprint";
@@ -324,8 +326,8 @@ function AdminDashboard() {
     // "Custom" on its own doesn't tell the reader which dates were picked -
     // show the actual chosen range instead.
     const label = tab === "custom" ? `From ${range.from} to ${range.to}` : tab.charAt(0).toUpperCase() + tab.slice(1);
-    const url = `${API_BASE}/tams/export-pdf?from=${range.from}&to=${range.to}&label=${encodeURIComponent(label)}`;
-    window.open(`${url}&token=${encodeURIComponent(token)}`, "_blank");
+    openDownload(`/tams/export-pdf?from=${range.from}&to=${range.to}&label=${encodeURIComponent(label)}`, token)
+      .catch((e) => showError("Export PDF", e.message));
   };
 
   return (

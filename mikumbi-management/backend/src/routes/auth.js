@@ -1,7 +1,7 @@
 // ── Auth Routes ───────────────────────────────────────────────────────────────
 const express = require("express");
 const router  = express.Router();
-const { login, me, changePassword, forgotPassword, resetPassword, uploadAvatar, removeAvatar, setPreferredFont, setPreferredLanguage, verifyLoginCode } = require("../controllers/authController");
+const { login, me, changePassword, forgotPassword, resetPassword, uploadAvatar, removeAvatar, setPreferredFont, setPreferredLanguage, issueDownloadToken, verifyLoginCode } = require("../controllers/authController");
 const auth = require("../middleware/auth");
 const { uploadStudentPhoto } = require("../middleware/upload"); // generic image multer (5MB, image/* only) — not student-specific despite the name
 
@@ -15,5 +15,6 @@ router.post("/photo",           auth(), uploadStudentPhoto.single("photo"), uplo
 router.delete("/photo",         auth(), removeAvatar);
 router.put("/preferences/font", auth(), setPreferredFont);
 router.put("/preferences/language", auth(), setPreferredLanguage);
+router.post("/download-token", auth(), issueDownloadToken);
 
 module.exports = router;

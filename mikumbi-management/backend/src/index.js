@@ -117,6 +117,9 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 // Language of the person reading the response (en | sw): API messages are
 // sent in that language. Before the rate limiters so their messages too.
 app.use(require("./middleware/lang"));
+// Strip secrets (password hashes) from every JSON response, and parents'
+// Results sign-in numbers from everyone except the Head Master / Second Master.
+app.use(require("./middleware/redact"));
 
 // Rate limiting
 // General API limit. Keyed per signed-in STAFF ACCOUNT when a valid token is

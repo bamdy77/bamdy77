@@ -98,6 +98,9 @@ const MESSAGES = [
   { en: "The year of finishing Standard Seven is not valid.", sw: "Mwaka wa kumaliza Darasa la Saba si sahihi." },
   { en: "This student has already reached the limit of {n} copies.", sw: "Mwanafunzi huyu tayari amefikia kikomo cha nakala {n}." },
 
+  { en: "Too many SMS sends in one hour. Please wait and try again.", sw: "Umetuma SMS mara nyingi ndani ya saa moja. Tafadhali subiri kisha ujaribu tena." },
+  { en: "You can only view results for your own class.", sw: "Unaweza kuona matokeo ya darasa lako tu." },
+
   // ── Website visitors (routes/visits.js) ──────────────────────────────
   { en: "Invalid date. Use the format YYYY-MM-DD.", sw: "Tarehe si sahihi. Tumia mfumo YYYY-MM-DD." },
   { en: "The start date must be on or before the end date.", sw: "Tarehe ya kuanzia isiwe baada ya tarehe ya mwisho." },

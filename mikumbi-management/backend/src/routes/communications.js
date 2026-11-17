@@ -17,7 +17,7 @@ router.delete("/announcements/:id",  auth(["admin", "second_master"]), c.deleteA
 router.get("/sms/contacts/:type",       auth(["admin", "second_master"]), c.listContacts);
 router.post("/sms/contacts/:type",      auth(["admin", "second_master"]), c.addContact);
 router.delete("/sms/contacts/:type/:id", auth(["admin", "second_master"]), c.deleteContact);
-router.post("/sms/send",                auth(["admin", "second_master"]), c.sendSms);
+router.post("/sms/send",                auth(["admin", "second_master"]), require("../utils/smsLimiter"), c.sendSms);
 router.get("/sms/history",              auth(["admin", "second_master"]), c.smsHistory);
 router.delete("/sms/history/failed",    auth(["admin", "second_master"]), c.deleteFailedSms);
 

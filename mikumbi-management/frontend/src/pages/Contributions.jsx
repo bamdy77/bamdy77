@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { openDownload } from "../utils/openDownload";
 import { createPortal } from "react-dom";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch, API_BASE } from "../utils/api";
@@ -612,7 +613,7 @@ function ReamOversight({ token }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{ fontSize: 12, color: THEME.muted, fontWeight: 600 }}>{r.form}</span>
                   <ActionMenu>
-                    <MenuItem icon={ReceiptIcon} onClick={() => window.open(`${API_BASE}/contributions/receipt/charge/${r.id}?token=${encodeURIComponent(token)}`, "_blank")}>Receipt (PDF)</MenuItem>
+                    <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/charge/${r.id}`, token).catch((e) => showError("Receipt", e.message))}>Receipt (PDF)</MenuItem>
                   </ActionMenu>
                 </div>
               </div>
@@ -631,7 +632,7 @@ function ReamOversight({ token }) {
               <span style={{ flex: 1 }}>{r.charge_date?.slice?.(0, 10) || r.charge_date}</span>
               <span style={{ width: 44, textAlign: "right" }}>
                 <ActionMenu>
-                  <MenuItem icon={ReceiptIcon} onClick={() => window.open(`${API_BASE}/contributions/receipt/charge/${r.id}?token=${encodeURIComponent(token)}`, "_blank")}>Receipt (PDF)</MenuItem>
+                  <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/charge/${r.id}`, token).catch((e) => showError("Receipt", e.message))}>Receipt (PDF)</MenuItem>
                 </ActionMenu>
               </span>
             </div>
@@ -663,7 +664,7 @@ function OtherExpensesOversight({ token }) {
 
   const actions = (r) => (
     <ActionMenu>
-      <MenuItem icon={ReceiptIcon} onClick={() => window.open(`${API_BASE}/contributions/receipt/charge/${r.id}?token=${encodeURIComponent(token)}`, "_blank")}>Receipt (PDF)</MenuItem>
+      <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/charge/${r.id}`, token).catch((e) => showError("Receipt", e.message))}>Receipt (PDF)</MenuItem>
       {canEdit && !r.locked && <MenuItem icon={EditIcon} onClick={() => setEditing(r)}>Edit Amount...</MenuItem>}
     </ActionMenu>
   );
@@ -945,7 +946,7 @@ function ClassTeacherPartTime() {
                     {!s.completed && <MenuItem icon={CheckCircleIcon} onClick={() => payFull(s)}>Mark Paid (Full)</MenuItem>}
                     {!s.completed && <MenuItem icon={LayersIcon} onClick={() => setInstallmentFor(s)}>Pay in Installments...</MenuItem>}
                     {!s.completed && <MenuItem icon={CalendarPlusIcon} onClick={() => setAdvanceFor(s)}>Pay Months Ahead...</MenuItem>}
-                    {s.contribution_id && <MenuItem icon={ReceiptIcon} onClick={() => window.open(`${API_BASE}/contributions/receipt/parttime/${s.contribution_id}?token=${encodeURIComponent(token)}`, "_blank")}>Receipt (PDF)</MenuItem>}
+                    {s.contribution_id && <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/parttime/${s.contribution_id}`, token).catch((e) => showError("Receipt", e.message))}>Receipt (PDF)</MenuItem>}
                   </ActionMenu>
                 </div>
                 <div style={{ marginTop: 6 }}>
@@ -961,7 +962,7 @@ function ClassTeacherPartTime() {
                     {!s.completed && <MenuItem icon={CheckCircleIcon} onClick={() => payFull(s)}>Mark Paid (Full)</MenuItem>}
                     {!s.completed && <MenuItem icon={LayersIcon} onClick={() => setInstallmentFor(s)}>Pay in Installments...</MenuItem>}
                     {!s.completed && <MenuItem icon={CalendarPlusIcon} onClick={() => setAdvanceFor(s)}>Pay Months Ahead...</MenuItem>}
-                    {s.contribution_id && <MenuItem icon={ReceiptIcon} onClick={() => window.open(`${API_BASE}/contributions/receipt/parttime/${s.contribution_id}?token=${encodeURIComponent(token)}`, "_blank")}>Receipt (PDF)</MenuItem>}
+                    {s.contribution_id && <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/parttime/${s.contribution_id}`, token).catch((e) => showError("Receipt", e.message))}>Receipt (PDF)</MenuItem>}
                   </ActionMenu>
                 </span>
               </div>

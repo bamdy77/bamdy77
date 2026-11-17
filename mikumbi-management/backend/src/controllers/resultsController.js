@@ -705,6 +705,13 @@ const getResults = async (req, res, next) => {
   const { sheet_id } = req.query;
   if (!sheet_id) return res.status(400).json({ error: "sheet_id required." });
   try {
+    // Compiled results of a whole class: Head Master / Second Master /
+    // Academic Master, and a Class Teacher for their OWN class only (they
+    // need the list for Parent Reports). Everyone else is refused here even
+    // if they call the address directly.
+    const sheetRow = (await query(`SELECT form FROM score_sheets WHERE id = $1`, [sheet_id])).rows[0];
+    if (!sheetRow) return res.status(404).json({ error: "Sheet not found." });
+    if (!canAccessParentReportForForm(req, sheetRow.form)) return res.status(403).json({ error: "You can only view results for your own class." });
     const studentsRes = await query(
       `SELECT * FROM student_results WHERE sheet_id = $1 ORDER BY gender ASC, reg_no ASC NULLS LAST, student_id ASC, first_name ASC, middle_name ASC, last_name ASC`,
       [sheet_id]

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 const c = require("../controllers/resultsController");
+const smsLimiter = require("../utils/smsLimiter");
 
 // ── Public (no login) — for the landing page "Publications" section ──
 router.get("/public", c.publicResults);
@@ -30,9 +31,9 @@ router.post("/unlock-request",          auth(["admin", "second_master", "academi
 
 router.get("/my-scores",      auth(["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"]), c.getMyScores);
 router.get("/my-scores/export-pdf", auth(["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"]), c.exportMyScoresPdf);
-router.get("/results",        auth(["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"]), c.getResults);
-router.get("/export-pdf",     auth(["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"]), c.exportResultsPdf);
-router.get("/export-excel",   auth(["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"]), c.exportResultsExcel);
+router.get("/results",        auth(["admin", "second_master", "academic", "class_teacher"]), c.getResults);
+router.get("/export-pdf",     auth(["admin", "second_master", "academic"]), c.exportResultsPdf);
+router.get("/export-excel",   auth(["admin", "second_master", "academic"]), c.exportResultsExcel);
 router.get("/submitted",      auth(["admin", "second_master", "academic"]), c.getSubmittedSheets);
 router.get("/teacher-status", auth(["admin", "second_master", "academic"]), c.getTeacherStatus);
 router.get("/history",        auth(["admin", "second_master", "academic"]), c.getHistory);
@@ -76,7 +77,7 @@ router.get("/parent-report/export-pdf-all",  auth(PARENT_REPORT_ROLES), c.export
 //    Academic Master only, same gate as Parent Report (PDF) above. ──
 const smsC = require("../controllers/resultsSmsController");
 router.post("/results-sms/preview", auth(["admin", "second_master", "academic"]), smsC.previewResultsSms);
-router.post("/results-sms/send",    auth(["admin", "second_master", "academic"]), smsC.sendResultsSms);
+router.post("/results-sms/send",    auth(["admin", "second_master", "academic"]), smsLimiter, smsC.sendResultsSms);
 
 // ── Published Results (PDFs on the landing page "Publications" tab) ──
 const { uploadResultsPdf } = require("../middleware/upload");

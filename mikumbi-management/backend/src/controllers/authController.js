@@ -209,6 +209,15 @@ const setPreferredFont = async (req, res, next) => {
   }
 };
 
+// POST /api/auth/download-token - a 2-minute token for opening one PDF in a
+// new tab (see middleware/auth.js). It carries the same identity and roles,
+// is checked against the account like any sign-in, and stops working after
+// a password change, like every other token.
+const issueDownloadToken = async (req, res) => {
+  const token = jwt.sign({ id: req.user.id, username: req.user.username, full_name: req.user.full_name, type: "download" }, process.env.JWT_SECRET, { expiresIn: 120 });
+  res.json({ success: true, token, expires_in: 120 });
+};
+
 // PUT /api/auth/preferences/language  { language: "en" | "sw" }
 // Saves the interface language for the CALLER only (id from the token).
 const setPreferredLanguage = async (req, res, next) => {
@@ -388,5 +397,5 @@ const removeAvatar = async (req, res, next) => {
 };
 
 module.exports = {
-  setPreferredFont, setPreferredLanguage,
+  setPreferredFont, setPreferredLanguage, issueDownloadToken,
   verifyLoginCode, login, me, changePassword, forgotPassword, resetPassword, uploadAvatar, removeAvatar };

@@ -5,12 +5,16 @@ const auth = (roles = []) => {
   return async (req, res, next) => {
     const authHeader = req.headers.authorization;
     let token = null;
+    let fromQuery = false;
     if (authHeader && authHeader.startsWith("Bearer ")) {
       token = authHeader.split(" ")[1];
-    } else if (req.query.token) {
-      // Fallback for direct-navigation downloads (e.g. window.open for a PDF)
-      // where the browser can't attach a custom Authorization header.
+    } else if (typeof req.query.token === "string") {
+      // Direct-navigation downloads (window.open for a PDF) cannot send a
+      // header. Only a short-lived DOWNLOAD token (POST /api/auth/download-token,
+      // 2 minutes) is accepted here - never the normal 12-hour sign-in token,
+      // because addresses end up in browser history and server logs.
       token = req.query.token;
+      fromQuery = true;
     }
     if (!token) {
       return res.status(401).json({ success: false, session_expired: true, message: "Access denied. No token provided." });
@@ -18,6 +22,11 @@ const auth = (roles = []) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // A download token works only in the address; a sign-in token only in
+      // the Authorization header; parents' results tokens never here.
+      if (fromQuery ? decoded.type !== "download" : decoded.type !== undefined) {
+        return res.status(401).json({ success: false, session_expired: !fromQuery, message: "Your session has ended. Please sign in again." });
+      }
 
       // A valid JWT signature only proves the token hasn't been tampered
       // with — it says nothing about whether the account is still active
