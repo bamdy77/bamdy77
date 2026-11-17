@@ -138,7 +138,7 @@ function FoodDailyCollections({ showClassFilter }) {
 
       <div style={{ display: "flex", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
         <StatCard label={`Students Contributed (${date})`} value={studentsContributed} color={THEME.success} />
-        <StatCard label={`Items Recorded (${date})`} value={rows.length} color={THEME.navy} />
+        <StatCard label={`Items Recorded (${date})`} value={rows.length} color={THEME.link} />
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
@@ -258,7 +258,7 @@ function FoodList({ category }) {
   return (
     <div>
       <div style={{ display: "flex", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
-        <StatCard label="Students" value={rows.length} color={THEME.navy} />
+        <StatCard label="Students" value={rows.length} color={THEME.link} />
         <StatCard label={`Have Contributed (${year})`} value={`${rows.filter((s) => Number(s.entry_count) > 0).length} / ${rows.length}`} color={THEME.success} />
       </div>
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>

@@ -154,6 +154,11 @@ img, svg {
   --mk-girl-light: rgba(192, 132, 252, 0.14);
   --mk-boy: #38BDF8;
   --mk-boy-light: rgba(56, 189, 248, 0.14);
+  --mk-link: #8CC0EC;
+  --mk-subj-lift: 45%;
+  --mk-danger-solid: #DC2626;
+  --mk-success-solid: #15803D;
+  --mk-warning-solid: #B45309;
 }
 
 /* Nocturne (previously "Slate", then "Onyx") — deep navy with the same
@@ -177,6 +182,16 @@ img, svg {
   --mk-success-light: rgba(74, 222, 128, 0.14);
   --mk-warning: #FBBF24;
   --mk-warning-light: rgba(251, 191, 36, 0.14);
+  --mk-accent-light: rgba(61, 81, 160, 0.22);
+  --mk-girl: #C084FC;
+  --mk-girl-light: rgba(192, 132, 252, 0.14);
+  --mk-boy: #38BDF8;
+  --mk-boy-light: rgba(56, 189, 248, 0.14);
+  --mk-link: #8CC0EC;
+  --mk-subj-lift: 45%;
+  --mk-danger-solid: #DC2626;
+  --mk-success-solid: #15803D;
+  --mk-warning-solid: #B45309;
 }
 
 /* The diagonal-stripe texture itself — only the page background gets

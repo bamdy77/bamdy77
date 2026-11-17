@@ -209,7 +209,7 @@ function Empty() {
 const inputStyle = { padding: "8px 10px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13, background: THEME.surface, color: THEME.text };
 const btnPrimary = { padding: "8px 16px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 600, fontSize: 12.5, cursor: "pointer" };
 const btnSecondary = { ...btnPrimary, background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` };
-const linkBtn = { background: "none", border: "none", color: THEME.navy, fontSize: 11.5, fontWeight: 600, cursor: "pointer", padding: 0, textDecoration: "underline" };
+const linkBtn = { background: "none", border: "none", color: THEME.link, fontSize: 11.5, fontWeight: 600, cursor: "pointer", padding: 0, textDecoration: "underline" };
 const errorBox = { marginBottom: 18, padding: 12, borderRadius: 4, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger };
 const loadingText = { fontSize: 13, color: THEME.muted, marginBottom: 16, display: "flex", alignItems: "center", gap: 7 };
 const rowStyle = { display: "flex", gap: 12, padding: "10px 14px", fontSize: 12.5, alignItems: "center" };

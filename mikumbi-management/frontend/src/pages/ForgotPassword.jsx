@@ -31,8 +31,8 @@ export default function ForgotPassword() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: THEME.bg, padding: 20, position: "relative" }}>
       <div style={{ position: "absolute", top: 14, right: 14 }}><StaffLangToggle dark={false} /></div>
-      <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 4, padding: "32px", boxShadow: "0 10px 30px rgba(15,23,42,0.1)" }}>
-        <h2 style={{ fontSize: 17, color: THEME.navy, marginBottom: 6 }}>{t("pw.forgotTitle")}</h2>
+      <div style={{ width: "100%", maxWidth: 380, background: THEME.surface, borderRadius: 4, padding: "32px", boxShadow: "0 10px 30px rgba(15,23,42,0.1)" }}>
+        <h2 style={{ fontSize: 17, color: THEME.link, marginBottom: 6 }}>{t("pw.forgotTitle")}</h2>
         <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 18 }}>
           {t("pw.forgotText")}
         </p>
@@ -52,7 +52,7 @@ export default function ForgotPassword() {
           </form>
         )}
         <div style={{ textAlign: "center", marginTop: 16 }}>
-          <Link to="/login" style={{ fontSize: 13, color: THEME.navy, display: "inline-flex", alignItems: "center", gap: 4 }}><ChevronLeftIcon size={12} />{t("pw.backLogin")}</Link>
+          <Link to="/login" style={{ fontSize: 13, color: THEME.link, display: "inline-flex", alignItems: "center", gap: 4 }}><ChevronLeftIcon size={12} />{t("pw.backLogin")}</Link>
         </div>
       </div>
     </div>

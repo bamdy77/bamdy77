@@ -135,7 +135,7 @@ export default function IdentityCards() {
         <button onClick={clearSelection} style={secondaryBtn}>Clear Selection</button>
       </div>
 
-      {error && <p style={{ color: "#B91C1C", fontSize: 12.5, marginBottom: 12 }}>{error}</p>}
+      {error && <p style={{ color: THEME.danger, fontSize: 12.5, marginBottom: 12 }}>{error}</p>}
 
       {students === null ? (
         <p style={{ color: THEME.muted, fontSize: 13.5, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={14} /> Loading...</p>
@@ -208,7 +208,7 @@ export default function IdentityCards() {
           ) : (
             <>
               <p style={{ fontSize: 11.5, color: THEME.muted, marginBottom: 8 }}>
-                To print, use the "Print" button above instead of the print icon inside this preview. If the box below looks empty, <a href={previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: THEME.navy, fontWeight: 600 }}>open the preview in a new tab</a> instead.
+                To print, use the "Print" button above instead of the print icon inside this preview. If the box below looks empty, <a href={previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: THEME.link, fontWeight: 600 }}>open the preview in a new tab</a> instead.
               </p>
               <iframe title="Identity Card Preview" src={previewUrl} style={{ width: "100%", height: 700, border: `1px solid ${THEME.border}`, borderRadius: 4 }} />
             </>

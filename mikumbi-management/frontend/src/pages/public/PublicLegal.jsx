@@ -34,13 +34,13 @@ export function PublicPrivacy() {
     { id: "nini", title: "Taarifa tunazokusanya", body: <>
       <p style={{ margin: 0 }}>Tunakusanya taarifa chache tu zinazohitajika:</p>
       <ul style={ul}>
-        <li style={li}><b>Maelekezo ya Kujiunga:</b> majina ya mwanafunzi, wilaya, kata, mtaa/kijiji, namba ya mtihani wa Darasa la Saba na mwaka aliomaliza.</li>
+        <li style={li}><b>Maelekezo ya Kujiunga na Kidato cha Kwanza:</b> majina ya mwanafunzi, wilaya, kata, mtaa/kijiji, namba ya mtihani wa Darasa la Saba na mwaka aliomaliza.</li>
         <li style={li}><b>Matokeo:</b> Namba ya Kuingia ya mwanafunzi na namba ya simu ya mzazi/mlezi (inatumika kuthibitisha tu, haihifadhiwi upya).</li>
         <li style={li}><b>Mipangilio ya kifaa chako:</b> lugha na aina ya herufi unazochagua huhifadhiwa kwenye kivinjari chako tu, si kwenye seva ya shule.</li>
         <li style={li}><b>Idadi ya wageni:</b> tunahesabu ni watu wangapi wanatembelea tovuti kila siku na kurasa wanazofungua. Hatuhifadhi jina, namba ya simu, anwani ya IP wala "cookie"; kila mgeni huwakilishwa na namba fupi isiyoweza kurudishwa nyuma inayobadilika kila siku, kwa hiyo hakuna mtu anayeweza kutambuliwa au kufuatiliwa.</li>
       </ul></> },
     { id: "matumizi", title: "Tunavyotumia taarifa hizi", body: <ul style={ul}>
-      <li style={li}>Kutoa Maelekezo ya Kujiunga yenye jina la mwanafunzi na kujiandaa kupokea wanafunzi wapya.</li>
+      <li style={li}>Kutoa Maelekezo ya Kujiunga na Kidato cha Kwanza yenye jina la mwanafunzi na kujiandaa kupokea wanafunzi wapya.</li>
       <li style={li}>Kukuonyesha matokeo ya mwanao peke yake, baada ya kuthibitisha kuwa ni wewe.</li>
       <li style={li}>Kulinda tovuti dhidi ya matumizi mabaya (kwa mfano kuzuia majaribio mengi ya kuingia).</li>
     </ul> },
@@ -53,7 +53,7 @@ export function PublicPrivacy() {
       <li style={li}>Nakala ya akiba (backup) ya taarifa za shule hutengenezwa kila siku, husimbwa (encrypted) na kuhifadhiwa kwa usalama ili zisipotee.</li>
     </ul> },
     { id: "muda", title: "Muda wa kuhifadhi", body: <p style={{ margin: 0 }}>Taarifa za maombi ya kujiunga huhifadhiwa kwa kipindi cha usajili wa mwaka husika. Kumbukumbu za matokeo huhifadhiwa kama sehemu ya kumbukumbu rasmi za shule. Nakala za akiba (backup) huhifadhiwa kwa siku 14 kisha hufutwa zenyewe.</p> },
-    { id: "haki", title: "Haki zako", body: <p style={{ margin: 0 }}>Unaweza kuomba kuona au kusahihisha taarifa za mwanao kwa kuwasiliana na shule. Ukiona taarifa isiyo sahihi kwenye matokeo au Maelekezo ya Kujiunga, wasiliana nasi mara moja.</p> },
+    { id: "haki", title: "Haki zako", body: <p style={{ margin: 0 }}>Unaweza kuomba kuona au kusahihisha taarifa za mwanao kwa kuwasiliana na shule. Ukiona taarifa isiyo sahihi kwenye matokeo au Maelekezo ya Kujiunga na Kidato cha Kwanza, wasiliana nasi mara moja.</p> },
     { id: "watoto", title: "Taarifa za watoto", body: <p style={{ margin: 0 }}>Tovuti hii imeandaliwa kwa ajili ya wazazi na walezi. Taarifa za wanafunzi zinashughulikiwa kwa uangalifu maalum na zinaonyeshwa kwa mzazi/mlezi aliyethibitishwa tu.</p> },
     { id: "ramani", title: "Ramani", body: <p style={{ margin: 0 }}>Ramani iliyo kwenye ukurasa wa mwanzo inaonyeshwa na Google Maps. Ukiitumia, Google inaweza kupokea taarifa za kawaida za kivinjari kwa mujibu wa sera yake.</p> },
     { id: "mabadiliko", title: "Mabadiliko ya sera hii", body: <p style={{ margin: 0 }}>Shule inaweza kuboresha sera hii. Tarehe iliyo juu inaonyesha toleo la sasa.</p> },
@@ -89,7 +89,7 @@ export function PublicPrivacy() {
     <PublicLayout>
       <LegalDoc tabs={tabsFor(sw)} labels={labelsFor(sw)} updated={UPDATED[sw ? "sw" : "en"]} contact={contactFor(sw)}
         title={sw ? "Sera ya Faragha" : "Privacy Policy"}
-        summary={sw ? "Kwa ufupi: tunakusanya taarifa chache tu zinazohitajika kutoa Maelekezo ya Kujiunga na kukuonyesha matokeo ya mwanao. Hatuuzi wala kushirikisha taarifa hizi."
+        summary={sw ? "Kwa ufupi: tunakusanya taarifa chache tu zinazohitajika kutoa Maelekezo ya Kujiunga na Kidato cha Kwanza na kukuonyesha matokeo ya mwanao. Hatuuzi wala kushirikisha taarifa hizi."
           : "In short: we collect only what is needed to issue Joining Instructions and show you your child's results. We never sell or share this information."}
         sections={sections} />
     </PublicLayout>
@@ -100,14 +100,14 @@ export function PublicTerms() {
   const { lang } = useLang(); const sw = lang !== "en";
   const sections = sw ? [
     { id: "kukubali", title: "Kukubali masharti", body: <p style={{ margin: 0 }}>Kwa kutumia tovuti hii unakubali masharti haya. Kama huyakubali, tafadhali usitumie huduma zake.</p> },
-    { id: "kweli", title: "Taarifa za kweli", body: <p style={{ margin: 0 }}>Unapojaza fomu ya Maelekezo ya Kujiunga, andika taarifa za kweli za mwanafunzi. Shule inaweza kumkataa au kumhakiki upya mwanafunzi ambaye taarifa zake si sahihi.</p> },
+    { id: "kweli", title: "Taarifa za kweli", body: <p style={{ margin: 0 }}>Unapojaza fomu ya Maelekezo ya Kujiunga na Kidato cha Kwanza, andika taarifa za kweli za mwanafunzi. Shule inaweza kumkataa au kumhakiki upya mwanafunzi ambaye taarifa zake si sahihi.</p> },
     { id: "matokeo", title: "Matumizi ya Matokeo", body: <ul style={ul}>
       <li style={li}>Matokeo yanaonyeshwa kwa mzazi/mlezi wa mwanafunzi husika peke yake. Usimpe mtu mwingine Namba ya Kuingia.</li>
       <li style={li}>Matokeo ni ya kusoma tu. Hairuhusiwi kuyapakua, kuyachapisha, kuyanakili au kuyasambaza.</li>
       <li style={li}>Kila ukurasa wa matokeo una alama (watermark) inayoonyesha namba ya mwanafunzi na muda wa kuangalia.</li>
       <li style={li}>Matokeo rasmi ni yale yaliyoko kwenye kumbukumbu za shule. Ukiona tofauti, wasiliana na shule.</li>
     </ul> },
-    { id: "kujiunga", title: "Maelekezo ya Kujiunga", body: <p style={{ margin: 0 }}>Kila mwanafunzi anaweza kupakua Maelekezo ya Kujiunga mara 5. Hati yenye QR code ndiyo halali; usiibadilishe.</p> },
+    { id: "kujiunga", title: "Maelekezo ya Kujiunga na Kidato cha Kwanza", body: <p style={{ margin: 0 }}>Kila mwanafunzi anaweza kupakua Maelekezo ya Kujiunga na Kidato cha Kwanza mara 5. Hati yenye QR code ndiyo halali; usiibadilishe.</p> },
     { id: "marufuku", title: "Matumizi yasiyoruhusiwa", body: <ul style={ul}>
       <li style={li}>Kujaribu kuingia kwenye matokeo ya mwanafunzi mwingine.</li>
       <li style={li}>Kujaribu kudukua, kuvuruga au kuzidisha mzigo kwa tovuti.</li>
@@ -153,7 +153,7 @@ export function PublicSupport() {
       { q: "Inasema nimezuiwa kwa muda.", a: "Baada ya majaribio mengi yasiyo sahihi, kuingia husimamishwa kwa dakika 15 hadi 30. Subiri, kisha jaribu tena ukihakikisha namba ni sahihi." },
       { q: "Kwa nini siwezi kupakua au kuchapisha matokeo?", a: "Matokeo ni ya kusoma tu ili kulinda faragha ya mwanafunzi. Ukihitaji ripoti rasmi, wasiliana na shule." },
     ] },
-    { id: "kujiunga", title: "Maelekezo ya Kujiunga", items: [
+    { id: "kujiunga", title: "Maelekezo ya Kujiunga na Kidato cha Kwanza", items: [
       { q: "Inasema fomu bado haijachapishwa.", a: "Shule itaifungua muda wa usajili wa Kidato cha Kwanza ukifika. Tafadhali angalia tena baadaye." },
       { q: "Nitapakuaje kwenye simu?", a: "Baada ya kuwasilisha taarifa, bonyeza \"Pakua (Download)\". Faili litahifadhiwa kwenye sehemu ya Downloads ya simu yako. Ukitaka kusoma tu, bonyeza \"Fungua kusoma\"." },
       { q: "Nimefikia kikomo cha kupakua.", a: "Kila mwanafunzi anaweza kupakua mara 5. Ukihitaji zaidi, wasiliana na shule." },

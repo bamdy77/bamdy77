@@ -74,7 +74,7 @@ const tabPillInactive = (isCompact) => ({ display: "inline-flex", alignItems: "c
 // Management/Food Contributions previously used a single flat neutral
 // card for every stat, which made it hard to tell "collected/paid" figures
 // apart from "outstanding/pending" ones at a glance.
-function StatCard({ label, value, sub, color = THEME.navy }) {
+function StatCard({ label, value, sub, color = THEME.link }) {
   return (
     <div style={{ background: `color-mix(in srgb, ${color} 16%, ${THEME.surface})`, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "12px 18px", minWidth: 160 }}>
       <div style={{ fontSize: 11.5, color: THEME.muted }}>{label}</div>
@@ -99,7 +99,7 @@ const tabCardIconWrap = (isActive) => ({
   display: "flex", alignItems: "center", justifyContent: "center",
   width: 30, height: 30, borderRadius: "50%",
   background: isActive ? "rgba(255,255,255,0.18)" : THEME.bg,
-  color: isActive ? "#fff" : THEME.navy,
+  color: isActive ? "#fff" : THEME.link,
 });
 const tabCardLabel = (isActive) => ({
   fontSize: 12, fontWeight: 700, lineHeight: 1.25,
@@ -380,7 +380,7 @@ function PartTimeStudentHistory({ token }) {
     <div>
       <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 12 }}>Each student who has contributed appears once - click "View History" for every month they paid, with the date and who collected it.</p>
       <div style={{ display: "flex", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
-        <StatCard label={`Total Collected - Part-Time Teachers (${year})`} value={`TZS ${grandTotal.toLocaleString()}`} color={THEME.navy} />
+        <StatCard label={`Total Collected - Part-Time Teachers (${year})`} value={`TZS ${grandTotal.toLocaleString()}`} color={THEME.link} />
         <StatCard label={`Students Contributed (${year})`} value={combinedCount} sub="Part-Time Teachers or Ream(s)" color={THEME.success} />
       </div>
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
@@ -807,7 +807,7 @@ function DailyCollections({ showClassFilter }) {
 
       <div style={{ display: "flex", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
         <StatCard label={`Students Paid (${date})`} value={studentsPaid} color={THEME.success} />
-        <StatCard label={`Total Collected (${date})`} value={`TZS ${totalCollected.toLocaleString()}`} color={THEME.navy} />
+        <StatCard label={`Total Collected (${date})`} value={`TZS ${totalCollected.toLocaleString()}`} color={THEME.link} />
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
@@ -910,7 +910,7 @@ function ClassTeacherPartTime() {
 
       <div style={{ display: "flex", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
         <StatCard label="Students Paid" value={`${paidCount} / ${rows.length}`} color={THEME.success} />
-        <StatCard label={`Total Collected (${MONTHS[month - 1]})`} value={`TZS ${totalCollected.toLocaleString()}`} color={THEME.navy} />
+        <StatCard label={`Total Collected (${MONTHS[month - 1]})`} value={`TZS ${totalCollected.toLocaleString()}`} color={THEME.link} />
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>

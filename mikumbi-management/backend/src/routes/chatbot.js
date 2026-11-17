@@ -14,7 +14,16 @@ const chatbotLimiter = rateLimit({
   keyGenerator: (req) => (req.user && req.user.id ? `user:${req.user.id}` : req.ip),
 });
 
-router.post("/ask", auth(), chatbotLimiter, askChatbot);
+// Also a daily ceiling per account, so one account (or a stolen session)
+// cannot run up the Gemini bill or use the assistant to probe the system.
+const chatbotDailyLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 200,
+  message: { ok: false, reason: "rate_limited" },
+  keyGenerator: (req) => (req.user && req.user.id ? `user:${req.user.id}` : req.ip),
+});
+
+router.post("/ask", auth(), chatbotLimiter, chatbotDailyLimiter, askChatbot);
 router.get("/status", auth(["admin", "second_master"]), chatbotLimiter, chatbotStatus);
 
 module.exports = router;

@@ -179,15 +179,15 @@ export default function ChatBot() {
     // reason, so the UI never shows a made-up "not part of the system"
     // answer when the real problem was connectivity.
     const askGemini = token
-      ? apiFetch("/chatbot/ask", { method: "POST", body: JSON.stringify({ message: text, history: messages.filter((m) => !m.key && !m.error).slice(-10).map((m) => ({ from: m.from, text: m.text })), page: currentPage }) }, token)
-          .then((result) => (result && result.ok && result.answer ? { failed: false, answer: result.answer } : { failed: true, reason: result?.reason || "error" }))
+      ? apiFetch("/chatbot/ask", { method: "POST", body: JSON.stringify({ message: text, history: messages.filter((m) => !m.key && !m.error).slice(-10).map((m) => ({ from: m.from, text: m.text, sig: m.sig })), page: currentPage }) }, token)
+          .then((result) => (result && result.ok && result.answer ? { failed: false, answer: result.answer, sig: result.sig } : { failed: true, reason: result?.reason || "error" }))
           .catch(() => ({ failed: true, reason: "network" }))
       : Promise.resolve({ failed: true, reason: "network" });
 
     Promise.all([askGemini, minDelay]).then(([result]) => {
       setTyping(false);
       clearTimeout(slowTimer); setSlow(false);
-      if (!result.failed) { setMessages((m) => [...m, { from: "bot", text: result.answer }]); return; }
+      if (!result.failed) { setMessages((m) => [...m, { from: "bot", text: result.answer, sig: result.sig }]); return; }
       const reason = REASON_KEYS[result.reason] ? result.reason : "error";
       const fix = isManager && ADMIN_FIX[reason] ? `\n\n${t(ADMIN_FIX[reason])}` : "";
       setMessages((m) => [...m, { from: "bot", error: true, text: t(REASON_KEYS[reason]) + fix }]);

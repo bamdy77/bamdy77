@@ -213,7 +213,7 @@ const STAFF_STRINGS = {
   "visits.none": { en: "No visits yet.", sw: "Bado hakuna wageni." },
   "visits.page.home": { en: "Home page", sw: "Ukurasa wa mwanzo" },
   "visits.page.results": { en: "Results", sw: "Matokeo" },
-  "visits.page.joining": { en: "Joining Instructions", sw: "Maelekezo ya Kujiunga" },
+  "visits.page.joining": { en: "Joining Instructions", sw: "Maelekezo ya Kujiunga na Kidato cha Kwanza" },
   "visits.page.privacy": { en: "Privacy Policy", sw: "Sera ya Faragha" },
   "visits.page.terms": { en: "Terms of Use", sw: "Masharti ya Matumizi" },
   "visits.page.support": { en: "Help & Support", sw: "Msaada" },

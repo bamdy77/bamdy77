@@ -534,10 +534,10 @@ function ChartCard({ title, sub, direction, directionGoodWhen = "improving", chi
 
 function TrendBadge({ direction, goodWhen = "improving" }) {
   if (!direction || direction === "insufficient_data") {
-    return <span style={{ ...badge, background: "#F1F5F9", color: THEME.muted }}><TrendingFlatIcon size={12} />Not enough data yet</span>;
+    return <span style={{ ...badge, background: THEME.bg, color: THEME.muted, border: `1px solid ${THEME.border}` }}><TrendingFlatIcon size={12} />Not enough data yet</span>;
   }
   if (direction === "stable") {
-    return <span style={{ ...badge, background: "#F1F5F9", color: THEME.muted }}><TrendingFlatIcon size={12} />Stable</span>;
+    return <span style={{ ...badge, background: THEME.bg, color: THEME.muted, border: `1px solid ${THEME.border}` }}><TrendingFlatIcon size={12} />Stable</span>;
   }
   const isGood = direction === goodWhen;
   const Icon = direction === "improving" ? TrendingUpIcon : TrendingDownIcon;

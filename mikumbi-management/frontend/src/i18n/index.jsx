@@ -87,13 +87,14 @@ export function LangToggle({ dark = true, onChange, order }) {
       lang={code} title={code === "en" ? "English" : "Kiswahili"}
       style={{
         border: "none", cursor: "pointer", padding: "4px 9px", fontSize: 12, fontWeight: 800, letterSpacing: "0.04em",
-        background: lang === code ? (dark ? "#fff" : "#0c426f") : "transparent",
-        color: lang === code ? (dark ? "#0c426f" : "#fff") : (dark ? "#fff" : "#0c426f"),
+        // On light/surface backgrounds the colours follow the theme (readable in Dark/Nocturne too).
+        background: lang === code ? (dark ? "#fff" : "var(--mk-navy, #0c426f)") : "transparent",
+        color: lang === code ? (dark ? "#0c426f" : "#fff") : (dark ? "#fff" : "var(--mk-link, #0c426f)"),
       }}
     >{code.toUpperCase()}</button>
   );
   return (
-    <div role="group" aria-label={lang === "sw" ? "Lugha" : "Language"} style={{ display: "inline-flex", border: `1px solid ${dark ? "rgba(255,255,255,0.6)" : "#0c426f"}`, flexShrink: 0 }}>
+    <div role="group" aria-label={lang === "sw" ? "Lugha" : "Language"} style={{ display: "inline-flex", border: `1px solid ${dark ? "rgba(255,255,255,0.6)" : "var(--mk-link, #0c426f)"}`, flexShrink: 0 }}>
       {codes.map(btn)}
     </div>
   );

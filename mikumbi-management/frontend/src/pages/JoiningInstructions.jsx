@@ -74,7 +74,7 @@ export default function JoiningInstructions() {
 
       {stats && (
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 20 }}>
-          <StatChip label="Online" value={stats.online} color={THEME.navy} />
+          <StatChip label="Online" value={stats.online} color={THEME.link} />
           <StatChip label="Issued at School" value={stats.manual} color="#B7791F" />
           <StatChip label="Total Applicants" value={stats.total} color="#166534" />
         </div>
@@ -84,7 +84,7 @@ export default function JoiningInstructions() {
         {tabs.map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)} style={{
             padding: "9px 18px", border: "none", background: "none", cursor: "pointer",
-            fontWeight: tab === id ? 700 : 500, fontSize: 13.5, color: tab === id ? THEME.navy : THEME.muted,
+            fontWeight: tab === id ? 700 : 500, fontSize: 13.5, color: tab === id ? THEME.link : THEME.muted,
             borderBottom: tab === id ? `3px solid ${THEME.navy}` : "3px solid transparent",
           }}>{label}</button>
         ))}
@@ -145,7 +145,7 @@ function ApplicationsTab({ token }) {
     }, { danger: true });
   };
 
-  if (error) return <p style={{ color: "#B91C1C", fontSize: 13 }}>{error}</p>;
+  if (error) return <p style={{ color: THEME.danger, fontSize: 13 }}>{error}</p>;
   if (!rows) return <Muted><SpinnerIcon size={14} /> Loading...</Muted>;
 
   return (
@@ -253,7 +253,7 @@ function ManualIssueTab({ token, onIssued }) {
         <FieldRow label="Village/Street" value={fields.village} onChange={set("village")} required />
         <FieldRow label="Exam Number (PS1234567-0001)" value={fields.exam_number} onChange={set("exam_number")} required />
         <FieldRow label="Standard VII Completion Year" value={fields.exam_year} onChange={set("exam_year")} type="number" required />
-        {error && <p style={{ color: "#B91C1C", fontSize: 12.5, margin: 0 }}>{error}</p>}
+        {error && <p style={{ color: THEME.danger, fontSize: 12.5, margin: 0 }}>{error}</p>}
         <button type="submit" disabled={busy} style={primaryBtn}>{busy ? "Issuing..." : "Issue & Download Joining Instruction"}</button>
       </form>
       {ConfirmDialogPortal}
@@ -357,7 +357,7 @@ function SettingsTab({ token }) {
     }, { danger: !next });
   };
 
-  if (!settings || !content) return error ? <p style={{ color: "#B91C1C", fontSize: 13 }}>{error}</p> : <Muted><SpinnerIcon size={14} /> Loading...</Muted>;
+  if (!settings || !content) return error ? <p style={{ color: THEME.danger, fontSize: 13 }}>{error}</p> : <Muted><SpinnerIcon size={14} /> Loading...</Muted>;
 
   const ro = locked;
   return (
@@ -376,14 +376,14 @@ function SettingsTab({ token }) {
       {locked && (
         <div style={noteBox}>The Joining Instruction is published, so editing is locked. Press <b>Turn Off to Edit</b>, make your changes, Preview, then Publish again.</div>
       )}
-      <div style={{ ...noteBox, background: hasSignature ? THEME.surface : "#FFFBEB" }}>
+      <div style={{ ...noteBox, background: hasSignature ? THEME.surface : THEME.warningLight }}>
         {hasSignature
           ? "The Head Master's signature uploaded in Settings is placed on every Joining Instruction automatically."
           : "No Head Master's signature has been uploaded yet - the PDF will show a dotted line instead. "}
         {!hasSignature && <button onClick={() => navigate("/dashboard/signature-stamp")} style={linkBtn}>Upload it in Settings → Signature &amp; Stamp</button>}
       </div>
 
-      {error && <p style={{ color: "#B91C1C", fontSize: 12.5, margin: "0 0 12px" }}>{error}</p>}
+      {error && <p style={{ color: THEME.danger, fontSize: 12.5, margin: "0 0 12px" }}>{error}</p>}
 
       <fieldset disabled={ro} style={{ border: "none", padding: 0, margin: 0, opacity: ro ? 0.7 : 1 }}>
         <div style={{ ...sectionCard, marginBottom: 16 }}>
@@ -422,7 +422,7 @@ function SettingsTab({ token }) {
               <input value={sec.title} onChange={(e) => updateSection(idx, { title: e.target.value })} style={{ ...inputStyle, fontWeight: 700 }} placeholder="Section title" />
               <button type="button" onClick={() => moveSection(idx, -1)} disabled={idx === 0} style={iconBtn} title="Move up">↑</button>
               <button type="button" onClick={() => moveSection(idx, 1)} disabled={idx === content.sections.length - 1} style={iconBtn} title="Move down">↓</button>
-              <button type="button" onClick={() => removeSection(idx)} style={{ ...iconBtn, color: "#B91C1C" }} title="Remove">✕</button>
+              <button type="button" onClick={() => removeSection(idx)} style={{ ...iconBtn, color: THEME.danger }} title="Remove">✕</button>
             </div>
             <textarea value={sec.body} onChange={(e) => updateSection(idx, { body: e.target.value })} rows={Math.min(16, Math.max(4, sec.body.split("\n").length + 1))} style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit", lineHeight: 1.5 }} />
           </div>
@@ -486,7 +486,7 @@ const grid2 = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(2
 const noteBox = { border: `1px solid ${THEME.border}`, background: THEME.surface, padding: "10px 14px", fontSize: 12.5, color: THEME.text, marginBottom: 14, lineHeight: 1.6 };
 const sectionCard = { border: `1px solid ${THEME.border}`, background: THEME.surface, padding: 12, marginBottom: 12 };
 const iconBtn = { width: 32, height: 32, flexShrink: 0, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, cursor: "pointer", fontWeight: 700 };
-const linkBtn = { background: "none", border: "none", color: THEME.navy, fontWeight: 700, cursor: "pointer", padding: 0, textDecoration: "underline", fontSize: 12.5 };
+const linkBtn = { background: "none", border: "none", color: THEME.link, fontWeight: 700, cursor: "pointer", padding: 0, textDecoration: "underline", fontSize: 12.5 };
 
 const Muted = ({ children }) => <p style={{ color: THEME.muted, fontSize: 13.5, display: "flex", alignItems: "center", gap: 7 }}>{children}</p>;
 const thStyle = { padding: "8px 10px", textAlign: "left", borderBottom: `1px solid ${THEME.border}`, fontWeight: 700, whiteSpace: "nowrap" };
@@ -494,5 +494,5 @@ const tdStyle = { padding: "7px 10px", borderBottom: `1px solid ${THEME.border}`
 const inputStyle = { width: "100%", padding: "9px 12px", borderRadius: 4, border: `1px solid ${THEME.border}`, fontSize: 13, boxSizing: "border-box" };
 const primaryBtn = { padding: "9px 18px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" };
 const secondaryBtn = { padding: "9px 18px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.text, fontWeight: 700, fontSize: 13, cursor: "pointer" };
-const dangerBtn = { padding: "9px 18px", borderRadius: 4, border: "none", background: "#B91C1C", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" };
-const smallDangerBtn = { padding: "5px 10px", borderRadius: 4, border: "1px solid #B91C1C55", background: "none", color: "#B91C1C", fontWeight: 700, fontSize: 11.5, cursor: "pointer" };
+const dangerBtn = { padding: "9px 18px", borderRadius: 4, border: "none", background: THEME.dangerSolid, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" };
+const smallDangerBtn = { padding: "5px 10px", borderRadius: 4, border: `1px solid ${THEME.danger}`, background: "none", color: THEME.danger, fontWeight: 700, fontSize: 11.5, cursor: "pointer" };

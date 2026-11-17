@@ -20,6 +20,10 @@ export const THEME = {
   // dark-on-dark. Brand navy itself (sidebar, primary buttons, borders)
   // never changes - this is a separate, purely text-readability token.
   heading: "var(--mk-heading, #0c426f)",
+  // Navy used as TEXT colour (links, tab labels, outlined buttons). Same
+  // navy in the light theme; a light blue in Dark/Nocturne so it can be read
+  // on dark surfaces. Backgrounds keep using THEME.navy (brand colour).
+  link: "var(--mk-link, #0c426f)",
   gold: "var(--mk-gold, #D4A017)",
   bg: "var(--mk-bg, #F8FAFC)",
   surface: "var(--mk-surface, #FFFFFF)",
@@ -28,10 +32,15 @@ export const THEME = {
   muted: "var(--mk-muted, #64748B)",
   danger: "var(--mk-danger, #DC2626)",
   dangerLight: "var(--mk-danger-light, #FEF2F2)",
-  success: "var(--mk-success, #16A34A)",
+  success: "var(--mk-success, #15803D)",
   successLight: "var(--mk-success-light, #F0FDF4)",
-  warning: "var(--mk-warning, #D97706)",
+  warning: "var(--mk-warning, #B45309)",
   warningLight: "var(--mk-warning-light, #FFFBEB)",
+  // Solid colours for buttons/badges that carry WHITE text. In dark themes
+  // danger/success/warning become light for text; these stay deep enough.
+  dangerSolid: "var(--mk-danger-solid, #DC2626)",
+  successSolid: "var(--mk-success-solid, #16A34A)",
+  warningSolid: "var(--mk-warning-solid, #D97706)",
 };
 
 // Competency-level colors for the Results Management → SCHOOL EXAMINATION

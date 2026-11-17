@@ -76,13 +76,13 @@ const MESSAGES = [
 
   // ── Joining Instructions (joiningController.js) - Kiswahili original ───
   { en: "Joining Instruction forms are not published online yet. Please contact the school.",
-    sw: "Fomu za Joining Instruction bado hazijachapishwa mtandaoni. Tafadhali wasiliana na shule." },
+    sw: "Fomu za Maelekezo ya Kujiunga na Kidato cha Kwanza bado hazijachapishwa mtandaoni. Tafadhali wasiliana na shule." },
   { en: "You have reached the download limit for the Joining Instruction ({n} times) for this student.",
-    sw: "Umefikia kikomo cha kupakua Joining Instruction (mara {n}) kwa mwanafunzi huyu." },
+    sw: "Umefikia kikomo cha kupakua Maelekezo ya Kujiunga na Kidato cha Kwanza (mara {n}) kwa mwanafunzi huyu." },
   { en: "Your details have been submitted. This is download number {n} of the Joining Instruction for this student.",
-    sw: "Umewasilisha taarifa zako. Hii ni mara ya {n} kupakua Joining Instruction kwa mwanafunzi huyu." },
+    sw: "Umewasilisha taarifa zako. Hii ni mara ya {n} kupakua Maelekezo ya Kujiunga na Kidato cha Kwanza kwa mwanafunzi huyu." },
   { en: "Your details have been submitted. You can now download your Joining Instruction.",
-    sw: "Umewasilisha taarifa zako kikamilifu. Sasa unaweza kupakua Joining Instruction yako." },
+    sw: "Umewasilisha taarifa zako kikamilifu. Sasa unaweza kupakua Maelekezo ya Kujiunga na Kidato cha Kwanza." },
   { en: "The download link was not found.", sw: "Kiungo cha kupakua hakikupatikana." },
   { en: "The download time has expired. Please fill in the form again.", sw: "Muda wa kupakua umeisha. Tafadhali jaza fomu tena." },
   { en: "The download link is not valid.", sw: "Kiungo cha kupakua si sahihi." },

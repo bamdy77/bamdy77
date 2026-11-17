@@ -49,7 +49,7 @@ export default function AnnouncementsBanner({ endpoint = "/communications/announ
         display: "flex", alignItems: "center", gap: isMobile ? 8 : 12,
       }}>
         <span style={{
-          flexShrink: 0, display: "flex", alignItems: "center", gap: 5, background: THEME.danger, color: "#fff",
+          flexShrink: 0, display: "flex", alignItems: "center", gap: 5, background: THEME.dangerSolid, color: "#fff",
           fontSize: isMobile ? 9.5 : 10, fontWeight: 700, letterSpacing: "0.05em", padding: isMobile ? "2.5px 7px" : "3px 8px", borderRadius: 4,
           animation: "mikumbi-notice-pulse 1.6s ease-in-out infinite",
         }}>

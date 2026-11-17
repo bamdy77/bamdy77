@@ -67,10 +67,10 @@ function Hero() {
           {t("hero.text")}
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link to="/results" className="pub-btn" style={{ ...heroBtn, background: "#C2410C", color: "#fff", boxShadow: "0 2px 6px rgba(0,0,0,0.18)" }}>
+          <Link to="/results" className="pub-btn" style={{ ...heroBtn, ...(isMobile ? heroBtnMobile : null), background: "#C2410C", color: "#fff", boxShadow: "0 2px 6px rgba(0,0,0,0.18)" }}>
             <CheckCircleIcon size={18} />{t("hero.results")}
           </Link>
-          <Link to="/joining-instructions" className="pub-btn" style={{ ...heroBtn, background: "#fff", color: NAVY }}>
+          <Link to="/joining-instructions" className="pub-btn" style={{ ...heroBtn, ...(isMobile ? heroBtnMobile : null), background: "#fff", color: NAVY }}>
             <GraduationCapIcon size={18} />{t("hero.joining")}
           </Link>
         </div>
@@ -83,6 +83,9 @@ const heroBtn = {
   display: "inline-flex", alignItems: "center", gap: 10, padding: "15px 28px", borderRadius: 4,
   fontWeight: 800, fontSize: 18, textDecoration: "none", minWidth: 210, justifyContent: "center",
 };
+// Phones: both buttons the same full width, text centred (the Kiswahili
+// "Maelekezo ya Kujiunga na Kidato cha Kwanza" needs two lines there).
+const heroBtnMobile = { width: "100%", maxWidth: 360, minWidth: 0, fontSize: 16.5, padding: "13px 18px", textAlign: "center", lineHeight: 1.3 };
 
 // ─────────────────────────── Quick access ───────────────────────────
 function QuickAccess() {

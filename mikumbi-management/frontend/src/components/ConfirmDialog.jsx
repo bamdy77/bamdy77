@@ -42,7 +42,7 @@ function ConfirmDialog({ message, confirmLabel, cancelLabel, danger, onConfirm, 
             borderRadius: 4, fontWeight: 600, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
           }}><CloseIcon size={13} />{cancelLabel}</button>
           <button onClick={onConfirm} style={{
-            padding: "9px 18px", background: danger ? THEME.danger : THEME.navy, color: "#fff", border: "none",
+            padding: "9px 18px", background: danger ? THEME.dangerSolid : THEME.navy, color: "#fff", border: "none",
             borderRadius: 4, fontWeight: 600, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
           }}><CheckIcon size={13} />{confirmLabel}</button>
         </div>

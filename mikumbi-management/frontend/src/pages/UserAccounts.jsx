@@ -248,7 +248,7 @@ export default function UserAccounts() {
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr auto", gap: 8 }}>
                   <input placeholder="Full subject name" value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} style={{ ...fieldInput, background: THEME.surface }} aria-label="New subject name" />
                   <input placeholder="Abbreviation (e.g. B/MATH)" value={newSubjectCode} onChange={(e) => setNewSubjectCode(e.target.value)} style={{ ...fieldInput, background: THEME.surface }} aria-label="New subject abbreviation" />
-                  <button type="button" onClick={addSubject} disabled={!newSubjectName.trim() || !newSubjectCode.trim()} style={{ padding: "9px 16px", background: THEME.surface, color: THEME.navy, border: `1px solid ${THEME.navy}`, borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: !newSubjectName.trim() || !newSubjectCode.trim() ? 0.5 : 1 }}><PlusCircleIcon size={13} />Add</button>
+                  <button type="button" onClick={addSubject} disabled={!newSubjectName.trim() || !newSubjectCode.trim()} style={{ padding: "9px 16px", background: THEME.surface, color: THEME.link, border: `1px solid ${THEME.navy}`, borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: !newSubjectName.trim() || !newSubjectCode.trim() ? 0.5 : 1 }}><PlusCircleIcon size={13} />Add</button>
                 </div>
                 <p style={{ fontSize: 11.5, color: THEME.muted, margin: "6px 0 0" }}>Both are required. The abbreviation is what appears in Results Management.</p>
               </div>
@@ -655,7 +655,7 @@ function FormSection({ title, isMobile, children }) {
   return (
     <section style={{ display: "grid", gap: 14 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: 0.6, textTransform: "uppercase", color: THEME.navy, whiteSpace: "nowrap" }}>{title}</span>
+        <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: 0.6, textTransform: "uppercase", color: THEME.link, whiteSpace: "nowrap" }}>{title}</span>
         {!isMobile && <span style={{ flex: 1, height: 1, background: THEME.border }} />}
       </div>
       {children}

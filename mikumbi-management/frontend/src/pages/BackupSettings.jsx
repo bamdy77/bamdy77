@@ -87,7 +87,7 @@ export default function BackupSettings() {
                 <button type="button" onClick={() => download(b, "excel")} disabled={downloading === `${b.id}-excel`} title="Open in Excel to read the records" style={{ padding: "7px 14px", borderRadius: 4, border: "none", background: THEME.navy, color: "#fff", fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>
                   {downloading === `${b.id}-excel` ? "Preparing…" : "Excel (to read)"}
                 </button>
-                <button type="button" onClick={() => download(b, "full")} disabled={downloading === `${b.id}-full`} title="Complete copy for restoring the system" style={{ padding: "7px 14px", borderRadius: 4, border: `1px solid ${THEME.navy}`, background: THEME.surface, color: THEME.navy, fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>
+                <button type="button" onClick={() => download(b, "full")} disabled={downloading === `${b.id}-full`} title="Complete copy for restoring the system" style={{ padding: "7px 14px", borderRadius: 4, border: `1px solid ${THEME.navy}`, background: THEME.surface, color: THEME.link, fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>
                   {downloading === `${b.id}-full` ? "Downloading…" : "Full copy"}
                 </button>
               </div>

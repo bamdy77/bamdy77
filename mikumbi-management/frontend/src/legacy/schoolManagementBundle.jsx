@@ -233,17 +233,20 @@ const LESSON_PERIODS = PERIODS.filter(p => !p.isBreak);
 const C = {
   bg:"var(--mk-bg, #F8FAFC)", surface:"var(--mk-surface, #FFFFFF)", border:"var(--mk-border, #E2E8F0)",
   text:"var(--mk-text, #0F172A)", muted:"var(--mk-muted, #64748B)",
-  accent:"var(--mk-navy, #0c426f)", accentLight:"var(--mk-accent-light, #EEF1FA)",
+  accent:"var(--mk-navy, #0c426f)", accentLight:"var(--mk-accent-light, #EEF1FA)", accentText:"var(--mk-link, #0c426f)",
+  dangerSolid:"var(--mk-danger-solid, #DC2626)", successSolid:"var(--mk-success-solid, #16A34A)", warningSolid:"var(--mk-warning-solid, #D97706)",
   danger:"var(--mk-danger, #DC2626)", dangerLight:"var(--mk-danger-light, #FEF2F2)",
-  success:"var(--mk-success, #16A34A)", successLight:"var(--mk-success-light, #F0FDF4)",
-  warning:"var(--mk-warning, #D97706)", warningLight:"var(--mk-warning-light, #FFFBEB)",
+  success:"var(--mk-success, #15803D)", successLight:"var(--mk-success-light, #F0FDF4)",
+  warning:"var(--mk-warning, #B45309)", warningLight:"var(--mk-warning-light, #FFFBEB)",
   girl:"var(--mk-girl, #9333EA)", girlLight:"var(--mk-girl-light, #FAF5FF)",
   boy:"var(--mk-boy, #0369A1)", boyLight:"var(--mk-boy-light, #F0F9FF)",
 };
 
 const SUBJ_COLORS = {};
 const PAL = ["#4F46E5","#0369A1","#9333EA","#16A34A","#D97706","#DC2626","#0891B2","#7C3AED","#065F46","#92400E","#1D4ED8","#BE185D","#0F766E","#6D28D9","#15803D","#B45309","#1E40AF"];
-SUBJECTS.forEach((s,i) => { SUBJ_COLORS[s] = PAL[i % PAL.length]; });
+// Subject colours are dark tones; in Dark/Nocturne they are mixed with white
+// (--mk-subj-lift, 0% in the light theme) so subject names stay readable.
+SUBJECTS.forEach((s,i) => { SUBJ_COLORS[s] = `color-mix(in srgb, ${PAL[i % PAL.length]}, #fff var(--mk-subj-lift, 0%))`; });
 
 // ─── API HELPER ───────────────────────────────────────────────────────────────
 // Every successful save/update/delete (POST/PUT/PATCH/DELETE) shows the same
@@ -308,7 +311,7 @@ const Badge = ({ color="default", children }) => {
 
 const Btn = ({ variant="primary", size="md", onClick, children, style={}, disabled, loading }) => {
   const base = { border:"none", borderRadius:4, cursor:disabled||loading?"not-allowed":"pointer", fontWeight:600, fontSize:size==="sm"?12:14, padding:size==="sm"?"5px 12px":"8px 18px", opacity:disabled?0.5:1, display:"inline-flex", alignItems:"center", gap:6 };
-  const v = { primary:{background:C.accent,color:"#fff"}, secondary:{background:C.border,color:C.text}, danger:{background:C.danger,color:"#fff"}, ghost:{background:"transparent",color:C.accent,border:`1px solid ${C.accent}`}, success:{background:C.success,color:"#fff"}, warning:{background:C.warning,color:"#fff"}, cancel:{background:"#fff",color:C.danger,border:`1.5px solid ${C.danger}`} };
+  const v = { primary:{background:C.accent,color:"#fff"}, secondary:{background:C.border,color:C.text}, danger:{background: C.dangerSolid,color:"#fff"}, ghost:{background:"transparent",color:C.accentText,border:`1px solid ${C.accent}`}, success:{background: C.successSolid,color:"#fff"}, warning:{background: C.warningSolid,color:"#fff"}, cancel:{background:C.surface,color:C.danger,border:`1.5px solid ${C.danger}`} };
   // Custom `style` (e.g. the Enroll Student button's deep green) must win
   // over the variant's default color - it's applied LAST, not merged into
   // `base` before the variant, which used to let the variant silently
@@ -356,7 +359,7 @@ const LocationField = ({ label, value, onChange, options, required, isMobile, is
         {labelEl}
         <input value={value} onChange={e=>onChange(e.target.value)} placeholder="Type here..." style={fieldStyle}/>
         <button type="button" onClick={()=>{onChange("");setManual(false);}}
-          style={{alignSelf:"flex-start",background:"none",border:"none",color:C.accent,fontWeight:touch?600:400,fontSize:touch?13:11,cursor:"pointer",padding:touch?"6px 2px":0,minHeight:touch?32:"auto",textDecoration:"underline"}}>
+          style={{alignSelf:"flex-start",background:"none",border:"none",color:C.accentText,fontWeight:touch?600:400,fontSize:touch?13:11,cursor:"pointer",padding:touch?"6px 2px":0,minHeight:touch?32:"auto",textDecoration:"underline"}}>
           Choose from list
         </button>
       </div>
@@ -583,7 +586,7 @@ const ActionsMenu = ({ items }) => {
 // color-mix() so it re-derives live from whatever `color` resolves to -
 // including the --mk-xxx CSS variables - meaning it repaints correctly on
 // every theme (System Default / Dark / Nocturne) with no extra logic here.
-const StatCard = ({ label, value, sub, color=C.accent }) => (
+const StatCard = ({ label, value, sub, color=C.accentText }) => (
   <div style={{background:`color-mix(in srgb, ${color} 16%, ${C.surface})`,border: `1px solid ${C.border}`,borderRadius:4,padding:18}}>
     <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:5}}>{label}</div>
     <div style={{fontSize:26,fontWeight:800,color}}>{value}</div>
@@ -1155,7 +1158,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
       {success && <Alert type="success" message={success} onClose={()=>setSuccess("")}/>}
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:14}}>
-        <StatCard label="Total Enrolled" value={total}  color={C.accent}/>
+        <StatCard label="Total Enrolled" value={total}  color={C.accentText}/>
         <StatCard label="Active"         value={active} color={C.success}/>
         {/* Male/Female cards in the neutral text colour (no blue/purple), per school request. */}
         <StatCard label="Male"           value={male}   color={C.text}/>
@@ -2261,9 +2264,9 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
         <div style={{fontWeight:700,color:"#92400E",fontSize:compact?9:11,lineHeight:1.2}}>{cell.event_name}</div>
       </div>
     );
-    const sc = SUBJ_COLORS[cell?.subject]||C.accent;
+    const sc = SUBJ_COLORS[cell?.subject]||C.accentText;
     return (
-      <div onClick={()=>openEditCell(cls,day,period)} style={{background:sc+"15",border:`1px solid ${sc}40`,borderRadius:4,padding:compact?"3px 5px":"6px 8px",cursor:editMode?"pointer":"default"}}>
+      <div onClick={()=>openEditCell(cls,day,period)} style={{background:`color-mix(in srgb, ${sc} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${sc} 25%, transparent)`,borderRadius:4,padding:compact?"3px 5px":"6px 8px",cursor:editMode?"pointer":"default"}}>
         <div style={{fontWeight:700,color:sc,fontSize:compact?9:11,lineHeight:1.2}}>{cell.subject}</div>
         <div style={{fontSize:compact?8:10,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cell.teacher_name}</div>
       </div>
@@ -2282,7 +2285,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       <div style={{display:"flex",flexDirection:"column",gap:compact?14:18}}>
         {DAYS.map(d=>(
           <div key={d}>
-            <div style={{fontWeight:800,fontSize:compact?12.5:13.5,color:C.accent,padding:compact?"0 12px 6px":"0 16px 7px",textTransform:"uppercase",letterSpacing:"0.03em"}}>{d}</div>
+            <div style={{fontWeight:800,fontSize:compact?12.5:13.5,color:C.accentText,padding:compact?"0 12px 6px":"0 16px 7px",textTransform:"uppercase",letterSpacing:"0.03em"}}>{d}</div>
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:compact?12:13,minWidth:compact?680:900}}>
                 <thead>
@@ -2321,7 +2324,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       <div style={{display:"flex",flexDirection:"column",gap:compact?14:18}}>
         {DAYS.map(d=>(
           <Card key={d} style={{padding:0}}>
-            <div style={{padding:isMobile?"10px 14px":"10px 16px",borderBottom:`1px solid ${C.border}`,fontWeight:800,fontSize:isMobile?13:14,color:C.accent,textTransform:"uppercase",letterSpacing:"0.03em"}}>{d}</div>
+            <div style={{padding:isMobile?"10px 14px":"10px 16px",borderBottom:`1px solid ${C.border}`,fontWeight:800,fontSize:isMobile?13:14,color:C.accentText,textTransform:"uppercase",letterSpacing:"0.03em"}}>{d}</div>
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:compact?12:13,minWidth:compact?820:1060}}>
                 <thead>
@@ -2441,7 +2444,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       {/* ── STEP 1 : Teachers / Subject / Class & Stream ─────────────────── */}
       {wizardStep===1 && <>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:14}}>
-          <StatCard label="Teachers"    value={teachers.length} color={C.accent}/>
+          <StatCard label="Teachers"    value={teachers.length} color={C.accentText}/>
           <StatCard label="Assignments" value={teachers.reduce((a,t)=>a+(t.assignments?.length||0),0)} sub="teacher–class pairs" color={C.success}/>
           <StatCard label="Classes"     value={classList.length} sub={classes.length? "configured":"default Form I–IV, A–C"} color={C.boy}/>
         </div>
@@ -2452,7 +2455,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
           <div style={{padding:"14px 20px",borderBottom:`1px solid ${C.border}`,fontWeight:700,fontSize:15}}>Teacher Assignment Table</div>
           <Tbl rows={teachers} columns={[
             {key:"short_name",label:"Teacher", render:r=>r.registered_username||r.short_name},
-            {key:"subject",   label:"Subject(s)", render:r=><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{(r.subjects||[r.subject]).map(s=><span key={s} style={{fontWeight:600,color:SUBJ_COLORS[s]||C.accent}}>{s}</span>)}</div>},
+            {key:"subject",   label:"Subject(s)", render:r=><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{(r.subjects||[r.subject]).map(s=><span key={s} style={{fontWeight:600,color:SUBJ_COLORS[s]||C.accentText}}>{s}</span>)}</div>},
             {key:"classes",   label:"Assigned Classes (subject · periods/week)", render:r=><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{(r.assignments||[]).map(a=><Badge key={a.id} color="indigo">{[a.form,a.stream].filter(Boolean).join(" ")} · {a.subject} · {a.periods_per_week||4}p</Badge>)}</div>},
             {key:"actions",   label:"", render:r=>(
               <ActionsMenu items={[
@@ -2501,7 +2504,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                     return (
                       <div key={cls} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:6}}>
                         <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <div onClick={()=>toggleClass(cls)} style={{flex:1,padding:"7px 10px",borderRadius:4,cursor:"pointer",border:`1px solid ${sel?C.accent:C.border}`,background:sel?C.accentLight:C.bg,color:sel?C.accent:C.muted,fontWeight:sel?700:400,fontSize:13,userSelect:"none"}}>{cls}</div>
+                          <div onClick={()=>toggleClass(cls)} style={{flex:1,padding:"7px 10px",borderRadius:4,cursor:"pointer",border:`1px solid ${sel?C.accent:C.border}`,background:sel?C.accentLight:C.bg,color:sel?C.accentText:C.muted,fontWeight:sel?700:400,fontSize:13,userSelect:"none"}}>{cls}</div>
                           {sel && <input type="number" min={1} max={10} value={sel.periods_per_week} onChange={e=>setClassPeriods(cls,e.target.value)} onBlur={e=>clampClassPeriods(cls,e.target.value)} title="Periods per week" style={{width:44,padding:"6px 4px",borderRadius:4,border:`1px solid ${C.border}`,fontSize:12,textAlign:"center"}}/>}
                         </div>
                         {sel && (
@@ -2553,7 +2556,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
           <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
             {(assignedClassList.length ? assignedClassList : classList).map(cls=>{
               const sel = evForm.classes.includes(cls);
-              return <div key={cls} onClick={()=>toggleEvClass(cls)} style={{padding:"5px 10px",borderRadius:4,cursor:"pointer",border:`1px solid ${sel?C.accent:C.border}`,background:sel?C.accentLight:C.bg,color:sel?C.accent:C.muted,fontWeight:sel?700:400,fontSize:12}}>{cls}</div>;
+              return <div key={cls} onClick={()=>toggleEvClass(cls)} style={{padding:"5px 10px",borderRadius:4,cursor:"pointer",border:`1px solid ${sel?C.accent:C.border}`,background:sel?C.accentLight:C.bg,color:sel?C.accentText:C.muted,fontWeight:sel?700:400,fontSize:12}}>{cls}</div>;
             })}
             {!assignedClassList.length && <span style={{fontSize:12,color:C.muted,fontStyle:"italic"}}>No classes have a teacher assignment yet - go to Step 1 first.</span>}
           </div>
@@ -2746,7 +2749,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       ) : (
         <div style={{display:"flex",gap:0,borderBottom:`1px solid ${C.border}`}}>
           {[["class","Per Class"],["master","General View"],["teacher","Per Teacher"]].map(([id,label])=>(
-            <button key={id} onClick={()=>setViewTab(id)} style={{flex:"none",whiteSpace:"nowrap",padding:"9px 20px",border:"none",borderBottom:viewTab===id?`3px solid ${C.accent}`:"3px solid transparent",background:"transparent",fontWeight:viewTab===id?700:500,color:viewTab===id?C.accent:C.muted,cursor:"pointer",fontSize:14}}>{label}</button>
+            <button key={id} onClick={()=>setViewTab(id)} style={{flex:"none",whiteSpace:"nowrap",padding:"9px 20px",border:"none",borderBottom:viewTab===id?`3px solid ${C.accent}`:"3px solid transparent",background:"transparent",fontWeight:viewTab===id?700:500,color:viewTab===id?C.accentText:C.muted,cursor:"pointer",fontSize:14}}>{label}</button>
           ))}
         </div>
       )}
@@ -2790,7 +2793,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
             <div style={{textAlign:"center",lineHeight:1.8}}>
               <div style={{fontWeight:800,fontSize:isMobile?13.5:15}}>{SCHOOL.line1}</div>
               <div style={{fontWeight:700,fontSize:isMobile?12.5:14}}>{SCHOOL.line2}</div>
-              <div style={{fontWeight:700,fontSize:isMobile?12.5:14,color:C.accent}}>{SCHOOL.line3}</div>
+              <div style={{fontWeight:700,fontSize:isMobile?12.5:14,color:C.accentText}}>{SCHOOL.line3}</div>
               <div style={{fontWeight:600,fontSize:isMobile?12:13}}>{SCHOOL.line4}</div>
               <div style={{fontSize:12,color:C.muted,marginTop:4}}>{ttMonth} {ttYear} · {ttTerm}</div>
               {!masterClasses && <div style={{fontSize:11,color:C.warning,marginTop:6}}>No timetable generated yet for this year/term.</div>}
@@ -2839,10 +2842,10 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                 <WeekGrid renderCell={(d,p)=>{
                 let found=null;
                 classList.forEach(cls=>{const c=ttMap[cls]?.[d]?.[p.label];if(c&&c.teacher_name===viewTeacher)found={...c,cls};});
-                const sc=found?SUBJ_COLORS[found.subject]||C.accent:null;
+                const sc=found?SUBJ_COLORS[found.subject]||C.accentText:null;
                 const compact=isMobile||isTablet;
                 return found
-                  ?<div style={{background:sc+"15",border:`1px solid ${sc}40`,borderRadius:4,padding:compact?"3px 5px":"6px 8px"}}><div style={{fontWeight:700,color:sc,fontSize:compact?9.5:11}}>{found.subject}</div><div style={{fontSize:compact?8.5:10,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{found.cls}</div></div>
+                  ?<div style={{background:`color-mix(in srgb, ${sc} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${sc} 25%, transparent)`,borderRadius:4,padding:compact?"3px 5px":"6px 8px"}}><div style={{fontWeight:700,color:sc,fontSize:compact?9.5:11}}>{found.subject}</div><div style={{fontSize:compact?8.5:10,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{found.cls}</div></div>
                   :<div style={{height:compact?28:38,display:"flex",alignItems:"center",justifyContent:"center",color:"#E2E8F0",fontSize:compact?9.5:11}}>-</div>;
               }}/>
             </Card>
@@ -3167,7 +3170,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
                   background:active?C.accent:"#fff",
                   boxShadow:active?"0 4px 14px rgba(15,23,42,0.18)":"0 1px 3px rgba(15,23,42,0.05)",
                 }}>
-                  <span style={{display:"flex",alignItems:"center",justifyContent:"center",width:28,height:28,borderRadius:"50%",background:active?"rgba(255,255,255,0.18)":C.bg,color:active?"#fff":C.accent}}><Icon size={15}/></span>
+                  <span style={{display:"flex",alignItems:"center",justifyContent:"center",width:28,height:28,borderRadius:"50%",background:active?"rgba(255,255,255,0.18)":C.bg,color:active?"#fff":C.accentText}}><Icon size={15}/></span>
                   <span style={{fontSize:11,fontWeight:700,lineHeight:1.2,color:active?"#fff":C.text}}>{label}</span>
                 </button>
               );
@@ -3547,14 +3550,14 @@ function HostelFeesTab({ token }) {
               <div style={{ fontWeight: 700, fontSize: 13.5, marginBottom: 4 }}>{[o.first_name, o.middle_name, o.last_name].filter(Boolean).join(" ")}</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: 12, color: C.muted }}>{o.form}</span>
-                <span style={{ fontSize: 12, color: C.accent, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><ReceiptIcon size={12} />Record fee</span>
+                <span style={{ fontSize: 12, color:C.accentText, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><ReceiptIcon size={12} />Record fee</span>
               </div>
             </div>
           ) : (
             <div key={o.id} onClick={() => openFeeModal(o)} style={{ display: "flex", alignItems: "center", padding: "10px 16px", fontSize: 13, cursor: "pointer", borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
               <span style={{ flex: 1 }}>{[o.first_name, o.middle_name, o.last_name].filter(Boolean).join(" ")}</span>
               <span style={{ flex: 1, color: C.muted }}>{o.form}</span>
-              <span style={{ fontSize: 12, color: C.accent, display: "flex", alignItems: "center", gap: 4 }}><ReceiptIcon size={12} />Record fee</span>
+              <span style={{ fontSize: 12, color:C.accentText, display: "flex", alignItems: "center", gap: 4 }}><ReceiptIcon size={12} />Record fee</span>
             </div>
           )
         ))}

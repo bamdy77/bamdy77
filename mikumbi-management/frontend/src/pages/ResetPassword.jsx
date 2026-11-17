@@ -49,8 +49,8 @@ export default function ResetPassword() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: THEME.bg, padding: 20, position: "relative" }}>
       <div style={{ position: "absolute", top: 14, right: 14 }}><StaffLangToggle dark={false} /></div>
-      <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 4, padding: 32, boxShadow: "0 10px 30px rgba(15,23,42,0.1)" }}>
-        <h2 style={{ fontSize: 17, color: THEME.navy, marginBottom: 18 }}>{t("pw.setNewTitle")}</h2>
+      <div style={{ width: "100%", maxWidth: 380, background: THEME.surface, borderRadius: 4, padding: 32, boxShadow: "0 10px 30px rgba(15,23,42,0.1)" }}>
+        <h2 style={{ fontSize: 17, color: THEME.link, marginBottom: 18 }}>{t("pw.setNewTitle")}</h2>
         {done ? (
           <div style={{ color: THEME.success, background: THEME.successLight, padding: 12, borderRadius: 4, fontSize: 13.5 }}>
             {t("pw.redirecting")}

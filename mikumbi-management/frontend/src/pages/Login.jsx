@@ -122,7 +122,7 @@ export default function Login() {
                 ...(verified ? { background: THEME.success, opacity: 1 } : {}),
               }}>{verified ? <span className="mk-code-ok">✓ {t("login.verified")}</span> : busy ? <><SpinnerIcon size={15} />{t("login.verifying")}</> : t("login.verify")}</button>
               <button type="button" onClick={() => { setTwofa(null); setError(""); setPassword(""); }}
-                style={{ width: "100%", marginTop: 10, background: "none", border: "none", color: THEME.navy, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
+                style={{ width: "100%", marginTop: 10, background: "none", border: "none", color: THEME.link, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
                 {t("login.noCode")}
               </button>
             </form>
@@ -142,7 +142,7 @@ export default function Login() {
             <label style={labelStyle}>{t("login.password")}</label>
             <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="" />
 
-            {notice && !error && <div role="status" style={{ color: THEME.navy, background: "#eef4fb", border: "1px solid #c9dcf0", borderRadius: 4, padding: "8px 10px", fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>{notice.startsWith("session.") ? t(notice) : notice}</div>}
+            {notice && !error && <div role="status" style={{ color: THEME.link, background: "#eef4fb", border: "1px solid #c9dcf0", borderRadius: 4, padding: "8px 10px", fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>{notice.startsWith("session.") ? t(notice) : notice}</div>}
             {error && <div style={{ color: THEME.danger, fontSize: 13, marginTop: 8 }}>{error}</div>}
 
             <button type="submit" disabled={busy} style={{
@@ -156,7 +156,7 @@ export default function Login() {
           )}
 
           <div style={{ textAlign: "center", marginTop: 16 }}>
-            <Link to="/forgot-password" style={{ fontSize: 13, color: THEME.navy }}>{t("login.forgot")}</Link>
+            <Link to="/forgot-password" style={{ fontSize: 13, color: THEME.link }}>{t("login.forgot")}</Link>
           </div>
           <div style={{ textAlign: "center", marginTop: 10 }}>
             <Link to="/" style={{ fontSize: 12.5, color: THEME.muted, display: "inline-flex", alignItems: "center", gap: 4 }}><ChevronLeftIcon size={12} />{t("login.backHome")}</Link>

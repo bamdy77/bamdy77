@@ -124,7 +124,7 @@ export default function NotificationBell({ dark }) {
         {count > 0 && (
           <span style={{
             position: "absolute", top: -4, right: -4, minWidth: 16, height: 16, padding: "0 3px",
-            borderRadius: 4, background: THEME.danger, color: "#fff", fontSize: 10, fontWeight: 800,
+            borderRadius: 4, background: THEME.dangerSolid, color: "#fff", fontSize: 10, fontWeight: 800,
             display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
             border: "2px solid " + THEME.navy,
           }}>{count > 9 ? "9+" : count}</span>
@@ -144,7 +144,7 @@ export default function NotificationBell({ dark }) {
             <span style={{ fontWeight: 800, fontSize: 13, color: THEME.heading }}>{t("bell.title")}</span>
             {count > 0 && (
               <button onClick={markAllRead} style={{
-                background: "none", border: "none", color: THEME.navy, fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+                background: "none", border: "none", color: THEME.link, fontSize: 11.5, fontWeight: 700, cursor: "pointer",
               }}>{t("bell.markAll")}</button>
             )}
           </div>

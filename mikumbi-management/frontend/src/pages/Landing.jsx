@@ -105,7 +105,7 @@ export default function Landing() {
               textTransform: "uppercase", marginBottom: isMobile ? 3 : 8,
             }}>{t("banner.country")}</div>
             <div style={{
-              fontSize: isMobile ? 15 : isTablet ? 22 : 32, fontWeight: 800, color: THEME.navy,
+              fontSize: isMobile ? 15 : isTablet ? 22 : 32, fontWeight: 800, color: THEME.link,
               letterSpacing: "0.01em", lineHeight: 1.18, textTransform: "uppercase",
             }}>{SCHOOL.name}</div>
             <div style={{ fontSize: isMobile ? 10.5 : isTablet ? 12.5 : 15, fontStyle: "italic", color: "#F54927", fontWeight: 600, marginTop: isMobile ? 3 : 6 }}>
@@ -230,7 +230,7 @@ export default function Landing() {
       {/* Features */}
       <section id="features" style={{ padding: isMobile ? "44px 18px" : isTablet ? "50px 22px" : "60px 24px", background: "#e0e1dd" }}>
        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <h2 style={{ textAlign: "center", color: THEME.navy, fontSize: isMobile ? 20 : 24, fontWeight: 800, marginBottom: isMobile ? 26 : 40 }}>{t("land.features")}</h2>
+        <h2 style={{ textAlign: "center", color: THEME.link, fontSize: isMobile ? 20 : 24, fontWeight: 800, marginBottom: isMobile ? 26 : 40 }}>{t("land.features")}</h2>
         <div style={{
           display: "grid",
           gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(230px, 1fr))",

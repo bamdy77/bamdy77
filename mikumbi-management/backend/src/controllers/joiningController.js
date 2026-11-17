@@ -142,7 +142,7 @@ const submitJoining = async (req, res, next) => {
   try {
     const settingsRes = await query(`SELECT is_published FROM joining_settings WHERE id = 1`);
     if (!settingsRes.rows[0]?.is_published) {
-      return res.status(403).json({ message: "Fomu za Joining Instruction bado hazijachapishwa mtandaoni. Tafadhali wasiliana na shule." });
+      return res.status(403).json({ message: "Fomu za Maelekezo ya Kujiunga na Kidato cha Kwanza bado hazijachapishwa mtandaoni. Tafadhali wasiliana na shule." });
     }
     const body = req.body || {};
     const err = validateApplicationFields(body);
@@ -158,7 +158,7 @@ const submitJoining = async (req, res, next) => {
       const cur = existing.rows[0];
       if (cur.download_count >= MAX_DOWNLOADS_PER_APPLICANT) {
         return res.status(429).json({
-          message: `Umefikia kikomo cha kupakua Joining Instruction (mara ${MAX_DOWNLOADS_PER_APPLICANT}) kwa mwanafunzi huyu.`,
+          message: `Umefikia kikomo cha kupakua Maelekezo ya Kujiunga na Kidato cha Kwanza (mara ${MAX_DOWNLOADS_PER_APPLICANT}) kwa mwanafunzi huyu.`,
           limitReached: true,
         });
       }
@@ -188,8 +188,8 @@ const submitJoining = async (req, res, next) => {
       token,
       download_count: row.download_count,
       message: row.download_count > 1
-        ? `Umewasilisha taarifa zako. Hii ni mara ya ${ordinalSw(row.download_count)} kupakua Joining Instruction kwa mwanafunzi huyu.`
-        : "Umewasilisha taarifa zako kikamilifu. Sasa unaweza kupakua Joining Instruction yako.",
+        ? `Umewasilisha taarifa zako. Hii ni mara ya ${ordinalSw(row.download_count)} kupakua Maelekezo ya Kujiunga na Kidato cha Kwanza kwa mwanafunzi huyu.`
+        : "Umewasilisha taarifa zako kikamilifu. Sasa unaweza kupakua Maelekezo ya Kujiunga na Kidato cha Kwanza.",
     });
   } catch (err) { next(err); }
 };
@@ -275,7 +275,7 @@ const updateJoiningSettings = async (req, res, next) => {
   try {
     const current = await loadJoiningSettings();
     if (current.is_published) {
-      return res.status(409).json({ message: "Joining Instruction imechapishwa tayari. Zima uchapishaji kwanza ili kuhariri." });
+      return res.status(409).json({ message: "Maelekezo ya Kujiunga na Kidato cha Kwanza yamechapishwa tayari. Zima uchapishaji kwanza ili kuhariri." });
     }
     const { content, admission_year } = req.body || {};
     const cleaned = sanitizeContent(content);
