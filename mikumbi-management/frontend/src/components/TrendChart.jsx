@@ -3,14 +3,16 @@
 // no charting library installed, so this draws plain SVG - consistent
 // with how the rest of the app already renders its own icons by hand.
 import { THEME } from "../styles/theme";
+import { useLang } from "../i18n";
 
 // points: [{ label, value }]  - value may be null (gap in the data, e.g. a
 // term the school didn't run this exam). `higherIsBetter` only affects the
 // color of the line/dots (green trending the right way, red the wrong way)
 // - it never changes what's plotted.
 export default function TrendChart({
-  points, height = 220, higherIsBetter = true, valueSuffix = "", valueFormatter, color, emptyText = "Not enough data yet for a trend.",
+  points, height = 220, higherIsBetter = true, valueSuffix = "", valueFormatter, color, emptyText,
 }) {
+  const { t } = useLang();
   const usable = points.filter((p) => p.value != null);
   if (!points.length || usable.length < 2) {
     return (
@@ -18,7 +20,7 @@ export default function TrendChart({
         height, display: "flex", alignItems: "center", justifyContent: "center",
         color: THEME.muted, fontSize: 13, background: THEME.bg, borderRadius: 4, border: `1px dashed ${THEME.border}`,
       }}>
-        {emptyText}
+        {emptyText || t("an.notEnough")}
       </div>
     );
   }

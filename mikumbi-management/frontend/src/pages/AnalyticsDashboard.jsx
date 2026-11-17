@@ -19,6 +19,8 @@
 // noted above - this page is an ADDITIONAL, not the only, layer of
 // protection (see ProtectedRoute in App.jsx).
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useLang } from "../i18n";
+import { formLabel } from "../i18n/display";
 import VisitorStats from "../components/VisitorStats";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
@@ -43,6 +45,7 @@ export default function AnalyticsDashboard() {
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
   const { user } = useAuth();
+  const { t } = useLang();
   const roles = user?.roles || [user?.role].filter(Boolean);
   // The two school-wide sections stay Head Master / Second Master only -
   // an Academic Master or Teacher reaching this page (for the per-student
@@ -54,12 +57,12 @@ export default function AnalyticsDashboard() {
     <div style={{ padding: isMobile ? "16px 12px" : isTablet ? "24px 20px" : 40 }}>
       <div style={{ marginBottom: 22 }}>
         <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : 20, margin: 0, display: "flex", alignItems: "center", gap: 9 }}>
-          <BarChartIcon size={19} />Analytics Dashboard
+          <BarChartIcon size={19} />{t("menu.analytics")}
         </h2>
         <p style={{ color: THEME.muted, fontSize: 12.5, marginTop: 5 }}>
           {canSeeSchoolWide
-            ? "School-wide trends across multiple exam periods and months, plus one student at a time."
-            : "Track whether one student is rising or falling across exam periods."}
+            ? t("an.introAll")
+            : t("an.introOne")}
         </p>
       </div>
 
@@ -85,6 +88,7 @@ export default function AnalyticsDashboard() {
 // ══════════════════ RESULTS TREND ══════════════════
 function ResultsTrendSection({ isCompact }) {
   const { token } = useAuth();
+  const { t, lang } = useLang();
   const [form, setForm] = useState(FORMS[0]);
   const [subjectId, setSubjectId] = useState("");
   const [data, setData] = useState(null);
@@ -106,7 +110,7 @@ function ResultsTrendSection({ isCompact }) {
         // loads, so the drill-down chart isn't empty by default.
         if (!sid && d.subjects && d.subjects.length) setSubjectId(String(d.subjects[0].id));
       })
-      .catch((err) => { if (id !== reqId.current) return; setData(null); setLoadError(err.message || "Failed to load results analytics."); })
+      .catch((err) => { if (id !== reqId.current) return; setData(null); setLoadError(err.message || t("an.loadFailed")); })
       .finally(() => { if (id === reqId.current) setLoading(false); });
   }, [token]);
 
@@ -116,54 +120,54 @@ function ResultsTrendSection({ isCompact }) {
   return (
     <section>
       <h3 style={{ fontSize: 15, color: THEME.heading, marginBottom: 4, display: "flex", alignItems: "center", gap: 7 }}>
-        <SchoolIcon size={15} />Results Trend - Across Exam Periods
+        <SchoolIcon size={15} />{t("an.resTitle")}
       </h3>
       <p style={{ fontSize: 12, color: THEME.muted, marginBottom: 16 }}>
-        Tracks whether a class or subject is improving or declining term after term - not just one exam in isolation.
+        {t("an.resIntro")}
       </p>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
-        <Field label="Form">
+        <Field label={t("sig.form")}>
           <select value={form} onChange={(e) => setForm(e.target.value)} style={selectStyle}>
-            {FORMS.map((f) => <option key={f}>{f}</option>)}
+            {FORMS.map((f) => <option key={f} value={f}>{formLabel(lang, f)}</option>)}
           </select>
         </Field>
-        <Field label="Subject (drill-down)">
+        <Field label={t("an.subject")}>
           <select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} style={selectStyle} disabled={!data || !data.subjects || !data.subjects.length}>
-            {(!data || !data.subjects || !data.subjects.length) && <option value="">No subject history yet</option>}
+            {(!data || !data.subjects || !data.subjects.length) && <option value="">{t("an.noSubjectHistory")}</option>}
             {data && data.subjects && data.subjects.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
           </select>
         </Field>
       </div>
 
       {loadError && <div style={errorBox}>⚠ {loadError}</div>}
-      {loading && <p style={loadingText}><SpinnerIcon size={13} /> Loading…</p>}
+      {loading && <p style={loadingText}><SpinnerIcon size={13} /> {t("common.loading")}</p>}
 
       {!loading && !loadError && data && (
         <>
           {/* Overall form trend */}
           <ChartCard
-            title={`${form} - Overall Pass Rate`}
+            title={t("an.passRate", { form: formLabel(lang, form) })}
             direction={data.overallTrendDirection?.pass_pct}
             directionGoodWhen="improving"
           >
             <TrendChart
               points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.pass_pct }))}
               valueSuffix="%" higherIsBetter
-              emptyText="No compiled results yet for this form - pass rate trend will appear once at least two exam periods have included results."
+              emptyText={t("an.noPass")}
             />
           </ChartCard>
 
           <ChartCard
-            title={`${form} - Overall School GPA`}
-            sub="Lower GPA = better performance (1.0 is the best possible average)."
+            title={t("an.gpa", { form: formLabel(lang, form) })}
+            sub={t("an.gpaHint")}
             direction={data.overallTrendDirection?.school_gpa}
             directionGoodWhen="improving"
           >
             <TrendChart
               points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.school_gpa }))}
               higherIsBetter={false}
-              emptyText="No compiled GPA data yet for this form."
+              emptyText={t("an.noGpa")}
             />
           </ChartCard>
 
@@ -171,26 +175,26 @@ function ResultsTrendSection({ isCompact }) {
           {subjectId && data.subjectMeta && (
             <>
               <ChartCard
-                title={`${data.subjectMeta.name} (${data.subjectMeta.code}) - Pass Rate in ${form}`}
+                title={t("an.subjPass", { subject: `${data.subjectMeta.name} (${data.subjectMeta.code})`, form: formLabel(lang, form) })}
                 direction={data.subjectTrendDirection?.pass_pct}
                 directionGoodWhen="improving"
               >
                 <TrendChart
                   points={(data.subjectTrend || []).map((r) => ({ label: periodLabel(r), value: r.pass_pct }))}
                   valueSuffix="%" higherIsBetter
-                  emptyText={`Not enough exam history for ${data.subjectMeta.name} in ${form} yet.`}
+                  emptyText={t("an.noSubjFormHistory", { subject: data.subjectMeta.name, form: formLabel(lang, form) })}
                 />
               </ChartCard>
               <ChartCard
-                title={`${data.subjectMeta.name} (${data.subjectMeta.code}) - GPA in ${form}`}
-                sub="Lower GPA = better performance."
+                title={t("an.subjGpa", { subject: `${data.subjectMeta.name} (${data.subjectMeta.code})`, form: formLabel(lang, form) })}
+                sub={t("an.gpaHintShort")}
                 direction={data.subjectTrendDirection?.gpa}
                 directionGoodWhen="improving"
               >
                 <TrendChart
                   points={(data.subjectTrend || []).map((r) => ({ label: periodLabel(r), value: r.gpa }))}
                   higherIsBetter={false}
-                  emptyText={`Not enough exam history for ${data.subjectMeta.name} in ${form} yet.`}
+                  emptyText={t("an.noSubjFormHistory", { subject: data.subjectMeta.name, form: formLabel(lang, form) })}
                 />
               </ChartCard>
             </>
@@ -204,6 +208,7 @@ function ResultsTrendSection({ isCompact }) {
 // ══════════════════ TAMS ATTENDANCE TREND ══════════════════
 function AttendanceTrendSection() {
   const { token } = useAuth();
+  const { t, lang } = useLang();
   const [months, setMonths] = useState(6);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -213,53 +218,53 @@ function AttendanceTrendSection() {
     setLoading(true); setLoadError("");
     apiFetch(`/tams/attendance-trend?months=${months}`, {}, token)
       .then(setData)
-      .catch((err) => { setData(null); setLoadError(err.message || "Failed to load the attendance trend."); })
+      .catch((err) => { setData(null); setLoadError(err.message || t("an.attLoadFailed")); })
       .finally(() => setLoading(false));
   }, [months, token]);
 
   return (
     <section>
       <h3 style={{ fontSize: 15, color: THEME.heading, marginBottom: 4, display: "flex", alignItems: "center", gap: 7 }}>
-        <ClockIcon size={15} />TAMS - Long-Term Teacher Attendance Trend
+        <ClockIcon size={15} />{t("an.attTitle")}
       </h3>
       <p style={{ fontSize: 12, color: THEME.muted, marginBottom: 16 }}>
-        Attendance % across several months - not just a single day's report - so a slipping pattern is visible early.
+        {t("an.attIntro")}
       </p>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
         {[3, 6, 12, 24].map((m) => (
           <button key={m} onClick={() => setMonths(m)} style={m === months ? tabActive : tabInactive}>
-            Last {m} months
+            {t("an.lastMonths", { n: m })}
           </button>
         ))}
       </div>
 
       {loadError && <div style={errorBox}>⚠ {loadError}</div>}
-      {loading && <p style={loadingText}><SpinnerIcon size={13} /> Loading…</p>}
+      {loading && <p style={loadingText}><SpinnerIcon size={13} /> {t("common.loading")}</p>}
 
       {!loading && !loadError && data && (
         <>
           <ChartCard
-            title="School-Wide Attendance Rate"
+            title={t("an.attRate")}
             direction={data.presentTrendDirection}
             directionGoodWhen="improving"
           >
             <TrendChart
               points={(data.months || []).map((m) => ({ label: m.month, value: m.presentPct }))}
               valueSuffix="%" higherIsBetter
-              emptyText="Not enough monthly attendance history yet."
+              emptyText={t("an.noAtt")}
             />
           </ChartCard>
 
           <div style={{ overflowX: "auto" }}>
             <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden", minWidth: 640 }}>
               <div style={{ ...rowStyle, fontWeight: 700, background: THEME.bg }}>
-                <span style={{ flex: 1.2 }}>Month</span>
-                <span style={{ flex: 1 }}>Teachers</span>
-                <span style={{ flex: 1 }}>Present %</span>
-                <span style={{ flex: 1 }}>On Time %</span>
-                <span style={{ flex: 1 }}>Late %</span>
-                <span style={{ flex: 1 }}>Absent %</span>
+                <span style={{ flex: 1.2 }}>{t("an.month")}</span>
+                <span style={{ flex: 1 }}>{t("an.teachers")}</span>
+                <span style={{ flex: 1 }}>{t("an.present")} %</span>
+                <span style={{ flex: 1 }}>{t("an.onTime")} %</span>
+                <span style={{ flex: 1 }}>{t("an.late")} %</span>
+                <span style={{ flex: 1 }}>{t("an.absent")} %</span>
               </div>
               {(data.months || []).map((m, i) => (
                 <div key={m.month} style={{ ...rowStyle, borderTop: i === 0 ? "none" : `1px solid ${THEME.border}` }}>
@@ -285,6 +290,7 @@ function AttendanceTrendSection() {
 // picker is scoped server-side to only the subjects they teach.
 function StudentTrendSection() {
   const { token } = useAuth();
+  const { t, lang } = useLang();
   const [search, setSearch] = useState("");
   const [matches, setMatches] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -326,7 +332,7 @@ function StudentTrendSection() {
         setData(d);
         if (!subId && d.subjects && d.subjects.length) setSubjectId(String(d.subjects[0].id));
       })
-      .catch((err) => { if (id !== reqId.current) return; setData(null); setLoadError(err.message || "Failed to load this student's trend."); })
+      .catch((err) => { if (id !== reqId.current) return; setData(null); setLoadError(err.message || t("an.stuLoadFailed")); })
       .finally(() => { if (id === reqId.current) setLoading(false); });
   }, [token]);
 
@@ -341,14 +347,14 @@ function StudentTrendSection() {
   return (
     <section>
       <h3 style={{ fontSize: 15, color: THEME.heading, marginBottom: 4, display: "flex", alignItems: "center", gap: 7 }}>
-        <PersonSilhouetteIcon size={15} />One Student - Rising or Falling?
+        <PersonSilhouetteIcon size={15} />{t("an.stuTitle")}
       </h3>
       <p style={{ fontSize: 12, color: THEME.muted, marginBottom: 16 }}>
-        A form-wide average can look stable while one student quietly slips. Search for a student to see their own GPA across every exam period, not just their most recent result.
+        {t("an.stuIntro")}
       </p>
 
       <div style={{ position: "relative", maxWidth: 380, marginBottom: student ? 18 : 8 }}>
-        <Field label="Search by name or reg. no.">
+        <Field label={t("an.search")}>
           <div style={{ position: "relative" }}>
             <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: THEME.muted, display: "flex" }}>
               <SearchIcon size={13} />
@@ -356,12 +362,12 @@ function StudentTrendSection() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="e.g. Juma Ally, or a registration number"
+              placeholder={t("an.searchPh")}
               style={{ ...selectStyle, width: "100%", paddingLeft: 28, boxSizing: "border-box" }}
             />
           </div>
         </Field>
-        {searching && <div style={{ ...loadingText, marginBottom: 0, marginTop: 4 }}><SpinnerIcon size={12} /> Searching…</div>}
+        {searching && <div style={{ ...loadingText, marginBottom: 0, marginTop: 4 }}><SpinnerIcon size={12} /> {t("an.searching")}</div>}
         {matches.length > 0 && (
           <div style={{
             position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, zIndex: 5,
@@ -377,7 +383,7 @@ function StudentTrendSection() {
                 <div style={{ fontWeight: 600, color: THEME.text }}>
                   {[m.first_name, m.middle_name, m.last_name].filter(Boolean).join(" ")}
                 </div>
-                <div style={{ fontSize: 11, color: THEME.muted }}>{m.form || "-"} · {m.reg_no || "No reg. no. yet"}</div>
+                <div style={{ fontSize: 11, color: THEME.muted }}>{m.form ? formLabel(lang, m.form) : "-"} · {m.reg_no || t("an.noReg")}</div>
               </div>
             ))}
           </div>
@@ -385,7 +391,7 @@ function StudentTrendSection() {
       </div>
 
       {!student && !loading && (
-        <p style={{ fontSize: 12.5, color: THEME.muted }}>Search above to get started - no student is selected yet.</p>
+        <p style={{ fontSize: 12.5, color: THEME.muted }}>{t("an.searchStart")}</p>
       )}
 
       {student && (
@@ -395,19 +401,19 @@ function StudentTrendSection() {
             <div style={{ fontWeight: 700, fontSize: 14, color: THEME.heading }}>
               {[student.first_name, student.middle_name, student.last_name].filter(Boolean).join(" ")}
             </div>
-            <div style={{ fontSize: 11.5, color: THEME.muted }}>{student.form || "-"} · {student.reg_no || "No reg. no. yet"}</div>
+            <div style={{ fontSize: 11.5, color: THEME.muted }}>{student.form ? formLabel(lang, student.form) : "-"} · {student.reg_no || t("an.noReg")}</div>
           </div>
         </div>
       )}
 
       {loadError && <div style={errorBox}>⚠ {loadError}</div>}
-      {loading && <p style={loadingText}><SpinnerIcon size={13} /> Loading…</p>}
+      {loading && <p style={loadingText}><SpinnerIcon size={13} /> {t("common.loading")}</p>}
 
       {!loading && !loadError && student && data && (
         <>
           <ChartCard
-            title={`${student.first_name} - Division Across Exam Periods`}
-            sub="Division I is the best result, Division 0 the weakest."
+            title={t("an.stuDiv", { name: student.first_name })}
+            sub={t("an.divHint")}
             direction={data.divisionTrendDirection}
             directionGoodWhen="improving"
           >
@@ -415,20 +421,20 @@ function StudentTrendSection() {
               points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.division_rank }))}
               higherIsBetter={false}
               valueFormatter={(v) => DIVISION_LABELS[Math.round(v)] || v}
-              emptyText="No division history yet for this student."
+              emptyText={t("an.noDiv")}
             />
           </ChartCard>
 
           <ChartCard
-            title={`${student.first_name} - GPA Across Exam Periods`}
-            sub="Lower GPA = better performance (1.0 is the best possible average)."
+            title={t("an.stuGpa", { name: student.first_name })}
+            sub={t("an.gpaHint")}
             direction={data.overallTrendDirection}
             directionGoodWhen="improving"
           >
             <TrendChart
               points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.gpa }))}
               higherIsBetter={false}
-              emptyText="No result history yet for this student."
+              emptyText={t("an.noStuHistory")}
             />
           </ChartCard>
 
@@ -437,10 +443,10 @@ function StudentTrendSection() {
           <div style={{ overflowX: "auto", marginBottom: 18 }}>
             <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden", minWidth: 520 }}>
               <div style={{ ...rowStyle, fontWeight: 700, background: THEME.bg }}>
-                <span style={{ flex: 1.3 }}>Period</span>
-                <span style={{ flex: 0.8 }}>Form</span>
-                <span style={{ flex: 0.8 }}>Division</span>
-                <span style={{ flex: 1 }}>Position</span>
+                <span style={{ flex: 1.3 }}>{t("an.period")}</span>
+                <span style={{ flex: 0.8 }}>{t("sig.form")}</span>
+                <span style={{ flex: 0.8 }}>{t("res.division")}</span>
+                <span style={{ flex: 1 }}>{t("res.position")}</span>
                 <span style={{ flex: 0.7 }}>GPA</span>
               </div>
               {(data.overallTrend || []).map((r, i) => (
@@ -448,38 +454,38 @@ function StudentTrendSection() {
                   <span style={{ flex: 1.3, fontWeight: 600 }}>{r.label}</span>
                   <span style={{ flex: 0.8 }}>{r.form}</span>
                   <span style={{ flex: 0.8 }}>{r.division || "-"}</span>
-                  <span style={{ flex: 1 }}>{r.position ? `${r.position} of ${r.total_students}` : "-"}</span>
+                  <span style={{ flex: 1 }}>{r.position ? t("an.posOf", { pos: r.position, total: r.total_students }) : "-"}</span>
                   <span style={{ flex: 0.7 }}>{r.gpa ?? "-"}</span>
                 </div>
               ))}
               {!(data.overallTrend || []).length && (
-                <div style={{ ...rowStyle, color: THEME.muted }}>No exam periods with a compiled result yet.</div>
+                <div style={{ ...rowStyle, color: THEME.muted }}>{t("an.noPeriods")}</div>
               )}
             </div>
           </div>
 
-          <Field label="Subject (drill-down)">
+          <Field label={t("an.subject")}>
             <select
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
               style={selectStyle}
               disabled={!data.subjects || !data.subjects.length}
             >
-              {(!data.subjects || !data.subjects.length) && <option value="">No subject history yet</option>}
+              {(!data.subjects || !data.subjects.length) && <option value="">{t("an.noSubjectHistory")}</option>}
               {data.subjects && data.subjects.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
             </select>
           </Field>
 
           {subjectId && data.subjectMeta && (
             <ChartCard
-              title={`${data.subjectMeta.name} (${data.subjectMeta.code}) - Marks Across Exam Periods`}
+              title={t("an.subjMarks", { subject: `${data.subjectMeta.name} (${data.subjectMeta.code})` })}
               direction={data.subjectTrendDirection}
               directionGoodWhen="improving"
             >
               <TrendChart
                 points={(data.subjectTrend || []).map((r) => ({ label: periodLabel(r), value: r.marks }))}
                 higherIsBetter
-                emptyText={`Not enough exam history for ${data.subjectMeta.name} yet.`}
+                emptyText={t("an.noSubjHistory", { subject: data.subjectMeta.name })}
               />
             </ChartCard>
           )}
@@ -493,12 +499,13 @@ function StudentTrendSection() {
 // framed as a rough estimate throughout (never "will pass/fail"), and only
 // shown once there's enough history to make a trend line meaningful at all.
 function GpaProjection({ projection }) {
+  const { t } = useLang();
   if (!projection) return null;
   if (projection.reason === "insufficient_data" || projection.predicted_gpa == null) {
     return (
-      <div style={{ ...errorBox, background: "#F1F5F9", color: THEME.muted, marginBottom: 18, display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ ...errorBox, background: THEME.bg, color: THEME.muted, marginBottom: 18, display: "flex", alignItems: "center", gap: 8 }}>
         <InfoIcon size={14} />
-        Not enough exam periods yet (at least 3 are needed) to estimate a trend - this will appear automatically once there's more history.
+        {t("an.projNoData")}
       </div>
     );
   }
@@ -507,10 +514,10 @@ function GpaProjection({ projection }) {
     <div style={{ background: THEME.surface, border: `1px dashed ${THEME.border}`, borderRadius: 4, padding: 14, marginBottom: 18 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <InfoIcon size={14} />
-        <span style={{ fontWeight: 700, fontSize: 13, color: THEME.heading }}>Estimated next-period GPA: {projection.predicted_gpa}</span>
+        <span style={{ fontWeight: 700, fontSize: 13, color: THEME.heading }}>{t("an.projTitle", { gpa: projection.predicted_gpa })}</span>
       </div>
       <div style={{ fontSize: 11.5, color: THEME.muted, lineHeight: 1.5 }}>
-        A rough estimate from the trend line so far - <strong>not a guarantee</strong>. The trend so far points toward {pointsTowardImprovement ? "improvement" : "decline"}. Treat this as an early signal to check in with the student, not as a final verdict.
+        {t("an.projText1")} <strong>{t("an.projNotGuarantee")}</strong>. {pointsTowardImprovement ? t("an.projUp") : t("an.projDown")} {t("an.projText2")}
       </div>
     </div>
   );
@@ -533,17 +540,18 @@ function ChartCard({ title, sub, direction, directionGoodWhen = "improving", chi
 }
 
 function TrendBadge({ direction, goodWhen = "improving" }) {
+  const { t } = useLang();
   if (!direction || direction === "insufficient_data") {
-    return <span style={{ ...badge, background: THEME.bg, color: THEME.muted, border: `1px solid ${THEME.border}` }}><TrendingFlatIcon size={12} />Not enough data yet</span>;
+    return <span style={{ ...badge, background: THEME.bg, color: THEME.muted, border: `1px solid ${THEME.border}` }}><TrendingFlatIcon size={12} />{t("an.notEnough")}</span>;
   }
   if (direction === "stable") {
-    return <span style={{ ...badge, background: THEME.bg, color: THEME.muted, border: `1px solid ${THEME.border}` }}><TrendingFlatIcon size={12} />Stable</span>;
+    return <span style={{ ...badge, background: THEME.bg, color: THEME.muted, border: `1px solid ${THEME.border}` }}><TrendingFlatIcon size={12} />{t("an.stable")}</span>;
   }
   const isGood = direction === goodWhen;
   const Icon = direction === "improving" ? TrendingUpIcon : TrendingDownIcon;
   return (
     <span style={{ ...badge, background: isGood ? THEME.successLight : THEME.dangerLight, color: isGood ? THEME.success : THEME.danger }}>
-      <Icon size={12} />{direction === "improving" ? "Improving" : "Declining"}
+      <Icon size={12} />{direction === "improving" ? t("an.improving") : t("an.declining")}
     </span>
   );
 }

@@ -8,7 +8,7 @@
 // backend/src/utils/auditLogger.js - this page only reads them.
 import { useState, useEffect, useCallback, Fragment } from "react";
 import { useAuth } from "../context/AuthContext";
-import { STRINGS } from "../i18n";
+import { STRINGS, useLang } from "../i18n";
 import { formatDate as fmtDate } from "../i18n/display";
 import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
