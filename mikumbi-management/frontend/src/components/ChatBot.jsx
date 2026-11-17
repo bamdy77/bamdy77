@@ -66,6 +66,21 @@ export default function ChatBot() {
   // opening. Treating tablet the same as mobile for this widget's own
   // layout (it's a small floating widget, not the main page grid) fixes it.
   const compact = isMobile || isTablet;
+
+  // On real phones the on-screen keyboard usually does NOT shrink the page;
+  // it only covers the bottom of the screen (the "visual viewport" shrinks).
+  // A chat panel anchored to the bottom would then sit behind the keyboard
+  // with the typing box hidden. We follow the visible area instead: while
+  // the keyboard is up, the panel fills the space above it.
+  const [vv, setVv] = useState(null); // { h, top } of the visible area
+  useEffect(() => {
+    const v = window.visualViewport;
+    const update = () => setVv(v ? { h: v.height, top: v.offsetTop } : { h: window.innerHeight, top: 0 });
+    update();
+    v?.addEventListener("resize", update); v?.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => { v?.removeEventListener("resize", update); v?.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
+  }, []);
   const { token, user } = useAuth();
   const isManager = [user?.role, ...(user?.roles || [])].some((r) => r === "admin" || r === "second_master");
   const location = useLocation();
@@ -105,7 +120,7 @@ export default function ChatBot() {
   const openPanelPos = () => {
     if (!pos) return null;
     const panelW = compact ? Math.min(400, window.innerWidth - 24) : 330;
-    const panelH = compact ? Math.min(window.innerHeight * 0.7, 480) : 440;
+    const panelH = compact ? Math.min(window.innerHeight * 0.7, 480) : Math.min(440, window.innerHeight - 110);
     const totalH = panelH + 12 + 58; // panel + gap + toggle button, stacked
     return {
       x: Math.min(Math.max(0, pos.x), Math.max(0, window.innerWidth - panelW)),
@@ -199,9 +214,15 @@ export default function ChatBot() {
   };
 
   const activePos = pos ? (open ? openPanelPos() : pos) : null;
+  // Keyboard up (visible area clearly shorter than the page): pin the panel
+  // to the top of the visible area and give it all of that height.
+  const keyboardUp = open && compact && vv && vv.h < window.innerHeight - 120;
 
   return (
-    <div ref={wrapRef} style={activePos ? {
+    <div ref={wrapRef} style={keyboardUp ? {
+      position: "fixed", zIndex: 9999, fontFamily: "inherit",
+      display: "flex", flexDirection: "column", left: 12, right: 12, top: vv.top + 8,
+    } : activePos ? {
       position: "fixed", zIndex: 9999, fontFamily: "inherit",
       display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12,
       left: activePos.x, top: activePos.y,
@@ -233,7 +254,7 @@ export default function ChatBot() {
           // ambiguity entirely and fixes this on phones for good.
           width: compact ? "calc(100vw - 24px)" : 330,
           maxWidth: compact ? "calc(100vw - 24px)" : 330,
-          height: compact ? "min(70vh, 480px)" : 440,
+          height: keyboardUp ? Math.max(160, vv.h - 16) : compact ? "min(70vh, 480px)" : "min(440px, calc(100vh - 110px))",
           background: THEME.surface, borderRadius: 4,
           boxShadow: "0 12px 32px rgba(15,23,42,0.25)", display: "flex", flexDirection: "column",
           overflow: "hidden", border: `1px solid ${THEME.border}`,
@@ -308,7 +329,9 @@ export default function ChatBot() {
         style={{
           width: 58, height: 58, borderRadius: "50%", background: THEME.navy, border: "none",
           boxShadow: "0 8px 20px rgba(42,60,127,0.4)", cursor: "grab",
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          // While the keyboard is up the round button is hidden (the panel's own
+          // close button is in its header) so the typing box gets the space.
+          display: keyboardUp ? "none" : "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           touchAction: "none",
         }}
       >
