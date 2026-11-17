@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { useLang } from "../i18n";
+import { formLabel } from "../i18n/display";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import { THEME } from "../styles/theme";
@@ -24,6 +26,7 @@ const CHECKER_BG = {
 
 export default function SignatureSettings() {
   const { user, token } = useAuth();
+  const { t } = useLang();
   const { isMobile } = useBreakpoint();
   const { confirm, ConfirmDialogPortal } = useConfirm();
   const [brand, setBrand] = useState({ headmaster_signature_url: null, school_stamp_url: null });
@@ -53,33 +56,33 @@ export default function SignatureSettings() {
   if (!isAdminTier && !isClassTeacher) {
     return (
       <div style={{ padding: 40, maxWidth: 560 }}>
-        <h2 style={{ color: THEME.heading, fontSize: 20, marginBottom: 8 }}>Signature &amp; Stamp</h2>
-        <p style={{ color: THEME.muted, fontSize: 13.5 }}>This page is only available to Admin, Second Master, Academic, and Class Teacher accounts.</p>
+        <h2 style={{ color: THEME.heading, fontSize: 20, marginBottom: 8 }}>{t("set.signature")}</h2>
+        <p style={{ color: THEME.muted, fontSize: 13.5 }}>{t("sig.onlyRoles")}</p>
       </div>
     );
   }
 
   return (
     <div style={{ padding: isMobile ? "16px 12px 32px" : "24px 16px 40px", maxWidth: 900, margin: "0 auto" }}>
-      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 17 : 20, marginBottom: 4 }}>Signature &amp; Stamp</h2>
+      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 17 : 20, marginBottom: 4 }}>{t("set.signature")}</h2>
       <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 4, maxWidth: 640 }}>
-        These images are stamped automatically onto every Parent Report PDF - no manual step needed each time it's generated.
+        {t("sig.intro")}
       </p>
       <p style={{ color: THEME.muted, fontSize: 12.5, marginBottom: 24, maxWidth: 640, display: "flex", gap: 6, alignItems: "flex-start" }}>
         <span style={{ marginTop: 1, flexShrink: 0 }}><InfoIcon size={13} /></span>
-        Take a clear photo of the signature or stamp on a plain sheet of paper. The white paper background is removed automatically, so it prints as if signed directly on the report.
+        {t("sig.photoTip")}
       </p>
 
       {error && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "10px 14px", borderRadius: 4, fontSize: 13, marginBottom: 18 }}>{error}</div>}
       {loading ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: THEME.muted, fontSize: 13.5 }}><SpinnerIcon size={16} /> Loading…</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: THEME.muted, fontSize: 13.5 }}><SpinnerIcon size={16} /> {t("common.loading")}</div>
       ) : (
         <>
           {isAdminTier && (
-            <Section title="Head Master's Signature &amp; School Stamp" subtitle="The School Stamp appears on every Parent Report (&quot;MHURI YA MKUU WA SHULE&quot; line). The Head Master's Signature is used on the Student Identity Card only — per policy, it is never printed on Parent Reports.">
+            <Section title={t("sig.hmTitle")} subtitle={t("sig.hmSub")}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
                 <ImageSlot
-                  label="Head Master's Signature"
+                  label={t("sig.hmSignature")}
                   imageUrl={brand.headmaster_signature_url}
                   token={token}
                   uploadPath="/settings/branding/signature"
@@ -88,7 +91,7 @@ export default function SignatureSettings() {
                   confirm={confirm}
                 />
                 <ImageSlot
-                  label="School Stamp"
+                  label={t("sig.stamp")}
                   imageUrl={brand.school_stamp_url}
                   token={token}
                   uploadPath="/settings/branding/stamp"
@@ -101,12 +104,8 @@ export default function SignatureSettings() {
           )}
 
           <Section
-            title="Class Teacher Signature"
-            subtitle={
-              isAdminTier
-                ? "Used on the \u201cSahihi\u201d line under the Class Teacher's comment. Choose a Form to upload or replace that class's Class Teacher's signature on their behalf."
-                : "Used on the \u201cSahihi\u201d line under your comment on your class's Parent Reports."
-            }
+            title={t("sig.ctTitle")}
+            subtitle={isAdminTier ? t("sig.ctSubAdmin") : t("sig.ctSubOwn")}
           >
             <ClassTeacherSection
               isAdminTier={isAdminTier}
@@ -129,33 +128,34 @@ export default function SignatureSettings() {
 function Section({ title, subtitle, children }) {
   return (
     <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "18px 18px 22px", marginBottom: 20 }}>
-      <h3 style={{ fontSize: 14.5, color: THEME.heading, margin: "0 0 4px", fontWeight: 700 }} dangerouslySetInnerHTML={{ __html: title }} />
-      {subtitle && <p style={{ fontSize: 12.5, color: THEME.muted, margin: "0 0 16px", maxWidth: 560 }} dangerouslySetInnerHTML={{ __html: subtitle }} />}
+      <h3 style={{ fontSize: 14.5, color: THEME.heading, margin: "0 0 4px", fontWeight: 700 }}>{title}</h3>
+      {subtitle && <p style={{ fontSize: 12.5, color: THEME.muted, margin: "0 0 16px", maxWidth: 560 }}>{subtitle}</p>}
       {children}
     </div>
   );
 }
 
 function ClassTeacherSection({ isAdminTier, user, ctSigs, token, onDone, confirm }) {
+  const { t, lang } = useLang();
   const [selectedForm, setSelectedForm] = useState(user.class_teacher_of || FORMS[0]);
 
   if (isAdminTier) {
     return (
       <div>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: THEME.text, marginBottom: 6 }}>Form</label>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: THEME.text, marginBottom: 6 }}>{t("sig.form")}</label>
           <select
             value={selectedForm}
             onChange={(e) => setSelectedForm(e.target.value)}
             style={{ padding: "8px 12px", borderRadius: 4, border: `1px solid ${THEME.border}`, fontSize: 13.5, background: THEME.surface, color: THEME.text, minWidth: 160 }}
           >
-            {FORMS.map((f) => <option key={f} value={f}>{f}</option>)}
+            {FORMS.map((f) => <option key={f} value={f}>{formLabel(lang, f)}</option>)}
           </select>
         </div>
         <div style={{ maxWidth: 260 }}>
           <ImageSlot
             key={selectedForm}
-            label={`${selectedForm} Class Teacher's Signature`}
+            label={t("sig.ctSignatureOf", { form: formLabel(lang, selectedForm) })}
             imageUrl={ctSigs[selectedForm]}
             token={token}
             uploadPath="/settings/class-teacher-signature"
@@ -170,13 +170,13 @@ function ClassTeacherSection({ isAdminTier, user, ctSigs, token, onDone, confirm
   }
 
   if (!user.class_teacher_of) {
-    return <p style={{ fontSize: 13, color: THEME.muted }}>You are not currently assigned as a Class Teacher of any Form, so there is no signature slot for you yet. Ask an Admin, Second Master, or Academic to assign you to a class.</p>;
+    return <p style={{ fontSize: 13, color: THEME.muted }}>{t("sig.notCt")}</p>;
   }
 
   return (
     <div style={{ maxWidth: 260 }}>
       <ImageSlot
-        label={`Your Signature (${user.class_teacher_of} Class Teacher)`}
+        label={t("sig.yourSignature", { form: formLabel(lang, user.class_teacher_of) })}
         imageUrl={ctSigs[user.class_teacher_of]}
         token={token}
         uploadPath="/settings/class-teacher-signature"
@@ -193,6 +193,7 @@ function ClassTeacherSection({ isAdminTier, user, ctSigs, token, onDone, confirm
 // types (Head Master signature, school stamp, a Form's Class Teacher
 // signature) - they differ only in which endpoint they talk to.
 function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormField, onDone, confirm }) {
+  const { t } = useLang();
   const [busy, setBusy] = useState(false);
   const [busyLabel, setBusyLabel] = useState("");
   const [err, setErr] = useState("");
@@ -231,29 +232,29 @@ function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormFi
       const beforeUrl = URL.createObjectURL(file);
       const beforeSize = await readImageSize(beforeUrl);
 
-      setBusyLabel("Removing background…");
+      setBusyLabel(t("sig.removingBg"));
       const { file: processed, processed: bgRemoved } = await removePaperBackground(file);
       const afterUrl = URL.createObjectURL(processed);
       const afterSize = await readImageSize(afterUrl);
       setCheckResult({ beforeUrl, afterUrl, beforeSize, afterSize, processed: bgRemoved });
 
-      setBusyLabel("Uploading…");
+      setBusyLabel(t("acct.uploading"));
       const fd = new FormData();
       fd.append("image", processed);
       if (extraFormField) fd.append("form", extraFormField);
       await apiFetch(uploadPath, { method: "POST", body: fd }, token);
       if (bgRemoved) {
-        showSuccess("Uploaded", `${label} has been saved.`);
+        showSuccess(t("sig.uploadedTitle"), t("sig.saved", { label }));
       } else {
         // Never block the upload over this - but be honest that the photo
         // went up AS-IS, so it's clear why it won't look "cut out" on the
         // report, instead of a silent mismatch between what was expected
         // and what actually got saved.
-        setErr("Uploaded, but the background couldn't be automatically removed from this photo - it was saved as-is. Try a clearer, evenly-lit photo with plain paper around the ink, or a different photo file.");
+        setErr(t("sig.bgNotRemoved"));
       }
       onDone();
     } catch (error) {
-      setErr(error.message || "Upload failed. Please try again.");
+      setErr(error.message || t("sig.uploadFailed"));
     } finally {
       setBusy(false);
       setBusyLabel("");
@@ -261,9 +262,9 @@ function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormFi
   };
 
   const handleRemove = () => {
-    confirm(`Remove ${label.toLowerCase()}?`, async () => {
+    confirm(t("sig.removeConfirm", { label }), async () => {
       setBusy(true);
-      setBusyLabel("Removing…");
+      setBusyLabel(t("acct.removing"));
       setErr("");
       try {
         const qs = extraFormField ? `?form=${encodeURIComponent(extraFormField)}` : "";
@@ -271,7 +272,7 @@ function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormFi
         setCheckResult(null);
         onDone();
       } catch (error) {
-        setErr(error.message || "Could not remove. Please try again.");
+        setErr(error.message || t("sig.removeFailed"));
       } finally {
         setBusy(false);
         setBusyLabel("");
@@ -297,7 +298,7 @@ function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormFi
         ) : imageUrl ? (
           <img src={imageUrl} alt={label} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
         ) : (
-          <span style={{ fontSize: 11.5, color: THEME.muted }}>Not uploaded yet</span>
+          <span style={{ fontSize: 11.5, color: THEME.muted }}>{t("sig.notUploaded")}</span>
         )}
       </div>
       {err && <p style={{ fontSize: 11.5, color: THEME.danger, margin: "0 0 8px" }}>{err}</p>}
@@ -308,14 +309,14 @@ function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormFi
           disabled={busy}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 4, border: `1px solid ${THEME.navy}`, background: THEME.navy, color: "#fff", fontSize: 12, fontWeight: 600, cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1 }}
         >
-          <ArrowUpCircleIcon size={13} /> {imageUrl ? "Replace" : "Upload"}
+          <ArrowUpCircleIcon size={13} /> {imageUrl ? t("sig.replace") : t("sig.upload")}
         </button>
         {imageUrl && !busy && (
           <button
             onClick={handleRemove}
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 4, border: `1px solid ${THEME.border}`, background: THEME.surface, color: THEME.danger, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
           >
-            <TrashIcon size={13} /> Remove
+            <TrashIcon size={13} /> {t("sig.remove")}
           </button>
         )}
       </div>
@@ -323,19 +324,19 @@ function ImageSlot({ label, imageUrl, token, uploadPath, deletePath, extraFormFi
       {checkResult && (
         <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px dashed ${THEME.border}` }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: THEME.heading, margin: "0 0 6px" }}>
-            Background check: {checkResult.processed ? "removed successfully" : "NOT removed (see message above)"}
+            {checkResult.processed ? t("sig.bgOk") : t("sig.bgFail")}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <div>
-              <p style={{ fontSize: 10, color: THEME.muted, margin: "0 0 4px" }}>Before ({checkResult.beforeSize})</p>
+              <p style={{ fontSize: 10, color: THEME.muted, margin: "0 0 4px" }}>{t("sig.before", { size: checkResult.beforeSize })}</p>
               <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, height: 70, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", overflow: "hidden" }}>
-                <img src={checkResult.beforeUrl} alt="before" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                <img src={checkResult.beforeUrl} alt={t("sig.before", { size: "" })} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
               </div>
             </div>
             <div>
-              <p style={{ fontSize: 10, color: THEME.muted, margin: "0 0 4px" }}>After ({checkResult.afterSize})</p>
+              <p style={{ fontSize: 10, color: THEME.muted, margin: "0 0 4px" }}>{t("sig.after", { size: checkResult.afterSize })}</p>
               <div style={{ ...CHECKER_BG, border: `1px solid ${THEME.border}`, borderRadius: 4, height: 70, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                <img src={checkResult.afterUrl} alt="after" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                <img src={checkResult.afterUrl} alt={t("sig.after", { size: "" })} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
               </div>
             </div>
           </div>

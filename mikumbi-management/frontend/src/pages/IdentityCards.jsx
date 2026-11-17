@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useLang } from "../i18n";
+import { formLabel } from "../i18n/display";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch, API_BASE } from "../utils/api";
@@ -10,6 +12,7 @@ const FORMS = ["Form I", "Form II", "Form III", "Form IV"];
 
 export default function IdentityCards() {
   const { token } = useAuth();
+  const { t, lang } = useLang();
   const navigate = useNavigate();
   const { isMobile, isTablet } = useBreakpoint();
   // Phones AND tablets alike are treated as "not desktop" here: neither
@@ -71,7 +74,7 @@ export default function IdentityCards() {
   };
 
   const doPreview = async () => {
-    if (!selected.size) { setError("Select at least one student."); return; }
+    if (!selected.size) { setError(t("idc.selectOne")); return; }
     setError(""); setBusy(true);
     try {
       const blob = await fetchCardsPdf();
@@ -91,7 +94,7 @@ export default function IdentityCards() {
   };
 
   const doDownload = async () => {
-    if (!selected.size) { setError("Select at least one student."); return; }
+    if (!selected.size) { setError(t("idc.selectOne")); return; }
     setError(""); setBusy(true);
     try {
       const blob = await fetchCardsPdf();
@@ -109,7 +112,7 @@ export default function IdentityCards() {
   // full browser tab uses the browser's native, full-featured PDF viewer
   // instead, where Print/Cancel behave normally.
   const doPrint = async () => {
-    if (!selected.size) { setError("Select at least one student."); return; }
+    if (!selected.size) { setError(t("idc.selectOne")); return; }
     setError(""); setBusy(true);
     try {
       const blob = await fetchCardsPdf();
@@ -120,27 +123,27 @@ export default function IdentityCards() {
 
   return (
     <div style={{ padding: isMobile ? "16px 12px" : 32, maxWidth: 1100 }}>
-      <button onClick={() => navigate("/dashboard/students")} style={backBtn}>← Back to Student Management</button>
-      <h2 style={{ color: THEME.heading, fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Student Identity Cards</h2>
+      <button onClick={() => navigate("/dashboard/students")} style={backBtn}>← {t("idc.back")}</button>
+      <h2 style={{ color: THEME.heading, fontSize: 22, fontWeight: 800, marginBottom: 4 }}>{t("idc.title")}</h2>
       <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 20 }}>
-        Uses each student's existing enrollment photo (background already replaced automatically) — no separate photo session needed.
+        {t("idc.intro")}
       </p>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
         <select value={form} onChange={(e) => setForm(e.target.value)} style={selectStyle}>
-          {FORMS.map((f) => <option key={f} value={f}>{f}</option>)}
+          {FORMS.map((f) => <option key={f} value={f}>{formLabel(lang, f)}</option>)}
         </select>
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name..." style={{ ...selectStyle, flex: 1, minWidth: 160 }} />
-        <button onClick={selectAllVisible} style={secondaryBtn}>Select All</button>
-        <button onClick={clearSelection} style={secondaryBtn}>Clear Selection</button>
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("idc.searchPh")} style={{ ...selectStyle, flex: 1, minWidth: 160 }} />
+        <button onClick={selectAllVisible} style={secondaryBtn}>{t("idc.selectAll")}</button>
+        <button onClick={clearSelection} style={secondaryBtn}>{t("idc.clear")}</button>
       </div>
 
       {error && <p style={{ color: THEME.danger, fontSize: 12.5, marginBottom: 12 }}>{error}</p>}
 
       {students === null ? (
-        <p style={{ color: THEME.muted, fontSize: 13.5, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={14} /> Loading...</p>
+        <p style={{ color: THEME.muted, fontSize: 13.5, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={14} /> {t("common.loading")}</p>
       ) : !students.length ? (
-        <p style={{ color: THEME.muted, fontSize: 13.5 }}>No students found.</p>
+        <p style={{ color: THEME.muted, fontSize: 13.5 }}>{t("idc.none")}</p>
       ) : (
         <div style={{
           display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(230px, 1fr))",
@@ -169,9 +172,9 @@ export default function IdentityCards() {
       )}
 
       <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: THEME.text }}>{selected.size} selected</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: THEME.text }}>{t("idc.selected", { n: selected.size })}</span>
         <div style={{ display: "flex", gap: 10 }}>
-          {[["single", "One Per Page"], ["grid", "Multiple Per Page"]].map(([val, label]) => (
+          {[["single", t("idc.onePerPage")], ["grid", t("idc.manyPerPage")]].map(([val, label]) => (
             <label key={val} style={{
               display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 4,
               border: `1.5px solid ${layout === val ? THEME.navy : THEME.border}`,
@@ -185,14 +188,14 @@ export default function IdentityCards() {
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-        <button onClick={doPreview} disabled={busy} style={secondaryBtn}>{busy ? "..." : "Preview"}</button>
-        <button onClick={doPrint} disabled={busy} style={secondaryBtn}>{busy ? "..." : "Print"}</button>
-        <button onClick={doDownload} disabled={busy} style={primaryBtn}>{busy ? "..." : "Download / Print PDF"}</button>
+        <button onClick={doPreview} disabled={busy} style={secondaryBtn}>{busy ? "..." : t("idc.preview")}</button>
+        <button onClick={doPrint} disabled={busy} style={secondaryBtn}>{busy ? "..." : t("idc.print")}</button>
+        <button onClick={doDownload} disabled={busy} style={primaryBtn}>{busy ? "..." : t("idc.download")}</button>
       </div>
 
       {previewUrl && (
         <div>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.heading, marginBottom: 4 }}>Preview — this is how it will print</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.heading, marginBottom: 4 }}>{t("idc.previewTitle")}</h3>
           {isHandheld ? (
             // No embedded PDF viewer to show inline here on a phone/tablet
             // - it already opened in its own tab (see doPreview) where the
@@ -201,16 +204,16 @@ export default function IdentityCards() {
             // automatic open was blocked as a pop-up.
             <div style={{ background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 18, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10 }}>
               <p style={{ fontSize: 12.5, color: THEME.muted, margin: 0 }}>
-                The preview opened in a new tab — phones and tablets don't have a way to show a PDF inside this page directly. If nothing opened (some browsers block pop-ups), tap the button below.
+                {t("idc.previewPhone")}
               </p>
-              <button onClick={() => window.open(previewUrl, "_blank")} style={secondaryBtn}>Open Preview</button>
+              <button onClick={() => window.open(previewUrl, "_blank")} style={secondaryBtn}>{t("idc.openPreview")}</button>
             </div>
           ) : (
             <>
               <p style={{ fontSize: 11.5, color: THEME.muted, marginBottom: 8 }}>
-                To print, use the "Print" button above instead of the print icon inside this preview. If the box below looks empty, <a href={previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: THEME.link, fontWeight: 600 }}>open the preview in a new tab</a> instead.
+                {t("idc.printTip")} <a href={previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: THEME.link, fontWeight: 600 }}>{t("idc.openNewTab")}</a>
               </p>
-              <iframe title="Identity Card Preview" src={previewUrl} style={{ width: "100%", height: 700, border: `1px solid ${THEME.border}`, borderRadius: 4 }} />
+              <iframe title={t("idc.previewFrame")} src={previewUrl} style={{ width: "100%", height: 700, border: `1px solid ${THEME.border}`, borderRadius: 4 }} />
             </>
           )}
         </div>

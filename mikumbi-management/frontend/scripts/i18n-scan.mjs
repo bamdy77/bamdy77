@@ -30,6 +30,7 @@ export const DONE = [
   "src/components/FontChooser.jsx", "src/components/PasswordInput.jsx", "src/components/InstallAppButton.jsx",
   "src/components/ActionMenu.jsx", "src/pages/DashboardHome.jsx", "src/components/VisitorStats.jsx", "src/components/ChatBot.jsx",
   "src/components/ExamTypesManager.jsx", "src/pages/AuditLog.jsx", "src/pages/BackupSettings.jsx", "src/pages/SmsGatewaySettings.jsx",
+  "src/pages/SignatureSettings.jsx", "src/pages/IdentityCards.jsx", "src/pages/ParentVideosTab.jsx",
 ];
 // Never visible text (icons, data, generated files).
 const IGNORE = ["src/components/icons.jsx", "src/data/locations.js", "src/components/FeatureIcons.jsx"];
