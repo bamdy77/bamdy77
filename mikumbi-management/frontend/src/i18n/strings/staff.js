@@ -228,7 +228,7 @@ const STAFF_STRINGS = {
   "chat.open": { en: "Open the System Assistant - press and hold to move it", sw: "Fungua Msaidizi wa Mfumo - bonyeza na ushikilie kuisogeza" },
   "chat.slow": { en: "Still preparing a full answer…", sw: "Bado ninaandaa jibu kamili…" },
   "chat.err.notConfigured": { en: "The System Assistant is not set up yet, so it cannot answer right now.", sw: "Msaidizi wa Mfumo bado haujawekwa tayari, kwa hiyo hauwezi kujibu kwa sasa." },
-  "chat.err.invalidKey": { en: "The System Assistant cannot connect to its service (the access key was refused).", sw: "Msaidizi wa Mfumo hauwezi kuunganishwa na huduma yake (ufunguo wa kuingia umekataliwa)." },
+  "chat.err.invalidKey": { en: "The System Assistant cannot work right now because of a technical problem.", sw: "Msaidizi wa Mfumo hauwezi kufanya kazi kwa sasa kwa sababu ya tatizo la kiufundi." },
   "chat.err.quota": { en: "The System Assistant has reached its usage limit for now. Please try again later.", sw: "Msaidizi wa Mfumo umefikia kikomo cha matumizi kwa sasa. Tafadhali jaribu tena baadaye." },
   "chat.err.timeout": { en: "The answer took too long. Please try again, or ask a shorter question.", sw: "Jibu limechukua muda mrefu mno. Tafadhali jaribu tena, au uliza swali fupi zaidi." },
   "chat.err.model": { en: "The System Assistant's service is not available right now. Please try again later.", sw: "Huduma ya Msaidizi wa Mfumo haipatikani kwa sasa. Tafadhali jaribu tena baadaye." },
@@ -236,8 +236,8 @@ const STAFF_STRINGS = {
   "chat.err.rateLimited": { en: "Too many questions in a short time. Please wait a few minutes and try again.", sw: "Maswali mengi kwa muda mfupi. Tafadhali subiri dakika chache kisha ujaribu tena." },
   "chat.err.network": { en: "I could not reach the server. Check your internet connection and try again.", sw: "Sikuweza kufikia seva. Angalia mtandao wako kisha ujaribu tena." },
   "chat.err.generic": { en: "Sorry, something went wrong and I couldn't get an answer. Please try again.", sw: "Samahani, hitilafu imetokea na sikuweza kupata jibu. Tafadhali jaribu tena." },
-  "chat.fix.key": { en: "How to fix (Head Master / Second Master): on Render, open the backend service → Environment, set GEMINI_API_KEY to a key from aistudio.google.com/apikey, then save (the service restarts by itself).", sw: "Jinsi ya kurekebisha (Mkuu wa Shule / Second Master): kwenye Render, fungua huduma ya backend → Environment, weka GEMINI_API_KEY kwa ufunguo kutoka aistudio.google.com/apikey, kisha hifadhi (huduma itawaka upya yenyewe)." },
-  "chat.fix.quota": { en: "How to fix: the free Gemini limit is used up for now. Wait (it resets daily) or enable billing for the key in Google AI Studio.", sw: "Jinsi ya kurekebisha: kikomo cha bure cha Gemini kimeisha kwa sasa. Subiri (kinarudi kila siku) au wezesha malipo kwa ufunguo huo kwenye Google AI Studio." },
-  "chat.fix.model": { en: "How to fix: the Gemini model name may have changed. On Render set GEMINI_MODEL to a current model name (for example gemini-flash-latest).", sw: "Jinsi ya kurekebisha: huenda jina la model ya Gemini limebadilika. Kwenye Render weka GEMINI_MODEL kuwa jina la model iliyopo sasa (mfano gemini-flash-latest)." },
+  "chat.fix.key": { en: "Please inform the system's technical administrator so they can set it up.", sw: "Tafadhali mjulishe msimamizi wa kiufundi wa mfumo ili aurekebishe." },
+  "chat.fix.quota": { en: "The daily limit usually resets the next day. If the problem continues, please inform the system's technical administrator.", sw: "Kikomo hiki kwa kawaida kinarudi siku inayofuata. Tatizo likiendelea, tafadhali mjulishe msimamizi wa kiufundi wa mfumo." },
+  "chat.fix.model": { en: "Please inform the system's technical administrator.", sw: "Tafadhali mjulishe msimamizi wa kiufundi wa mfumo." },
 };
 export default STAFF_STRINGS;

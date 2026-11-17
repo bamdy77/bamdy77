@@ -16,8 +16,8 @@ const REASON_KEYS = {
   timeout: "chat.err.timeout", model_unavailable: "chat.err.model", blocked: "chat.err.blocked",
   rate_limited: "chat.err.rateLimited", network: "chat.err.network", error: "chat.err.generic",
 };
-// Only the Head Master / Second Master can fix a missing or wrong key on
-// Render, so only they see the "how to fix" line.
+// The Head Master / Second Master also see who to tell (the technical
+// administrator who manages the server); other staff see the message only.
 const ADMIN_FIX = { not_configured: "chat.fix.key", invalid_key: "chat.fix.key", quota: "chat.fix.quota", model_unavailable: "chat.fix.model" };
 
 // Maps a /dashboard/<segment> route to the exact module label the backend
