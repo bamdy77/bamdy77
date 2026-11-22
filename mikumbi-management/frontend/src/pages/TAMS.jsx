@@ -9,6 +9,7 @@ import { PasswordInput } from "../components/PasswordInput";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { showSuccess } from "../components/SuccessModal";
 import { ShieldIcon, ClockIcon, CalendarIcon, DownloadIcon, LocationPinIcon, BarChartIcon, SpinnerIcon } from "../components/icons";
+import { useLang } from "../i18n";
 
 // Reads "what hour is it right now in Africa/Dar_es_Salaam" directly via
 // Intl.DateTimeFormat, WITHOUT building a locale string and re-parsing it
@@ -52,13 +53,14 @@ export default function TAMS() {
 // else's (Second Master, or anyone holding two roles like Academic + Matron)
 // gets a small switch between the two views instead of only one.
 function DualView() {
+  const { t } = useLang();
   const [view, setView] = useState("admin"); // admin | mine
   const { isMobile } = useBreakpoint();
   return (
     <div>
       <div style={{ display: "flex", gap: 8, padding: isMobile ? "16px 14px 0" : "24px 40px 0" }}>
-        <button onClick={() => setView("admin")} style={{ ...(view === "admin" ? tabActive : tabInactive), ...(isMobile ? { flex: 1 } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}><ShieldIcon size={14} />Admin Overview</button>
-        <button onClick={() => setView("mine")} style={{ ...(view === "mine" ? tabActive : tabInactive), ...(isMobile ? { flex: 1 } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}><ClockIcon size={14} />My Attendance</button>
+        <button onClick={() => setView("admin")} style={{ ...(view === "admin" ? tabActive : tabInactive), ...(isMobile ? { flex: 1 } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}><ShieldIcon size={14} />{t("tams.adminOverview")}</button>
+        <button onClick={() => setView("mine")} style={{ ...(view === "mine" ? tabActive : tabInactive), ...(isMobile ? { flex: 1 } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}><ClockIcon size={14} />{t("tams.myAttendance")}</button>
       </div>
       {view === "admin" ? <AdminDashboard /> : <TeacherCheckIn />}
     </div>
@@ -67,6 +69,7 @@ function DualView() {
 
 // ══════════════════ TEACHER VIEW ══════════════════
 function TeacherCheckIn() {
+  const { t } = useLang();
   const { token, user } = useAuth();
   const { isMobile } = useBreakpoint();
   const [status, setStatus] = useState("idle"); // idle | locating | submitting | done | error
@@ -131,7 +134,7 @@ function TeacherCheckIn() {
   const doCheckIn = () => {
     if (!allChecked) {
       setStatus("error");
-      setMessage("Please complete every item on the checklist above before checking in.");
+      setMessage(t("tams.completeChecklist"));
       return;
     }
     setStatus("locating");
@@ -152,7 +155,7 @@ function TeacherCheckIn() {
           setStatus("done");
           setMessage(data.message);
           setDistanceM(data.distanceM ?? null);
-          showSuccess("Attendance", `${data.message}${data.distanceM != null ? ` (${data.distanceM}m from school)` : ""}`);
+          showSuccess(t("tams.attendance"), `${data.message}${data.distanceM != null ? ` (${t("tams.mFromSchool", { m: data.distanceM })})` : ""}`);
           apiFetch("/tams/my-history", {}, token).then((d) => setHistory(d.history || [])).catch(() => {});
         } catch (err) {
           setStatus("error");
@@ -160,50 +163,50 @@ function TeacherCheckIn() {
           setMessage(err.message);
         }
       },
-      () => { setStatus("error"); setGps("denied"); setMessage("Could not get GPS - please allow 'Location' access in your browser."); },
+      () => { setStatus("error"); setGps("denied"); setMessage(t("tams.gpsError")); },
       { enableHighAccuracy: true, timeout: 15000 }
     );
   };
 
   return (
     <div style={{ padding: isMobile ? "20px 16px" : 40, maxWidth: 480 }}>
-      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 17 : 20, marginBottom: 6 }}>TAMS-TEACHER DASHBOARD</h2>
+      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 17 : 20, marginBottom: 6 }}>{t("tams.teacherDashboard")}</h2>
       <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 20 }}>
-        Complete the checklist below, then tap "Mark Attendance", between 6:00–8:00 AM.
+        {t("tams.checklistIntro")}
       </p>
 
       <div style={{ marginBottom: 14 }}>
-        <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Your full name (as registered):</label>
-        <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. John Peter Mwakasege" style={{
+        <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>{t("tams.fullNameLabel")}</label>
+        <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("tams.namePh")} style={{
           width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13.5,
         }} />
       </div>
 
       <div style={{ marginBottom: 18 }}>
-        <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Your password:</label>
+        <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>{t("tams.passwordLabel")}</label>
         <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} style={{ fontSize: 13.5 }} />
       </div>
 
       <div style={{ marginBottom: 18, background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "10px 14px" }}>
-        <ChecklistItem ok={nameOk} label="Full name matches User Accounts" />
-        <ChecklistItem ok={passwordOk} label="Password entered" />
-        <ChecklistItem ok={gpsOk} label="GPS location enabled">
+        <ChecklistItem ok={nameOk} label={t("tams.checkName")} />
+        <ChecklistItem ok={passwordOk} label={t("tams.checkPassword")} />
+        <ChecklistItem ok={gpsOk} label={t("tams.checkGps")}>
           {gps === "denied" && (
             <button
               type="button"
               onClick={() => setGpsRetryTick((t) => t + 1)}
               style={{ marginLeft: 6, fontSize: 12, fontWeight: 600, color: THEME.heading, background: "none", border: "none", textDecoration: "underline", cursor: "pointer", padding: 0 }}
             >
-              Jaribu tena
+              {t("tams.retry")}
             </button>
           )}
         </ChecklistItem>
-        <ChecklistItem ok={windowOk} label="Within the registration window (6:00–8:00 AM)" />
+        <ChecklistItem ok={windowOk} label={t("tams.checkWindow")} />
       </div>
 
       {needsReason && (
         <div style={{ marginBottom: 14 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Reason for being late:</label>
+          <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>{t("tams.lateReasonLabel")}</label>
           <input value={lateReason} onChange={(e) => setLateReason(e.target.value.slice(0, 75))} maxLength={75} style={{
             width: "100%", padding: "10px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13.5,
           }} />
@@ -218,7 +221,7 @@ function TeacherCheckIn() {
         display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
       }}>
         {status === "locating" || status === "submitting" ? <SpinnerIcon size={16} /> : <LocationPinIcon size={16} />}
-        {status === "locating" ? "Getting your location (GPS)..." : status === "submitting" ? "Submitting..." : "MARK ATTENDANCE"}
+        {status === "locating" ? t("tams.locating") : status === "submitting" ? t("tams.submitting") : t("tams.markAttendance")}
       </button>
 
       {message && (
@@ -228,14 +231,14 @@ function TeacherCheckIn() {
           color: status === "done" ? THEME.success : THEME.danger,
         }}>
           {message}
-          {status === "done" && distanceM != null && <span> - you signed in {distanceM}m from school.</span>}
+          {status === "done" && distanceM != null && <span>{t("tams.signedInDistance", { m: distanceM })}</span>}
         </div>
       )}
 
       <div style={{ marginTop: 32 }}>
-        <h3 style={{ fontSize: 14, color: THEME.text, marginBottom: 10 }}>Recent History</h3>
+        <h3 style={{ fontSize: 14, color: THEME.text, marginBottom: 10 }}>{t("tams.recentHistory")}</h3>
         {history.length === 0 ? (
-          <p style={{ fontSize: 13, color: THEME.muted }}>No records yet.</p>
+          <p style={{ fontSize: 13, color: THEME.muted }}>{t("tams.noRecords")}</p>
         ) : (
           <div style={{ display: "grid", gap: 6 }}>
             {history.map((h, i) => (
@@ -245,9 +248,9 @@ function TeacherCheckIn() {
               }}>
                 <span style={{ minWidth: 70 }}>{h.date}</span>
                 <span style={{ minWidth: 60 }}>{h.time_str}</span>
-                {h.distance_m != null && <span style={{ color: THEME.muted }}>{h.distance_m}m from school</span>}
+                {h.distance_m != null && <span style={{ color: THEME.muted }}>{t("tams.mFromSchool", { m: h.distance_m })}</span>}
                 <span style={{ marginLeft: "auto", color: h.is_late ? THEME.warning : THEME.success, fontWeight: 600 }}>
-                  {h.is_late ? "Late" : "On Time"}
+                  {h.is_late ? t("tams.late") : t("tams.onTime")}
                 </span>
               </div>
             ))}
@@ -271,6 +274,7 @@ const tzDaysAgo = (days) => tzDateStr(new Date(Date.now() - days * 24 * 60 * 60 
 
 // ══════════════════ ADMIN / OVERSIGHT VIEW ══════════════════
 function AdminDashboard() {
+  const { t } = useLang();
   const { user, token } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
@@ -309,13 +313,13 @@ function AdminDashboard() {
     if (tab === "today") {
       apiFetch(`/tams/dashboard?date=${range.from}`, {}, token)
         .then((d) => setData(d))
-        .catch((err) => { setData(null); setLoadError(err.message || "Failed to load today's attendance."); })
+        .catch((err) => { setData(null); setLoadError(err.message || t("tams.errToday")); })
         .finally(() => setLoading(false));
       setHistoryRows([]);
     } else {
       apiFetch(`/tams/history?from=${range.from}&to=${range.to}`, {}, token)
         .then((d) => setHistoryRows(d.records || []))
-        .catch((err) => { setHistoryRows([]); setLoadError(err.message || "Failed to load the report."); })
+        .catch((err) => { setHistoryRows([]); setLoadError(err.message || t("tams.errReport")); })
         .finally(() => setLoading(false));
       setData(null);
     }
@@ -325,26 +329,26 @@ function AdminDashboard() {
     // Today/Week/Month get the plain tab name as the report label, but
     // "Custom" on its own doesn't tell the reader which dates were picked -
     // show the actual chosen range instead.
-    const label = tab === "custom" ? `From ${range.from} to ${range.to}` : tab.charAt(0).toUpperCase() + tab.slice(1);
+    const label = tab === "custom" ? t("tams.fromTo", { from: range.from, to: range.to }) : t(`tams.tab.${tab}`);
     openDownload(`/tams/export-pdf?from=${range.from}&to=${range.to}&label=${encodeURIComponent(label)}`, token)
-      .catch((e) => showError("Export PDF", e.message));
+      .catch((e) => showError(t("tams.exportPdf"), e.message));
   };
 
   return (
     <div style={{ padding: isMobile ? "20px 14px" : 40 }}>
-      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 15.5 : 20, marginBottom: 16 }}>TEACHERS ATTENDANCE MANAGEMENT SYSTEM -TAMS</h2>
+      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 15.5 : 20, marginBottom: 16 }}>{t("tams.adminTitle")}</h2>
 
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 8, marginBottom: 20 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {["today", "week", "month", "custom"].map((t) => (
-            <button key={t} onClick={() => setTab(t)} style={{ ...(tab === t ? tabActive : tabInactive), ...(isMobile ? { flex: 1 } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-              <CalendarIcon size={13} />{t.charAt(0).toUpperCase() + t.slice(1)}
+          {["today", "week", "month", "custom"].map((tabKey) => (
+            <button key={tabKey} onClick={() => setTab(tabKey)} style={{ ...(tab === tabKey ? tabActive : tabInactive), ...(isMobile ? { flex: 1 } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <CalendarIcon size={13} />{t(`tams.tab.${tabKey}`)}
             </button>
           ))}
         </div>
         {canExport && (
           <button onClick={exportPdf} style={{ ...tabInactive, marginLeft: isMobile ? 0 : "auto", color: THEME.heading, borderColor: THEME.heading, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-            <DownloadIcon size={13} />Export PDF
+            <DownloadIcon size={13} />{t("tams.exportPdf")}
           </button>
         )}
       </div>
@@ -355,12 +359,12 @@ function AdminDashboard() {
           background: THEME.dangerLight, color: THEME.danger,
         }}>⚠ {loadError}</div>
       )}
-      {loading && <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 16, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={13} /> Loading…</p>}
+      {loading && <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 16, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={13} /> {t("common.loading")}</p>}
 
       {tab === "custom" && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 20 }}>
           <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} style={{ ...dateStyle, ...(isMobile ? { flex: 1, minWidth: 140 } : {}) }} />
-          <span style={{ color: THEME.muted, fontSize: 13 }}>to</span>
+          <span style={{ color: THEME.muted, fontSize: 13 }}>{t("tams.to")}</span>
           <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} style={{ ...dateStyle, ...(isMobile ? { flex: 1, minWidth: 140 } : {}) }} />
         </div>
       )}
@@ -368,26 +372,26 @@ function AdminDashboard() {
       {tab === "today" && data && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 14, marginBottom: 24 }}>
-            <StatCard label="Present" value={data.counts.present} color={THEME.success} />
-            <StatCard label="On Time" value={data.counts.onTime} color={THEME.heading} />
-            <StatCard label="Late" value={data.counts.late} color={THEME.warning} />
-            <StatCard label="Absent" value={data.counts.absent} color={THEME.danger} />
+            <StatCard label={t("tams.present")} value={data.counts.present} color={THEME.success} />
+            <StatCard label={t("tams.onTime")} value={data.counts.onTime} color={THEME.heading} />
+            <StatCard label={t("tams.late")} value={data.counts.late} color={THEME.warning} />
+            <StatCard label={t("tams.absent")} value={data.counts.absent} color={THEME.danger} />
           </div>
 
-          <h3 style={{ fontSize: 14, marginBottom: 10 }}>Present Today</h3>
+          <h3 style={{ fontSize: 14, marginBottom: 10 }}>{t("tams.presentToday")}</h3>
           {isCompact ? (
             <div style={{ ...cardList, marginBottom: 24 }}>
               {data.present.length === 0 ? <Empty /> : data.present.map((r, i) => (
                 <div key={i} className="mk-row-card" style={rowCard}>
                   <div style={cardHeadRow}>
                     <span style={cardTitle}>{r.teacher_name}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: r.is_late ? THEME.warning : THEME.success }}>{r.is_late ? "Late" : "On Time"}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: r.is_late ? THEME.warning : THEME.success }}>{r.is_late ? t("tams.late") : t("tams.onTime")}</span>
                   </div>
-                  <div style={cardField}><span style={cardFieldLabel}>Date</span><span style={cardFieldValue}>{r.date}</span></div>
-                  <div style={cardField}><span style={cardFieldLabel}>Subject</span><span style={cardFieldValue}>{r.subject || "-"}</span></div>
-                  <div style={cardField}><span style={cardFieldLabel}>Time</span><span style={cardFieldValue}>{r.time_str}</span></div>
-                  <div style={cardField}><span style={cardFieldLabel}>Distance</span><span style={cardFieldValue}>{r.distance_m != null ? `${r.distance_m} m` : "-"}</span></div>
-                  {r.is_late && <div style={cardField}><span style={cardFieldLabel}>Reason</span><span style={{ ...cardFieldValue, fontWeight: 400, fontStyle: "italic" }}>{r.late_reason || "-"}</span></div>}
+                  <div style={cardField}><span style={cardFieldLabel}>{t("tams.date")}</span><span style={cardFieldValue}>{r.date}</span></div>
+                  <div style={cardField}><span style={cardFieldLabel}>{t("tams.subject")}</span><span style={cardFieldValue}>{r.subject || "-"}</span></div>
+                  <div style={cardField}><span style={cardFieldLabel}>{t("tams.time")}</span><span style={cardFieldValue}>{r.time_str}</span></div>
+                  <div style={cardField}><span style={cardFieldLabel}>{t("tams.distance")}</span><span style={cardFieldValue}>{r.distance_m != null ? `${r.distance_m} m` : "-"}</span></div>
+                  {r.is_late && <div style={cardField}><span style={cardFieldLabel}>{t("tams.reason")}</span><span style={{ ...cardFieldValue, fontWeight: 400, fontStyle: "italic" }}>{r.late_reason || "-"}</span></div>}
                 </div>
               ))}
             </div>
@@ -395,13 +399,13 @@ function AdminDashboard() {
           <div style={{ overflowX: "auto", marginBottom: 24 }}>
           <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
             <div style={{ ...rowStyle(-1), fontWeight: 700, background: THEME.bg }}>
-              <span style={{ flex: 1 }}>Date</span>
-              <span style={{ flex: 2 }}>Teacher</span>
-              <span style={{ flex: 1 }}>Subject</span>
-              <span style={{ flex: 1 }}>Time</span>
-              <span style={{ flex: 1 }}>Status</span>
-              <span style={{ flex: 1 }}>Distance</span>
-              <span style={{ flex: 2 }}>Reason (if late)</span>
+              <span style={{ flex: 1 }}>{t("tams.date")}</span>
+              <span style={{ flex: 2 }}>{t("tams.teacher")}</span>
+              <span style={{ flex: 1 }}>{t("tams.subject")}</span>
+              <span style={{ flex: 1 }}>{t("tams.time")}</span>
+              <span style={{ flex: 1 }}>{t("tams.status")}</span>
+              <span style={{ flex: 1 }}>{t("tams.distance")}</span>
+              <span style={{ flex: 2 }}>{t("tams.reasonIfLate")}</span>
             </div>
             {data.present.length === 0 ? <Empty /> : data.present.map((r, i) => (
               <div key={i} style={rowStyle(i)}>
@@ -409,7 +413,7 @@ function AdminDashboard() {
                 <span style={{ flex: 2 }}>{r.teacher_name}</span>
                 <span style={{ flex: 1 }}>{r.subject || "-"}</span>
                 <span style={{ flex: 1 }}>{r.time_str}</span>
-                <span style={{ flex: 1, color: r.is_late ? THEME.warning : THEME.success, fontWeight: 600 }}>{r.is_late ? "Late" : "On Time"}</span>
+                <span style={{ flex: 1, color: r.is_late ? THEME.warning : THEME.success, fontWeight: 600 }}>{r.is_late ? t("tams.late") : t("tams.onTime")}</span>
                 <span style={{ flex: 1 }}>{r.distance_m != null ? `${r.distance_m} m` : "-"}</span>
                 <span style={{ flex: 2, color: THEME.muted, fontStyle: "italic" }}>{r.is_late ? (r.late_reason || "-") : ""}</span>
               </div>
@@ -418,23 +422,23 @@ function AdminDashboard() {
           </div>
           )}
 
-          <h3 style={{ fontSize: 14, marginBottom: 10 }}>Absent Today ({data.absent.length})</h3>
+          <h3 style={{ fontSize: 14, marginBottom: 10 }}>{t("tams.absentToday", { n: data.absent.length })}</h3>
           {isCompact ? (
             <div style={cardList}>
-              {data.absent.length === 0 ? <Empty text="Everyone checked in." /> : data.absent.map((t, i) => (
+              {data.absent.length === 0 ? <Empty text={t("tams.everyoneCheckedIn")} /> : data.absent.map((a, i) => (
                 <div key={i} className="mk-row-card" style={{ ...rowCard, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <span style={{ fontSize: 13.5, fontWeight: 600 }}>{t.full_name}</span>
-                  <span style={{ fontSize: 12, color: THEME.muted }}>{t.subject || "-"}</span>
+                  <span style={{ fontSize: 13.5, fontWeight: 600 }}>{a.full_name}</span>
+                  <span style={{ fontSize: 12, color: THEME.muted }}>{a.subject || "-"}</span>
                 </div>
               ))}
             </div>
           ) : (
           <div style={{ overflowX: "auto" }}>
           <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
-            {data.absent.length === 0 ? <Empty text="Everyone checked in." /> : data.absent.map((t, i) => (
+            {data.absent.length === 0 ? <Empty text={t("tams.everyoneCheckedIn")} /> : data.absent.map((a, i) => (
               <div key={i} style={rowStyle(i)}>
-                <span style={{ flex: 2 }}>{t.full_name}</span>
-                <span style={{ flex: 1 }}>{t.subject || "-"}</span>
+                <span style={{ flex: 2 }}>{a.full_name}</span>
+                <span style={{ flex: 1 }}>{a.subject || "-"}</span>
               </div>
             ))}
           </div>
@@ -446,9 +450,9 @@ function AdminDashboard() {
       {tab !== "today" && (
         <>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 14, marginBottom: 24 }}>
-          <StatCard label="Present" value={historyRows.length} color={THEME.success} />
-          <StatCard label="On Time" value={historyRows.filter((r) => !r.is_late).length} color={THEME.heading} />
-          <StatCard label="Late" value={historyRows.filter((r) => r.is_late).length} color={THEME.warning} />
+          <StatCard label={t("tams.present")} value={historyRows.length} color={THEME.success} />
+          <StatCard label={t("tams.onTime")} value={historyRows.filter((r) => !r.is_late).length} color={THEME.heading} />
+          <StatCard label={t("tams.late")} value={historyRows.filter((r) => r.is_late).length} color={THEME.warning} />
         </div>
         {isCompact ? (
           <div style={cardList}>
@@ -456,13 +460,13 @@ function AdminDashboard() {
               <div key={r.id} className="mk-row-card" style={rowCard}>
                 <div style={cardHeadRow}>
                   <span style={cardTitle}>{r.teacher_name}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: r.is_late ? THEME.warning : THEME.success }}>{r.is_late ? "Late" : "On Time"}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: r.is_late ? THEME.warning : THEME.success }}>{r.is_late ? t("tams.late") : t("tams.onTime")}</span>
                 </div>
-                <div style={cardField}><span style={cardFieldLabel}>Date</span><span style={cardFieldValue}>{r.date}</span></div>
-                <div style={cardField}><span style={cardFieldLabel}>Subject</span><span style={cardFieldValue}>{r.subject || "-"}</span></div>
-                <div style={cardField}><span style={cardFieldLabel}>Time</span><span style={cardFieldValue}>{r.time_str}</span></div>
-                <div style={cardField}><span style={cardFieldLabel}>Distance</span><span style={cardFieldValue}>{r.distance_m != null ? `${r.distance_m} m` : "-"}</span></div>
-                {r.is_late && <div style={cardField}><span style={cardFieldLabel}>Reason</span><span style={{ ...cardFieldValue, fontWeight: 400, fontStyle: "italic" }}>{r.late_reason || "-"}</span></div>}
+                <div style={cardField}><span style={cardFieldLabel}>{t("tams.date")}</span><span style={cardFieldValue}>{r.date}</span></div>
+                <div style={cardField}><span style={cardFieldLabel}>{t("tams.subject")}</span><span style={cardFieldValue}>{r.subject || "-"}</span></div>
+                <div style={cardField}><span style={cardFieldLabel}>{t("tams.time")}</span><span style={cardFieldValue}>{r.time_str}</span></div>
+                <div style={cardField}><span style={cardFieldLabel}>{t("tams.distance")}</span><span style={cardFieldValue}>{r.distance_m != null ? `${r.distance_m} m` : "-"}</span></div>
+                {r.is_late && <div style={cardField}><span style={cardFieldLabel}>{t("tams.reason")}</span><span style={{ ...cardFieldValue, fontWeight: 400, fontStyle: "italic" }}>{r.late_reason || "-"}</span></div>}
               </div>
             ))}
           </div>
@@ -470,13 +474,13 @@ function AdminDashboard() {
         <div style={{ overflowX: "auto" }}>
         <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
           <div style={{ ...rowStyle(-1), fontWeight: 700, background: THEME.bg }}>
-            <span style={{ flex: 1 }}>Date</span>
-            <span style={{ flex: 2 }}>Teacher</span>
-            <span style={{ flex: 1 }}>Subject</span>
-            <span style={{ flex: 1 }}>Time</span>
-            <span style={{ flex: 1 }}>Status</span>
-            <span style={{ flex: 1 }}>Distance</span>
-            <span style={{ flex: 2 }}>Reason (if late)</span>
+            <span style={{ flex: 1 }}>{t("tams.date")}</span>
+            <span style={{ flex: 2 }}>{t("tams.teacher")}</span>
+            <span style={{ flex: 1 }}>{t("tams.subject")}</span>
+            <span style={{ flex: 1 }}>{t("tams.time")}</span>
+            <span style={{ flex: 1 }}>{t("tams.status")}</span>
+            <span style={{ flex: 1 }}>{t("tams.distance")}</span>
+            <span style={{ flex: 2 }}>{t("tams.reasonIfLate")}</span>
           </div>
           {historyRows.length === 0 ? <Empty /> : historyRows.map((r, i) => (
             <div key={r.id} style={rowStyle(i)}>
@@ -484,7 +488,7 @@ function AdminDashboard() {
               <span style={{ flex: 2 }}>{r.teacher_name}</span>
               <span style={{ flex: 1 }}>{r.subject || "-"}</span>
               <span style={{ flex: 1 }}>{r.time_str}</span>
-              <span style={{ flex: 1, color: r.is_late ? THEME.warning : THEME.success, fontWeight: 600 }}>{r.is_late ? "Late" : "On Time"}</span>
+              <span style={{ flex: 1, color: r.is_late ? THEME.warning : THEME.success, fontWeight: 600 }}>{r.is_late ? t("tams.late") : t("tams.onTime")}</span>
               <span style={{ flex: 1 }}>{r.distance_m != null ? `${r.distance_m} m` : "-"}</span>
               <span style={{ flex: 2, color: THEME.muted, fontStyle: "italic" }}>{r.is_late ? (r.late_reason || "-") : ""}</span>
             </div>
@@ -507,6 +511,7 @@ function AdminDashboard() {
 // day), and Absent - each count paired with its % of the month's working
 // days.
 function TeacherMonthlyReport() {
+  const { t } = useLang();
   const { token } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
@@ -524,38 +529,38 @@ function TeacherMonthlyReport() {
         setRows(d.summary || []);
         setWorkingDays(d.workingDays || 0);
       })
-      .catch((err) => { setRows([]); setWorkingDays(0); setLoadError(err.message || "Failed to load the monthly report."); })
+      .catch((err) => { setRows([]); setWorkingDays(0); setLoadError(err.message || t("tams.errMonthly")); })
       .finally(() => setLoading(false));
   }, [month, token]);
 
   return (
     <div style={{ marginTop: 36, paddingTop: 28, borderTop: `1px solid ${THEME.border}` }}>
-      <h3 style={{ fontSize: 15, marginBottom: 14, color: THEME.heading, display: "flex", alignItems: "center", gap: 7 }}><BarChartIcon size={15} />Teacher Monthly Report</h3>
+      <h3 style={{ fontSize: 15, marginBottom: 14, color: THEME.heading, display: "flex", alignItems: "center", gap: 7 }}><BarChartIcon size={15} />{t("tams.monthlyReport")}</h3>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 18 }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 7, ...(isMobile ? { flex: 1, minWidth: 140 } : {}) }}>
           <CalendarIcon size={13} />
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={{ ...dateStyle, flex: 1 }} />
         </span>
-        <span style={{ fontSize: 12.5, color: THEME.muted }}>Working Days this month: <strong style={{ color: THEME.heading }}>{workingDays}</strong> (Mon–Fri only)</span>
+        <span style={{ fontSize: 12.5, color: THEME.muted }}>{t("tams.workingDaysMonth")} <strong style={{ color: THEME.heading }}>{workingDays}</strong> {t("tams.monFriOnly")}</span>
       </div>
 
       {loadError && (
         <div style={{ marginBottom: 20, padding: 12, borderRadius: 4, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger }}>⚠ {loadError}</div>
       )}
-      {loading && <p style={{ fontSize: 13, color: THEME.muted, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={13} /> Loading…</p>}
+      {loading && <p style={{ fontSize: 13, color: THEME.muted, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={13} /> {t("common.loading")}</p>}
 
       {!loading && !loadError && (isCompact ? (
         <div style={cardList}>
-          {rows.length === 0 ? <Empty text="No teachers found." /> : rows.map((r) => (
+          {rows.length === 0 ? <Empty text={t("tams.noTeachers")} /> : rows.map((r) => (
             <div key={r.teacher_id} className="mk-row-card" style={rowCard}>
               <div style={cardHeadRow}>
                 <span style={cardTitle}>{r.full_name}</span>
-                <span style={{ fontSize: 11.5, color: THEME.muted }}>{workingDays} working days</span>
+                <span style={{ fontSize: 11.5, color: THEME.muted }}>{workingDays} {t("tams.workingDaysLower")}</span>
               </div>
-              <div style={cardField}><span style={cardFieldLabel}>On Time</span><span style={cardFieldValue}>{r.days_on_time} ({r.days_on_time_pct}%)</span></div>
-              <div style={cardField}><span style={cardFieldLabel}>Late</span><span style={cardFieldValue}>{r.days_late} ({r.days_late_pct}%)</span></div>
-              <div style={cardField}><span style={cardFieldLabel}>Present</span><span style={cardFieldValue}>{r.days_present} ({r.days_present_pct}%)</span></div>
-              <div style={cardField}><span style={cardFieldLabel}>Absent</span><span style={cardFieldValue}>{r.days_absent} ({r.days_absent_pct}%)</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("tams.onTime")}</span><span style={cardFieldValue}>{r.days_on_time} ({r.days_on_time_pct}%)</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("tams.late")}</span><span style={cardFieldValue}>{r.days_late} ({r.days_late_pct}%)</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("tams.present")}</span><span style={cardFieldValue}>{r.days_present} ({r.days_present_pct}%)</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("tams.absent")}</span><span style={cardFieldValue}>{r.days_absent} ({r.days_absent_pct}%)</span></div>
             </div>
           ))}
         </div>
@@ -563,18 +568,18 @@ function TeacherMonthlyReport() {
         <div style={{ overflowX: "auto" }}>
           <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden", minWidth: 920 }}>
             <div style={{ ...rowStyle(-1), fontWeight: 700, background: THEME.bg }}>
-              <span style={{ flex: 2 }}>Teacher</span>
-              <span style={{ flex: 1 }}>Working Days</span>
-              <span style={{ flex: 1 }}>On Time</span>
-              <span style={{ flex: 1 }}>On Time %</span>
-              <span style={{ flex: 1 }}>Late</span>
-              <span style={{ flex: 1 }}>Late %</span>
-              <span style={{ flex: 1 }}>Present</span>
-              <span style={{ flex: 1 }}>Present %</span>
-              <span style={{ flex: 1 }}>Absent</span>
-              <span style={{ flex: 1 }}>Absent %</span>
+              <span style={{ flex: 2 }}>{t("tams.teacher")}</span>
+              <span style={{ flex: 1 }}>{t("tams.workingDays")}</span>
+              <span style={{ flex: 1 }}>{t("tams.onTime")}</span>
+              <span style={{ flex: 1 }}>{t("tams.onTime")} %</span>
+              <span style={{ flex: 1 }}>{t("tams.late")}</span>
+              <span style={{ flex: 1 }}>{t("tams.late")} %</span>
+              <span style={{ flex: 1 }}>{t("tams.present")}</span>
+              <span style={{ flex: 1 }}>{t("tams.present")} %</span>
+              <span style={{ flex: 1 }}>{t("tams.absent")}</span>
+              <span style={{ flex: 1 }}>{t("tams.absent")} %</span>
             </div>
-            {rows.length === 0 ? <Empty text="No teachers found." /> : rows.map((r, i) => (
+            {rows.length === 0 ? <Empty text={t("tams.noTeachers")} /> : rows.map((r, i) => (
               <div key={r.teacher_id} style={rowStyle(i)}>
                 <span style={{ flex: 2, fontWeight: 600 }}>{r.full_name}</span>
                 <span style={{ flex: 1 }}>{workingDays}</span>
@@ -619,8 +624,9 @@ function StatCard({ label, value, color = THEME.navy, sub }) {
     </div>
   );
 }
-function Empty({ text = "None." }) {
-  return <div style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{text}</div>;
+function Empty({ text }) {
+  const { t } = useLang();
+  return <div style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{text || t("tams.none")}</div>;
 }
 function rowStyle(i) {
   return {
