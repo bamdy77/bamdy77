@@ -23,8 +23,21 @@ export default function ResultsManagement() {
   const [subjects, setSubjects] = useState([]);
   const [period, setPeriod] = useState(null); // { id, form, exam_type, month, year }
   const examTypes = useExamTypes(token);
+
+  // Which classes this account may pick. Head Master / Second Master /
+  // Academic Master oversee every class; every other teacher sees ONLY the
+  // Form(s) they were assigned (plus the class they are Class Teacher of).
+  const myRoles = user.roles && user.roles.length ? user.roles : [user.role];
+  const isOverseer = myRoles.some((r) => ["admin", "second_master", "academic"].includes(r));
+  const myForms = isOverseer
+    ? FORMS
+    : [...new Set([...(user.assigned_forms || []), ...(user.class_teacher_of ? [user.class_teacher_of] : [])])]
+        .filter((f) => FORMS.includes(f))
+        .sort((a, b) => FORMS.indexOf(a) - FORMS.indexOf(b));
+  const formLocked = !isOverseer && myForms.length <= 1;
+
   const [selection, setSelection] = useState({
-    form: (user.assigned_forms && user.assigned_forms[0]) || (user.role === "class_teacher" && user.class_teacher_of) || "Form I", exam_type: EXAM_TYPES[0], month: MONTHS[new Date().getMonth()], year: new Date().getFullYear(),
+    form: myForms[0] || "Form I", exam_type: EXAM_TYPES[0], month: MONTHS[new Date().getMonth()], year: new Date().getFullYear(),
   });
 
   // Keeps the locked Form value in sync with a LIVE reassignment. The Form
@@ -44,11 +57,7 @@ export default function ResultsManagement() {
   // is no longer one they teach (re-assigned for a new year), jump to the
   // first Form they DO teach and drop the previously opened period, which
   // belonged to the old class.
-  const allowedFormsKey = JSON.stringify(
-    user.role === "teacher" ? (user.assigned_forms || [])
-    : user.role === "class_teacher" && user.class_teacher_of ? [user.class_teacher_of]
-    : null
-  );
+  const allowedFormsKey = JSON.stringify(isOverseer ? null : myForms);
   useEffect(() => {
     const allowed = JSON.parse(allowedFormsKey);
     if (!allowed || !allowed.length) return;
@@ -56,7 +65,6 @@ export default function ResultsManagement() {
     setPeriod((p) => (p && !allowed.includes(p.form) ? null : p));
   }, [allowedFormsKey]);
 
-  const myRoles = user.roles && user.roles.length ? user.roles : [user.role];
   // Only the Academic Master administers the Results Management workflow
   // (Sheets & Status, Exam Activation, Publishing, History) - that's where
   // every other teacher submits their scores for review/inclusion, and from
@@ -174,11 +182,13 @@ export default function ResultsManagement() {
               value={selection.form}
               onChange={(e) => setSelection({ ...selection, form: e.target.value })}
               style={{ ...selectStyle, ...(isCompact ? { flex: 1, minWidth: 100 } : {}) }}
-              disabled={(user.role === "teacher" && (user.assigned_forms || []).length === 1) || (user.role === "class_teacher" && !!user.class_teacher_of)}
+              disabled={formLocked || (!isOverseer && !myForms.length)}
             >
-              {(user.role === "teacher" && (user.assigned_forms || []).length ? user.assigned_forms
-                : user.role === "class_teacher" && user.class_teacher_of ? [user.class_teacher_of]
-                : FORMS).map((f) => <option key={f}>{f}</option>)}
+              {isOverseer
+                ? FORMS.map((f) => <option key={f}>{f}</option>)
+                : myForms.length
+                  ? myForms.map((f) => <option key={f}>{f}</option>)
+                  : <option value="">No class assigned</option>}
             </select>
           </Field>
           <Field label="Exam Type">
