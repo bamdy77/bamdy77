@@ -8,6 +8,12 @@ const { recordAudit } = require("../utils/auditLogger");
 const rolesText = (role, extra) => [role, ...(extra || [])].filter(Boolean).join(" + ");
 
 const VALID_ROLES = ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"];
+// "developer" (System Developer / Fundi wa Mfumo) is a maintenance account
+// seeded once at setup (see migrate.js). It is never created or assigned
+// through this screen, and only the developer themselves can change it -
+// the Head Master sees the name in the list but cannot edit, reset,
+// deactivate or delete it. So it is deliberately NOT in VALID_ROLES.
+const PROTECTED_ROLES = ["admin", "developer"]; // only the holder may modify
 // A person can hold several roles at once (their primary `role` plus any
 // number of `extra_roles`), but "admin" (Head Master) is a single, fixed
 // seat — it must never appear as an extra role on anyone else's account.
@@ -111,6 +117,8 @@ const createUser = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Invalid employment type." });
     if (role === "admin")
       return res.status(400).json({ success: false, message: "There can only be one Head Master account." });
+    if (role === "developer")
+      return res.status(400).json({ success: false, message: "The System Developer account is created only during setup." });
     const extraRolesClean = Array.isArray(extra_roles) ? extra_roles.filter((r) => r !== role) : [];
     for (const r of extraRolesClean) {
       if (!EXTRA_ROLES_ALLOWED.includes(r)) return res.status(400).json({ success: false, message: `Invalid extra role: ${r}.` });
@@ -214,6 +222,8 @@ const updateUser = async (req, res, next) => {
     const targetLookup = await query(`SELECT role, extra_roles, class_teacher_of, username, full_name, email, phone, is_active, employment_type, subject_ids, assigned_forms FROM users WHERE id = $1`, [req.params.id]);
     if (!targetLookup.rows.length) return res.status(404).json({ success: false, message: "User not found." });
     const targetRow = targetLookup.rows[0];
+    if (targetRow.role === "developer" && String(req.user.id) !== String(req.params.id))
+      return res.status(403).json({ success: false, message: "The System Developer account can only be changed by the developer." });
 
     let extraRolesClean = null;
     if (Array.isArray(extra_roles)) {
@@ -246,6 +256,8 @@ const updateUser = async (req, res, next) => {
         return res.status(403).json({ success: false, message: "The Head Master account's role cannot be changed." });
       if (role === "admin")
         return res.status(400).json({ success: false, message: "There can only be one Head Master account." });
+      if (role === "developer" || targetRow.role === "developer")
+        return res.status(403).json({ success: false, message: "The System Developer account's role cannot be changed." });
       if ((role === "second_master" || targetRow.role === "second_master") && req.user.role !== "admin")
         return res.status(403).json({ success: false, message: "Only the Head Master can change a Second Master's role." });
       roleClean = role;
@@ -396,8 +408,8 @@ const adminSetPassword = async (req, res, next) => {
     // The Head Master's own password can only be reset by the Head Master
     // themselves — a Second Master must not be able to lock the Head Master
     // out of their own account.
-    if (target.rows[0].role === "admin" && String(req.user.id) !== String(req.params.id))
-      return res.status(403).json({ success: false, message: "Only the Head Master can reset their own password." });
+    if (PROTECTED_ROLES.includes(target.rows[0].role) && String(req.user.id) !== String(req.params.id))
+      return res.status(403).json({ success: false, message: target.rows[0].role === "developer" ? "The System Developer sets their own password (via Gmail reset)." : "Only the Head Master can reset their own password." });
 
     const hashed = await bcrypt.hash(new_password, BCRYPT_ROUNDS);
     // Unlock the account and end every existing session of that user.
@@ -424,6 +436,8 @@ const deleteUser = async (req, res, next) => {
     if (!target.rows.length) return res.status(404).json({ success: false, message: "User not found." });
     if (target.rows[0].role === "admin")
       return res.status(403).json({ success: false, message: "The Head Master account cannot be deleted." });
+    if (target.rows[0].role === "developer")
+      return res.status(403).json({ success: false, message: "The System Developer account cannot be deleted here." });
     if (target.rows[0].role === "second_master" && req.user.role !== "admin")
       return res.status(403).json({ success: false, message: "Only the Head Master can delete a Second Master account." });
 
@@ -461,6 +475,8 @@ const deactivateUser = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Only the Head Master can deactivate a Second Master account." });
     if (target.rows[0].role === "admin")
       return res.status(403).json({ success: false, message: "The Head Master account cannot be deactivated." });
+    if (target.rows[0].role === "developer" && String(req.user.id) !== String(req.params.id))
+      return res.status(403).json({ success: false, message: "The System Developer account cannot be deactivated." });
 
     const result = await query(
       `UPDATE users SET is_active = false WHERE id = $1 RETURNING id, full_name, role, extra_roles, phone, is_active`,

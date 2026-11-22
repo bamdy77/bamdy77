@@ -399,3 +399,9 @@ body, button, input, select, textarea {
 .mk-actionmenu-item:active {
   background: var(--mk-border, #E2E8F0) !important;
 }
+
+/* Staff area: a small, uniform text/UI size bump for readability. Applied by
+   Layout only while a staff page is open (the public site keeps its size).
+   zoom scales text and layout together, including modals, so nothing is left
+   out and no inline font-size needs changing. */
+html.mk-staff-zoom { zoom: 1.06; }

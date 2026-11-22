@@ -95,7 +95,7 @@ const login = async (req, res, next) => {
 // their account email when signing in from a device not used before. The
 // device is then trusted for TRUST_DAYS. Codes live 10 minutes and allow 5
 // tries. Changing/resetting the password forgets every trusted device.
-const TWO_FACTOR_ROLES = ["admin", "second_master", "academic"];
+const TWO_FACTOR_ROLES = ["admin", "second_master", "academic", "developer"];
 const TRUST_DAYS = 30;
 const CODE_MINUTES = 10;
 const MAX_CODE_TRIES = 5;

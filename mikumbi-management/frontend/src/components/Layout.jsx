@@ -45,7 +45,7 @@ const MODULES = [
   // renders for them - AnalyticsDashboard.jsx itself hides the school-wide
   // Form/TAMS sections for that role.
   { key: "analytics",      path: "/dashboard/analytics",      roles: ["admin", "second_master", "academic", "teacher"], Icon: BarChartIcon },
-  { key: "audit-log",      path: "/dashboard/audit-log",      roles: ["admin", "second_master", "academic"], Icon: FileClockIcon },
+  { key: "audit-log",      path: "/dashboard/audit-log",      roles: ["admin", "second_master", "developer"], Icon: FileClockIcon },
   { key: "communications", path: "/dashboard/communications", roles: ["admin", "second_master"], Icon: MessageIcon },
   { key: "users",          path: "/dashboard/users",          roles: ["admin", "second_master"], Icon: UsersIcon },
 ];
@@ -300,6 +300,13 @@ export default function Layout() {
   // time the viewport grows back to desktop size.
   useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
   useEffect(() => { if (isDesktop) setDrawerOpen(false); }, [isDesktop]);
+  // Slightly larger text across the whole staff area (easier to read for
+  // first-time users). Applied to the document only while a staff page is
+  // open, so the public parents' site and the login page keep their size.
+  useEffect(() => {
+    document.documentElement.classList.add("mk-staff-zoom");
+    return () => document.documentElement.classList.remove("mk-staff-zoom");
+  }, []);
 
   const doLogout = () => {
     confirm(t("acct.logoutConfirm"), () => { logout(); navigate("/"); }, {

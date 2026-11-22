@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 // unlocks is where they land. Order matters: e.g. an Academic Master who is
 // ALSO a Matron still lands on Results (her main daily task), not Hostel.
 const FIRST_MODULE_BY_ROLE = [
+  { role: "developer", path: "/dashboard/audit-log" },
   { role: "admin", path: "/dashboard/students" },
   { role: "second_master", path: "/dashboard/students" },
   { role: "academic", path: "/dashboard/results" },

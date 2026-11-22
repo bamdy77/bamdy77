@@ -14,7 +14,7 @@ async function migrate() {
       username    VARCHAR(100) UNIQUE NOT NULL,
       password    VARCHAR(255) NOT NULL,
       full_name   VARCHAR(200) NOT NULL,
-      role        VARCHAR(50) NOT NULL CHECK (role IN ('admin','second_master','academic','teacher','patron','matron','class_teacher','food_teacher')),
+      role        VARCHAR(50) NOT NULL CHECK (role IN ('admin','second_master','academic','teacher','patron','matron','class_teacher','food_teacher','developer')),
       is_active   BOOLEAN DEFAULT true,
       created_at  TIMESTAMPTZ DEFAULT NOW(),
       updated_at  TIMESTAMPTZ DEFAULT NOW()
@@ -717,7 +717,7 @@ async function migrate() {
   //    second_master added (same access as admin, but admin can deactivate them) ──
   await query(`UPDATE users SET role = 'patron' WHERE role = 'hostel_warden';`);
   await query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;`);
-  await query(`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','second_master','academic','teacher','patron','matron','class_teacher','food_teacher'));`);
+  await query(`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','second_master','academic','teacher','patron','matron','class_teacher','food_teacher','developer'));`);
 
   // ── Employment type: Permanent (Serikali/Government) vs Temporary — shown
   // as a badge next to a teacher's name in User Accounts. Defaults to
@@ -1915,6 +1915,36 @@ async function migrate() {
         ('mbaazi', 'MBAAZI', 'KG', 7), ('kunde', 'KUNDE', 'KG', 8)
       ON CONFLICT (key) DO NOTHING;`);
     await setFlag("food_types_seeded");
+  }
+
+  // ── System Developer account (Fundi wa Mfumo), seeded once at setup ───────
+  // Set DEV_ACCOUNT_USERNAME and DEV_ACCOUNT_EMAIL in the backend environment
+  // to create a maintenance account the Head Master can SEE but cannot edit,
+  // reset, deactivate or delete (enforced in usersController). No password is
+  // stored in code: a random one is set, and the developer signs in by using
+  // "Forgot password" with DEV_ACCOUNT_EMAIL (Gmail reset). Leaving the env
+  // vars unset creates nothing. Idempotent: it never overwrites an existing
+  // account, and updates only the email if it changed.
+  {
+    const devUser = (process.env.DEV_ACCOUNT_USERNAME || "").trim();
+    const devEmail = (process.env.DEV_ACCOUNT_EMAIL || "").trim().toLowerCase();
+    const devName = (process.env.DEV_ACCOUNT_NAME || "System Developer").trim();
+    if (devUser && devEmail) {
+      const existing = await query(`SELECT id, role FROM users WHERE role = 'developer' OR LOWER(username) = LOWER($1) LIMIT 1`, [devUser]);
+      if (!existing.rows.length) {
+        const bcrypt = require("bcryptjs");
+        const crypto = require("crypto");
+        const randomPw = await bcrypt.hash(crypto.randomBytes(24).toString("hex"), 10);
+        await query(
+          `INSERT INTO users (username, password, full_name, role, email, is_active)
+           VALUES ($1, $2, $3, 'developer', $4, true)
+           ON CONFLICT (username) DO NOTHING`,
+          [devUser, randomPw, devName, devEmail]);
+        console.log(`[setup] System Developer account "${devUser}" created - sign in with "Forgot password" using the developer email.`);
+      } else if (existing.rows[0].role === "developer") {
+        await query(`UPDATE users SET email = $1 WHERE id = $2 AND email IS DISTINCT FROM $1`, [devEmail, existing.rows[0].id]);
+      }
+    }
   }
 
   console.log("All migrations completed successfully.");

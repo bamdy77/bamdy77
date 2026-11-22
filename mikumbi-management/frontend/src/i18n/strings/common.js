@@ -12,6 +12,7 @@ const COMMON_STRINGS = {
   "role.patron": { en: "School Patron", sw: "Mlezi wa Kiume (Patron)" },
   "role.matron": { en: "School Matron", sw: "Mlezi wa Kike (Matron)" },
   "role.food_teacher": { en: "Food Teacher", sw: "Mwalimu wa Chakula" },
+  "role.developer": { en: "System Developer", sw: "Fundi wa Mfumo" },
 
   // ── Glossary: forms (students.form) ─────────────────────────────────────
   "form.Form I": { en: "Form I", sw: "Kidato cha Kwanza" },

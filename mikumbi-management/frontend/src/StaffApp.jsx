@@ -77,7 +77,7 @@ export default function StaffApp() {
                 panel inside this page, not the school-wide sections - see
                 AnalyticsDashboard.jsx, which hides those for that role. */}
             <Route path="analytics" element={<ProtectedRoute roles={["admin", "second_master", "academic", "teacher"]}><AnalyticsDashboard /></ProtectedRoute>} />
-            <Route path="audit-log" element={<ProtectedRoute roles={["admin", "second_master", "academic"]}><AuditLog /></ProtectedRoute>} />
+            <Route path="audit-log" element={<ProtectedRoute roles={["admin", "second_master", "developer"]}><AuditLog /></ProtectedRoute>} />
           </Route>
 
           <Route path="*" element={<Landing />} />

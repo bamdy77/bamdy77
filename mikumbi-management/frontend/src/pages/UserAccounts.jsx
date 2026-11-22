@@ -193,8 +193,8 @@ export default function UserAccounts() {
           <p style={{ margin: "4px 0 0", fontSize: 12.5, color: THEME.muted }}>Fill in the staff member's details, choose their role, then press Create Account.</p>
         </div>
 
-        <div style={{ padding: isMobile ? 16 : 22, display: "grid", gap: isMobile ? 20 : 24 }}>
-          <FormSection title="Account Details" isMobile={isMobile}>
+        <div style={{ padding: isMobile ? 14 : 22, display: "grid", gap: isMobile ? 14 : 18, background: THEME.bg }}>
+          <FormSection step={1} title="Account Details" desc="Who the person is and how they sign in." isMobile={isMobile}>
             <div style={grid2(isMobile)}>
               <Field label="Username" required>
                 <input placeholder="e.g. MR.BEYANGA" required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={fieldInput} />
@@ -211,7 +211,7 @@ export default function UserAccounts() {
             </div>
           </FormSection>
 
-          <FormSection title="Role & Employment" isMobile={isMobile}>
+          <FormSection step={2} title="Role & Employment" desc="What this person does at school - this decides which menus they see." isMobile={isMobile}>
             <div style={{ ...grid2(isMobile), alignItems: "start" }}>
               <Field label="Main Role" required>
                 <select value={form.role} onChange={(e) => {
@@ -235,7 +235,7 @@ export default function UserAccounts() {
           </FormSection>
 
           {needsTeachingFields(form.role, form.extra_roles) && (
-            <FormSection title="Teaching" isMobile={isMobile}>
+            <FormSection step={3} title="Teaching" desc="The subjects and classes this teacher handles." isMobile={isMobile}>
               <Field label="Subjects" hint="A teacher may teach more than one subject.">
                 <div style={chipsBox}>
                   {subjects.map((s) => (
@@ -293,7 +293,7 @@ export default function UserAccounts() {
         )}
         {users.map((u, i) => {
           const canManageThisTarget = u.role !== "second_master" || me.role === "admin";
-          const menu = (u.role !== "admin" || u.id === me.id) && (
+          const menu = ((u.role !== "admin" && u.role !== "developer") || u.id === me.id) && (
             <ActionMenu>
               <MenuItem icon={<EditIcon />} onClick={() => setEditUser(u)}>Edit</MenuItem>
               <MenuItem icon={<KeyIcon />} onClick={() => setResetPwdUser(u)}>Reset Password</MenuItem>
@@ -642,7 +642,7 @@ function roleLabel(role) {
   return {
     admin: "Head Master", second_master: "Second Master", academic: "Academic Master",
     teacher: "Teacher", patron: "School Patron", matron: "School Matron",
-    class_teacher: "Class Teacher", food_teacher: "Food Teacher",
+    class_teacher: "Class Teacher", food_teacher: "Food Teacher", developer: "System Developer",
   }[role] || role;
 }
 
@@ -651,14 +651,24 @@ const inputStyle = { padding: "9px 12px", border: `1px solid ${THEME.border}`, b
 const PANEL_MAX = 900;
 const fieldInput = { ...inputStyle, width: "100%", boxSizing: "border-box", fontSize: 13.5, padding: "10px 12px", color: THEME.text, background: THEME.surface };
 const grid2 = (isMobile) => ({ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 14 : "14px 18px" });
-function FormSection({ title, isMobile, children }) {
+// Each part of the form is its own card: a numbered header (step, title,
+// one-line explanation) and the fields below it, so a first-time user can
+// see at a glance what to fill in and in which order.
+function FormSection({ step, title, desc, isMobile, children }) {
   return (
-    <section style={{ display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: 0.6, textTransform: "uppercase", color: THEME.link, whiteSpace: "nowrap" }}>{title}</span>
-        {!isMobile && <span style={{ flex: 1, height: 1, background: THEME.border }} />}
+    <section style={{ border: `1px solid ${THEME.border}`, borderRadius: 6, background: THEME.surface, overflow: "hidden", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
+      <header style={{ display: "flex", alignItems: "center", gap: 12, padding: isMobile ? "11px 14px" : "12px 18px", background: `color-mix(in srgb, ${THEME.link} 7%, ${THEME.surface})`, borderBottom: `1px solid ${THEME.border}` }}>
+        {step != null && (
+          <span aria-hidden="true" style={{ flex: "none", width: 26, height: 26, borderRadius: "50%", background: THEME.navy, color: "#fff", fontSize: 13, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{step}</span>
+        )}
+        <div style={{ minWidth: 0 }}>
+          <h4 style={{ margin: 0, fontSize: 14.5, fontWeight: 800, color: THEME.heading }}>{title}</h4>
+          {desc && <p style={{ margin: "2px 0 0", fontSize: 12, color: THEME.muted, lineHeight: 1.45 }}>{desc}</p>}
+        </div>
+      </header>
+      <div style={{ padding: isMobile ? 14 : 18, display: "grid", gap: 14 }}>
+        {children}
       </div>
-      {children}
     </section>
   );
 }
