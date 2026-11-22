@@ -26,6 +26,7 @@ import Contributions from "./pages/Contributions";
 import FoodContributions from "./pages/FoodContributions";
 import UserAccounts from "./pages/UserAccounts";
 import ChangePassword from "./pages/ChangePassword";
+import LoginSecurity from "./pages/LoginSecurity";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import AuditLog from "./pages/AuditLog";
 import SignatureSettings from "./pages/SignatureSettings";
@@ -59,6 +60,7 @@ export default function StaffApp() {
           <Route path="/dashboard" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<DashboardHome />} />
             <Route path="change-password" element={<ChangePassword />} />
+            <Route path="login-security" element={<LoginSecurity />} />
             <Route path="signature-stamp" element={<ProtectedRoute roles={["admin", "second_master", "academic", "class_teacher"]}><SignatureSettings /></ProtectedRoute>} />
             <Route path="sms-gateway" element={<ProtectedRoute roles={["admin", "second_master", "academic"]}><SmsGatewaySettings /></ProtectedRoute>} />
             <Route path="backups" element={<ProtectedRoute roles={["admin"]}><BackupSettings /></ProtectedRoute>} />

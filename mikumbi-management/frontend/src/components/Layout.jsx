@@ -639,6 +639,10 @@ function SettingsMenu({ navigate, user }) {
             {t("pw.changeTitle")}
           </SettingsItem>
 
+          <SettingsItem icon={<ShieldIcon />} onClick={() => { setOpen(false); navigate("/dashboard/login-security"); }}>
+            {t("set.loginSecurity")}
+          </SettingsItem>
+
           {canManageSignature && (
             <SettingsItem icon={<EditIcon />} onClick={() => { setOpen(false); navigate("/dashboard/signature-stamp"); }}>
               {t("set.signature")}

@@ -1695,6 +1695,9 @@ async function migrate() {
   // One-time steps are remembered in app_flags so they never run again: a
   // default exam type that the Head Master deletes must NOT come back on the
   // next deploy (the old seed re-added every deleted default each time).
+  // How long a 2-step-verified device stays trusted for this account
+  // (10/30/90 days, or 0 = until the password changes). Default 30.
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS trusted_device_days INTEGER NOT NULL DEFAULT 30;`);
   await query(`CREATE TABLE IF NOT EXISTS app_flags (key VARCHAR(80) PRIMARY KEY, set_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
   const flagged = async (key) => (await query(`SELECT 1 FROM app_flags WHERE key = $1`, [key])).rows.length > 0;
   const setFlag = (key) => query(`INSERT INTO app_flags (key) VALUES ($1) ON CONFLICT DO NOTHING`, [key]);

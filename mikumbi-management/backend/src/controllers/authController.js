@@ -91,20 +91,21 @@ const login = async (req, res, next) => {
 };
 
 // ── Two-step verification (2FA) ─────────────────────────────────────────
-// Head Master, Second Master and Academic Master accounts must confirm a 6-digit code sent to
-// their account email when signing in from a device not used before. The
-// device is then trusted for TRUST_DAYS. Codes live 10 minutes and allow 5
-// tries. Changing/resetting the password forgets every trusted device.
-const TWO_FACTOR_ROLES = ["admin", "second_master", "academic", "developer"];
-const TRUST_DAYS = 30;
+// EVERY staff account must confirm a 6-digit code sent to their account
+// email when signing in from a device not used before (the site is public,
+// so first-time sign-in protection matters for all roles). The device is
+// then trusted for the number of days that account chose (Settings → Login
+// Security), defaulting to DEFAULT_TRUST_DAYS. Codes live 10 minutes and
+// allow 5 tries. Changing/resetting the password forgets every trusted device.
+const DEFAULT_TRUST_DAYS = 30;
+const ALLOWED_TRUST_DAYS = [10, 30, 90, 0]; // 0 = remember until the password changes
 const CODE_MINUTES = 10;
 const MAX_CODE_TRIES = 5;
 const sha256 = (v) => crypto.createHash("sha256").update(String(v)).digest("hex");
 const maskEmail = (e) => String(e).replace(/^(.)(.*)(@.*)$/, (_m, a, b, c) => a + "*".repeat(Math.max(2, b.length)) + c);
 
 async function twoFactorGate(user, deviceToken) {
-  const roles = [user.role, ...(user.extra_roles || [])];
-  if (!roles.some((r) => TWO_FACTOR_ROLES.includes(r))) return null;
+  // Applies to every staff account now (not only managers).
   const { mailStatus } = require("../utils/mailer");
   if (!user.email || !/^Brevo/.test(mailStatus())) {
     // Cannot send a code (no email on the account, or email not set up on
@@ -163,8 +164,15 @@ const verifyLoginCode = async (req, res, next) => {
     const uRes = await query(`SELECT * FROM users WHERE id = $1 AND is_active = true`, [ch.user_id]);
     if (!uRes.rows.length) return res.status(401).json({ success: false, message: "Account not available." });
     const deviceToken = crypto.randomBytes(32).toString("hex");
+    // Trust length: what this account chose, or a value passed with this
+    // request (both validated); 0 means "until the password changes".
+    let days = Number(uRes.rows[0].trusted_device_days);
+    if (!ALLOWED_TRUST_DAYS.includes(days)) days = DEFAULT_TRUST_DAYS;
+    const asked = Number(req.body && req.body.remember_days);
+    if (ALLOWED_TRUST_DAYS.includes(asked)) days = asked;
+    const expiresExpr = days > 0 ? `NOW() + INTERVAL '${days} days'` : `NOW() + INTERVAL '100 years'`;
     await query(
-      `INSERT INTO trusted_devices (user_id, token_hash, user_agent, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL '${TRUST_DAYS} days')`,
+      `INSERT INTO trusted_devices (user_id, token_hash, user_agent, expires_at) VALUES ($1, $2, $3, ${expiresExpr})`,
       [ch.user_id, sha256(deviceToken), String(req.headers["user-agent"] || "").slice(0, 200)]);
     await recordAudit({ actor: asActor(uRes.rows[0]), action: "auth.login", entityType: "user", entityId: ch.user_id,
       description: `${uRes.rows[0].full_name} signed in on a new device (login code confirmed).`, metadata: { two_factor: true }, req });
@@ -205,14 +213,23 @@ async function issueLogin(res, user, extra = {}) {
         subject_ids: user.subject_ids || [], subject_names, assigned_forms: user.assigned_forms || [],
         class_teacher_of: user.class_teacher_of || null, photo_url: user.photo_url || null,
         phone: user.phone || null, email: user.email || null, employment_type: user.employment_type || "Permanent",
-        preferred_font: user.preferred_font || null, preferred_language: user.preferred_language || null },
+        preferred_font: user.preferred_font || null, preferred_language: user.preferred_language || null,
+        trusted_device_days: user.trusted_device_days == null ? DEFAULT_TRUST_DAYS : Number(user.trusted_device_days) },
       ...extra,
     });
 }
 
 // GET /api/auth/me
 const me = async (req, res) => {
-  res.json({ success: true, user: req.user });
+  // The token doesn't carry the device-trust setting (it can change after
+  // sign-in); fetch it so Settings → Login Security shows the current value
+  // even after a page reload.
+  let trusted_device_days = DEFAULT_TRUST_DAYS;
+  try {
+    const r = await query("SELECT trusted_device_days FROM users WHERE id = $1", [req.user.id]);
+    if (r.rows.length && r.rows[0].trusted_device_days != null) trusted_device_days = Number(r.rows[0].trusted_device_days);
+  } catch { /* fall back to default */ }
+  res.json({ success: true, user: { ...req.user, trusted_device_days } });
 };
 
 // PUT /api/auth/preferences/font  { font }
@@ -243,6 +260,18 @@ const issueDownloadToken = async (req, res) => {
 
 // PUT /api/auth/preferences/language  { language: "en" | "sw" }
 // Saves the interface language for the CALLER only (id from the token).
+// PUT /api/auth/preferences/trusted-days { days } - how long THIS account's
+// 2-step-verified devices stay trusted (10/30/90, or 0 = until password change).
+const setTrustedDays = async (req, res, next) => {
+  try {
+    const days = Number(req.body && req.body.days);
+    if (!ALLOWED_TRUST_DAYS.includes(days))
+      return res.status(400).json({ success: false, message: "Choose 10, 30, 90 days, or no expiry." });
+    await query("UPDATE users SET trusted_device_days = $1 WHERE id = $2", [days, req.user.id]);
+    res.json({ success: true, trusted_device_days: days });
+  } catch (err) { next(err); }
+};
+
 const setPreferredLanguage = async (req, res, next) => {
   try {
     const language = req.body ? req.body.language : undefined;
@@ -427,5 +456,5 @@ const removeAvatar = async (req, res, next) => {
 };
 
 module.exports = {
-  setPreferredFont, setPreferredLanguage, issueDownloadToken,
+  setPreferredFont, setPreferredLanguage, setTrustedDays, issueDownloadToken,
   verifyLoginCode, login, me, changePassword, forgotPassword, resetPassword, uploadAvatar, removeAvatar };
