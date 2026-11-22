@@ -16,7 +16,7 @@ import {
 
 const NAVY = "#1a50c7";
 const ORANGE = "#F54927";
-const GREEN = "#10358f"; // About section - brand deep blue (matches the royal-blue theme)
+const GOLD = "#E3A51A"; // About section - warm gold band (UDOM-style), with navy text
 
 export default function PublicHome() {
   // Wake the (free-tier) backend while the visitor is reading the page, so
@@ -122,7 +122,7 @@ function About() {
   const [headPhotoFailed, setHeadPhotoFailed] = useState(false);
   const showHead = !headPhotoFailed;
   return (
-    <section id="about" className="pub-section" style={{ background: GREEN, color: "#fff", padding: isMobile ? "48px 18px" : "70px 24px" }}>
+    <section id="about" className="pub-section" style={{ background: GOLD, color: "#0c2c6b", padding: isMobile ? "48px 18px" : "70px 24px" }}>
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: showHead && !isMobile && !isTablet ? "220px 1fr" : "1fr", gap: 32, alignItems: "center", textAlign: showHead && !isMobile && !isTablet ? "left" : "center", marginBottom: 32 }}>
           {showHead && (
@@ -132,13 +132,14 @@ function About() {
               onError={() => setHeadPhotoFailed(true)}
               style={{ width: isMobile ? 160 : 230, height: isMobile ? 190 : 270, objectFit: "cover", objectPosition: "50% 20%", borderRadius: 4, margin: "0 auto", display: "block", boxShadow: "0 10px 26px rgba(0,0,0,0.25)" }}
             />
-            <figcaption style={{ marginTop: 10, textAlign: "center", fontSize: 15, fontWeight: 700, opacity: 0.95 }}>{t("about.headCaption")}</figcaption>
+            <figcaption style={{ marginTop: 10, textAlign: "center", fontSize: 15, fontWeight: 700, color: "#0c2c6b" }}>{t("about.headCaption")}</figcaption>
             </figure>
           )}
           <div>
             <img src="/assets/shule.svg" alt="" width="64" height="64" style={{ height: isMobile ? 48 : 64, width: "auto", marginBottom: 12, display: showHead && !isMobile && !isTablet ? "none" : "inline-block" }} onError={(e) => (e.currentTarget.style.display = "none")} />
-            <h2 style={{ fontSize: isMobile ? 25.5 : 32, fontWeight: 800, marginBottom: 12 }}>{t("about.title")}</h2>
-            <p style={{ fontSize: isMobile ? 16 : 18, lineHeight: 1.8, color: "rgba(255,255,255,0.93)", maxWidth: 640, margin: showHead && !isMobile && !isTablet ? 0 : "0 auto" }}>
+            <h2 style={{ fontSize: isMobile ? 25.5 : 32, fontWeight: 800, marginBottom: 10 }}>{t("about.title")}</h2>
+            <div style={{ width: 64, height: 4, borderRadius: 2, background: "#0c2c6b", margin: showHead && !isMobile && !isTablet ? "0 0 14px" : "0 auto 14px" }} />
+            <p style={{ fontSize: isMobile ? 16 : 18, lineHeight: 1.8, color: "rgba(12,44,107,0.92)", maxWidth: 640, margin: showHead && !isMobile && !isTablet ? 0 : "0 auto" }}>
               {t("about.text")}
             </p>
           </div>
@@ -159,7 +160,7 @@ function About() {
 function Fact({ label, value }) {
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: "#F3C14B", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>{label}</div>
       <div style={{ fontSize: 15.5, fontWeight: 700, color: "#fff", overflowWrap: "anywhere" }}>{value}</div>
     </div>
   );
