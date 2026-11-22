@@ -2,8 +2,12 @@ const { query } = require("../db/db");
 const PDFDocument = require("pdfkit");
 const { tzColumn, formatTZ, dateOnly } = require("../utils/tz");
 const { drawLetterhead, drawFooter, drawTableGrid } = require("../utils/pdfHeader");
+const { recordAudit } = require("../utils/auditLogger");
+const tzs = (n) => `TZS ${Number(n || 0).toLocaleString("en-US")}`;
 
-const PARTTIME_MONTHLY_FEE = 2000;
+// The monthly amount is set by the Head Master / Second Master (default
+// TZS 2,000) and can differ per month - see utils/parttimeFee.js.
+const feeRates = require("../utils/parttimeFee");
 const MAX_INSTALLMENTS = 4;
 const HOLIDAY_MONTHS = [6, 12]; // June & December - no fee billed
 
@@ -31,7 +35,7 @@ const logHistory = async (studentId, eventType, note, userId) => {
   `, [studentId, eventType, note || null, userId || null]);
 };
 
-// ── Part-time Teachers (TSH.2000/month, up to 4 installments, June/Dec excluded) ──
+// ── Part-time Teachers (monthly amount set in the app, up to 4 installments, June/Dec excluded) ──
 
 // GET /api/contributions/parttime?year=&month=  - every enrolled student + their status for that month
 const getPartTime = async (req, res, next) => {
@@ -60,7 +64,9 @@ const getPartTime = async (req, res, next) => {
       ORDER BY s.form, s.gender ASC, LOWER(s.first_name) ASC, LOWER(s.middle_name) ASC, LOWER(s.last_name) ASC
     `, scope ? [year, month, scope] : [year, month]);
 
-    res.json({ success: true, data: result.rows, monthly_fee: PARTTIME_MONTHLY_FEE, max_installments: MAX_INSTALLMENTS });
+    const rates = await feeRates.rates();
+    res.json({ success: true, data: result.rows, monthly_fee: feeRates.feeFromRates(rates, year, month), max_installments: MAX_INSTALLMENTS,
+      fee_rates: rates.map((r) => ({ amount: r.amount, year: r.effective_year, month: r.effective_month })) });
   } catch (err) { next(err); }
 };
 
@@ -119,6 +125,7 @@ const payPartTime = async (req, res, next) => {
     if (row && row.installments >= MAX_INSTALLMENTS)
       return res.status(400).json({ success: false, message: `Maximum of ${MAX_INSTALLMENTS} installments already reached for this month.` });
 
+    const PARTTIME_MONTHLY_FEE = await feeRates.feeFor(year, month);
     const currentPaid = row ? Number(row.amount_paid) : 0;
     // "Mark Paid (Full)" deliberately sends the full monthly fee and is
     // capped to the balance below; any OTHER amount above the balance is a
@@ -162,6 +169,10 @@ const payPartTime = async (req, res, next) => {
       INSERT INTO contribution_parttime_payments (student_id, year, month, amount, recorded_by)
       VALUES ($1,$2,$3,$4,$5)
     `, [studentId, year, month, actualCollected, req.user?.id || null]);
+
+    await recordAudit({ actor: req.user, action: "contribution.payment", entityType: "student", entityId: student.id,
+      description: `Recorded ${tzs(actualCollected)} Part-Time Teachers payment for ${fullNameOf(student)} (${student.form}), month ${month}/${year}${completed ? " - month fully paid" : ""}.`,
+      metadata: { amount: actualCollected, year, month, total_paid: newPaid, completed }, req });
 
     res.json({ success: true, data: result.rows[0], student: { id: student.id, name: fullNameOf(student) } });
   } catch (err) { next(err); }
@@ -209,11 +220,12 @@ const payPartTimeAdvance = async (req, res, next) => {
       // balance is actually collected now; logging the full monthly fee
       // here would double-count the earlier partial payment in Daily
       // Collections (same issue as the single-month payPartTime path).
+      const PARTTIME_MONTHLY_FEE = await feeRates.feeFor(year, month);
       const currentPaid = row ? Number(row.amount_paid) : 0;
-      const actualCollected = PARTTIME_MONTHLY_FEE - currentPaid;
+      const actualCollected = Math.max(PARTTIME_MONTHLY_FEE - currentPaid, 0);
       const r = row
         ? await query(`UPDATE contribution_parttime SET amount_paid=$1, installments=$2, completed=true, updated_at=NOW() WHERE id=$3 RETURNING *`,
-            [PARTTIME_MONTHLY_FEE, (row.installments || 0) + 1, row.id])
+            [Math.max(PARTTIME_MONTHLY_FEE, currentPaid), (row.installments || 0) + 1, row.id])
         : await query(`INSERT INTO contribution_parttime (student_id, year, month, amount_paid, installments, completed, recorded_by) VALUES ($1,$2,$3,$4,1,true,$5) RETURNING *`,
             [studentId, year, month, PARTTIME_MONTHLY_FEE, req.user?.id || null]);
       results.push(r.rows[0]);
@@ -225,6 +237,11 @@ const payPartTimeAdvance = async (req, res, next) => {
       `, [studentId, year, month, actualCollected, req.user?.id || null]);
     }
     await logHistory(studentId, "Contribution", `Part-Time Teachers contribution paid in advance for ${results.length} month(s) of ${year}.`, req.user?.id);
+    if (results.length) {
+      await recordAudit({ actor: req.user, action: "contribution.payment_advance", entityType: "student", entityId: student.id,
+        description: `Recorded advance Part-Time Teachers payment for ${fullNameOf(student)} (${student.form}): ${results.length} month(s) of ${year} (${results.map((r) => r.month).join(", ")}).`,
+        metadata: { year, months: results.map((r) => r.month) }, req });
+    }
     res.json({ success: true, data: results, student: { id: student.id, name: fullNameOf(student) } });
   } catch (err) { next(err); }
 };
@@ -248,7 +265,7 @@ const getPartTimeSummary = async (req, res, next) => {
       WHERE s.status = 'Active'
       GROUP BY s.form ORDER BY s.form
     `, [year, month]);
-    res.json({ success: true, data: result.rows, monthly_fee: PARTTIME_MONTHLY_FEE });
+    res.json({ success: true, data: result.rows, monthly_fee: await feeRates.feeFor(year, month) });
   } catch (err) { next(err); }
 };
 
@@ -649,7 +666,9 @@ const updateChargeAmount = async (req, res, next) => {
     const { amount, note } = req.body;
     if (amount !== undefined && amount !== null && amount !== "" && (!Number.isFinite(Number(amount)) || Number(amount) < 0))
       return res.status(400).json({ success: false, message: "Amount must be a number of 0 or more." });
-    const existing = await query(`SELECT locked FROM student_charges WHERE id = $1`, [req.params.chargeId]);
+    const existing = await query(
+      `SELECT c.locked, c.amount, c.note, c.charge_type, s.id AS student_id, s.first_name, s.middle_name, s.last_name, s.form
+       FROM student_charges c LEFT JOIN students s ON s.id = c.student_id WHERE c.id = $1`, [req.params.chargeId]);
     if (!existing.rows.length) return res.status(404).json({ success: false, message: "Record not found." });
     if (existing.rows[0].locked)
       return res.status(400).json({ success: false, message: "This record has already been submitted and locked - it can no longer be edited." });
@@ -658,7 +677,14 @@ const updateChargeAmount = async (req, res, next) => {
       UPDATE student_charges SET amount = COALESCE($1, amount), note = COALESCE($2, note)
       WHERE id = $3 RETURNING *
     `, [amount === "" ? null : amount, note, req.params.chargeId]);
-    res.json({ success: true, data: result.rows[0] });
+    const old = existing.rows[0];
+    const after = result.rows[0];
+    if (Number(old.amount) !== Number(after.amount) || (old.note || "") !== (after.note || "")) {
+      await recordAudit({ actor: req.user, action: "contribution.amount_edit", entityType: "student_charge", entityId: after.id,
+        description: `Edited ${old.charge_type || "charge"} record of ${fullNameOf(old)} (${old.form || "-"}): amount ${tzs(old.amount)} -> ${tzs(after.amount)}${(old.note || "") !== (after.note || "") ? ", note changed" : ""}.`,
+        metadata: { student_id: old.student_id, before: { amount: Number(old.amount), note: old.note }, after: { amount: Number(after.amount), note: after.note } }, req });
+    }
+    res.json({ success: true, data: after });
   } catch (err) { next(err); }
 };
 
@@ -765,6 +791,8 @@ const markReam = async (req, res, next) => {
        VALUES ($1, 'Ream', 0, true, NOW(), true, CURRENT_DATE, $2) RETURNING *`,
       [studentId, req.user?.id || null]
     );
+    await recordAudit({ actor: req.user, action: "contribution.ream", entityType: "student", entityId: student.id,
+      description: `Recorded that ${fullNameOf(student)} (${student.form}) brought Ream for ${year}.`, metadata: { year }, req });
     res.status(201).json({
       success: true,
       data: result.rows[0],
@@ -773,7 +801,58 @@ const markReam = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// GET /api/contributions/parttime/fee - the amount for this month, any
+// change already planned for a later month, and the history of changes.
+const getPartTimeFee = async (req, res, next) => {
+  try {
+    const { year, month } = feeRates.nowYearMonth();
+    const rates = await feeRates.rates();
+    res.json({ success: true, current: feeRates.feeFromRates(rates, year, month), year, month,
+      min: feeRates.MIN_FEE, max: feeRates.MAX_FEE,
+      rates: rates.map((r) => ({ id: r.id, amount: r.amount, year: r.effective_year, month: r.effective_month, set_by: r.created_by_name, set_at: r.created_at })) });
+  } catch (err) { next(err); }
+};
+
+// POST /api/contributions/parttime/fee { amount, year, month } - Head Master /
+// Second Master: new monthly amount starting from that month (this month or
+// later; earlier months keep what applied then). Months already fully paid
+// stay paid; a month whose payments now reach the new amount becomes paid.
+const setPartTimeFee = async (req, res, next) => {
+  try {
+    const amount = Number(req.body.amount);
+    const year = validYear(req.body.year);
+    const month = validMonth(req.body.month);
+    if (!Number.isInteger(amount) || amount < feeRates.MIN_FEE || amount > feeRates.MAX_FEE)
+      return res.status(400).json({ success: false, message: `Amount must be a whole number from TZS ${feeRates.MIN_FEE.toLocaleString("en-US")} to TZS ${feeRates.MAX_FEE.toLocaleString("en-US")}.` });
+    if (!year || !month) return res.status(400).json({ success: false, message: "Choose the month the new amount starts from." });
+    const now = feeRates.nowYearMonth();
+    if (year * 100 + month < now.year * 100 + now.month)
+      return res.status(400).json({ success: false, message: "The new amount can only start from this month or a later month." });
+    const before = await feeRates.feeFor(year, month);
+    await query(
+      `INSERT INTO parttime_fee_rates (amount, effective_year, effective_month, created_by, created_by_name)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (effective_year, effective_month) DO UPDATE SET amount = EXCLUDED.amount, created_by = EXCLUDED.created_by,
+         created_by_name = EXCLUDED.created_by_name, created_at = NOW()`,
+      [amount, year, month, req.user.id, req.user.full_name || req.user.username]);
+    feeRates.clearCache();
+    // A lower amount: months from here on whose payments already reach it are now fully paid.
+    const rates = await feeRates.rates();
+    const open = await query(
+      `SELECT id, year, month, amount_paid FROM contribution_parttime WHERE completed = false AND (year::int * 100 + month::int) >= $1`, [year * 100 + month]);
+    for (const r of open.rows) {
+      if (Number(r.amount_paid) >= feeRates.feeFromRates(rates, r.year, r.month))
+        await query(`UPDATE contribution_parttime SET completed = true, updated_at = NOW() WHERE id = $1`, [r.id]);
+    }
+    await recordAudit({ actor: req.user, action: "contribution.fee_change", entityType: "parttime_fee",
+      description: `Changed the Part-Time Teachers monthly amount from ${tzs(before)} to ${tzs(amount)}, starting ${year}-${String(month).padStart(2, "0")}.`,
+      metadata: { before, after: amount, year, month }, req });
+    res.json({ success: true, message: "Monthly amount saved." });
+  } catch (err) { next(err); }
+};
+
 module.exports = {
+  getPartTimeFee, setPartTimeFee,
   getPartTime, payPartTime, payPartTimeAdvance, getPartTimeSummary, getPartTimeHistory, receiptPartTime,
   getPartTimeStudents, getPartTimeStudentEntries, getContributedStudentsCount, getPartTimeDaily,
   getReam, getReamSummary, getOtherExpenses, updateChargeAmount, receiptCharge,

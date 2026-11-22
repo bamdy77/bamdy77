@@ -2,6 +2,8 @@ const { query } = require("../db/db");
 const { tzColumn, formatTZ } = require("../utils/tz");
 const PDFDocument = require("pdfkit");
 const { drawLetterhead, drawFooter, drawTableGrid } = require("../utils/pdfHeader");
+const { allFoodTypes, activeFoodTypes, clearFoodTypesCache, unitShort } = require("../utils/foodTypes");
+const { recordAudit } = require("../utils/auditLogger");
 
 const fullNameOf = (s) => [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ");
 
@@ -18,23 +20,137 @@ const classScopeFor = (req) => {
   return req.user.class_teacher_of ? [req.user.class_teacher_of] : [];
 };
 
-// The 8 physical items collected - mahindi/mchele/mafuta plus chumvi and the
-// 4 vegetable types, each written in Swahili exactly as the school names them.
-const TYPES = [
-  { key: "maize",       label: "MAHINDI",            unit: "KG" },
-  { key: "rice",        label: "MCHELE",              unit: "KG" },
-  { key: "cooking_oil", label: "MAFUTA YA KUPIKIA",   unit: "LITRES" },
-  { key: "salt",        label: "CHUMVI",              unit: "KG" },
-  { key: "njugu",       label: "NJUGU",               unit: "KG" },
-  { key: "maharage",    label: "MAHARAGE",            unit: "KG" },
-  { key: "mbaazi",      label: "MBAAZI",              unit: "KG" },
-  { key: "kunde",       label: "KUNDE",               unit: "KG" },
-];
-const TYPE_KEYS = TYPES.map((t) => t.key);
 
 // GET /api/food/types - lets the frontend build its type picker / units from
 // one source of truth instead of duplicating the list.
-const getTypes = (_req, res) => res.json({ success: true, data: TYPES });
+// ?all=1 (Head Master / Second Master): hidden types too, with how many
+// entries use each one, for the "Food Types" manager.
+const getTypes = async (req, res, next) => {
+  try {
+    const roles = req.user.roles && req.user.roles.length ? req.user.roles : [req.user.role];
+    const manager = roles.some((r) => r === "admin" || r === "second_master");
+    if (req.query.all && manager) {
+      const types = await allFoodTypes();
+      const used = await query(`SELECT contribution_type, COUNT(*)::int AS n FROM food_contribution_entries GROUP BY contribution_type`);
+      const counts = Object.fromEntries(used.rows.map((r) => [r.contribution_type, r.n]));
+      return res.json({ success: true, data: types.map((t) => ({ ...t, used: counts[t.key] || 0 })) });
+    }
+    res.json({ success: true, data: await activeFoodTypes() });
+  } catch (err) { next(err); }
+};
+
+const FOOD_UNITS = ["KG", "LITRES", "PIECES"];
+const cleanLabel = (v) => String(v || "").replace(/\s+/g, " ").trim().toUpperCase();
+// Required amount per student per year: empty/0 = none; otherwise 0.1-100000.
+const parseRequired = (v) => {
+  if (v === undefined) return undefined;
+  if (v === null || v === "" || Number(v) === 0) return null;
+  const n = Math.round(Number(v) * 100) / 100;
+  return Number.isFinite(n) && n > 0 && n <= 100000 ? n : NaN;
+};
+
+// POST /api/food/types { label, unit } - new type, added at the end of the list.
+const createType = async (req, res, next) => {
+  try {
+    const label = cleanLabel(req.body.label);
+    const unit = String(req.body.unit || "KG").toUpperCase();
+    if (label.length < 2 || label.length > 60) return res.status(400).json({ success: false, message: "Food name must be 2-60 characters." });
+    if (!FOOD_UNITS.includes(unit)) return res.status(400).json({ success: false, message: "Invalid unit." });
+    const required = parseRequired(req.body.required_qty) ?? null;
+    if (Number.isNaN(required)) return res.status(400).json({ success: false, message: "The required amount must be a number greater than zero." });
+    const clash = await query(`SELECT id FROM food_types WHERE UPPER(label) = $1`, [label]);
+    if (clash.rows.length) return res.status(409).json({ success: false, message: "That food type already exists." });
+    // The stored key never changes, even if the name is edited later.
+    let base = label.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40) || "food";
+    let key = base; let n = 2;
+    while ((await query(`SELECT 1 FROM food_types WHERE key = $1`, [key])).rows.length) key = `${base}_${n++}`;
+    const { rows } = await query(
+      `INSERT INTO food_types (key, label, unit, required_qty, sort_order) VALUES ($1, $2, $3, $4, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM food_types))
+       RETURNING id, key, label, unit, sort_order, is_active, required_qty::float AS required_qty`, [key, label, unit, required]);
+    clearFoodTypesCache();
+    await recordAudit({ actor: req.user, action: "food.type_add", entityType: "food_type", entityId: rows[0].id,
+      description: `Added food type ${label} (${unit})${required ? `, ${required} ${unitShort(unit)} per student` : ""}.`, metadata: { key, unit, required_qty: required }, req });
+    res.status(201).json({ success: true, data: rows[0], message: "Food type added." });
+  } catch (err) {
+    if (err.code === "23505") return res.status(409).json({ success: false, message: "That food type already exists." });
+    next(err);
+  }
+};
+
+// PATCH /api/food/types/:id { label?, unit?, is_active? }
+const updateType = async (req, res, next) => {
+  try {
+    const cur = await query(`SELECT * FROM food_types WHERE id = $1`, [req.params.id]);
+    if (!cur.rows.length) return res.status(404).json({ success: false, message: "Food type not found." });
+    const before = cur.rows[0];
+    const label = req.body.label !== undefined ? cleanLabel(req.body.label) : before.label;
+    const unit = req.body.unit !== undefined ? String(req.body.unit).toUpperCase() : before.unit;
+    const isActive = req.body.is_active !== undefined ? !!req.body.is_active : before.is_active;
+    const reqIn = parseRequired(req.body.required_qty);
+    if (Number.isNaN(reqIn)) return res.status(400).json({ success: false, message: "The required amount must be a number greater than zero." });
+    const required = reqIn === undefined ? (before.required_qty === null ? null : Number(before.required_qty)) : reqIn;
+    if (label.length < 2 || label.length > 60) return res.status(400).json({ success: false, message: "Food name must be 2-60 characters." });
+    if (!FOOD_UNITS.includes(unit)) return res.status(400).json({ success: false, message: "Invalid unit." });
+    if (unit !== before.unit) {
+      // Changing kg <-> litres would make every quantity already recorded wrong.
+      const used = await query(`SELECT 1 FROM food_contribution_entries WHERE contribution_type = $1 LIMIT 1`, [before.key]);
+      if (used.rows.length) return res.status(400).json({ success: false, message: "The unit cannot be changed: contributions are already recorded for this food." });
+    }
+    if (!isActive && before.is_active) {
+      const left = await query(`SELECT COUNT(*)::int AS n FROM food_types WHERE is_active AND id <> $1`, [before.id]);
+      if (!left.rows[0].n) return res.status(400).json({ success: false, message: "At least one food type must stay visible." });
+    }
+    const { rows } = await query(
+      `UPDATE food_types SET label = $1, unit = $2, is_active = $3, required_qty = $4 WHERE id = $5
+       RETURNING id, key, label, unit, sort_order, is_active, required_qty::float AS required_qty`,
+      [label, unit, isActive, required, before.id]);
+    clearFoodTypesCache();
+    const changes = [];
+    if (label !== before.label) changes.push(`name ${before.label} -> ${label}`);
+    if (unit !== before.unit) changes.push(`unit ${before.unit} -> ${unit}`);
+    if (isActive !== before.is_active) changes.push(isActive ? "shown again" : "hidden");
+    const oldReq = before.required_qty === null ? null : Number(before.required_qty);
+    if (oldReq !== required) changes.push(`required amount ${oldReq ?? "none"} -> ${required ?? "none"} ${unitShort(unit)}`);
+    if (changes.length) await recordAudit({ actor: req.user, action: "food.type_edit", entityType: "food_type", entityId: before.id,
+      description: `Edited food type ${before.label}: ${changes.join(", ")}.`, req });
+    res.json({ success: true, data: rows[0], message: "Food type updated." });
+  } catch (err) {
+    if (err.code === "23505") return res.status(409).json({ success: false, message: "That food type already exists." });
+    next(err);
+  }
+};
+
+// PUT /api/food/types/order { ids: [3, 1, 2, ...] } - the new display order.
+const reorderTypes = async (req, res, next) => {
+  try {
+    const ids = Array.isArray(req.body.ids) ? req.body.ids.map(Number) : [];
+    const { rows } = await query(`SELECT id FROM food_types`);
+    const all = rows.map((r) => r.id).sort((a, b) => a - b);
+    if (ids.length !== all.length || [...ids].sort((a, b) => a - b).some((id, i) => id !== all[i]))
+      return res.status(400).json({ success: false, message: "The list has changed - please refresh and try again." });
+    await query(`UPDATE food_types t SET sort_order = o.pos FROM unnest($1::int[]) WITH ORDINALITY AS o(id, pos) WHERE t.id = o.id`, [ids]);
+    clearFoodTypesCache();
+    await recordAudit({ actor: req.user, action: "food.type_reorder", entityType: "food_type", description: "Changed the order of the food types.", req });
+    res.json({ success: true, message: "Order saved." });
+  } catch (err) { next(err); }
+};
+
+// DELETE /api/food/types/:id - only a type nothing was recorded for yet.
+const deleteType = async (req, res, next) => {
+  try {
+    const cur = await query(`SELECT * FROM food_types WHERE id = $1`, [req.params.id]);
+    if (!cur.rows.length) return res.status(404).json({ success: false, message: "Food type not found." });
+    const t = cur.rows[0];
+    const used = await query(`SELECT 1 FROM food_contribution_entries WHERE contribution_type = $1 LIMIT 1`, [t.key]);
+    if (used.rows.length) return res.status(409).json({ success: false, message: "Contributions are already recorded for this food, so it cannot be deleted. Hide it instead." });
+    const left = await query(`SELECT COUNT(*)::int AS n FROM food_types WHERE is_active AND id <> $1`, [t.id]);
+    if (t.is_active && !left.rows[0].n) return res.status(400).json({ success: false, message: "At least one food type must stay visible." });
+    await query(`DELETE FROM food_types WHERE id = $1`, [t.id]);
+    clearFoodTypesCache();
+    await recordAudit({ actor: req.user, action: "food.type_delete", entityType: "food_type", entityId: t.id, description: `Deleted food type ${t.label}.`, req });
+    res.json({ success: true, message: "Food type deleted." });
+  } catch (err) { next(err); }
+};
 
 // GET /api/food/students?category=boarding|day&year=
 // Whether a student is "boarding" is resolved live against hostel_occupants
@@ -55,7 +171,7 @@ const getStudents = async (req, res, next) => {
 
     const scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.json({ success: true, data: [], category, types: TYPES, message: "You have no class assigned yet - ask the Head Master to assign your class." });
+      return res.json({ success: true, data: [], category, types: await activeFoodTypes(), message: "You have no class assigned yet - ask the Head Master to assign your class." });
 
     const params = [year];
     let scopeFilter = "";
@@ -79,7 +195,7 @@ const getStudents = async (req, res, next) => {
       ORDER BY s.form, s.gender ASC, LOWER(s.first_name) ASC, LOWER(s.middle_name) ASC, LOWER(s.last_name) ASC
     `, params);
 
-    res.json({ success: true, data: result.rows, category, types: TYPES });
+    res.json({ success: true, data: result.rows, category, types: await activeFoodTypes() });
   } catch (err) { next(err); }
 };
 
@@ -95,7 +211,8 @@ const addEntry = async (req, res, next) => {
     const studentId = req.params.studentId;
     if (!category || !contribution_type || quantity === undefined || !year)
       return res.status(400).json({ success: false, message: "category, contribution_type, quantity and year are required." });
-    if (!TYPE_KEYS.includes(contribution_type))
+    const typeInfo = (await activeFoodTypes()).find((t) => t.key === contribution_type);
+    if (!typeInfo)
       return res.status(400).json({ success: false, message: "Invalid contribution_type." });
     if (!["boarding", "day"].includes(category))
       return res.status(400).json({ success: false, message: "Category must be Boarding or Day." });
@@ -124,17 +241,34 @@ const addEntry = async (req, res, next) => {
     if ((category === "boarding") !== !!student.in_hostel)
       return res.status(400).json({ success: false, message: `${fullNameOf(student)} is a ${student.in_hostel ? "Boarding" : "Day"} student - record this under ${student.in_hostel ? "Boarding" : "Day"}.` });
 
+    // With a required amount set, the student cannot be recorded for more
+    // than what is still owed (a typing slip would otherwise hide a debt).
+    let given = 0;
+    if (typeInfo.required_qty) {
+      const g = await query(`SELECT COALESCE(SUM(quantity), 0)::float AS g FROM food_contribution_entries WHERE student_id = $1 AND year = $2 AND contribution_type = $3`,
+        [studentId, String(yearNum), contribution_type]);
+      given = g.rows[0].g;
+      const left = Math.round((typeInfo.required_qty - given) * 100) / 100;
+      if (left <= 0)
+        return res.status(400).json({ success: false, message: `${fullNameOf(student)} has already completed ${typeInfo.label} for ${yearNum} (${typeInfo.required_qty} ${unitShort(typeInfo.unit)}).` });
+      if (qty > left + 1e-9)
+        return res.status(400).json({ success: false, message: `${fullNameOf(student)} only owes ${left} ${unitShort(typeInfo.unit)} of ${typeInfo.label} - the amount entered is more than that.` });
+    }
+
     const result = await query(`
       INSERT INTO food_contribution_entries (student_id, category, contribution_type, quantity, year, recorded_by)
       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *
     `, [studentId, category, contribution_type, qty, String(yearNum), req.user?.id || null]);
 
-    const typeInfo = TYPES.find((t) => t.key === contribution_type);
     res.status(201).json({
       success: true,
       data: result.rows[0],
       student: { id: student.id, name: fullNameOf(student) },
-      message: `Submitted successfully - ${qty} ${typeInfo.unit} of ${typeInfo.label} recorded for ${fullNameOf(student)}.`,
+      message: typeInfo.required_qty
+        ? (given + qty >= typeInfo.required_qty - 1e-9
+          ? `Submitted successfully - ${fullNameOf(student)} has now COMPLETED ${typeInfo.label} (${typeInfo.required_qty} ${unitShort(typeInfo.unit)}).`
+          : `Submitted successfully - ${qty} ${unitShort(typeInfo.unit)} of ${typeInfo.label} recorded for ${fullNameOf(student)}. Still owes ${Math.round((typeInfo.required_qty - given - qty) * 100) / 100} ${unitShort(typeInfo.unit)}.`)
+        : `Submitted successfully - ${qty} ${typeInfo.unit} of ${typeInfo.label} recorded for ${fullNameOf(student)}.`,
     });
   } catch (err) { next(err); }
 };
@@ -145,6 +279,12 @@ const deleteEntry = async (req, res, next) => {
   try {
     const result = await query(`DELETE FROM food_contribution_entries WHERE id = $1 RETURNING *`, [req.params.id]);
     if (!result.rows.length) return res.status(404).json({ success: false, message: "Entry not found." });
+    const e = result.rows[0];
+    const t = (await allFoodTypes()).find((x) => x.key === e.contribution_type);
+    const st = await query(`SELECT first_name, middle_name, last_name, form FROM students WHERE id = $1`, [e.student_id]);
+    await recordAudit({ actor: req.user, action: "food.entry_delete", entityType: "student", entityId: e.student_id,
+      description: `Removed a food contribution: ${Number(e.quantity)} ${unitShort(t?.unit)} of ${t?.label || e.contribution_type} for ${st.rows[0] ? `${fullNameOf(st.rows[0])} (${st.rows[0].form})` : "a student"} (${e.year}).`,
+      metadata: { entry_id: e.id, quantity: Number(e.quantity), type: e.contribution_type, category: e.category, recorded_at: e.created_at }, req });
     res.json({ success: true, message: "Entry removed." });
   } catch (err) { next(err); }
 };
@@ -191,7 +331,7 @@ const getHistory = async (req, res, next) => {
     const params = [year];
     const scope = classScopeFor(req);
     if (scope && scope.length === 0)
-      return res.json({ success: true, data: [], types: TYPES, message: "You have no class assigned yet - ask the Head Master to assign your class." });
+      return res.json({ success: true, data: [], types: await activeFoodTypes(), message: "You have no class assigned yet - ask the Head Master to assign your class." });
     if (scope) { params.push(scope); conditions.push(`s.form = ANY($${params.length}::text[])`); }
     else if (form) { params.push(form); conditions.push(`s.form = $${params.length}`); }
     if (category) { params.push(category); conditions.push(`fe.category = $${params.length}`); }
@@ -207,7 +347,7 @@ const getHistory = async (req, res, next) => {
       WHERE ${conditions.join(" AND ")}
       ORDER BY fe.created_at DESC
     `, params);
-    res.json({ success: true, data: result.rows, types: TYPES });
+    res.json({ success: true, data: result.rows, types: await allFoodTypes() });
   } catch (err) { next(err); }
 };
 
@@ -281,7 +421,7 @@ const getFoodDaily = async (req, res, next) => {
     `, params);
 
     const studentsContributed = new Set(result.rows.map((r) => r.student_id)).size;
-    res.json({ success: true, data: result.rows, students_contributed: studentsContributed, types: TYPES });
+    res.json({ success: true, data: result.rows, students_contributed: studentsContributed, types: await allFoodTypes() });
   } catch (err) { next(err); }
 };
 
@@ -326,6 +466,9 @@ const exportStudentsPdf = async (req, res, next) => {
 
     // Grand total per item type across every student in this list - the
     // "idadi ya jumla ya kilo/litres alizotoa kwenye kila mahitaji" figure.
+    // Columns: the visible types, plus any hidden type that still has
+    // quantities in this list (so nothing recorded disappears from the PDF).
+    const TYPES = (await allFoodTypes()).filter((t) => t.is_active || result.rows.some((r) => Number(r.totals?.[t.key] || 0) > 0));
     const grand = {};
     TYPES.forEach((t) => { grand[t.key] = 0; });
     result.rows.forEach((s) => TYPES.forEach((t) => { grand[t.key] += Number(s.totals?.[t.key] || 0); }));
@@ -341,7 +484,7 @@ const exportStudentsPdf = async (req, res, next) => {
     const itemW = (doc.page.width - doc.page.margins.left - doc.page.margins.right - nameW - formW) / TYPES.length;
     const tableWidth = nameW + formW + itemW * TYPES.length;
     const colX = [left, left + nameW, ...TYPES.map((_, i) => left + nameW + formW + itemW * i)];
-    const headers = ["Full Name", "Class", ...TYPES.map((t) => `${t.label} (${t.unit === "LITRES" ? "L" : "kg"})`)];
+    const headers = ["Full Name", "Class", ...TYPES.map((t) => `${t.label} (${unitShort(t.unit)})`)];
 
     const drawHeaderRow = (y) => {
       doc.rect(left, y, tableWidth, 24).fill("#334155");
@@ -373,7 +516,7 @@ const exportStudentsPdf = async (req, res, next) => {
     // whole list, drawn as its own highlighted row right under the table.
     doc.rect(left, y, tableWidth, 20).fill("#EAF0FF");
     doc.fontSize(7).font("Helvetica-Bold").fillColor("#153810");
-    const totalsRow = ["GRAND TOTAL", "", ...TYPES.map((t) => `${grand[t.key]} ${t.unit === "LITRES" ? "L" : "kg"}`)];
+    const totalsRow = ["GRAND TOTAL", "", ...TYPES.map((t) => `${grand[t.key]} ${unitShort(t.unit)}`)];
     totalsRow.forEach((v, i) => doc.text(v, colX[i] + 3, y + 6, { width: (colX[i + 1] || left + tableWidth) - colX[i] - 5 }));
     drawTableGrid(doc, colX, left + tableWidth, [y, y + 20]);
     doc.y = y + 24;
@@ -383,4 +526,98 @@ const exportStudentsPdf = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getTypes, getStudents, addEntry, deleteEntry, getStudentEntries, getHistory, getHistoryStudents, getFoodDaily, exportStudentsPdf, TYPES };
+// ── Completed / owing per food type ────────────────────────────────────────
+// For one food type with a required amount (e.g. MAHINDI 30 kg): every
+// active student, how much they brought this year, how much is left, and
+// whether they have completed. ?status=completed|owing narrows the list.
+async function foodStatusRows(q) {
+  const year = String(Number(q.year) || new Date().getFullYear());
+  const type = (await allFoodTypes()).find((t) => t.key === q.type);
+  if (!type) { const e = new Error("Choose a food type."); e.status = 400; throw e; }
+  if (!type.required_qty) { const e = new Error(`${type.label} has no required amount yet - the Head Master or Second Master can set it under Food Types.`); e.status = 400; throw e; }
+  const params = [year, type.key];
+  const cond = ["s.status = 'Active'"];
+  if (q.form) { params.push(String(q.form)); cond.push(`s.form = $${params.length}`); }
+  const inHostel = "EXISTS (SELECT 1 FROM hostel_occupants o WHERE o.student_id = s.id AND o.is_active = true)";
+  if (q.category === "boarding") cond.push(inHostel);
+  if (q.category === "day") cond.push(`NOT ${inHostel}`);
+  const { rows } = await query(`
+    SELECT s.id AS student_id, s.first_name, s.middle_name, s.last_name, s.form, ${inHostel} AS boarding,
+      COALESCE((SELECT SUM(quantity) FROM food_contribution_entries e WHERE e.student_id = s.id AND e.year = $1 AND e.contribution_type = $2), 0)::float AS given
+    FROM students s WHERE ${cond.join(" AND ")}
+    ORDER BY s.form, s.gender ASC, LOWER(s.first_name), LOWER(s.middle_name), LOWER(s.last_name)`, params);
+  const req = type.required_qty;
+  let list = rows.map((r) => {
+    const remaining = Math.max(Math.round((req - r.given) * 100) / 100, 0);
+    return { student_id: r.student_id, name: fullNameOf(r), form: r.form, category: r.boarding ? "boarding" : "day",
+      given: r.given, required: req, remaining, completed: remaining <= 0 };
+  });
+  const summary = { total: list.length, completed: list.filter((r) => r.completed).length,
+    owing: list.filter((r) => !r.completed).length, total_owed: Math.round(list.reduce((a, r) => a + r.remaining, 0) * 100) / 100 };
+  if (q.status === "completed") list = list.filter((r) => r.completed);
+  if (q.status === "owing") list = list.filter((r) => !r.completed);
+  return { type, year, list, summary };
+}
+
+// GET /api/food/status?year=&type=&category=&form=&status=
+const getFoodStatus = async (req, res, next) => {
+  try {
+    const { type, year, list, summary } = await foodStatusRows(req.query);
+    res.json({ success: true, type, year, data: list, summary });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ success: false, message: err.message });
+    next(err);
+  }
+};
+
+// GET /api/food/status/pdf - the same list as a PDF (completed or owing names).
+const exportFoodStatusPdf = async (req, res, next) => {
+  try {
+    const { type, year, list, summary } = await foodStatusRows(req.query);
+    const u = unitShort(type.unit);
+    const which = req.query.status === "completed" ? "Completed" : req.query.status === "owing" ? "Still Owing" : "All Students";
+    const scopeText = [req.query.form, req.query.category === "boarding" ? "Boarding" : req.query.category === "day" ? "Day" : null].filter(Boolean).join(" - ");
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${type.key}-${which.toLowerCase().replace(/ /g, "-")}-${year}.pdf"`);
+    const doc = new PDFDocument({ margin: 30, size: "A4", bufferPages: true });
+    doc.pipe(res);
+    drawLetterhead(doc, `${type.label} (${type.required_qty} ${u} per student) - ${which} - ${year}${scopeText ? ` - ${scopeText}` : ""}`);
+    doc.fontSize(9).font("Helvetica").fillColor("#0F172A")
+      .text(`Completed: ${summary.completed}   Still owing: ${summary.owing}   Total still owed: ${summary.total_owed} ${u}`);
+    doc.moveDown(0.6);
+    const left = doc.page.margins.left;
+    const widths = [28, 190, 60, 70, 60, 60, 66];
+    const colX = widths.reduce((acc, w) => [...acc, acc[acc.length - 1] + w], [left]);
+    const tableW = colX[colX.length - 1] - left;
+    const headers = ["#", "Full Name", "Class", "Boarding/Day", `Given (${u})`, `Owes (${u})`, "Status"];
+    const head = (y) => {
+      doc.rect(left, y, tableW, 20).fill("#334155");
+      doc.fillColor("#FFFFFF").fontSize(8).font("Helvetica-Bold");
+      headers.forEach((h, i) => doc.text(h, colX[i] + 3, y + 6, { width: widths[i] - 6 }));
+      return y + 20;
+    };
+    let y = head(doc.y);
+    let rowYs = [y - 20, y];
+    doc.font("Helvetica");
+    list.forEach((r, i) => {
+      if (y > doc.page.height - 70) {
+        drawTableGrid(doc, colX.slice(0, -1), left + tableW, rowYs);
+        doc.addPage({ margin: 30, size: "A4" });
+        y = head(30); rowYs = [30, y];
+      }
+      if (i % 2 === 0) doc.rect(left, y, tableW, 16).fill("#F8FAFC");
+      const vals = [i + 1, r.name, r.form, r.category === "boarding" ? "Boarding" : "Day", r.given, r.remaining, r.completed ? "COMPLETED" : "OWES"];
+      vals.forEach((v, k) => doc.fontSize(8).fillColor(k === 6 ? (r.completed ? "#15803D" : "#B91C1C") : "#0F172A").text(String(v), colX[k] + 3, y + 4, { width: widths[k] - 6 }));
+      y += 16; rowYs.push(y);
+    });
+    if (!list.length) { doc.fontSize(9).fillColor("#64748B").text("No students in this list.", left + 3, y + 4); y += 18; rowYs.push(y); }
+    drawTableGrid(doc, colX.slice(0, -1), left + tableW, rowYs);
+    drawFooter(doc, formatTZ);
+    doc.end();
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ success: false, message: err.message });
+    next(err);
+  }
+};
+
+module.exports = { getTypes, createType, updateType, reorderTypes, deleteType, getStudents, addEntry, deleteEntry, getStudentEntries, getHistory, getHistoryStudents, getFoodDaily, exportStudentsPdf, getFoodStatus, exportFoodStatusPdf };

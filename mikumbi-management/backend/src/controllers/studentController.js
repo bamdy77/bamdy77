@@ -4,7 +4,7 @@ const { formatTZ, tzColumn, todayTZ, dateOnly } = require("../utils/tz");
 const { drawLetterhead, drawFooter, drawTableGrid, STUDENT_THEME } = require("../utils/pdfHeader");
 const { cloudinaryResized } = require("../middleware/upload");
 const { parseRosterFile, normalizeStudentRow, fullNameKey, MAX_IMPORT_ROWS } = require("../utils/studentImport");
-const { TYPES: FOOD_TYPES } = require("./foodContributionsController");
+const { allFoodTypes } = require("../utils/foodTypes");
 
 // Same light-blue backdrop resultsController.js paints behind the "MATOKEO
 // YA JUMLA" table and the Parent Report (there called NECTA_SUMMARY_BG) -
@@ -321,7 +321,8 @@ const getStudents = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-const FOOD_TYPE_LABELS = Object.fromEntries(FOOD_TYPES.map((t) => [t.key, t]));
+// key -> { label, unit } for every food type (hidden ones included).
+const foodTypeLabels = async () => Object.fromEntries((await allFoodTypes()).map((t) => [t.key, t]));
 
 // GET /api/students/:id
 const getStudent = async (req, res, next) => {
@@ -394,8 +395,9 @@ const getStudent = async (req, res, next) => {
 
     const student = result.rows[0];
     // Swahili label + unit attached here (not baked into the SQL) so the
-    // one source of truth for these labels stays FOOD_TYPES in
-    // foodContributionsController.js.
+    // one source of truth for these labels is the food_types table
+    // (utils/foodTypes.js).
+    const FOOD_TYPE_LABELS = await foodTypeLabels();
     student.food_contributions = (student.food_contributions || []).map((fc) => ({
       ...fc,
       label: FOOD_TYPE_LABELS[fc.contribution_type]?.label || fc.contribution_type,
@@ -1169,6 +1171,7 @@ const exportStudentReportPdf = async (req, res, next) => {
           `SELECT contribution_type, quantity, year, created_at FROM food_contribution_entries WHERE student_id = $1 ORDER BY created_at DESC`,
           [req.params.id]
         );
+        const FOOD_TYPE_LABELS = await foodTypeLabels();
         if (feRes.rows.length) {
           doc.fontSize(10).font("Helvetica-Bold").fillColor("#0F172A").text("Michango ya Chakula (Food Contributions):");
           feRes.rows.forEach(fe => {

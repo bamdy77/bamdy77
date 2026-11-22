@@ -428,7 +428,7 @@ async function migrate() {
       id                 SERIAL PRIMARY KEY,
       student_id         INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
       category           VARCHAR(20) NOT NULL CHECK (category IN ('boarding','day')),
-      contribution_type  VARCHAR(20) NOT NULL CHECK (contribution_type IN ('maize','rice','cooking_oil','salt','njugu','maharage','mbaazi','kunde')),
+      contribution_type  VARCHAR(60) NOT NULL,
       quantity           NUMERIC(10,2) NOT NULL CHECK (quantity > 0),
       year               VARCHAR(10) NOT NULL,
       recorded_by        INTEGER REFERENCES users(id),
@@ -437,11 +437,11 @@ async function migrate() {
   `);
   await query(`CREATE INDEX IF NOT EXISTS idx_food_entries_student ON food_contribution_entries(student_id, year);`);
   await query(`CREATE INDEX IF NOT EXISTS idx_food_entries_year_type ON food_contribution_entries(year, contribution_type);`);
-  // Existing databases created before CHUMVI (salt) was added need their
-  // CHECK constraint widened — CREATE TABLE IF NOT EXISTS above is a no-op
-  // once the table already exists, so this runs every migration to catch up.
+  // Food types are now a table the Head Master can add to (food_types,
+  // further below), so the old fixed list of allowed types is removed; the
+  // controller checks the type against food_types instead.
   await query(`ALTER TABLE food_contribution_entries DROP CONSTRAINT IF EXISTS food_contribution_entries_contribution_type_check;`);
-  await query(`ALTER TABLE food_contribution_entries ADD CONSTRAINT food_contribution_entries_contribution_type_check CHECK (contribution_type IN ('maize','rice','cooking_oil','salt','njugu','maharage','mbaazi','kunde'));`);
+  await query(`ALTER TABLE food_contribution_entries ALTER COLUMN contribution_type TYPE VARCHAR(60);`);
 
   // ── Hostel History (admitted / departed / re-admitted…) ────
   await query(`
@@ -1872,6 +1872,50 @@ async function migrate() {
   // that now filters for 'Ream', and look like they'd disappeared. Safe to
   // re-run - a no-op once no 'Limu' rows are left.
   await query(`UPDATE student_charges SET charge_type = 'Ream' WHERE charge_type = 'Limu';`);
+
+  // ── Part-Time Teachers monthly amount (editable) ─────────────────────────
+  // Each change starts in a given month; earlier months keep the amount
+  // that applied then. Seeded with the old fixed TZS 2,000.
+  await query(`
+    CREATE TABLE IF NOT EXISTS parttime_fee_rates (
+      id               SERIAL PRIMARY KEY,
+      amount           INTEGER NOT NULL CHECK (amount > 0),
+      effective_year   INTEGER NOT NULL,
+      effective_month  INTEGER NOT NULL CHECK (effective_month BETWEEN 1 AND 12),
+      created_by       INTEGER,
+      created_by_name  VARCHAR(200),
+      created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (effective_year, effective_month)
+    );`);
+  await query(`INSERT INTO parttime_fee_rates (amount, effective_year, effective_month, created_by_name)
+               VALUES (2000, 2000, 1, 'System') ON CONFLICT (effective_year, effective_month) DO NOTHING;`);
+
+  // ── Food contribution types (editable by Head Master / Second Master) ────
+  // Used to be a fixed list in the code. "key" is what entries store, so it
+  // never changes once created; label/unit/order/visibility can.
+  await query(`
+    CREATE TABLE IF NOT EXISTS food_types (
+      id          SERIAL PRIMARY KEY,
+      key         VARCHAR(60) NOT NULL UNIQUE,
+      label       VARCHAR(80) NOT NULL,
+      unit        VARCHAR(10) NOT NULL DEFAULT 'KG' CHECK (unit IN ('KG', 'LITRES', 'PIECES')),
+      sort_order  INTEGER NOT NULL DEFAULT 0,
+      is_active   BOOLEAN NOT NULL DEFAULT true,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );`);
+  await query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_food_types_label ON food_types (UPPER(label));`);
+  // How much each student must bring in a year (e.g. MAHINDI 30 kg). Empty =
+  // no set amount (only totals are shown, nobody "owes").
+  await query(`ALTER TABLE food_types ADD COLUMN IF NOT EXISTS required_qty NUMERIC(10,2) CHECK (required_qty IS NULL OR required_qty > 0);`);
+  if (!(await flagged("food_types_seeded"))) {
+    await query(`
+      INSERT INTO food_types (key, label, unit, sort_order) VALUES
+        ('maize', 'MAHINDI', 'KG', 1), ('rice', 'MCHELE', 'KG', 2), ('cooking_oil', 'MAFUTA YA KUPIKIA', 'LITRES', 3),
+        ('salt', 'CHUMVI', 'KG', 4), ('njugu', 'NJUGU', 'KG', 5), ('maharage', 'MAHARAGE', 'KG', 6),
+        ('mbaazi', 'MBAAZI', 'KG', 7), ('kunde', 'KUNDE', 'KG', 8)
+      ON CONFLICT (key) DO NOTHING;`);
+    await setFlag("food_types_seeded");
+  }
 
   console.log("All migrations completed successfully.");
   process.exit(0);

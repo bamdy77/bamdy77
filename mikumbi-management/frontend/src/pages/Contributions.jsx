@@ -144,11 +144,15 @@ function OversightView() {
 }
 
 function PartTimeOversight({ token }) {
+  const { user } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
+  const canEditFee = [user?.role, ...(user?.roles || [])].some((r) => r === "admin" || r === "second_master");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
   const [summary, setSummary] = useState([]);
+  const [fee, setFee] = useState(null);
+  const [editFee, setEditFee] = useState(false);
   const [drillForm, setDrillForm] = useState(null);
   const [drillRows, setDrillRows] = useState([]);
   const [error, setError] = useState("");
@@ -156,7 +160,7 @@ function PartTimeOversight({ token }) {
   const loadSummary = useCallback(() => {
     setError("");
     apiFetch(`/contributions/parttime/summary?year=${year}&month=${month}`, {}, token)
-      .then((d) => setSummary(d.data || []))
+      .then((d) => { setSummary(d.data || []); if (d.monthly_fee) setFee(Number(d.monthly_fee)); })
       .catch((err) => setError(err.message));
   }, [token, year, month]);
   useEffect(loadSummary, [loadSummary]);
@@ -172,6 +176,17 @@ function PartTimeOversight({ token }) {
 
   return (
     <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap", background: `color-mix(in srgb, ${THEME.link} 8%, ${THEME.surface})`, border: `1px solid ${THEME.border}`, borderRadius: 6, padding: "11px 16px" }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 11.5, color: THEME.muted }}>Monthly amount per student ({MONTHS[month - 1]} {year})</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: THEME.heading }}>{fee == null ? "…" : `TZS ${fee.toLocaleString()}`}</div>
+        </div>
+        {canEditFee && (
+          <button onClick={() => setEditFee(true)} style={{ ...btnSecondary, marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}><EditIcon size={13} />Change amount</button>
+        )}
+      </div>
+      {editFee && <EditPartTimeFeeModal token={token} onClose={() => setEditFee(false)} onDone={() => { setEditFee(false); loadSummary(); }} />}
+
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <select value={month} onChange={(e) => { setMonth(Number(e.target.value)); setDrillForm(null); }} style={{ ...selectStyle, ...(isMobile ? { flex: 1, minWidth: 130 } : {}) }}>
           {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
@@ -864,6 +879,82 @@ function DailyCollections({ showClassFilter }) {
   );
 }
 
+// Head Master / Second Master: change the Part-Time Teachers monthly amount.
+// The new amount starts from a month they choose (this month or later);
+// earlier months keep whatever amount applied then, so old receipts and
+// history stay correct. Shows the history of past changes.
+function EditPartTimeFeeModal({ token, onClose, onDone }) {
+  const now = new Date();
+  const [amount, setAmount] = useState("");
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [info, setInfo] = useState(null); // { current, rates, min, max }
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const { confirm, ConfirmDialogPortal } = useConfirm();
+
+  useEffect(() => {
+    apiFetch("/contributions/parttime/fee", {}, token)
+      .then((d) => { setInfo(d); setAmount(String(d.current)); })
+      .catch((e) => setError(e.message));
+  }, [token]);
+
+  const submit = (e) => {
+    e.preventDefault();
+    const n = Number(amount);
+    if (!Number.isInteger(n) || n < (info?.min || 100) || n > (info?.max || 1000000)) {
+      setError(`Amount must be a whole number from TZS ${(info?.min || 100).toLocaleString()} to TZS ${(info?.max || 1000000).toLocaleString()}.`);
+      return;
+    }
+    setError("");
+    confirm(`Set the Part-Time Teachers monthly amount to TZS ${n.toLocaleString()}, starting ${MONTHS[month - 1]} ${year}? Earlier months keep their old amount.`, async () => {
+      setBusy(true);
+      try {
+        await apiFetch("/contributions/parttime/fee", { method: "POST", body: JSON.stringify({ amount: n, year, month }) }, token);
+        showSuccess("Monthly amount", "The new monthly amount has been saved.");
+        onDone();
+      } catch (err) { setError(err.message); setBusy(false); }
+    });
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: THEME.surface, borderRadius: 6, padding: 22, width: "100%", maxWidth: 440, maxHeight: "90vh", overflowY: "auto" }}>
+        <h3 style={{ marginTop: 0, marginBottom: 4, color: THEME.heading, fontSize: 16.5 }}>Part-Time Teachers Monthly Amount</h3>
+        <p style={{ fontSize: 12.5, color: THEME.muted, marginBottom: 16, lineHeight: 1.5 }}>
+          The amount each student pays per month. The new amount starts from the month you choose; months before it keep the old amount, so past records stay correct.
+        </p>
+        {error && <ErrorBox msg={error} />}
+        <form onSubmit={submit} style={{ display: "grid", gap: 12 }}>
+          <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: THEME.text }}>New amount (TZS)
+            <input type="number" min={info?.min || 100} max={info?.max || 1000000} value={amount} onChange={(e) => setAmount(e.target.value)} style={{ ...selectStyle, width: "100%", boxSizing: "border-box" }} autoFocus /></label>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: THEME.text }}>Starting month
+              <select value={month} onChange={(e) => setMonth(Number(e.target.value))} style={{ ...selectStyle, width: "100%" }}>{MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select></label>
+            <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: THEME.text }}>Year
+              <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={{ ...selectStyle, width: "100%" }}>{[now.getFullYear(), now.getFullYear() + 1].map((y) => <option key={y} value={y}>{y}</option>)}</select></label>
+          </div>
+          {info?.rates?.length > 1 && (
+            <div style={{ fontSize: 11.5, color: THEME.muted, background: THEME.bg, borderRadius: 4, padding: "8px 11px" }}>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>Past amounts</div>
+              {info.rates.slice(0, 5).map((r) => (
+                <div key={r.id} style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>From {MONTHS[r.month - 1]} {r.year}</span><span>TZS {Number(r.amount).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
+            <button type="button" onClick={onClose} style={btnSecondary}>Cancel</button>
+            <button type="submit" disabled={busy} style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 6 }}>{busy && <SpinnerIcon size={13} />}Save</button>
+          </div>
+        </form>
+        {ConfirmDialogPortal}
+      </div>
+    </div>
+  );
+}
+
 function ClassTeacherPartTime() {
   const { token, user } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
@@ -871,6 +962,7 @@ function ClassTeacherPartTime() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
   const [rows, setRows] = useState([]);
+  const [fee, setFee] = useState(MONTHLY_FEE);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [noClass, setNoClass] = useState(false);
@@ -883,6 +975,7 @@ function ClassTeacherPartTime() {
     apiFetch(`/contributions/parttime?year=${year}&month=${month}`, {}, token)
       .then((d) => {
         setRows(d.data || []);
+        if (d.monthly_fee) setFee(Number(d.monthly_fee));
         if (d.message && !d.data?.length) setNoClass(true);
       })
       .catch((err) => setError(err.message));
@@ -902,12 +995,16 @@ function ClassTeacherPartTime() {
     } catch (err) { setError(err.message); }
   };
 
-  const payFull = (s) => confirm(`Record TZS ${MONTHLY_FEE.toLocaleString()} as fully paid for ${[s.first_name, s.last_name].join(" ")} for ${MONTHS[month - 1]} ${year}?`, () => pay(s.student_id, MONTHLY_FEE, [s.first_name, s.last_name].join(" ")));
+  const payFull = (s) => {
+    const already = Number(s.amount_paid || 0);
+    const amount = Math.max(fee - already, 0) || fee;
+    confirm(`Record TZS ${amount.toLocaleString()} as fully paid for ${[s.first_name, s.last_name].join(" ")} for ${MONTHS[month - 1]} ${year}?`, () => pay(s.student_id, fee, [s.first_name, s.last_name].join(" ")));
+  };
 
   return (
     <div>
       <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : 20, marginBottom: 4 }}>Part-Time Teachers Contributions - My Class</h2>
-      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>Collect the TZS {MONTHLY_FEE.toLocaleString()}/month contribution from your own class only.</p>
+      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>Collect the TZS {fee.toLocaleString()}/month contribution from your own class only.</p>
 
       <div style={{ display: "flex", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
         <StatCard label="Students Paid" value={`${paidCount} / ${rows.length}`} color={THEME.success} />
@@ -973,11 +1070,11 @@ function ClassTeacherPartTime() {
       )}
       {ConfirmDialogPortal}
       {advanceFor && (
-        <AdvancePaymentModal student={advanceFor} year={year} currentMonth={month} token={token}
+        <AdvancePaymentModal student={advanceFor} year={year} currentMonth={month} token={token} monthlyFee={fee}
           onClose={() => setAdvanceFor(null)} onDone={() => { setAdvanceFor(null); load(); }} />
       )}
       {installmentFor && (
-        <InstallmentPaymentModal student={installmentFor} year={year} month={month} token={token}
+        <InstallmentPaymentModal student={installmentFor} year={year} month={month} token={token} monthlyFee={fee}
           onClose={() => setInstallmentFor(null)} onDone={() => { setInstallmentFor(null); load(); }} />
       )}
     </div>
@@ -991,14 +1088,14 @@ function ClassTeacherPartTime() {
 // full fee the backend automatically marks it "completed" - matching
 // "Mark Paid (Full)" from then on, with nothing here ever showing
 // "installment X of 4" anywhere.
-function InstallmentPaymentModal({ student, year, month, token, onClose, onDone }) {
+function InstallmentPaymentModal({ student, year, month, token, monthlyFee = MONTHLY_FEE, onClose, onDone }) {
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { confirm, ConfirmDialogPortal } = useConfirm();
   const name = [student.first_name, student.last_name].filter(Boolean).join(" ");
   const already = Number(student.amount_paid || 0);
-  const remaining = Math.max(0, MONTHLY_FEE - already);
+  const remaining = Math.max(0, monthlyFee - already);
 
   const doSubmit = async () => {
     setBusy(true); setError("");
@@ -1022,7 +1119,7 @@ function InstallmentPaymentModal({ student, year, month, token, onClose, onDone 
       <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 400 }}>
         <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>Pay in Installments</h3>
         <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 4 }}>{name} - {MONTHS[month - 1]} {year}</p>
-        <p style={{ fontSize: 12, color: THEME.muted, marginBottom: 14 }}>Already paid TZS {already.toLocaleString()} of {MONTHLY_FEE.toLocaleString()}. Remaining: TZS {remaining.toLocaleString()}.</p>
+        <p style={{ fontSize: 12, color: THEME.muted, marginBottom: 14 }}>Already paid TZS {already.toLocaleString()} of {monthlyFee.toLocaleString()}. Remaining: TZS {remaining.toLocaleString()}.</p>
         {error && <ErrorBox msg={error} />}
         <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Amount being paid now (TZS)</label>
         <input type="number" min="1" max={remaining} value={amount} onChange={(e) => setAmount(e.target.value)}
@@ -1147,7 +1244,7 @@ function ClassTeacherReam() {
   );
 }
 
-function AdvancePaymentModal({ student, year, currentMonth, token, onClose, onDone }) {
+function AdvancePaymentModal({ student, year, currentMonth, token, monthlyFee = MONTHLY_FEE, onClose, onDone }) {
   const [months, setMonths] = useState([]);
   const [error, setError] = useState("");
   const toggle = (m) => setMonths((p) => p.includes(m) ? p.filter((x) => x !== m) : [...p, m]);
@@ -1175,7 +1272,7 @@ function AdvancePaymentModal({ student, year, currentMonth, token, onClose, onDo
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
       <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 420, maxHeight: "90vh", overflowY: "auto" }}>
         <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>Pay Months Ahead</h3>
-        <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 14 }}>{[student.first_name, student.last_name].join(" ")} - select every month being paid for now (TZS {MONTHLY_FEE.toLocaleString()} each).</p>
+        <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 14 }}>{[student.first_name, student.last_name].join(" ")} - select every month being paid for now (about TZS {monthlyFee.toLocaleString()} each).</p>
         {error && <ErrorBox msg={error} />}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
           {futureMonths.map((m) => (
@@ -1186,7 +1283,7 @@ function AdvancePaymentModal({ student, year, currentMonth, token, onClose, onDo
             }}>{MONTHS[m - 1]}</div>
           ))}
         </div>
-        <p style={{ fontSize: 12.5, color: THEME.muted, marginBottom: 14 }}>Total: TZS {(months.length * MONTHLY_FEE).toLocaleString()} for {months.length} month(s)</p>
+        <p style={{ fontSize: 12.5, color: THEME.muted, marginBottom: 14 }}>About TZS {(months.length * monthlyFee).toLocaleString()} for {months.length} month(s)</p>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={btnSecondary}>Cancel</button>
           <button onClick={submit} style={btnPrimary}>Confirm Payment</button>

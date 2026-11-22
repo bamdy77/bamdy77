@@ -4,6 +4,8 @@ const { passwordProblem, BCRYPT_ROUNDS } = require("../utils/passwordPolicy");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const { query } = require("../db/db");
+const { recordAudit } = require("../utils/auditLogger");
+const rolesText = (role, extra) => [role, ...(extra || [])].filter(Boolean).join(" + ");
 
 const VALID_ROLES = ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"];
 // A person can hold several roles at once (their primary `role` plus any
@@ -175,6 +177,10 @@ const createUser = async (req, res, next) => {
       }
     }
 
+    await recordAudit({ actor: req.user, action: "user.create", entityType: "user", entityId: newUser.id,
+      description: `Created account "${newUser.username}" (${newUser.full_name}) as ${rolesText(newUser.role, newUser.extra_roles)}.`,
+      metadata: { username: newUser.username, role: newUser.role, extra_roles: newUser.extra_roles, temporary_password: !password }, req });
+
     res.status(201).json({
       success: true,
       data: newUser,
@@ -205,7 +211,7 @@ const updateUser = async (req, res, next) => {
     // are being changed) because class_teacher_of's final value depends on
     // the account's CURRENT held roles whenever this request doesn't also
     // change them.
-    const targetLookup = await query(`SELECT role, extra_roles, class_teacher_of FROM users WHERE id = $1`, [req.params.id]);
+    const targetLookup = await query(`SELECT role, extra_roles, class_teacher_of, username, full_name, email, phone, is_active, employment_type, subject_ids, assigned_forms FROM users WHERE id = $1`, [req.params.id]);
     if (!targetLookup.rows.length) return res.status(404).json({ success: false, message: "User not found." });
     const targetRow = targetLookup.rows[0];
 
@@ -350,6 +356,29 @@ const updateUser = async (req, res, next) => {
     }
 
     if (teacher_id) await query(`UPDATE teachers SET user_id = $1 WHERE id = $2`, [req.params.id, teacher_id]);
+
+    // Audit: role changes and activation are recorded on their own (they
+    // change what the person can do); any other edit as one "updated" entry.
+    const before = targetRow;
+    const sameList = (a, b) => JSON.stringify([...(a || [])].sort()) === JSON.stringify([...(b || [])].sort());
+    const who = `"${updated.username}" (${updated.full_name})`;
+    if (before.role !== updated.role || !sameList(before.extra_roles, updated.extra_roles)) {
+      await recordAudit({ actor: req.user, action: "user.role_change", entityType: "user", entityId: updated.id,
+        description: `Changed roles of ${who}: ${rolesText(before.role, before.extra_roles)} -> ${rolesText(updated.role, updated.extra_roles)}.`,
+        metadata: { before: { role: before.role, extra_roles: before.extra_roles }, after: { role: updated.role, extra_roles: updated.extra_roles } }, req });
+    }
+    if (before.is_active !== updated.is_active) {
+      await recordAudit({ actor: req.user, action: updated.is_active ? "user.reactivate" : "user.deactivate", entityType: "user", entityId: updated.id,
+        description: `${updated.is_active ? "Reactivated" : "Deactivated"} account ${who}.`, req });
+    }
+    const fields = ["username", "full_name", "email", "phone", "employment_type", "class_teacher_of"].filter((f) => (before[f] || null) !== (updated[f] || null));
+    if (!sameList(before.subject_ids, updated.subject_ids)) fields.push("subjects");
+    if (!sameList(before.assigned_forms, updated.assigned_forms)) fields.push("assigned_forms");
+    if (fields.length) {
+      await recordAudit({ actor: req.user, action: "user.update", entityType: "user", entityId: updated.id,
+        description: `Edited account ${who}: ${fields.join(", ")}.`,
+        metadata: { changed: fields, ...(fields.includes("username") ? { old_username: before.username } : {}) }, req });
+    }
     res.json({ success: true, data: updated });
   } catch (err) { next(err); }
 };
@@ -362,7 +391,7 @@ const adminSetPassword = async (req, res, next) => {
     const { new_password } = req.body;
     { const pwErr = passwordProblem(new_password); if (pwErr) return res.status(400).json({ success: false, message: pwErr }); }
 
-    const target = await query(`SELECT role FROM users WHERE id = $1`, [req.params.id]);
+    const target = await query(`SELECT role, username, full_name FROM users WHERE id = $1`, [req.params.id]);
     if (!target.rows.length) return res.status(404).json({ success: false, message: "User not found." });
     // The Head Master's own password can only be reset by the Head Master
     // themselves — a Second Master must not be able to lock the Head Master
@@ -374,6 +403,8 @@ const adminSetPassword = async (req, res, next) => {
     // Unlock the account and end every existing session of that user.
     await query(`UPDATE users SET password = $1, password_changed_at = NOW(), failed_logins = 0, locked_until = NULL, updated_at = NOW() WHERE id = $2`, [hashed, req.params.id]);
     await query(`DELETE FROM trusted_devices WHERE user_id = $1`, [req.params.id]); // re-verify devices after a reset
+    await recordAudit({ actor: req.user, action: "user.password_reset", entityType: "user", entityId: Number(req.params.id),
+      description: `Reset the password of "${target.rows[0].username}" (${target.rows[0].full_name}).`, req });
     res.json({ success: true, message: "Password updated." });
   } catch (err) { next(err); }
 };
@@ -389,7 +420,7 @@ const adminSetPassword = async (req, res, next) => {
 // the caller to Deactivate instead rather than silently orphaning data.
 const deleteUser = async (req, res, next) => {
   try {
-    const target = await query(`SELECT role FROM users WHERE id = $1`, [req.params.id]);
+    const target = await query(`SELECT role, username, full_name FROM users WHERE id = $1`, [req.params.id]);
     if (!target.rows.length) return res.status(404).json({ success: false, message: "User not found." });
     if (target.rows[0].role === "admin")
       return res.status(403).json({ success: false, message: "The Head Master account cannot be deleted." });
@@ -403,6 +434,9 @@ const deleteUser = async (req, res, next) => {
     // still selectable/visible in Timetable, Teacher Assignment, etc.
     await query(`UPDATE teachers SET user_id = NULL, is_active = false WHERE user_id = $1`, [req.params.id]);
     await query(`DELETE FROM users WHERE id = $1`, [req.params.id]);
+    await recordAudit({ actor: req.user, action: "user.delete", entityType: "user", entityId: Number(req.params.id),
+      description: `Permanently deleted account "${target.rows[0].username}" (${target.rows[0].full_name}).`,
+      metadata: { username: target.rows[0].username, role: target.rows[0].role }, req });
     res.json({ success: true, message: "Account permanently deleted." });
   } catch (err) {
     if (err.code === "23503") {
@@ -437,6 +471,8 @@ const deactivateUser = async (req, res, next) => {
     // active teacher elsewhere, otherwise they still show up there.
     await query(`UPDATE teachers SET is_active = false WHERE user_id = $1`, [req.params.id]);
     await syncStaffContact(result.rows[0]);
+    await recordAudit({ actor: req.user, action: "user.deactivate", entityType: "user", entityId: Number(req.params.id),
+      description: `Deactivated account "${result.rows[0].full_name}".`, req });
     res.json({ success: true, message: "Account deactivated." });
   } catch (err) { next(err); }
 };

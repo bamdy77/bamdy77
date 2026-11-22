@@ -5,7 +5,7 @@ const {
   getPartTime, payPartTime, payPartTimeAdvance, getPartTimeSummary, getPartTimeHistory, receiptPartTime,
   getPartTimeStudents, getPartTimeStudentEntries, getContributedStudentsCount, getPartTimeDaily,
   getReam, getReamSummary, getOtherExpenses, updateChargeAmount, receiptCharge,
-  getReamMyClass, markReam, exportPartTimeStudentsPdf,
+  getReamMyClass, markReam, exportPartTimeStudentsPdf, getPartTimeFee, setPartTimeFee,
 } = require("../controllers/contributionsController");
 
 // Contributions Management is visible to: Head Master, Second Master, and
@@ -17,6 +17,10 @@ router.use(auth(["admin", "second_master", "academic", "class_teacher"]));
 
 // ── Part-time Teachers ────────────────────────────────────────────────────
 router.get("/parttime",                  getPartTime);
+// Monthly amount: everyone here can read it; only the Head Master / Second
+// Master change it. (Before "/parttime/:studentId" so "fee" is not an id.)
+router.get("/parttime/fee",              getPartTimeFee);
+router.post("/parttime/fee",             auth(["admin", "second_master"]), setPartTimeFee);
 // Recording a payment is admin/second_master/class_teacher only — Academic
 // Master is read-only (History), so is deliberately left out here even
 // though the router.use() above lets them through for the GET routes.

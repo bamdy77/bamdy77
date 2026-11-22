@@ -20,6 +20,9 @@ const MAX_FAILED_LOGINS = 8;
 const DUMMY_HASH = "$2a$12$xJ1yJPvObIn5xOqN1udLruyay6AbFkR2Kj9oTRjZhQw8GcYI9RxrW";
 const { query } = require("../db/db");
 const { sendPasswordResetEmail } = require("../utils/mailer");
+const { recordAudit } = require("../utils/auditLogger");
+// The account itself as the "actor" of its own sign-in entries.
+const asActor = (u) => ({ id: u.id, username: u.username, role: u.role });
 
 // Every role (including Patron/Matron) now uses Gmail self-service reset,
 // same as any other teacher — there is no admin-only-reset role anymore.
@@ -42,6 +45,10 @@ const login = async (req, res, next) => {
       // Spend the same time as a real check so response timing can't reveal
       // which usernames exist.
       await bcrypt.compare(String(password), DUMMY_HASH);
+      // The typed name is NOT stored: people sometimes type their password
+      // into the username box by mistake.
+      recordAudit({ actor: null, action: "auth.login_failed", entityType: "user",
+        description: "Failed sign-in: unknown or inactive username.", metadata: { reason: "unknown_username" }, req });
       return res.status(401).json({ success: false, message: "Invalid credentials." });
     }
 
@@ -52,10 +59,18 @@ const login = async (req, res, next) => {
     }
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      await query(
+      const upd = await query(
         `UPDATE users SET failed_logins = failed_logins + 1,
            locked_until = CASE WHEN failed_logins + 1 >= ${MAX_FAILED_LOGINS} THEN NOW() + INTERVAL '15 minutes' ELSE locked_until END
-         WHERE id = $1`, [user.id]);
+         WHERE id = $1 RETURNING failed_logins, locked_until`, [user.id]);
+      const tries = upd.rows[0]?.failed_logins || 0;
+      const nowLocked = upd.rows[0]?.locked_until && new Date(upd.rows[0].locked_until) > new Date();
+      await recordAudit({ actor: asActor(user), action: "auth.login_failed", entityType: "user", entityId: user.id,
+        description: `Wrong password for ${user.full_name} (${tries} in a row).`, metadata: { reason: "wrong_password", tries }, req });
+      if (nowLocked && tries === MAX_FAILED_LOGINS) {
+        await recordAudit({ actor: asActor(user), action: "auth.locked", entityType: "user", entityId: user.id,
+          description: `${user.full_name}'s account was locked for 15 minutes after ${tries} wrong passwords.`, metadata: { tries }, req });
+      }
       return res.status(401).json({ success: false, message: "Invalid credentials." });
     }
     if (user.failed_logins || user.locked_until) {
@@ -67,6 +82,8 @@ const login = async (req, res, next) => {
     const gate = await twoFactorGate(user, req.body && req.body.device_token);
     if (gate) return res.json(gate);
 
+    await recordAudit({ actor: asActor(user), action: "auth.login", entityType: "user", entityId: user.id,
+      description: `${user.full_name} signed in.`, req });
     return issueLogin(res, user);
   } catch (err) {
     next(err);
@@ -135,6 +152,10 @@ const verifyLoginCode = async (req, res, next) => {
     if (!ok) {
       await query(`UPDATE login_challenges SET attempts = attempts + 1 WHERE id = $1`, [cid]);
       const left = MAX_CODE_TRIES - ch.attempts - 1;
+      const who = await query(`SELECT id, username, role, full_name FROM users WHERE id = $1`, [ch.user_id]);
+      if (who.rows[0]) await recordAudit({ actor: asActor(who.rows[0]), action: "auth.2fa_failed", entityType: "user", entityId: ch.user_id,
+        description: `Wrong login code for ${who.rows[0].full_name}${left > 0 ? ` (${left} attempt(s) left)` : " - sign-in blocked, a new code is needed"}.`,
+        metadata: { attempts_left: Math.max(left, 0) }, req });
       return res.status(401).json({ success: false, expired: left <= 0,
         message: left > 0 ? `Wrong code. ${left} attempt(s) left.` : "Too many wrong codes. Please sign in again." });
     }
@@ -145,6 +166,8 @@ const verifyLoginCode = async (req, res, next) => {
     await query(
       `INSERT INTO trusted_devices (user_id, token_hash, user_agent, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL '${TRUST_DAYS} days')`,
       [ch.user_id, sha256(deviceToken), String(req.headers["user-agent"] || "").slice(0, 200)]);
+    await recordAudit({ actor: asActor(uRes.rows[0]), action: "auth.login", entityType: "user", entityId: ch.user_id,
+      description: `${uRes.rows[0].full_name} signed in on a new device (login code confirmed).`, metadata: { two_factor: true }, req });
     return issueLogin(res, uRes.rows[0], { device_token: deviceToken });
   } catch (err) { next(err); }
 };
@@ -253,6 +276,8 @@ const changePassword = async (req, res, next) => {
     // password; this browser gets a fresh token below so it stays signed in.
     await query("UPDATE users SET password = $1, password_changed_at = NOW(), failed_logins = 0, locked_until = NULL, updated_at = NOW() WHERE id = $2", [hashed, req.user.id]);
     await query("DELETE FROM trusted_devices WHERE user_id = $1", [req.user.id]); // new password = re-verify devices
+    await recordAudit({ actor: req.user, action: "auth.password_changed", entityType: "user", entityId: req.user.id,
+      description: `${user.full_name} changed their own password.`, req });
     const freshToken = jwt.sign(
       { id: user.id, username: user.username, role: user.role, roles: Array.from(new Set([user.role, ...(user.extra_roles || [])])), full_name: user.full_name,
         subject_ids: user.subject_ids || [], assigned_forms: user.assigned_forms || [], class_teacher_of: user.class_teacher_of || null },
@@ -347,6 +372,11 @@ const resetPassword = async (req, res, next) => {
       [hashed, uid]
     );
     await query("DELETE FROM trusted_devices WHERE user_id = $1", [uid]); // new password = re-verify devices
+    {
+      const who = await query(`SELECT id, username, role, full_name FROM users WHERE id = $1`, [uid]);
+      if (who.rows[0]) await recordAudit({ actor: asActor(who.rows[0]), action: "auth.password_reset_email", entityType: "user", entityId: uid,
+        description: `${who.rows[0].full_name} set a new password with the email reset link.`, req });
+    }
 
     res.json({ success: true, message: "Password has been reset successfully. You can now log in." });
   } catch (err) {
