@@ -128,10 +128,10 @@ async function twoFactorGate(user, deviceToken) {
   await sendMail({
     to: user.email, toName: user.full_name, subject: `Login code: ${code} - Mikumbi Secondary School`,
     html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;border:1px solid #e0e0e0;border-radius:4px;">
-      <h2 style="color:#0c426f;margin:0 0 14px;">Mikumbi Secondary School</h2>
+      <h2 style="color:#1a50c7;margin:0 0 14px;">Mikumbi Secondary School</h2>
       <p>Hello ${esc(user.full_name)},</p>
       <p>Someone (hopefully you) is signing in to your account from a new device. Your login code is:</p>
-      <p style="font-size:30px;font-weight:800;letter-spacing:8px;text-align:center;margin:22px 0;color:#0c426f;">${code}</p>
+      <p style="font-size:30px;font-weight:800;letter-spacing:8px;text-align:center;margin:22px 0;color:#1a50c7;">${code}</p>
       <p style="font-size:13px;color:#555;">It expires in ${CODE_MINUTES} minutes. If this was not you, change your password immediately.</p></div>`,
   });
   return { success: true, twofa_required: true, challenge_id: challengeId, email_hint: maskEmail(user.email),

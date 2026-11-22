@@ -46,13 +46,13 @@ async function sendPasswordResetEmail(toEmail, fullName, resetUrl) {
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;
       border:1px solid #e0e0e0;border-radius:4px;">
-      <h2 style="color:#0c426f;margin:0 0 4px;">Mikumbi Secondary School</h2>
+      <h2 style="color:#1a50c7;margin:0 0 4px;">Mikumbi Secondary School</h2>
       <p style="color:#666;margin:0 0 20px;font-size:13px;">School Management System</p>
       <p>Hello ${esc(fullName)},</p>
       <p>We received a request to reset your password. Click the button below to
       set a new password. This link expires in <b>1 hour</b>.</p>
       <p style="text-align:center;margin:28px 0;">
-        <a href="${esc(resetUrl)}" style="background:#0c426f;
+        <a href="${esc(resetUrl)}" style="background:#1a50c7;
           color:#fff;text-decoration:none;padding:12px 28px;border-radius:4px;
           font-weight:600;display:inline-block;">Reset My Password</a>
       </p>

@@ -55,7 +55,7 @@ export default function ProtectedView({ watermark, children, labels }) {
 
   // SVG tile with the watermark text, repeated over the whole results area.
   const tile = encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="220"><text x="260" y="118" text-anchor="middle" transform="rotate(-20 260 110)" fill="rgba(12,66,111,0.13)" font-family="Arial, sans-serif" font-size="15" font-weight="700">${String(watermark).replace(/[<>&"]/g, "")}</text></svg>`
+    `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="220"><text x="260" y="118" text-anchor="middle" transform="rotate(-20 260 110)" fill="rgba(26,80,199,0.13)" font-family="Arial, sans-serif" font-size="15" font-weight="700">${String(watermark).replace(/[<>&"]/g, "")}</text></svg>`
   );
 
   return (
@@ -72,7 +72,7 @@ export default function ProtectedView({ watermark, children, labels }) {
       <div aria-hidden={hidden} style={{ filter: hidden ? "blur(16px)" : "none", transition: "filter .1s" }}>{children}</div>
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", backgroundImage: `url("data:image/svg+xml,${tile}")`, backgroundRepeat: "repeat" }} />
       {hidden && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center", fontWeight: 700, color: "#0c426f", fontSize: 16 }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center", fontWeight: 700, color: "#1a50c7", fontSize: 16 }}>
           {labels.hidden}
         </div>
       )}

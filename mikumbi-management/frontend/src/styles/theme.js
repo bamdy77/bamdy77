@@ -1,5 +1,5 @@
 // Shared design tokens for the whole unified system.
-// Navy requested by the school: #0c426f
+// Navy requested by the school: #1a50c7
 //
 // Every value below is a CSS custom-property reference with the ORIGINAL
 // hard-coded color kept as its fallback. That means:
@@ -10,20 +10,20 @@
 //    override these custom properties - every component that already
 //    uses THEME.xxx repaints automatically, with no per-page changes.
 export const THEME = {
-  navy: "var(--mk-navy, #0c426f)",
-  navyDark: "var(--mk-navy-dark, #072C4B)",
-  navyLight: "var(--mk-navy-light, #165D99)",
+  navy: "var(--mk-navy, #1a50c7)",
+  navyDark: "var(--mk-navy-dark, #10358f)",
+  navyLight: "var(--mk-navy-light, #4674e0)",
   // Heading/accent TEXT color for content sitting on a themed surface
   // (cards, page backgrounds) - starts identical to navy in the System
   // Default theme (no visual change there), but lightens in Dark/Nocturne
   // so headings stay readable against a dark surface instead of going
   // dark-on-dark. Brand navy itself (sidebar, primary buttons, borders)
   // never changes - this is a separate, purely text-readability token.
-  heading: "var(--mk-heading, #0c426f)",
+  heading: "var(--mk-heading, #1a50c7)",
   // Navy used as TEXT colour (links, tab labels, outlined buttons). Same
   // navy in the light theme; a light blue in Dark/Nocturne so it can be read
   // on dark surfaces. Backgrounds keep using THEME.navy (brand colour).
-  link: "var(--mk-link, #0c426f)",
+  link: "var(--mk-link, #1a50c7)",
   gold: "var(--mk-gold, #D4A017)",
   bg: "var(--mk-bg, #F8FAFC)",
   surface: "var(--mk-surface, #FFFFFF)",

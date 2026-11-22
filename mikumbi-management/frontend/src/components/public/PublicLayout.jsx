@@ -13,7 +13,7 @@ import {
   CheckCircleIcon, GraduationCapIcon, LocationPinIcon, SchoolIcon, ShieldIcon,
 } from "../icons";
 
-const NAVY = "#0c426f";
+const NAVY = "#1a50c7";
 const ORANGE = "#F54927";
 
 // Wraps every page of the public website: identity banner + sticky navbar on

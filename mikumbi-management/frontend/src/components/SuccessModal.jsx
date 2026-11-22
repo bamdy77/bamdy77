@@ -164,7 +164,7 @@ export function SuccessModalHost() {
           style={{
             padding: "10px 36px", background: THEME.navy, color: "#fff", border: "none",
             borderRadius: 4, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
-            boxShadow: "0 4px 10px -2px rgba(12,66,111,0.4)",
+            boxShadow: "0 4px 10px -2px rgba(26,80,199,0.4)",
             animation: "mk-success-fade-up 0.4s ease 0.4s both",
           }}
         >{translate(getLang(), "common.ok")}</button>
@@ -225,7 +225,7 @@ export function SuccessModalHost() {
         }
         .mk-success-timer-bar { animation: mk-success-timer 6s linear both; }
         .mk-success-btn { transition: transform 0.15s ease, box-shadow 0.15s ease; }
-        .mk-success-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px -2px rgba(12,66,111,0.5); }
+        .mk-success-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px -2px rgba(26,80,199,0.5); }
         .mk-success-btn:active { transform: translateY(0); }
         @media (prefers-reduced-motion: reduce) {
           div[style*="mk-success"], div[style*="mk-success"] * { animation: none !important; }

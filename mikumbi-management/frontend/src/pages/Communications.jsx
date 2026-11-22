@@ -109,7 +109,7 @@ function AnnouncementsTab({ isMobile }) {
               <label key={o.value} style={{
                 display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 12px", cursor: "pointer", borderRadius: 4,
                 border: `1.5px solid ${audience === o.value ? THEME.navy : THEME.border}`,
-                background: audience === o.value ? "rgba(12,66,111,0.06)" : "transparent",
+                background: audience === o.value ? "rgba(26,80,199,0.06)" : "transparent",
               }}>
                 <input type="radio" name="announcement-audience" value={o.value} checked={audience === o.value} onChange={() => setAudience(o.value)} style={{ marginTop: 3 }} />
                 <span>

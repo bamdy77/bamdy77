@@ -9,7 +9,7 @@ import { THEME } from "../styles/theme";
 // wait" moments, submit buttons, etc.
 //
 // Colors, exactly as requested:
-//   - navy   (brand navy, THEME.navy / #0c426f)
+//   - navy   (brand navy, THEME.navy / #1a50c7)
 //   - coral  #FF7F50
 //   - teal   #008B8B
 // Two rings, spinning in opposite directions. Pure CSS (conic-gradient
@@ -53,7 +53,7 @@ export default function MikumbiLoader({
             position: "absolute",
             inset: 0,
             borderRadius: "50%",
-            background: "conic-gradient(from 0deg, transparent 0deg, #0c426f 65deg, #FF7F50 205deg, transparent 330deg, transparent 360deg)",
+            background: "conic-gradient(from 0deg, transparent 0deg, #1a50c7 65deg, #FF7F50 205deg, transparent 330deg, transparent 360deg)",
             WebkitMask: `radial-gradient(farthest-side, transparent calc(100% - ${outerThickness}px), #000 calc(100% - ${outerThickness}px))`,
             mask: `radial-gradient(farthest-side, transparent calc(100% - ${outerThickness}px), #000 calc(100% - ${outerThickness}px))`,
             animation: "mikumbi-loader-cw 1.25s linear infinite",
@@ -88,14 +88,14 @@ export default function MikumbiLoader({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 2px 12px rgba(12,66,111,0.2)",
+            boxShadow: "0 2px 12px rgba(26,80,199,0.2)",
           }}
         >
           <span
             style={{
               fontWeight: 800,
               letterSpacing: "0.01em",
-              color: "#0c426f",
+              color: "#1a50c7",
               fontSize,
               whiteSpace: "nowrap",
               textAlign: "center",

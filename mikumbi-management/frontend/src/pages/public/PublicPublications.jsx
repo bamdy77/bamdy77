@@ -15,7 +15,7 @@ function Shell({ view }) {
     <PublicLayout>
       <div style={{ background: "#f4f7fa", minHeight: 400, paddingBottom: 30 }}>
         <div style={{ maxWidth: 1000, margin: "0 auto", padding: isMobile ? "18px 18px 0" : "24px 24px 0" }}>
-          <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "#0c426f", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
+          <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "#1a50c7", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
             <ChevronLeftIcon size={15} />{t("pub.back")}
           </Link>
         </div>

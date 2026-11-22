@@ -109,7 +109,7 @@ export default function Login() {
                 autoFocus placeholder={codeHint} aria-label={t("login.code")} className={busy && !verified ? "mk-code-checking" : ""}
                 style={{ ...inputStyle, fontSize: 22, letterSpacing: 8, textAlign: "center", transition: "border-color .2s, box-shadow .2s",
                   ...(code.length === 6 ? { borderColor: THEME.navy, boxShadow: `0 0 0 3px ${THEME.navy}22` } : {}) }} />
-              <style>{`@keyframes mkCodePulse { 0%,100% { box-shadow: 0 0 0 3px rgba(12,66,111,.15); } 50% { box-shadow: 0 0 0 7px rgba(12,66,111,.32); } }
+              <style>{`@keyframes mkCodePulse { 0%,100% { box-shadow: 0 0 0 3px rgba(26,80,199,.15); } 50% { box-shadow: 0 0 0 7px rgba(26,80,199,.32); } }
                 .mk-code-checking { animation: mkCodePulse 0.9s ease-in-out infinite; }
                 @keyframes mkCodeOk { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
                 .mk-code-ok { display: inline-block; animation: mkCodeOk .35s ease-out; }

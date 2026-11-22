@@ -551,7 +551,7 @@ export function SpinnerIcon({ size = 16 }) {
     <span style={{ position: "relative", display: "inline-block", width: size, height: size, flexShrink: 0 }}>
       <span aria-hidden="true" style={{
         position: "absolute", inset: 0, borderRadius: "50%",
-        background: "conic-gradient(from 0deg, transparent 0deg, #0c426f 65deg, #FF7F50 205deg, transparent 330deg, transparent 360deg)",
+        background: "conic-gradient(from 0deg, transparent 0deg, #1a50c7 65deg, #FF7F50 205deg, transparent 330deg, transparent 360deg)",
         WebkitMask: `radial-gradient(farthest-side, transparent calc(100% - ${outerThickness}px), #000 calc(100% - ${outerThickness}px))`,
         mask: `radial-gradient(farthest-side, transparent calc(100% - ${outerThickness}px), #000 calc(100% - ${outerThickness}px))`,
         animation: "mikumbi-loader-cw 1.25s linear infinite",

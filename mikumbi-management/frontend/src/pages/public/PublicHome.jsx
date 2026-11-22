@@ -14,7 +14,7 @@ import {
   LocationPinIcon, ChevronRightIcon, CloseIcon, ChevronLeftIcon, TrophyIcon,
 } from "../../components/icons";
 
-const NAVY = "#0c426f";
+const NAVY = "#1a50c7";
 const ORANGE = "#F54927";
 const GREEN = "#415d43"; // About section colour requested by the school
 
@@ -51,7 +51,7 @@ function Hero() {
       // A light, bottom-weighted shade keeps the school photo clearly
       // visible (it used to sit under a ~90% navy wash) while the text on
       // top stays readable.
-      backgroundImage: "linear-gradient(180deg, rgba(5,30,52,0.55) 0%, rgba(5,30,52,0.66) 55%, rgba(5,30,52,0.88) 100%), url(/assets/hero.jpg), url(/assets/picha.png), linear-gradient(160deg, #0c426f 0%, #072C4B 100%)",
+      backgroundImage: "linear-gradient(180deg, rgba(5,30,52,0.55) 0%, rgba(5,30,52,0.66) 55%, rgba(5,30,52,0.88) 100%), url(/assets/hero.jpg), url(/assets/picha.png), linear-gradient(160deg, #1a50c7 0%, #10358f 100%)",
       backgroundSize: "cover", backgroundPosition: isMobile ? "center 25%" : "center 30%",
       textShadow: "0 2px 12px rgba(0,0,0,0.45)",
       padding: isMobile ? "70px 20px 96px" : isTablet ? "110px 28px 120px" : "150px 28px 150px",
@@ -186,7 +186,7 @@ function Boarding() {
             <article key={title} className="pub-lift" style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, overflow: "hidden" }}>
               <Slideshow
                 srcs={imgs} alt={title}
-                wrapStyle={{ height: 190, background: `linear-gradient(150deg, ${NAVY}, #165D99)` }}
+                wrapStyle={{ height: 190, background: `linear-gradient(150deg, ${NAVY}, #4674e0)` }}
                 fallback={<div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.85)" }}><Icon size={48} /></div>}
               />
               <div style={{ padding: "16px 18px 20px" }}>
@@ -391,7 +391,7 @@ function Contact() {
             {!mapActive && (
               <button type="button" onClick={() => setMapActive(true)} aria-label={t("map.activate")}
                 style={{ position: "absolute", inset: 0, width: "100%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: 14 }}>
-                <span style={{ background: "rgba(12,66,111,0.88)", color: "#fff", fontWeight: 700, fontSize: 15.5, padding: "8px 14px", borderRadius: 4 }}>{t("map.activate")}</span>
+                <span style={{ background: "rgba(26,80,199,0.88)", color: "#fff", fontWeight: 700, fontSize: 15.5, padding: "8px 14px", borderRadius: 4 }}>{t("map.activate")}</span>
               </button>
             )}
           </div>

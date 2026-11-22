@@ -45,7 +45,7 @@ export default function InstallAppButton({ style = {} }) {
     <div style={{ textAlign: "center", ...style }}>
       <button type="button" onClick={onClick} style={{
         display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 4,
-        border: "none", background: "#fff", color: "#0c426f", fontWeight: 800, fontSize: 15, cursor: "pointer",
+        border: "none", background: "#fff", color: "#1a50c7", fontWeight: 800, fontSize: 15, cursor: "pointer",
       }}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" />
