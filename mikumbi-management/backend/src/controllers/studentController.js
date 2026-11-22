@@ -1228,14 +1228,19 @@ const exportStudentReportPdf = async (req, res, next) => {
         const foodSummary = buildFoodSummary(foodRows, Object.values(FOOD_TYPE_LABELS));
         if (foodSummary.length) {
           const curYear = currentFoodYear();
-          doc.fontSize(10).font("Helvetica-Bold").fillColor("#0F172A").text(`Michango ya Chakula (Food Contributions) - ${curYear}:`);
+          // Labels follow the language the report was requested in (req.lang).
+          const sw = req.lang === "sw";
+          const L = sw
+            ? { title: "Michango ya Chakula", required: "Inatakiwa", brought: `Ametoa ${curYear}`, owed: "Anadaiwa", status: "Hali", done: "Imekamilika", owes: "Anadaiwa", dates: "Alileta lini", type: "Aina" }
+            : { title: "Food Contributions", required: "Required", brought: `Brought ${curYear}`, owed: "Owed", status: "Status", done: "Completed", owes: "Owes", dates: "Dates brought", type: "Type" };
+          doc.fontSize(10).font("Helvetica-Bold").fillColor("#0F172A").text(`${L.title} - ${curYear}:`);
           doc.moveDown(0.2);
           // Table: Type | Required | Brought (this year) | Owed | Status
           const left = doc.page.margins.left;
           const widths = [130, 85, 90, 85, 70];
           const colX = widths.reduce((acc, w) => [...acc, acc[acc.length - 1] + w], [left]);
           const tableW = colX[colX.length - 1] - left;
-          const head = ["Aina (Type)", "Inatakiwa", `Ametoa ${curYear}`, "Anadaiwa", "Hali"];
+          const head = [L.type, L.required, L.brought, L.owed, L.status];
           doc.rect(left, doc.y, tableW, 16).fill("#334155");
           let hy = doc.y;
           doc.fillColor("#FFFFFF").fontSize(7.5).font("Helvetica-Bold");
@@ -1250,7 +1255,7 @@ const exportStudentReportPdf = async (req, res, next) => {
               r.required ? `${r.required} ${u}` : "-",
               `${r.brought} ${u}`,
               r.required ? (r.remaining > 0 ? `${r.remaining} ${u}` : "0") : "-",
-              r.required == null ? "-" : (r.completed ? "Imekamilika" : "Anadaiwa"),
+              r.required == null ? "-" : (r.completed ? L.done : L.owes),
             ];
             cells.forEach((c, k) => doc.fontSize(7.5).fillColor(k === 4 && r.required != null ? (r.completed ? "#15803D" : "#B91C1C") : "#0F172A").text(String(c), colX[k] + 3, y + 4, { width: widths[k] - 6 }));
             y += 15;
@@ -1263,7 +1268,7 @@ const exportStudentReportPdf = async (req, res, next) => {
           doc.y = y + 6;
           // Dated deliveries per type (so "brought when" is clear).
           if (foodSummary.some((r) => r.entries.length)) {
-            doc.fontSize(8.5).fillColor("#0F172A").font("Helvetica-Bold").text("Alileta lini (dates):", left, doc.y, { width: tableW });
+            doc.fontSize(8.5).fillColor("#0F172A").font("Helvetica-Bold").text(`${L.dates}:`, left, doc.y, { width: tableW });
             doc.moveDown(0.1);
           }
           foodSummary.forEach((r) => {

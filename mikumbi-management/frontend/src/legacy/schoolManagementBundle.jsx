@@ -5,6 +5,7 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { BedIcon, ReceiptIcon, ClockIcon, ShieldIcon, CalendarPlusIcon, DownloadIcon, CloseIcon, CheckIcon, SaveIcon, CameraIcon, ArrowUpCircleIcon, SearchIcon, PrinterIcon, SpinnerIcon } from "../components/icons";
 import { replaceBackgroundLightBlue } from "../utils/photoBackground";
 import { REGIONS, getDistricts, getWards, getVillages, findRegionForDistrict } from "../data/locations";
+import { getLang } from "../i18n";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 // Local development - the Vite dev proxy forwards /api → http://localhost:5000/api.
@@ -1344,7 +1345,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
               if (reportInclude.results && !reportResultsSheetId) { setError("Please choose which exam's results to include, or untick Student Results."); return; }
               const include = Object.entries(reportInclude).filter(([,v])=>v).map(([k])=>k).join(",");
               const sheetParam = (reportInclude.results && reportResultsSheetId) ? `&results_sheet_id=${reportResultsSheetId}` : "";
-              await downloadPdf(`/students/${reportModal.id}/report?include=${include}${sheetParam}`, `${digitsOnly(reportModal.reg_no || reportModal.id)}-report.pdf`);
+              await downloadPdf(`/students/${reportModal.id}/report?include=${include}${sheetParam}&lang=${getLang()}`, `${digitsOnly(reportModal.reg_no || reportModal.id)}-report.pdf`);
               setReportModal(null);
             }}>Download PDF</Btn>
           </div>
@@ -1517,26 +1518,30 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           {(() => {
             const fs = chargeModal.food_summary || [];
             const curYear = fs[0]?.year || new Date().getFullYear();
+            const sw = getLang() === "sw";
+            const FL = sw
+              ? { title: "Michango ya Chakula (Food Contributions)", note: 'Muhtasari tu - michango inasajiliwa kupitia Manage Foods. "Anadaiwa" huhesabiwa kwa aina zenye kiasi kilichopangwa kwa mwaka.', type: "Aina (Type)", required: "Inatakiwa", brought: "Ametoa", owed: "Anadaiwa", status: "Hali", done: "Imekamilika", owes: "Anadaiwa", dates: "Alileta lini (dates)", empty: "Hakuna mchango wa chakula uliosajiliwa." }
+              : { title: "Food Contributions", note: 'Read-only summary - recorded through Manage Foods. "Owed" is calculated for foods that have a required yearly amount.', type: "Type", required: "Required", brought: "Brought", owed: "Owed", status: "Status", done: "Completed", owes: "Owes", dates: "Dates brought", empty: "No food contributions recorded." };
             return (
               <div style={{marginTop:20,background:NECTA_PANEL_BG,borderRadius:4,padding:14}}>
-                <SLabel>Michango ya Chakula (Food Contributions) — {curYear}</SLabel>
-                <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>Muhtasari tu - michango inasajiliwa kupitia Manage Foods. "Anadaiwa" huhesabiwa kwa aina zenye kiasi kilichopangwa kwa mwaka.</div>
+                <SLabel>{FL.title} — {curYear}</SLabel>
+                <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>{FL.note}</div>
                 <Tbl
                   theme="necta"
                   columns={[
-                    {key:"label", label:"Aina (Type)"},
-                    {key:"required", label:"Inatakiwa", render:r=>r.required?`${Number(r.required).toLocaleString()} ${r.unit_short}`:"—"},
-                    {key:"brought", label:`Ametoa (${curYear})`, render:r=>`${Number(r.brought).toLocaleString()} ${r.unit_short}`},
-                    {key:"remaining", label:"Anadaiwa", render:r=>r.required==null?"—":(r.remaining>0?`${Number(r.remaining).toLocaleString()} ${r.unit_short}`:"0")},
-                    {key:"status", label:"Hali", render:r=>r.required==null?<span style={{color:NECTA_TEXT}}>—</span>:<Badge color={r.completed?"green":"red"}>{r.completed?"Imekamilika":"Anadaiwa"}</Badge>},
+                    {key:"label", label:FL.type},
+                    {key:"required", label:FL.required, render:r=>r.required?`${Number(r.required).toLocaleString()} ${r.unit_short}`:"—"},
+                    {key:"brought", label:`${FL.brought} (${curYear})`, render:r=>`${Number(r.brought).toLocaleString()} ${r.unit_short}`},
+                    {key:"remaining", label:FL.owed, render:r=>r.required==null?"—":(r.remaining>0?`${Number(r.remaining).toLocaleString()} ${r.unit_short}`:"0")},
+                    {key:"status", label:FL.status, render:r=>r.required==null?<span style={{color:NECTA_TEXT}}>—</span>:<Badge color={r.completed?"green":"red"}>{r.completed?FL.done:FL.owes}</Badge>},
                   ]}
                   loading={chargeModalLoading}
                   rows={fs}
-                  emptyMsg="Hakuna mchango wa chakula uliosajiliwa."
+                  emptyMsg={FL.empty}
                 />
                 {fs.some(r=>r.entries?.length) && (
                   <div style={{marginTop:12}}>
-                    <div style={{fontSize:12,fontWeight:700,color:NECTA_TEXT,marginBottom:6}}>Alileta lini (dates):</div>
+                    <div style={{fontSize:12,fontWeight:700,color:NECTA_TEXT,marginBottom:6}}>{FL.dates}:</div>
                     <div style={{display:"grid",gap:6}}>
                       {fs.filter(r=>r.entries?.length).map(r=>(
                         <div key={r.type} style={{fontSize:12,color:NECTA_TEXT}}>
