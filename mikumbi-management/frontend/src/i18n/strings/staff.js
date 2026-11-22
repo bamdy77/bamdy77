@@ -318,6 +318,7 @@ const STAFF_STRINGS = {
   "audit.action.food.type_reorder": { en: "Food types reordered", sw: "Mpangilio wa aina za chakula umebadilishwa" },
   "audit.action.food.type_delete": { en: "Food type deleted", sw: "Aina ya chakula imefutwa" },
   "audit.action.food.entry_delete": { en: "Food contribution removed", sw: "Mchango wa chakula umeondolewa" },
+  "audit.action.hostel.edit": { en: "Hostel registration edited", sw: "Usajili wa bweni umehaririwa" },
   "audit.intro": { en: "Who changed what, and when - including marks corrected after a subject was already locked/submitted.", sw: "Nani alibadilisha nini, na lini - pamoja na alama zilizosahihishwa baada ya somo kufungwa/kutumwa." },
   "audit.action": { en: "Action", sw: "Kitendo" },
   "audit.allActions": { en: "All actions", sw: "Vitendo vyote" },

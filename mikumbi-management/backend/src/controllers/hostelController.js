@@ -677,9 +677,64 @@ const exportDisciplinePdf = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// PATCH /api/hostel/occupants/:id - fix a registration recorded by mistake:
+// the admission date and, for the Girls Hostel, the room (capacity + gender
+// checked). The class/name come from Student Management and are not edited
+// here. Matron/Patron and Head Master/Second Master.
+const updateOccupant = async (req, res, next) => {
+  try {
+    const { admitted_date, room_id } = req.body;
+    const occRes = await query(
+      `SELECT o.*, s.gender AS student_gender, s.status AS student_status FROM hostel_occupants o
+       LEFT JOIN students s ON s.id = o.student_id WHERE o.id = $1`, [req.params.id]);
+    if (!occRes.rows.length) return res.status(404).json({ success: false, message: "Registration not found." });
+    const occ = occRes.rows[0];
+
+    let newRoomId = occ.room_id;
+    let roomNote = "";
+    if (room_id !== undefined && room_id !== null && String(room_id) !== String(occ.room_id)) {
+      if (occ.hostel_name === "Boys Hostel")
+        return res.status(400).json({ success: false, message: "The Boys Hostel has no rooms to move between." });
+      if (!occ.is_active)
+        return res.status(400).json({ success: false, message: "This student has left the hostel, so the room cannot be changed. Re-admit them instead." });
+      const cap = await query(`
+        SELECT r.capacity, r.hostel_name, r.room_number, r.gender,
+          (SELECT COUNT(*) FROM hostel_occupants o WHERE o.room_id = r.id AND o.is_active = true) AS occupied
+        FROM hostel_rooms r WHERE r.id = $1`, [room_id]);
+      if (!cap.rows.length) return res.status(404).json({ success: false, message: "Room not found." });
+      const room = cap.rows[0];
+      if (room.hostel_name !== occ.hostel_name)
+        return res.status(400).json({ success: false, message: "That room belongs to a different hostel." });
+      if (parseInt(room.occupied) >= parseInt(room.capacity))
+        return res.status(400).json({ success: false, message: "That room is full." });
+      newRoomId = room_id;
+      roomNote = ` Moved to ${room.room_number || `Room ${room_id}`}.`;
+    }
+
+    let dateExpr = "admitted_date";
+    const params = [newRoomId];
+    if (admitted_date !== undefined) {
+      if (admitted_date && !/^\d{4}-\d{2}-\d{2}$/.test(String(admitted_date)))
+        return res.status(400).json({ success: false, message: "Enter the admission date as YYYY-MM-DD." });
+      params.push(admitted_date || null);
+      dateExpr = `COALESCE($${params.length}::date, admitted_date)`;
+    }
+    params.push(req.params.id);
+    const upd = await query(
+      `UPDATE hostel_occupants SET room_id = $1, admitted_date = ${dateExpr} WHERE id = $${params.length} RETURNING *`, params);
+
+    await logHistory(occ.id, "Edited", `Registration edited.${roomNote}${admitted_date ? ` Admission date set to ${admitted_date}.` : ""}`, req.user?.id);
+    const { recordAudit } = require("../utils/auditLogger");
+    await recordAudit({ actor: req.user, action: "hostel.edit", entityType: "hostel_occupant", entityId: occ.id,
+      description: `Edited hostel registration for ${[occ.first_name, occ.last_name].filter(Boolean).join(" ")} (${occ.hostel_name}).${roomNote}`,
+      metadata: { admitted_date: admitted_date || undefined, room_id: newRoomId }, req });
+    res.json({ success: true, data: upd.rows[0] });
+  } catch (err) { next(err); }
+};
+
 module.exports = {
   getRooms, createRoom, updateRoom, deleteRoom, searchOccupants,
-  getStats, assignStudent, getBoysOccupants, admitBoysHall,
+  getStats, assignStudent, getBoysOccupants, admitBoysHall, updateOccupant,
   removeOccupant, permanentlyDeleteOccupant, getOccupant, getHistory, getHistoryByClass,
   getContributions, addContribution, deleteContribution,
   getDiscipline, addDiscipline,

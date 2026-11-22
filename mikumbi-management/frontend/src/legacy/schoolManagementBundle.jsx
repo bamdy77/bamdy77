@@ -3626,6 +3626,7 @@ function HostelHistoryTab({ token, canDeletePermanent }) {
   const [hostel, setHostel] = useState("Girls Hostel");
   const [byForm, setByForm] = useState({});
   const [error, setError] = useState("");
+  const [editOcc, setEditOcc] = useState(null); // occupant being edited
 
   const load = () => {
     apiFetch(`/hostel/history-by-class?hostel_name=${encodeURIComponent(hostel)}`, {}, token)
@@ -3671,7 +3672,7 @@ function HostelHistoryTab({ token, canDeletePermanent }) {
               <div key={s.id} className="mk-row-card" style={{ padding: "12px 14px", borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                   <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>{[s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ")}</div>
-                  {canDeletePermanent && <ActionsMenu items={[{ label: "Delete Registration (Mistake)", onClick: () => deletePermanent(s), danger: true }]} />}
+                  {canDeletePermanent && <ActionsMenu items={[{ label: "Edit", onClick: () => setEditOcc({ ...s, hostel_name: hostel }) }, { label: "Delete Registration (Mistake)", onClick: () => deletePermanent(s), danger: true }]} />}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 11.5 }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: C.muted }}>Room</span><span>{s.room_number || "-"}</span></div>
@@ -3685,13 +3686,73 @@ function HostelHistoryTab({ token, canDeletePermanent }) {
                 <span style={{ flex: 1, color: C.muted }}>Room: {s.room_number || "-"}</span>
                 <span style={{ flex: 1, color: C.muted }}>Admitted: {s.admitted_date ? String(s.admitted_date).slice(0, 10) : "-"}</span>
                 <span style={{ flex: 1, color: s.is_active ? C.girl : C.muted, fontWeight: 600 }}>{s.is_active ? "Current" : `Departed ${s.departed_date ? String(s.departed_date).slice(0, 10) : ""}`}</span>
-                {canDeletePermanent && <span style={{ width: 40, textAlign: "right" }}><ActionsMenu items={[{ label: "Delete Registration (Mistake)", onClick: () => deletePermanent(s), danger: true }]} /></span>}
+                {canDeletePermanent && <span style={{ width: 40, textAlign: "right" }}><ActionsMenu items={[{ label: "Edit", onClick: () => setEditOcc({ ...s, hostel_name: hostel }) }, { label: "Delete Registration (Mistake)", onClick: () => deletePermanent(s), danger: true }]} /></span>}
               </div>
             )
           ))}
         </Card>
       ))}
       {!forms.length && !error && <p style={{ fontSize: 13, color: C.muted }}>No history yet for {hostel}.</p>}
+      {editOcc && <HostelEditModal token={token} occ={editOcc} onClose={() => setEditOcc(null)} onSaved={() => { setEditOcc(null); load(); }} />}
+    </div>
+  );
+}
+
+// Fix a mistaken hostel registration: the admission date, and (Girls Hostel
+// only, for a current resident) the room. Name/class come from Student
+// Management and are not edited here.
+function HostelEditModal({ token, occ, onClose, onSaved }) {
+  const [date, setDate] = useState(occ.admitted_date ? String(occ.admitted_date).slice(0, 10) : "");
+  const [roomId, setRoomId] = useState("");
+  const [rooms, setRooms] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const canMoveRoom = occ.hostel_name === "Girls Hostel" && occ.is_active;
+  const name = [occ.first_name, occ.middle_name, occ.last_name].filter(Boolean).join(" ");
+
+  useEffect(() => {
+    if (!canMoveRoom) return;
+    apiFetch(`/hostel/rooms?hostel_name=${encodeURIComponent(occ.hostel_name)}`, {}, token)
+      .then((r) => setRooms(r.data || [])).catch(() => {});
+  }, [token, occ.hostel_name, canMoveRoom]);
+
+  const save = async () => {
+    setBusy(true); setError("");
+    try {
+      const body = {};
+      if (date) body.admitted_date = date;
+      if (canMoveRoom && roomId) body.room_id = Number(roomId);
+      await apiFetch(`/hostel/occupants/${occ.id}`, { method: "PATCH", body: JSON.stringify(body) }, token);
+      showSuccess("Hostel", "Registration updated.");
+      onSaved();
+    } catch (e) { setError(e.message); setBusy(false); }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: C.surface, borderRadius: 6, padding: 22, width: "100%", maxWidth: 420 }}>
+        <h3 style={{ marginTop: 0, marginBottom: 4, color: C.heading, fontSize: 16 }}>Edit Registration</h3>
+        <p style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>{name} - {occ.hostel_name}</p>
+        {error && <Alert type="error" message={error} onClose={() => setError("")} />}
+        <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: C.text, marginBottom: 14 }}>Admission date
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 13.5, background: C.surface, color: C.text }} /></label>
+        {canMoveRoom && (
+          <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: C.text, marginBottom: 14 }}>Move to room (optional)
+            <select value={roomId} onChange={(e) => setRoomId(e.target.value)} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 13.5, background: C.surface, color: C.text }}>
+              <option value="">Keep current room ({occ.room_number || "-"})</option>
+              {rooms.filter((r) => Number(r.occupied_count) < Number(r.capacity) && r.room_number !== occ.room_number).map((r) => (
+                <option key={r.id} value={r.id}>{r.room_number} ({r.occupied_count}/{r.capacity})</option>
+              ))}
+            </select></label>
+        )}
+        {occ.hostel_name === "Girls Hostel" && !occ.is_active && (
+          <p style={{ fontSize: 11.5, color: C.muted, marginBottom: 14 }}>This student has left the hostel, so the room cannot be changed here.</p>
+        )}
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <Btn variant="secondary" onClick={onClose}>Cancel</Btn>
+          <Btn variant="primary" onClick={save} loading={busy}>Save</Btn>
+        </div>
+      </div>
     </div>
   );
 }

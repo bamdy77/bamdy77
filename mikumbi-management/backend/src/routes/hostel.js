@@ -3,7 +3,7 @@ const router  = express.Router();
 const auth    = require("../middleware/auth");
 const {
   getRooms, createRoom, updateRoom, deleteRoom, searchOccupants,
-  getStats, assignStudent, getBoysOccupants, admitBoysHall,
+  getStats, assignStudent, getBoysOccupants, admitBoysHall, updateOccupant,
   removeOccupant, permanentlyDeleteOccupant, getOccupant, getHistory, getHistoryByClass,
   getContributions, addContribution, deleteContribution,
   getDiscipline, addDiscipline,
@@ -36,6 +36,7 @@ router.get("/occupants/:id",           getOccupant);
 router.get("/occupants/:id/history",   getHistory);
 router.get("/occupants/:id/pdf",       exportOccupantPdf);
 router.get("/history-by-class",        getHistoryByClass);
+router.patch("/occupants/:id", auth(["patron","matron","admin","second_master"]), updateOccupant);
 router.delete("/occupants/:occupantId", auth(["patron","matron"]), removeOccupant);
 // Hard delete - ONLY for correcting a mistaken registration (wrong student,
 // duplicate entry). Fully erases the record so it stops appearing in
