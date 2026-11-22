@@ -324,6 +324,48 @@ const getStudents = async (req, res, next) => {
 // key -> { label, unit } for every food type (hidden ones included).
 const foodTypeLabels = async () => Object.fromEntries((await allFoodTypes()).map((t) => [t.key, t]));
 
+// The current year in Tanzania (the server may run in another time zone) -
+// food contribution amounts are set/owed per calendar year.
+const currentFoodYear = () => Number(new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Dar_es_Salaam", year: "numeric" }).format(new Date()));
+
+// Turns the raw per-delivery rows into one row per food type for the CURRENT
+// year: required amount (if the school set one), total brought, amount still
+// owed, completed flag, and the individual dated deliveries. Any food type
+// with a required amount is included even if the student has brought nothing
+// (so an untouched debt is visible), plus every type the student has ever
+// brought (so older deliveries are never hidden).
+const unitShortS = (u) => (u === "LITRES" ? "L" : u === "PIECES" ? "pcs" : "kg");
+function buildFoodSummary(contributions, foodTypes) {
+  const year = currentFoodYear();
+  const byKey = new Map();
+  const keyOf = (c) => c.contribution_type;
+  for (const t of foodTypes) {
+    if (t.required_qty) byKey.set(t.key, { key: t.key, label: t.label, unit: t.unit, required: Number(t.required_qty), brought: 0, entries: [] });
+  }
+  for (const c of contributions || []) {
+    const k = keyOf(c);
+    if (!byKey.has(k)) byKey.set(k, { key: k, label: c.label || k, unit: c.unit || "", required: null, brought: 0, entries: [] });
+    const row = byKey.get(k);
+    const qty = Number(c.quantity) || 0;
+    row.entries.push({ quantity: qty, year: Number(c.year), date: c.created_at });
+    if (Number(c.year) === year) row.brought += qty;
+  }
+  return [...byKey.values()]
+    .filter((r) => r.required || r.entries.length)
+    .map((r) => {
+      const brought = Math.round(r.brought * 100) / 100;
+      const remaining = r.required ? Math.max(Math.round((r.required - brought) * 100) / 100, 0) : null;
+      return {
+        type: r.key, label: r.label, unit: r.unit, unit_short: unitShortS(r.unit),
+        required: r.required, brought, remaining,
+        completed: r.required ? remaining <= 0 : null,
+        year,
+        entries: r.entries.sort((a, b) => new Date(b.date) - new Date(a.date)),
+      };
+    })
+    .sort((a, b) => (b.required ? 1 : 0) - (a.required ? 1 : 0) || a.label.localeCompare(b.label));
+}
+
 // GET /api/students/:id
 const getStudent = async (req, res, next) => {
   try {
@@ -403,6 +445,11 @@ const getStudent = async (req, res, next) => {
       label: FOOD_TYPE_LABELS[fc.contribution_type]?.label || fc.contribution_type,
       unit: FOOD_TYPE_LABELS[fc.contribution_type]?.unit || "",
     }));
+    // A clear per-food summary for the current year: how much is required,
+    // how much the student has brought, how much is still owed, whether they
+    // have completed, and every dated delivery. This is what Student
+    // Management shows (modal + PDF) so the Head Master sees it at a glance.
+    student.food_summary = buildFoodSummary(student.food_contributions, Object.values(FOOD_TYPE_LABELS));
 
     // Without this, the browser (or an in-between cache) can serve a stale
     // cached/304 response for this same URL - so right after recording a
@@ -1163,24 +1210,69 @@ const exportStudentReportPdf = async (req, res, next) => {
             doc.moveDown(0.5);
           }
         }
+      }
 
-        // Michango ya Chakula (Food Contributions) - real records, Swahili
-        // labels, straight from food_contribution_entries (the same table
-        // Food Contributions' own History reads).
+      // Michango ya Chakula (Food Contributions) - shown whenever School
+      // Contributions are included (it belongs with contributions, not with
+      // hostel). Real records from food_contribution_entries.
         const feRes = await query(
           `SELECT contribution_type, quantity, year, created_at FROM food_contribution_entries WHERE student_id = $1 ORDER BY created_at DESC`,
           [req.params.id]
         );
         const FOOD_TYPE_LABELS = await foodTypeLabels();
-        if (feRes.rows.length) {
-          doc.fontSize(10).font("Helvetica-Bold").fillColor("#0F172A").text("Michango ya Chakula (Food Contributions):");
-          feRes.rows.forEach(fe => {
-            const t = FOOD_TYPE_LABELS[fe.contribution_type];
-            doc.fontSize(9).font("Helvetica").fillColor("#0F172A").text(`${fe.year}  -  ${t ? t.label : fe.contribution_type}: ${Number(fe.quantity).toLocaleString()} ${t ? t.unit : ""}`);
+        const foodRows = feRes.rows.map((fe) => ({
+          contribution_type: fe.contribution_type, quantity: fe.quantity, year: fe.year, created_at: fe.created_at,
+          label: FOOD_TYPE_LABELS[fe.contribution_type]?.label || fe.contribution_type,
+          unit: FOOD_TYPE_LABELS[fe.contribution_type]?.unit || "",
+        }));
+        const foodSummary = buildFoodSummary(foodRows, Object.values(FOOD_TYPE_LABELS));
+        if (foodSummary.length) {
+          const curYear = currentFoodYear();
+          doc.fontSize(10).font("Helvetica-Bold").fillColor("#0F172A").text(`Michango ya Chakula (Food Contributions) - ${curYear}:`);
+          doc.moveDown(0.2);
+          // Table: Type | Required | Brought (this year) | Owed | Status
+          const left = doc.page.margins.left;
+          const widths = [130, 85, 90, 85, 70];
+          const colX = widths.reduce((acc, w) => [...acc, acc[acc.length - 1] + w], [left]);
+          const tableW = colX[colX.length - 1] - left;
+          const head = ["Aina (Type)", "Inatakiwa", `Ametoa ${curYear}`, "Anadaiwa", "Hali"];
+          doc.rect(left, doc.y, tableW, 16).fill("#334155");
+          let hy = doc.y;
+          doc.fillColor("#FFFFFF").fontSize(7.5).font("Helvetica-Bold");
+          head.forEach((h, i) => doc.text(h, colX[i] + 3, hy + 4, { width: widths[i] - 6 }));
+          let y = hy + 16;
+          doc.font("Helvetica");
+          foodSummary.forEach((r, i) => {
+            if (i % 2 === 0) { doc.rect(left, y, tableW, 15).fill("#F8FAFC"); }
+            const u = r.unit_short;
+            const cells = [
+              r.label,
+              r.required ? `${r.required} ${u}` : "-",
+              `${r.brought} ${u}`,
+              r.required ? (r.remaining > 0 ? `${r.remaining} ${u}` : "0") : "-",
+              r.required == null ? "-" : (r.completed ? "Imekamilika" : "Anadaiwa"),
+            ];
+            cells.forEach((c, k) => doc.fontSize(7.5).fillColor(k === 4 && r.required != null ? (r.completed ? "#15803D" : "#B91C1C") : "#0F172A").text(String(c), colX[k] + 3, y + 4, { width: widths[k] - 6 }));
+            y += 15;
+          });
+          // thin grid: vertical column lines + top/bottom borders
+          doc.strokeColor("#CBD5E1").lineWidth(0.5);
+          [left, ...colX.slice(1), left + tableW].forEach((x) => doc.moveTo(x, hy).lineTo(x, y).stroke());
+          doc.moveTo(left, hy).lineTo(left + tableW, hy).stroke();
+          doc.moveTo(left, y).lineTo(left + tableW, y).stroke();
+          doc.y = y + 6;
+          // Dated deliveries per type (so "brought when" is clear).
+          if (foodSummary.some((r) => r.entries.length)) {
+            doc.fontSize(8.5).fillColor("#0F172A").font("Helvetica-Bold").text("Alileta lini (dates):", left, doc.y, { width: tableW });
+            doc.moveDown(0.1);
+          }
+          foodSummary.forEach((r) => {
+            if (!r.entries.length) return;
+            const parts = r.entries.map((e) => `${new Date(e.date).toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" })} (${Number(e.quantity)} ${r.unit_short})`).join(",  ");
+            doc.fontSize(8).fillColor("#475569").font("Helvetica").text(`${r.label}: ${parts}`, left, doc.y, { width: tableW });
           });
           doc.moveDown(0.5);
         }
-      }
     }
 
     // ── Student Results ──

@@ -1514,22 +1514,46 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           })()}
           </div>
 
-          <div style={{marginTop:20,background:NECTA_PANEL_BG,borderRadius:4,padding:14}}>
-            <SLabel>Michango ya Chakula (Food Contributions)</SLabel>
-            <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>Muhtasari tu - michango inasajiliwa kupitia Manage Foods.</div>
-            <Tbl
-              theme="necta"
-              columns={[
-                {key:"label", label:"Aina"},
-                {key:"qty", label:"Kiasi", render:r=>`${Number(r.quantity).toLocaleString()} ${r.unit}`},
-                {key:"year", label:"Mwaka"},
-                {key:"created_at", label:"Tarehe", render:r=>r.created_at?.slice(0,10) || "—"},
-              ]}
-              loading={chargeModalLoading}
-              rows={chargeModal.food_contributions||[]}
-              emptyMsg="Hakuna mchango wa chakula uliosajiliwa."
-            />
-          </div>
+          {(() => {
+            const fs = chargeModal.food_summary || [];
+            const curYear = fs[0]?.year || new Date().getFullYear();
+            return (
+              <div style={{marginTop:20,background:NECTA_PANEL_BG,borderRadius:4,padding:14}}>
+                <SLabel>Michango ya Chakula (Food Contributions) — {curYear}</SLabel>
+                <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>Muhtasari tu - michango inasajiliwa kupitia Manage Foods. "Anadaiwa" huhesabiwa kwa aina zenye kiasi kilichopangwa kwa mwaka.</div>
+                <Tbl
+                  theme="necta"
+                  columns={[
+                    {key:"label", label:"Aina (Type)"},
+                    {key:"required", label:"Inatakiwa", render:r=>r.required?`${Number(r.required).toLocaleString()} ${r.unit_short}`:"—"},
+                    {key:"brought", label:`Ametoa (${curYear})`, render:r=>`${Number(r.brought).toLocaleString()} ${r.unit_short}`},
+                    {key:"remaining", label:"Anadaiwa", render:r=>r.required==null?"—":(r.remaining>0?`${Number(r.remaining).toLocaleString()} ${r.unit_short}`:"0")},
+                    {key:"status", label:"Hali", render:r=>r.required==null?<span style={{color:NECTA_TEXT}}>—</span>:<Badge color={r.completed?"green":"red"}>{r.completed?"Imekamilika":"Anadaiwa"}</Badge>},
+                  ]}
+                  loading={chargeModalLoading}
+                  rows={fs}
+                  emptyMsg="Hakuna mchango wa chakula uliosajiliwa."
+                />
+                {fs.some(r=>r.entries?.length) && (
+                  <div style={{marginTop:12}}>
+                    <div style={{fontSize:12,fontWeight:700,color:NECTA_TEXT,marginBottom:6}}>Alileta lini (dates):</div>
+                    <div style={{display:"grid",gap:6}}>
+                      {fs.filter(r=>r.entries?.length).map(r=>(
+                        <div key={r.type} style={{fontSize:12,color:NECTA_TEXT}}>
+                          <b>{r.label}:</b>{" "}
+                          {r.entries.map((e,i)=>(
+                            <span key={i} style={{whiteSpace:"nowrap"}}>
+                              {e.date?.slice(0,10)} ({Number(e.quantity).toLocaleString()} {r.unit_short}{Number(e.year)!==curYear?`, ${e.year}`:""}){i<r.entries.length-1?",  ":""}
+                            </span>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <div style={{marginTop:20,background:NECTA_PANEL_BG,borderRadius:4,padding:14}}>
             <SLabel>Hostel Fee</SLabel>
