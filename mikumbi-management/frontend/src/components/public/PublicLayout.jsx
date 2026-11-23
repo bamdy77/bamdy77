@@ -298,8 +298,8 @@ function Footer() {
               <PhoneSvg /><a className="pub-flink" href={toTelHref(p)} style={fl}>{p}</a>
             </div>
           ))}
-          <div style={{ display: "flex", gap: 8, marginTop: 6, fontSize: 15 }}>
-            <MailSvg /><a className="pub-flink" href={`mailto:${siteConfig.email}`} style={{ ...fl, overflowWrap: "anywhere" }}>{siteConfig.email}</a>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, fontSize: 12.5 }}>
+            <MailSvg /><a className="pub-flink" href={`mailto:${siteConfig.email}`} style={{ ...fl, minWidth: 0, overflowWrap: "anywhere" }} title={siteConfig.email}>{siteConfig.email}</a>
           </div>
           {siteConfig.social.length > 0 && (
             <div style={{ marginTop: 18 }}>
