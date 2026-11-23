@@ -2939,13 +2939,13 @@ function RoomCard({ room, occ, full, free, hc, hb, C, fullNameOf, onEditBeds, on
       <div style={{padding:"13px 16px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div>
           <div style={{fontWeight:700,fontSize:15,color:hover?hc:C.text}}>{room.room_number}</div>
-          <div style={{fontSize:12,color:C.muted}}>Capacity: {room.capacity} beds</div>
+          <div style={{fontSize:12,color:C.muted}}>{tr("ho.capacity", { n: room.capacity })}</div>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
-          <Badge color={full?"red":free<=2?"amber":hb}>{full?"Full":`${free} free`}</Badge>
+          <Badge color={full?"red":free<=2?"amber":hb}>{full?tr("ho.full"):tr("ho.free", { n: free })}</Badge>
           <ActionsMenu items={[
-            { label:"Edit Beds", onClick:onEditBeds },
-            occ.length===0 ? { label:"Delete Room", onClick:onDeleteRoom, danger:true } : null,
+            { label:tr("ho.editBeds"), onClick:onEditBeds },
+            occ.length===0 ? { label:tr("ho.deleteRoom"), onClick:onDeleteRoom, danger:true } : null,
           ]}/>
         </div>
       </div>
@@ -2953,7 +2953,7 @@ function RoomCard({ room, occ, full, free, hc, hb, C, fullNameOf, onEditBeds, on
         <div style={{display:"grid",gridTemplateColumns:`repeat(${room.capacity},1fr)`,gap:5,marginBottom:12}}>
           {Array.from({length:room.capacity}).map((_,i)=>{
             const o=occ[i];
-            return <div key={i} title={o?fullNameOf(o):"Empty"} style={{height:28,borderRadius:4,background:o?hc+"18":C.bg,border:`1px solid ${o?hc+"50":C.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:o?hc:C.muted}}>
+            return <div key={i} title={o?fullNameOf(o):tr("ho.empty")} style={{height:28,borderRadius:4,background:o?hc+"18":C.bg,border:`1px solid ${o?hc+"50":C.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:o?hc:C.muted}}>
               {o?o.first_name.slice(0,3).toUpperCase():"-"}
             </div>;
           })}
@@ -2965,13 +2965,13 @@ function RoomCard({ room, occ, full, free, hc, hb, C, fullNameOf, onEditBeds, on
               <div style={{fontSize:11,color:C.muted}}>{o.form} · {o.admitted_date?.slice(0,10)}</div>
             </div>
             <ActionsMenu items={[
-              { label:"History", onClick:()=>onHistory(o) },
-              { label:"Remove (Departed)",  onClick:()=>onRemoveOcc(o.id), danger:true },
-              { label:"Delete Registration (Mistake)", onClick:()=>onDeleteOccPermanent(o.id), danger:true },
+              { label:tr("ho.history"), onClick:()=>onHistory(o) },
+              { label:tr("ho.removeDeparted"),  onClick:()=>onRemoveOcc(o.id), danger:true },
+              { label:tr("ho.deleteRegMistake"), onClick:()=>onDeleteOccPermanent(o.id), danger:true },
             ]}/>
           </div>
         ))}
-        {!full && <Btn size="sm" variant="ghost" style={{marginTop:10,width:"100%"}} onClick={onAdmit}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UserPlus size={13}/>Admit Student</span></Btn>}
+        {!full && <Btn size="sm" variant="ghost" style={{marginTop:10,width:"100%"}} onClick={onAdmit}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UserPlus size={13}/>{tr("ho.admitStudent")}</span></Btn>}
       </div>
     </Card>
   );
@@ -2979,6 +2979,7 @@ function RoomCard({ room, occ, full, free, hc, hb, C, fullNameOf, onEditBeds, on
 
 // ─── HOSTEL MODULE ────────────────────────────────────────────────────────────
 function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
+  useLang();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
   const { confirm, ConfirmDialogPortal } = useConfirm();
@@ -3032,13 +3033,13 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
 
   // ── Admission ────────────────────────────────────────────────────────────
   const assign = async () => {
-    if (!af.student_id) { setError("Search and select an enrolled student first."); return; }
+    if (!af.student_id) { setError(tr("ho.searchSelectFirst")); return; }
     setSaving(true);
     try {
       const body = { student_id: af.student_id, admitted_date: af.admitted_date };
       if (assignModal === "boys") await apiFetch("/hostel/boys", { method:"POST", body }, token);
       else await apiFetch(`/hostel/rooms/${assignModal.id}/assign`, { method:"POST", body }, token);
-      setSuccess("Student admitted."); setAssignModal(null);
+      setSuccess(tr("ho.studentAdmitted")); setAssignModal(null);
       setAf({ student_id:"", studentLabel:"", admitted_date:"" });
       setStudentSearch(""); setStudentResults([]);
       load();
@@ -3062,7 +3063,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
   // soft delete - by design they keep showing up in History forever as
   // "Departed", which is the correct permanent admission record.
   const removeOcc = occupantId => {
-    confirm("Remove this student from the hostel? They will still appear in History as 'Departed' (this is a real departure record).", async () => {
+    confirm(tr("ho.removeOccConfirm"), async () => {
       try { await apiFetch(`/hostel/occupants/${occupantId}`, { method:"DELETE" }, token); load(); }
       catch (err) { setError(err.message); }
     });
@@ -3074,7 +3075,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
   // it stops lingering in History, and doesn't leave a duplicate behind if
   // the same student is then correctly re-registered.
   const deleteOccPermanent = occupantId => {
-    confirm("Delete this registration completely? Use this ONLY if the student was registered by mistake. This cannot be undone and the record will disappear from History entirely (unlike 'Remove', which keeps a Departed record).", async () => {
+    confirm(tr("ho.deleteOccConfirm"), async () => {
       try { await apiFetch(`/hostel/occupants/${occupantId}/permanent`, { method:"DELETE" }, token); load(); }
       catch (err) { setError(err.message); }
     });
@@ -3084,19 +3085,19 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
   const saveRoom = async () => {
     const capacityNum = parseInt(roomForm.capacity, 10);
     if (!roomForm.room_number || !roomForm.capacity || !Number.isFinite(capacityNum) || capacityNum < 1) {
-      setError("Room number and bed count required."); return;
+      setError(tr("ho.roomBedRequired")); return;
     }
     const body = { ...roomForm, capacity: capacityNum };
     try {
       if (roomModal === "add") await apiFetch("/hostel/rooms", { method:"POST", body:{ hostel_name:"Girls Hostel", ...body } }, token);
       else await apiFetch(`/hostel/rooms/${roomModal.id}`, { method:"PUT", body }, token);
       setRoomModal(null); setRoomForm({ room_number:"", capacity:6 });
-      setSuccess("Room saved."); load();
+      setSuccess(tr("ho.roomSaved")); load();
     } catch (err) { setError(err.message); }
   };
 
   const removeRoom = id => {
-    confirm("Delete this room? (Only possible if it has no residents.)", async () => {
+    confirm(tr("ho.deleteRoomConfirm"), async () => {
       try { await apiFetch(`/hostel/rooms/${id}`, { method:"DELETE" }, token); load(); }
       catch (err) { setError(err.message); }
     });
@@ -3114,7 +3115,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
       await apiFetch(`/hostel/occupants/${contribModal.id}/contributions`, { method:"POST", body:cf }, token);
       setCf({ term:"Term I", academic_year:CURRENT_YEAR, maize_kg:"", vegetable_type:"", vegetables_kg:"", oil_litres:"", salt_kg:"", other_item:"", other_qty:"", hostel_fee:"", owes:false, comment:"" });
       const r = await apiFetch(`/hostel/occupants/${contribModal.id}/contributions`, {}, token); setContribs(r.data);
-      setSuccess("Contribution recorded.");
+      setSuccess(tr("ho.contribRecorded"));
     } catch (err) { setError(err.message); }
     finally { setSaving(false); }
   };
@@ -3134,11 +3135,11 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
 
   // ── Discipline ───────────────────────────────────────────────────────────
   const addDisc = async () => {
-    if (!df.student_name||!df.issue) { setError("Name and issue required."); return; }
+    if (!df.student_name||!df.issue) { setError(tr("ho.nameIssueRequired")); return; }
     setSaving(true);
     try {
       await apiFetch("/hostel/discipline", { method:"POST", body:df }, token);
-      setSuccess("Record saved."); setDiscModal(false);
+      setSuccess(tr("ho.recordSaved")); setDiscModal(false);
       setDf({ student_name:"", hostel_name:"Girls Hostel", room_number:"", severity:"Minor", issue:"", action_taken:"", incident_date:"" });
       load();
     } catch (err) { setError(err.message); }
@@ -3170,16 +3171,16 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
   const fullNameOf = o => [o.first_name,o.middle_name,o.last_name].filter(Boolean).join(" ");
 
   const hostelTabs = [
-    ["maladhi", "Accommodation", BedIcon],
-    ["fees", "Hostel Fees", ReceiptIcon],
-    ["history", "History", ClockIcon],
+    ["maladhi", tr("ho.accommodation"), BedIcon],
+    ["fees", tr("ho.hostelFees"), ReceiptIcon],
+    ["history", tr("ho.history"), ClockIcon],
   ];
 
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20,padding:isMobile?"16px 12px":isTablet?"24px 20px":32,boxSizing:"border-box",width:"100%"}}>
       <div>
-        <h2 style={{margin:0,fontSize:isMobile?18:22,fontWeight:800,color:C.text}}>Hostel Management</h2>
-        {isHistoryOnly && <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:13}}>Read-only view - admission and fee collection are handled by the Matron/Patron.</p>}
+        <h2 style={{margin:0,fontSize:isMobile?18:22,fontWeight:800,color:C.text}}>{tr("ho.hostelMgmt")}</h2>
+        {isHistoryOnly && <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:13}}>{tr("ho.readonlyNote")}</p>}
       </div>
       {!isHistoryOnly && (
         isCompact ? (
@@ -3223,12 +3224,12 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
       <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div style={{display:"flex",flexDirection:isMobile?"column":"row",justifyContent:"space-between",alignItems:isMobile?"stretch":"flex-start",flexWrap:"wrap",gap:12}}>
         <div>
-          <h2 style={{margin:0,fontSize:isMobile?17:22,fontWeight:800,color:C.text}}>Accommodation</h2>
-          <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:14}}>Room/bed allocation (Girls) · Hall (Boys) · discipline</p>
+          <h2 style={{margin:0,fontSize:isMobile?17:22,fontWeight:800,color:C.text}}>{tr("ho.accommodation")}</h2>
+          <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:14}}>{tr("ho.accommodationNote")}</p>
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap",flexDirection:isMobile?"column":"row"}}>
-          <Btn variant="secondary" loading={exportingPdf} onClick={()=>downloadPdf(`/hostel/pdf?hostel=${encodeURIComponent(selHostel)}`, `${selHostel}-residents.pdf`)} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={14}/>Export PDF</span></Btn>
-          <Btn variant="ghost" onClick={()=>setDiscModal(true)} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><ShieldIcon size={14}/>Discipline Record</span></Btn>
+          <Btn variant="secondary" loading={exportingPdf} onClick={()=>downloadPdf(`/hostel/pdf?hostel=${encodeURIComponent(selHostel)}`, `${selHostel}-residents.pdf`)} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={14}/>{tr("lg.exportPdf")}</span></Btn>
+          <Btn variant="ghost" onClick={()=>setDiscModal(true)} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><ShieldIcon size={14}/>{tr("ho.disciplineRecord")}</span></Btn>
         </div>
       </div>
 
@@ -3236,14 +3237,14 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
       {success && <Alert type="success" message={success} onClose={()=>setSuccess("")}/>}
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:14}}>
-        <StatCard label="Girls Hostel Beds" value={girlStats.total_beds||0} color={C.girl}/>
-        <StatCard label="Girls Residents"   value={girlStats.occupied||0}  sub="in rooms" color={C.girl}/>
-        <StatCard label="Boys Hostel (Hall)" value={boyStats.occupied||0}  sub="residents - no room count" color={C.boy}/>
+        <StatCard label={tr("ho.girlsBeds")} value={girlStats.total_beds||0} color={C.girl}/>
+        <StatCard label={tr("ho.girlsResidents")}   value={girlStats.occupied||0}  sub={tr("ho.inRooms")} color={C.girl}/>
+        <StatCard label={tr("ho.boysHall")} value={boyStats.occupied||0}  sub={tr("ho.residentsNoCount")} color={C.boy}/>
       </div>
 
       <div style={{display:"flex",gap:0,borderBottom:`1px solid ${C.border}`}}>
         {HOSTELS.map(h=>{const sel=selHostel===h;const col=h==="Girls Hostel"?C.girl:C.boy;return(
-          <button key={h} onClick={()=>setSelHostel(h)} style={{padding:"9px 22px",border:"none",borderBottom:sel?`3px solid ${col}`:"3px solid transparent",background:"transparent",fontWeight:sel?700:500,fontSize:14,color:sel?col:C.muted,cursor:"pointer"}}>{h}</button>
+          <button key={h} onClick={()=>setSelHostel(h)} style={{padding:"9px 22px",border:"none",borderBottom:sel?`3px solid ${col}`:"3px solid transparent",background:"transparent",fontWeight:sel?700:500,fontSize:14,color:sel?col:C.muted,cursor:"pointer"}}>{h==="Girls Hostel"?tr("ho.girlsHostel"):tr("ho.boysHostel")}</button>
         );})}
       </div>
 
@@ -3251,7 +3252,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
         <>
           <Card style={{padding:16}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:8,fontSize:13,fontWeight:600}}>
-              <span>Girls Hostel Occupancy</span>
+              <span>{tr("ho.girlsOccupancy")}</span>
               <span style={{color:hc}}>{hStats.occupied||0}/{hStats.total_beds||0} ({pct}%)</span>
             </div>
             <div style={{background:C.border,borderRadius:4,height:10}}>
@@ -3260,7 +3261,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
           </Card>
 
           <div style={{display:"flex",justifyContent:"flex-end"}}>
-            <Btn variant="ghost" onClick={()=>{setRoomForm({room_number:"",capacity:6});setRoomModal("add");}} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><BedIcon size={14}/>Add Room</span></Btn>
+            <Btn variant="ghost" onClick={()=>{setRoomForm({room_number:"",capacity:6});setRoomModal("add");}} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><BedIcon size={14}/>{tr("ho.addRoom")}</span></Btn>
           </div>
 
           {loading ? <div style={{padding:40,textAlign:"center",color:C.muted,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><SpinnerIcon size={16} />{tr("lg.loading")}</div> : (
@@ -3290,25 +3291,23 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
         <>
           <Card style={{padding:16}}>
             <div style={{fontSize:13,color:C.muted}}>
-              Due to the lack of a boys' hostel, a classroom has been converted into temporary
-              accommodation for male students to allow them to stay near the school. This simply
-              tracks current residents and their admission dates.
+              {tr("ho.boysNote")}
             </div>
           </Card>
           <div style={{display:"flex",justifyContent:"flex-end"}}>
-            <Btn onClick={()=>{setAf({student_id:"",studentLabel:"",admitted_date:""});setStudentSearch("");setStudentResults([]);setAssignModal("boys");}} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><CalendarPlusIcon size={14}/>Admit to Boarding Facility</span></Btn>
+            <Btn onClick={()=>{setAf({student_id:"",studentLabel:"",admitted_date:""});setStudentSearch("");setStudentResults([]);setAssignModal("boys");}} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><CalendarPlusIcon size={14}/>{tr("ho.admitBoarding")}</span></Btn>
           </div>
           <Card style={{padding:0}}>
             <Tbl loading={loading} rows={boys} columns={[
-              {key:"name", label:"Full Name", render:r=>fullNameOf(r)},
+              {key:"name", label:tr("lg.fullName"), render:r=>fullNameOf(r)},
               {key:"form", label:tr("lg.form")},
-              {key:"admitted_date", label:"Admitted", render:r=>r.admitted_date?.slice(0,10)},
+              {key:"admitted_date", label:tr("ho.admitted"), render:r=>r.admitted_date?.slice(0,10)},
               {key:"actions", label:"", render:r=>(
                 <ActionsMenu items={[
-                  { label:"History",       onClick:()=>openHistory(r) },
-                  { label:"PDF",           onClick:()=>downloadPdf(`/hostel/occupants/${r.id}/pdf`, `${fullNameOf(r)}.pdf`) },
-                  { label:"Remove (Departed)", onClick:()=>removeOcc(r.id), danger:true },
-                  { label:"Delete Registration (Mistake)", onClick:()=>deleteOccPermanent(r.id), danger:true },
+                  { label:tr("ho.history"),       onClick:()=>openHistory(r) },
+                  { label:tr("lg.pdf"),           onClick:()=>downloadPdf(`/hostel/occupants/${r.id}/pdf`, `${fullNameOf(r)}.pdf`) },
+                  { label:tr("ho.removeDeparted"), onClick:()=>removeOcc(r.id), danger:true },
+                  { label:tr("ho.deleteRegMistake"), onClick:()=>deleteOccPermanent(r.id), danger:true },
                 ]}/>
               )},
             ]}/>
@@ -3318,45 +3317,45 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
 
       <Card>
         <div style={{display:"flex",flexDirection:isMobile?"column":"row",justifyContent:"space-between",alignItems:isMobile?"stretch":"center",gap:10,marginBottom:14}}>
-          <h3 style={{margin:0,fontSize:16,fontWeight:700}}>Discipline Records</h3>
+          <h3 style={{margin:0,fontSize:16,fontWeight:700}}>{tr("ho.disciplineRecords")}</h3>
           <Btn size="sm" variant="secondary" loading={exportingPdf} onClick={()=>downloadPdf(`/hostel/discipline/pdf?hostel=${encodeURIComponent(selHostel)}`, `discipline-${selHostel}.pdf`)} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={13}/>{tr("lg.exportPdf")}</span></Btn>
         </div>
         <Tbl rows={disc} columns={[
-          {key:"incident_date", label:"Date",     render:r=>r.incident_date?.slice(0,10)},
-          {key:"student_name",  label:"Student"},
-          {key:"hostel_name",   label:"Hostel"},
-          {key:"room_number",   label:"Room"},
-          {key:"severity",      label:"Severity", render:r=><Badge color={r.severity==="Minor"?"amber":r.severity==="Serious"?"red":"indigo"}>{r.severity}</Badge>},
-          {key:"issue",         label:"Issue"},
-          {key:"action_taken",  label:"Action Taken"},
+          {key:"incident_date", label:tr("lg.date"),     render:r=>r.incident_date?.slice(0,10)},
+          {key:"student_name",  label:tr("ho.student")},
+          {key:"hostel_name",   label:tr("ho.hostel")},
+          {key:"room_number",   label:tr("ho.room")},
+          {key:"severity",      label:tr("ho.severity"), render:r=><Badge color={r.severity==="Minor"?"amber":r.severity==="Serious"?"red":"indigo"}>{r.severity}</Badge>},
+          {key:"issue",         label:tr("ho.issue")},
+          {key:"action_taken",  label:tr("ho.actionTaken")},
         ]}/>
       </Card>
 
       {/* ── Admission Modal (Girls: room-based / Boys: Hall) ────────────── */}
       {assignModal && (
-        <Modal title={assignModal==="boys" ? "Admit - Boys Boarding Facility" : `Admit - ${assignModal.hostel_name} · ${assignModal.room_number}`} onClose={()=>{setAssignModal(null);setError("");}}>
+        <Modal title={assignModal==="boys" ? tr("ho.admitBoysTitle") : tr("ho.admitRoomTitle", { hostel: assignModal.hostel_name, room: assignModal.room_number })} onClose={()=>{setAssignModal(null);setError("");}}>
           {error && <Alert type="error" message={error} onClose={()=>setError("")}/>}
           {assignModal!=="boys" && (
             <div style={{background:C.girlLight,border:`1px solid ${hc}30`,borderRadius:4,padding:"8px 12px",marginBottom:14,fontSize:13,fontWeight:600,color:hc}}>
-              {assignModal.room_number} · {assignModal.capacity-(assignModal.occupants||[]).length} bed(s) available
+              {tr("ho.bedsAvailable", { room: assignModal.room_number, n: assignModal.capacity-(assignModal.occupants||[]).length })}
             </div>
           )}
 
-          <SLabel>Find Enrolled Student</SLabel>
+          <SLabel>{tr("ho.findStudent")}</SLabel>
           <p style={{fontSize:12,color:C.muted,marginTop:-4,marginBottom:10}}>
-            Only students already enrolled in Student Management can be admitted to the hostel.
+            {tr("ho.onlyEnrolled")}
           </p>
           <div style={{position:"relative",marginBottom:14}}>
             <input
               value={studentSearch}
               onChange={e=>{ setStudentSearch(e.target.value); searchStudents(e.target.value); if(af.student_id) setAf(p=>({...p,student_id:"",studentLabel:""})); }}
-              placeholder="Type name or Reg. No…"
+              placeholder={tr("ho.typeNameReg")}
               style={{...IS,width:"100%"}}
             />
             {studentSearch && !af.student_id && (
               <div style={{position:"absolute",top:40,left:0,right:0,zIndex:20,background:C.surface,border:`1px solid ${C.border}`,borderRadius:4,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",maxHeight:220,overflowY:"auto"}}>
                 {studentSearching
-                  ? <div style={{padding:12,fontSize:13,color:C.muted}}>Searching…</div>
+                  ? <div style={{padding:12,fontSize:13,color:C.muted}}>{tr("ho.searching")}</div>
                   : studentResults.length
                     ? studentResults.map(s=>(
                         <button key={s.id} onClick={()=>{
@@ -3369,84 +3368,84 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
                           <div style={{fontSize:11,color:C.muted}}>{s.form} · {s.reg_no||"-"} · {s.status}</div>
                         </button>
                       ))
-                    : <div style={{padding:12,fontSize:13,color:C.muted}}>No student found. Make sure they've already been registered in Student Management.</div>}
+                    : <div style={{padding:12,fontSize:13,color:C.muted}}>{tr("ho.noStudentFound")}</div>}
               </div>
             )}
           </div>
 
           {af.student_id && (
             <div style={{background:C.successLight,border:`1px solid ${C.success}30`,borderRadius:4,padding:"8px 12px",marginBottom:14,fontSize:13,fontWeight:600,color:C.success}}>
-              Aliyechaguliwa: {af.studentLabel}
+              {tr("ho.selected", { name: af.studentLabel })}
             </div>
           )}
 
-          <Inp label="Admission Date" type="date" value={af.admitted_date} onChange={v=>setAf(p=>({...p,admitted_date:v}))}/>
+          <Inp label={tr("lg.admissionDate")} type="date" value={af.admitted_date} onChange={v=>setAf(p=>({...p,admitted_date:v}))}/>
 
           <div style={{display:"flex",gap:10,marginTop:20,justifyContent:"flex-end"}}>
             <Btn variant="secondary" onClick={()=>{setAssignModal(null);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
-            <Btn onClick={assign} loading={saving} disabled={!af.student_id}>Admit</Btn>
+            <Btn onClick={assign} loading={saving} disabled={!af.student_id}>{tr("ho.admit")}</Btn>
           </div>
         </Modal>
       )}
 
       {/* ── Room (beds) add/edit ────────────────────────────────────────── */}
       {roomModal && (
-        <Modal title={roomModal==="add" ? "Add Room" : `Edit - ${roomModal.room_number}`} onClose={()=>setRoomModal(null)}>
+        <Modal title={roomModal==="add" ? tr("ho.addRoom") : tr("lg.editName", { name: roomModal.room_number })} onClose={()=>setRoomModal(null)}>
           {error && <Alert type="error" message={error} onClose={()=>setError("")}/>}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-            <Inp label="Room Number" value={roomForm.room_number} onChange={v=>setRoomForm(p=>({...p,room_number:v}))} placeholder="e.g. Room 7" required/>
-            <Inp label="Bed Capacity" type="number" value={roomForm.capacity} onChange={v=>setRoomForm(p=>({...p,capacity:v}))} required/>
+            <Inp label={tr("ho.roomNumber")} value={roomForm.room_number} onChange={v=>setRoomForm(p=>({...p,room_number:v}))} placeholder={tr("ho.roomNumberPh")} required/>
+            <Inp label={tr("ho.bedCapacity")} type="number" value={roomForm.capacity} onChange={v=>setRoomForm(p=>({...p,capacity:v}))} required/>
           </div>
           <div style={{display:"flex",gap:10,marginTop:20,justifyContent:"flex-end"}}>
             <Btn variant="secondary" onClick={()=>setRoomModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
-            <Btn onClick={saveRoom}>Save</Btn>
+            <Btn onClick={saveRoom}>{tr("common.save")}</Btn>
           </div>
         </Modal>
       )}
 
       {/* ── Contributions ────────────────────────────────────────────────── */}
       {contribModal && (
-        <Modal wide title={`Contributions - ${fullNameOf(contribModal)}`} onClose={()=>{setContribModal(null);setError("");}}>
+        <Modal wide title={tr("ho.contribTitle", { name: fullNameOf(contribModal) })} onClose={()=>{setContribModal(null);setError("");}}>
           {error && <Alert type="error" message={error} onClose={()=>setError("")}/>}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
-            <Inp label="Term"          value={cf.term}          onChange={v=>setCf(p=>({...p,term:v}))}          options={CONTRIB_TERMS.map(t=>({value:t,label:t}))}/>
-            <Inp label="Academic Year" value={cf.academic_year} onChange={v=>setCf(p=>({...p,academic_year:v}))} options={YEARS.map(y=>({value:y,label:y}))}/>
-            <Inp label="Maize (Kg)" type="number" value={cf.maize_kg} onChange={v=>setCf(p=>({...p,maize_kg:v}))}/>
+            <Inp label={tr("lg.term")}          value={cf.term}          onChange={v=>setCf(p=>({...p,term:v}))}          options={CONTRIB_TERMS.map(t=>({value:t,label:t}))}/>
+            <Inp label={tr("lg.academicYear")} value={cf.academic_year} onChange={v=>setCf(p=>({...p,academic_year:v}))} options={YEARS.map(y=>({value:y,label:y}))}/>
+            <Inp label={tr("ho.maizeKg")} type="number" value={cf.maize_kg} onChange={v=>setCf(p=>({...p,maize_kg:v}))}/>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              <Inp label="Vegetable Type" value={cf.vegetable_type} onChange={v=>setCf(p=>({...p,vegetable_type:v}))} options={VEGETABLE_TYPES.map(v=>({value:v,label:v}))}/>
-              <Inp label="Vegetables (Kg)" type="number" value={cf.vegetables_kg} onChange={v=>setCf(p=>({...p,vegetables_kg:v}))}/>
+              <Inp label={tr("ho.vegType")} value={cf.vegetable_type} onChange={v=>setCf(p=>({...p,vegetable_type:v}))} options={VEGETABLE_TYPES.map(v=>({value:v,label:v}))}/>
+              <Inp label={tr("ho.vegKg")} type="number" value={cf.vegetables_kg} onChange={v=>setCf(p=>({...p,vegetables_kg:v}))}/>
             </div>
-            <Inp label="Cooking Oil (Litres)" type="number" value={cf.oil_litres} onChange={v=>setCf(p=>({...p,oil_litres:v}))}/>
-            <Inp label="Salt (Kg)"            type="number" value={cf.salt_kg}   onChange={v=>setCf(p=>({...p,salt_kg:v}))}/>
-            <Inp label="Hostel Fee (Tsh.)"    type="number" value={cf.hostel_fee} onChange={v=>setCf(p=>({...p,hostel_fee:v}))}/>
+            <Inp label={tr("ho.oilLitres")} type="number" value={cf.oil_litres} onChange={v=>setCf(p=>({...p,oil_litres:v}))}/>
+            <Inp label={tr("ho.saltKg")}            type="number" value={cf.salt_kg}   onChange={v=>setCf(p=>({...p,salt_kg:v}))}/>
+            <Inp label={tr("ho.hostelFeeTsh")}    type="number" value={cf.hostel_fee} onChange={v=>setCf(p=>({...p,hostel_fee:v}))}/>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              <Inp label="Other Item"     value={cf.other_item} onChange={v=>setCf(p=>({...p,other_item:v}))} placeholder="e.g. Soap"/>
-              <Inp label="Other Qty"      value={cf.other_qty}  onChange={v=>setCf(p=>({...p,other_qty:v}))}/>
+              <Inp label={tr("ho.otherItem")}     value={cf.other_item} onChange={v=>setCf(p=>({...p,other_item:v}))} placeholder={tr("ho.otherItemPh")}/>
+              <Inp label={tr("ho.otherQty")}      value={cf.other_qty}  onChange={v=>setCf(p=>({...p,other_qty:v}))}/>
             </div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
             <input type="checkbox" id="owes" checked={cf.owes} onChange={e=>setCf(p=>({...p,owes:e.target.checked}))}/>
-            <label htmlFor="owes" style={{fontSize:13,color:C.text}}>This student still has an <strong>outstanding contribution</strong></label>
+            <label htmlFor="owes" style={{fontSize:13,color:C.text}}>{tr("ho.owesPre")}<strong>{tr("ho.outstandingWord")}</strong></label>
           </div>
-          <Inp label="Comment" value={cf.comment} onChange={v=>setCf(p=>({...p,comment:v}))} placeholder="e.g. outstanding maize for Term II / fully paid"/>
+          <Inp label={tr("ho.comment")} value={cf.comment} onChange={v=>setCf(p=>({...p,comment:v}))} placeholder={tr("ho.commentPh")}/>
           <div style={{display:"flex",justifyContent:"flex-end",marginTop:10,marginBottom:20}}>
-            <Btn onClick={addContrib} loading={saving}>+ Add Contribution</Btn>
+            <Btn onClick={addContrib} loading={saving}>{tr("ho.addContribution")}</Btn>
           </div>
 
-          <SLabel>History of Contributions</SLabel>
+          <SLabel>{tr("ho.historyOfContrib")}</SLabel>
           {!contribs.length
-            ? <p style={{fontSize:13,color:C.muted}}>No contributions recorded yet.</p>
+            ? <p style={{fontSize:13,color:C.muted}}>{tr("ho.noContribYet")}</p>
             : <Tbl rows={contribs} columns={[
-                {key:"created_at_tz", label:"Recorded"},
+                {key:"created_at_tz", label:tr("ho.recorded")},
                 {key:"term", label:tr("lg.term"), render:r=>`${r.term||"-"} ${r.academic_year||""}`},
-                {key:"maize_kg", label:"Maize (kg)"},
-                {key:"vegetables_kg", label:"Vegetables", render:r=>Number(r.vegetables_kg)?`${r.vegetable_type||""} ${r.vegetables_kg}kg`:"-"},
-                {key:"oil_litres", label:"Cooking Oil (L)"},
-                {key:"salt_kg", label:"Salt (kg)"},
-                {key:"other_item", label:"Other", render:r=>r.other_item?`${r.other_item} ${r.other_qty||""}`:"-"},
-                {key:"hostel_fee", label:"Fee (Tsh.)", render:r=>Number(r.hostel_fee).toLocaleString()},
-                {key:"owes", label:"Status", render:r=><Badge color={r.owes?"red":"green"}>{r.owes?"Outstanding":"Paid"}</Badge>},
-                {key:"actions", label:"", render:r=><ActionsMenu items={[{ label:"Remove", onClick:()=>removeContrib(r.id), danger:true }]}/>},
+                {key:"maize_kg", label:tr("ho.maizeKg")},
+                {key:"vegetables_kg", label:tr("ho.vegetables"), render:r=>Number(r.vegetables_kg)?`${r.vegetable_type||""} ${r.vegetables_kg}kg`:"-"},
+                {key:"oil_litres", label:tr("ho.oilL")},
+                {key:"salt_kg", label:tr("ho.saltKg")},
+                {key:"other_item", label:tr("ho.other"), render:r=>r.other_item?`${r.other_item} ${r.other_qty||""}`:"-"},
+                {key:"hostel_fee", label:tr("ho.feeTsh"), render:r=>Number(r.hostel_fee).toLocaleString()},
+                {key:"owes", label:tr("lg.status"), render:r=><Badge color={r.owes?"red":"green"}>{r.owes?tr("ho.outstanding"):tr("lg.paid")}</Badge>},
+                {key:"actions", label:"", render:r=><ActionsMenu items={[{ label:tr("lg.remove"), onClick:()=>removeContrib(r.id), danger:true }]}/>},
               ]}/>}
 
           <div style={{display:"flex",justifyContent:"flex-end",marginTop:16}}>
@@ -3457,7 +3456,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
 
       {/* ── History ──────────────────────────────────────────────────────── */}
       {historyModal && (
-        <Modal title={`History - ${fullNameOf(historyModal)}`} onClose={()=>setHistoryModal(null)}>
+        <Modal title={tr("ho.historyTitle", { name: fullNameOf(historyModal) })} onClose={()=>setHistoryModal(null)}>
           <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",marginBottom:14}}>
             <Btn size="sm" variant="secondary" onClick={()=>downloadPdf(`/hostel/occupants/${historyModal.id}/pdf`, `${fullNameOf(historyModal)}.pdf`)}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={13}/>{tr("lg.pdf")}</span></Btn>
           </div>
@@ -3482,20 +3481,20 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
 
       {/* ── Discipline ───────────────────────────────────────────────────── */}
       {discModal && (
-        <Modal title="New Discipline Record" onClose={()=>{setDiscModal(false);setError("");}}>
+        <Modal title={tr("ho.newDiscipline")} onClose={()=>{setDiscModal(false);setError("");}}>
           {error && <Alert type="error" message={error} onClose={()=>setError("")}/>}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-            <Inp label="Student Name"    value={df.student_name} onChange={v=>setDf(p=>({...p,student_name:v}))} required/>
-            <Inp label="Hostel"          value={df.hostel_name}  onChange={v=>setDf(p=>({...p,hostel_name:v}))}  options={HOSTELS.map(h=>({value:h,label:h}))}/>
-            <Inp label="Room"            value={df.room_number}  onChange={v=>setDf(p=>({...p,room_number:v}))}  placeholder="e.g. Room 3 (leave blank for Boys Hall)"/>
-            <Inp label="Date" type="date" value={df.incident_date} onChange={v=>setDf(p=>({...p,incident_date:v}))}/>
-            <Inp label="Severity"        value={df.severity}     onChange={v=>setDf(p=>({...p,severity:v}))}     options={[{value:"Minor",label:"Minor"},{value:"Serious",label:"Serious"},{value:"Expulsion Risk",label:"Expulsion Risk"}]}/>
-            <div style={{gridColumn:"1/-1"}}><Inp label="Issue Description" value={df.issue}         onChange={v=>setDf(p=>({...p,issue:v}))}         required/></div>
-            <div style={{gridColumn:"1/-1"}}><Inp label="Action Taken"      value={df.action_taken} onChange={v=>setDf(p=>({...p,action_taken:v}))}/></div>
+            <Inp label={tr("ho.studentName")}    value={df.student_name} onChange={v=>setDf(p=>({...p,student_name:v}))} required/>
+            <Inp label={tr("ho.hostel")}          value={df.hostel_name}  onChange={v=>setDf(p=>({...p,hostel_name:v}))}  options={HOSTELS.map(h=>({value:h,label:h==="Girls Hostel"?tr("ho.girlsHostel"):tr("ho.boysHostel")}))}/>
+            <Inp label={tr("ho.room")}            value={df.room_number}  onChange={v=>setDf(p=>({...p,room_number:v}))}  placeholder={tr("ho.roomPh")}/>
+            <Inp label={tr("lg.date")} type="date" value={df.incident_date} onChange={v=>setDf(p=>({...p,incident_date:v}))}/>
+            <Inp label={tr("ho.severity")}        value={df.severity}     onChange={v=>setDf(p=>({...p,severity:v}))}     options={[{value:"Minor",label:tr("ho.minor")},{value:"Serious",label:tr("ho.serious")},{value:"Expulsion Risk",label:tr("ho.expulsion")}]}/>
+            <div style={{gridColumn:"1/-1"}}><Inp label={tr("ho.issueDesc")} value={df.issue}         onChange={v=>setDf(p=>({...p,issue:v}))}         required/></div>
+            <div style={{gridColumn:"1/-1"}}><Inp label={tr("ho.actionTaken")}      value={df.action_taken} onChange={v=>setDf(p=>({...p,action_taken:v}))}/></div>
           </div>
           <div style={{display:"flex",gap:10,marginTop:20,justifyContent:"flex-end"}}>
             <Btn variant="secondary" onClick={()=>{setDiscModal(false);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
-            <Btn onClick={addDisc} loading={saving}>Save Record</Btn>
+            <Btn onClick={addDisc} loading={saving}>{tr("ho.saveRecord")}</Btn>
           </div>
         </Modal>
       )}
@@ -4039,15 +4038,15 @@ function ContributionsModule({ token, role }) {
           {hOcc && (
             <>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
-                <Inp label="Term"          value={cf.term}          onChange={v=>setCf(p=>({...p,term:v}))}          options={CONTRIB_TERMS.map(t=>({value:t,label:t}))}/>
-                <Inp label="Academic Year" value={cf.academic_year} onChange={v=>setCf(p=>({...p,academic_year:v}))} options={YEARS.map(y=>({value:y,label:y}))}/>
-                <Inp label="Maize (Kg)" type="number" value={cf.maize_kg} onChange={v=>setCf(p=>({...p,maize_kg:v}))}/>
+                <Inp label={tr("lg.term")}          value={cf.term}          onChange={v=>setCf(p=>({...p,term:v}))}          options={CONTRIB_TERMS.map(t=>({value:t,label:t}))}/>
+                <Inp label={tr("lg.academicYear")} value={cf.academic_year} onChange={v=>setCf(p=>({...p,academic_year:v}))} options={YEARS.map(y=>({value:y,label:y}))}/>
+                <Inp label={tr("ho.maizeKg")} type="number" value={cf.maize_kg} onChange={v=>setCf(p=>({...p,maize_kg:v}))}/>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                  <Inp label="Vegetable Type" value={cf.vegetable_type} onChange={v=>setCf(p=>({...p,vegetable_type:v}))} options={VEGETABLE_TYPES.map(v=>({value:v,label:v}))}/>
-                  <Inp label="Vegetables (Kg)" type="number" value={cf.vegetables_kg} onChange={v=>setCf(p=>({...p,vegetables_kg:v}))}/>
+                  <Inp label={tr("ho.vegType")} value={cf.vegetable_type} onChange={v=>setCf(p=>({...p,vegetable_type:v}))} options={VEGETABLE_TYPES.map(v=>({value:v,label:v}))}/>
+                  <Inp label={tr("ho.vegKg")} type="number" value={cf.vegetables_kg} onChange={v=>setCf(p=>({...p,vegetables_kg:v}))}/>
                 </div>
-                <Inp label="Cooking Oil (Litres)" type="number" value={cf.oil_litres} onChange={v=>setCf(p=>({...p,oil_litres:v}))}/>
-                <Inp label="Salt (Kg)"            type="number" value={cf.salt_kg}   onChange={v=>setCf(p=>({...p,salt_kg:v}))}/>
+                <Inp label={tr("ho.oilLitres")} type="number" value={cf.oil_litres} onChange={v=>setCf(p=>({...p,oil_litres:v}))}/>
+                <Inp label={tr("ho.saltKg")}            type="number" value={cf.salt_kg}   onChange={v=>setCf(p=>({...p,salt_kg:v}))}/>
                 <Inp label="Rice (Kg)"            type="number" value={cf.rice_kg}   onChange={v=>setCf(p=>({...p,rice_kg:v}))}/>
                 <Inp label="Hostel Fee (TZS)"     type="number" value={cf.hostel_fee} onChange={v=>setCf(p=>({...p,hostel_fee:v}))}/>
               </div>
@@ -4055,24 +4054,24 @@ function ContributionsModule({ token, role }) {
                 <input type="checkbox" id="owes2" checked={cf.owes} onChange={e=>setCf(p=>({...p,owes:e.target.checked}))}/>
                 <label htmlFor="owes2" style={{fontSize:13,color:C.text}}>This student still has an <strong>outstanding contribution</strong></label>
               </div>
-              <Inp label="Comment" value={cf.comment} onChange={v=>setCf(p=>({...p,comment:v}))} placeholder="e.g. outstanding maize for Term II / fully paid"/>
+              <Inp label={tr("ho.comment")} value={cf.comment} onChange={v=>setCf(p=>({...p,comment:v}))} placeholder={tr("ho.commentPh")}/>
               <div style={{display:"flex",justifyContent:"flex-end",marginTop:10,marginBottom:20}}>
                 <Btn onClick={addHostelContribution} loading={saving}>+ Add Contribution</Btn>
               </div>
 
               <SLabel>History</SLabel>
               {!hContribs.length
-                ? <p style={{fontSize:13,color:C.muted}}>No contributions recorded yet.</p>
+                ? <p style={{fontSize:13,color:C.muted}}>{tr("ho.noContribYet")}</p>
                 : <Tbl rows={hContribs} columns={[
-                    {key:"created_at_tz", label:"Recorded"},
+                    {key:"created_at_tz", label:tr("ho.recorded")},
                     {key:"term", label:tr("lg.term"), render:r=>`${r.term||"-"} ${r.academic_year||""}`},
-                    {key:"maize_kg", label:"Maize (kg)"},
-                    {key:"vegetables_kg", label:"Vegetables", render:r=>Number(r.vegetables_kg)?`${r.vegetable_type||""} ${r.vegetables_kg}kg`:"-"},
+                    {key:"maize_kg", label:tr("ho.maizeKg")},
+                    {key:"vegetables_kg", label:tr("ho.vegetables"), render:r=>Number(r.vegetables_kg)?`${r.vegetable_type||""} ${r.vegetables_kg}kg`:"-"},
                     {key:"oil_litres", label:"Oil (L)"},
-                    {key:"salt_kg", label:"Salt (kg)"},
+                    {key:"salt_kg", label:tr("ho.saltKg")},
                     {key:"rice_kg", label:"Rice (kg)"},
                     {key:"hostel_fee", label:"Fee (TZS)", render:r=>Number(r.hostel_fee).toLocaleString()},
-                    {key:"owes", label:"Status", render:r=><Badge color={r.owes?"red":"green"}>{r.owes?"Outstanding":"Paid"}</Badge>},
+                    {key:"owes", label:tr("lg.status"), render:r=><Badge color={r.owes?"red":"green"}>{r.owes?tr("ho.outstanding"):tr("lg.paid")}</Badge>},
                     {key:"actions", label:"", render:r=><ActionsMenu items={[
                       { label:"Print Receipt", onClick:()=>downloadHostelReceipt(r.id) },
                       { label:"Remove", onClick:()=>removeHostelContribution(r.id), danger:true },
@@ -4096,14 +4095,14 @@ function ContributionsModule({ token, role }) {
 
       {addModal && (
         <Modal title={addModal==="ream" ? "Add Ream Record" : "Add Other Expense"} onClose={()=>setAddModal(null)}>
-          <SLabel>Find Enrolled Student</SLabel>
+          <SLabel>{tr("ho.findStudent")}</SLabel>
           <p style={{fontSize:12,color:C.muted,marginTop:-4,marginBottom:10}}>Only students already enrolled in Student Management can be selected.</p>
           <div style={{position:"relative",marginBottom:14}}>
-            <input value={studentSearch} onChange={e=>{setStudentSearch(e.target.value);searchStudents(e.target.value);if(pickedStudent)setPickedStudent(null);}} placeholder="Type name or Reg. No…" style={{...IS,width:"100%"}}/>
+            <input value={studentSearch} onChange={e=>{setStudentSearch(e.target.value);searchStudents(e.target.value);if(pickedStudent)setPickedStudent(null);}} placeholder={tr("ho.typeNameReg")} style={{...IS,width:"100%"}}/>
             {studentSearch && !pickedStudent && (
               <div style={{position:"absolute",top:40,left:0,right:0,zIndex:20,background:C.surface,border:`1px solid ${C.border}`,borderRadius:4,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",maxHeight:220,overflowY:"auto"}}>
                 {studentSearching
-                  ? <div style={{padding:12,fontSize:13,color:C.muted}}>Searching…</div>
+                  ? <div style={{padding:12,fontSize:13,color:C.muted}}>{tr("ho.searching")}</div>
                   : studentResults.length
                     ? studentResults.map(s=>{
                         const label = [s.first_name,s.middle_name,s.last_name].filter(Boolean).join(" ");
