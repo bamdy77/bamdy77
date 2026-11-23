@@ -3218,7 +3218,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
       )}
 
       {pageTab==="fees" && !isHistoryOnly && <HostelFeesTab token={token} />}
-      {(pageTab==="history" || isHistoryOnly) && <HostelHistoryTab token={token} canDeletePermanent={canDeletePermanent} />}
+      {(pageTab==="history" || isHistoryOnly) && <HostelHistoryTab token={token} canDeletePermanent={canDeletePermanent} canEdit={!isHistoryOnly} />}
 
       {pageTab==="maladhi" && !isHistoryOnly && (
       <div style={{display:"flex",flexDirection:"column",gap:20}}>
@@ -3614,7 +3614,8 @@ function HostelFeesTab({ token }) {
 }
 
 // History - full admission record by class/Form, for Boys and Girls.
-function HostelHistoryTab({ token, canDeletePermanent }) {
+function HostelHistoryTab({ token, canDeletePermanent, canEdit = true }) {
+  useLang();
   const { isMobile } = useBreakpoint();
   const { confirm, ConfirmDialogPortal } = useConfirm();
   const [hostel, setHostel] = useState("Girls Hostel");
@@ -3666,7 +3667,7 @@ function HostelHistoryTab({ token, canDeletePermanent }) {
               <div key={s.id} className="mk-row-card" style={{ padding: "12px 14px", borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                   <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>{[s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ")}</div>
-                  {canDeletePermanent && <ActionsMenu items={[{ label: "Edit", onClick: () => setEditOcc({ ...s, hostel_name: hostel }) }, { label: "Delete Registration (Mistake)", onClick: () => deletePermanent(s), danger: true }]} />}
+                  {(canEdit || canDeletePermanent) && <ActionsMenu items={[...(canEdit ? [{ label: tr("lg.edit"), onClick: () => setEditOcc({ ...s, hostel_name: hostel }) }] : []), ...(canDeletePermanent ? [{ label: tr("ho.deleteRegMistake"), onClick: () => deletePermanent(s), danger: true }] : [])]} />}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 11.5 }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: C.muted }}>Room</span><span>{s.room_number || "-"}</span></div>
@@ -3680,7 +3681,7 @@ function HostelHistoryTab({ token, canDeletePermanent }) {
                 <span style={{ flex: 1, color: C.muted }}>Room: {s.room_number || "-"}</span>
                 <span style={{ flex: 1, color: C.muted }}>Admitted: {s.admitted_date ? String(s.admitted_date).slice(0, 10) : "-"}</span>
                 <span style={{ flex: 1, color: s.is_active ? C.girl : C.muted, fontWeight: 600 }}>{s.is_active ? "Current" : `Departed ${s.departed_date ? String(s.departed_date).slice(0, 10) : ""}`}</span>
-                {canDeletePermanent && <span style={{ width: 40, textAlign: "right" }}><ActionsMenu items={[{ label: "Edit", onClick: () => setEditOcc({ ...s, hostel_name: hostel }) }, { label: "Delete Registration (Mistake)", onClick: () => deletePermanent(s), danger: true }]} /></span>}
+                {(canEdit || canDeletePermanent) && <span style={{ width: 40, textAlign: "right" }}><ActionsMenu items={[...(canEdit ? [{ label: tr("lg.edit"), onClick: () => setEditOcc({ ...s, hostel_name: hostel }) }] : []), ...(canDeletePermanent ? [{ label: tr("ho.deleteRegMistake"), onClick: () => deletePermanent(s), danger: true }] : [])]} /></span>}
               </div>
             )
           ))}
@@ -3716,8 +3717,8 @@ function HostelEditModal({ token, occ, onClose, onSaved }) {
       const body = {};
       if (date) body.admitted_date = date;
       if (canMoveRoom && roomId) body.room_id = Number(roomId);
-      await apiFetch(`/hostel/occupants/${occ.id}`, { method: "PATCH", body: JSON.stringify(body) }, token);
-      showSuccess("Hostel", "Registration updated.");
+      await apiFetch(`/hostel/occupants/${occ.id}`, { method: "PATCH", body }, token);
+      showSuccess(tr("he.hostel"), tr("he.regUpdated"));
       onSaved();
     } catch (e) { setError(e.message); setBusy(false); }
   };

@@ -16,7 +16,7 @@
 export const DEFAULT_FONT = "default";
 
 export const FONT_STACKS = {
-  default: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  default: "Arial, Arimo, Helvetica, sans-serif",
   arial: "Arial, Arimo, Helvetica, sans-serif",
   poppins: 'Poppins, "Segoe UI", Roboto, Arial, sans-serif',
   times: '"Times New Roman", Tinos, Times, serif',
@@ -33,7 +33,7 @@ export const FONT_CRITICAL_CSS = `${FONT_TARGETS.map((t) => `:root[data-mk-font]
 
 // Display names are proper names, so they are the same in every language.
 export const FONT_OPTIONS = [
-  { value: "default", label: "Default" },
+  { value: "default", label: "Default (Arial)" },
   { value: "arial", label: "Arial" },
   { value: "poppins", label: "Poppins" },
   { value: "times", label: "Times New Roman" },
