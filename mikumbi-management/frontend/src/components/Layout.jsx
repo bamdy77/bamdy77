@@ -17,7 +17,7 @@ import { apiFetch } from "../utils/api";
 import { useLang } from "../i18n";
 import { StaffLangToggle } from "../i18n/StaffLang";
 import { roleLabel as roleName, formLabel as formName } from "../i18n/display";
-import { ShieldIcon, SettingsIcon, LockIcon, PaletteIcon, ChevronDownIcon, CheckIcon, MenuIcon, CloseIcon, GraduationCapIcon, CoinsIcon, UtensilsIcon, TableIcon, BedIcon, BarChartIcon, ClockIcon, MessageIcon, UsersIcon, LogoutIcon, CameraIcon, TrashIcon, UserCircleIcon, EyeIcon, SpinnerIcon, FileClockIcon, EditIcon } from "./icons";
+import { ShieldIcon, SettingsIcon, LockIcon, PaletteIcon, CheckIcon, MenuIcon, CloseIcon, GraduationCapIcon, CoinsIcon, UtensilsIcon, TableIcon, BedIcon, BarChartIcon, ClockIcon, MessageIcon, UsersIcon, LogoutIcon, CameraIcon, TrashIcon, UserCircleIcon, EyeIcon, SpinnerIcon, FileClockIcon, EditIcon } from "./icons";
 
 // Module visibility, exactly per spec:
 //  - admin (Head Master) + second_master: everything
@@ -31,23 +31,36 @@ import { ShieldIcon, SettingsIcon, LockIcon, PaletteIcon, ChevronDownIcon, Check
 //    History there is oversight-only - admin/second_master, not food_teacher)
 // A user can hold MULTIPLE roles at once (e.g. Academic Master + Matron) -
 // they see the UNION of every module any of their roles unlocks.
+// Each module also carries a `group` so the sidebar can arrange the modules
+// into clearly-labelled sections (Students & Hostel / Finance & Contributions
+// / Academics / System) rather than one long flat list. A role only ever sees
+// the groups that contain at least one module it can open, so empty section
+// headers never show.
 const MODULES = [
-  { key: "students",       path: "/dashboard/students",       roles: ["admin", "second_master"], Icon: GraduationCapIcon },
-  { key: "contributions",  path: "/dashboard/contributions",  roles: ["admin", "second_master", "academic", "class_teacher"], Icon: CoinsIcon },
-  { key: "food",           path: "/dashboard/food",           roles: ["admin", "second_master", "food_teacher"], Icon: UtensilsIcon },
-  { key: "timetable",      path: "/dashboard/timetable",      roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: TableIcon },
-  { key: "hostel",         path: "/dashboard/hostel",         roles: ["admin", "second_master", "patron", "matron"], Icon: BedIcon },
-  { key: "results",        path: "/dashboard/results",        roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: BarChartIcon },
-  { key: "tams",           path: "/dashboard/tams",           roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: ClockIcon },
+  { key: "students",       path: "/dashboard/students",       section: "students",  roles: ["admin", "second_master"], Icon: GraduationCapIcon },
+  { key: "hostel",         path: "/dashboard/hostel",         section: "students",  roles: ["admin", "second_master", "patron", "matron"], Icon: BedIcon },
+  { key: "contributions",  path: "/dashboard/contributions",  section: "finance",   roles: ["admin", "second_master", "academic", "class_teacher"], Icon: CoinsIcon },
+  { key: "food",           path: "/dashboard/food",           section: "finance",   roles: ["admin", "second_master", "food_teacher"], Icon: UtensilsIcon },
+  { key: "results",        path: "/dashboard/results",        section: "academics", roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: BarChartIcon },
+  { key: "timetable",      path: "/dashboard/timetable",      section: "academics", roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: TableIcon },
+  { key: "tams",           path: "/dashboard/tams",           section: "academics", roles: ["admin", "second_master", "academic", "teacher", "patron", "matron", "class_teacher", "food_teacher"], Icon: ClockIcon },
   // Head Master / Second Master oversight tools - multi-period results &
   // attendance trends, and the security audit trail. The Academic Master
   // now ALSO gets this entry, but only the one-student trend panel inside
   // renders for them - AnalyticsDashboard.jsx itself hides the school-wide
   // Form/TAMS sections for that role.
-  { key: "analytics",      path: "/dashboard/analytics",      roles: ["admin", "second_master", "academic", "teacher"], Icon: BarChartIcon },
-  { key: "audit-log",      path: "/dashboard/audit-log",      roles: ["admin", "second_master", "developer"], Icon: FileClockIcon },
-  { key: "communications", path: "/dashboard/communications", roles: ["admin", "second_master"], Icon: MessageIcon },
-  { key: "users",          path: "/dashboard/users",          roles: ["admin", "second_master"], Icon: UsersIcon },
+  { key: "analytics",      path: "/dashboard/analytics",      section: "academics", roles: ["admin", "second_master", "academic", "teacher"], Icon: BarChartIcon },
+  { key: "communications", path: "/dashboard/communications", section: "system",    roles: ["admin", "second_master"], Icon: MessageIcon },
+  { key: "users",          path: "/dashboard/users",          section: "system",    roles: ["admin", "second_master"], Icon: UsersIcon },
+  { key: "audit-log",      path: "/dashboard/audit-log",      section: "system",    roles: ["admin", "second_master", "developer"], Icon: FileClockIcon },
+];
+
+// The order the sidebar groups appear in, each with its section-header key.
+const MODULE_GROUPS = [
+  { key: "students",  labelKey: "menu.group.students" },
+  { key: "finance",   labelKey: "menu.group.finance" },
+  { key: "academics", labelKey: "menu.group.academics" },
+  { key: "system",    labelKey: "menu.group.system" },
 ];
 
 // Account-header avatar for the logged-in account (e.g. Teacher, Head
@@ -278,6 +291,7 @@ export default function Layout() {
   useEffect(() => { refreshUser(); }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
   const { isDesktop } = useBreakpoint();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { confirm, ConfirmDialogPortal } = useConfirm();
 
   const myRoles = user.roles && user.roles.length ? user.roles : [user.role];
@@ -383,19 +397,52 @@ export default function Layout() {
     }, { confirmLabel: t("common.yes"), cancelLabel: t("common.no"), danger: true });
   };
 
+  // Shared styling for one sidebar row (used for both the module links and
+  // the Settings button at the bottom), so the active highlight and spacing
+  // stay identical between them.
+  const rowStyle = (active) => ({
+    padding: "11px 20px", color: "#fff", textDecoration: "none", fontSize: 14,
+    background: active ? "rgba(255,255,255,0.12)" : "transparent",
+    borderLeft: active ? `3px solid ${THEME.gold}` : "3px solid transparent",
+    display: "flex", alignItems: "center", gap: 12, width: "100%",
+    font: "inherit", textAlign: "left", border: "none", borderLeftStyle: "solid",
+    cursor: "pointer",
+  });
+  const groupHeaderStyle = {
+    padding: "15px 20px 6px", fontSize: 10.5, fontWeight: 800, letterSpacing: 1.4,
+    textTransform: "uppercase", color: "rgba(243,193,75,0.9)",
+  };
+
   const navLinks = (
-    <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {visible.map((m) => (
-        <Link key={m.key} to={m.path} style={{
-          padding: "12px 20px", color: "#fff", textDecoration: "none", fontSize: 14,
-          background: location.pathname.startsWith(m.path) ? "rgba(255,255,255,0.12)" : "transparent",
-          borderLeft: location.pathname.startsWith(m.path) ? `3px solid ${THEME.gold}` : "3px solid transparent",
-          display: "flex", alignItems: "center", gap: 12,
-        }}>
-          <span style={{ display: "flex", flexShrink: 0, opacity: 0.9 }}><m.Icon size={16} /></span>
-          {t(`menu.${m.key}`)}
-        </Link>
-      ))}
+    <nav style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      {MODULE_GROUPS.map((g) => {
+        const items = visible.filter((m) => m.section === g.key);
+        if (!items.length) return null;
+        return (
+          <div key={g.key}>
+            <div style={groupHeaderStyle}>{t(g.labelKey)}</div>
+            {items.map((m) => {
+              const active = location.pathname.startsWith(m.path);
+              return (
+                <Link key={m.key} to={m.path} style={rowStyle(active)}>
+                  <span style={{ display: "flex", flexShrink: 0, opacity: 0.9 }}><m.Icon size={16} /></span>
+                  {t(`menu.${m.key}`)}
+                </Link>
+              );
+            })}
+          </div>
+        );
+      })}
+
+      {/* Settings now lives in the module list itself, at the very bottom,
+          rather than behind a gear icon in the header. It opens the same
+          settings panel (theme, font, language, password, security...). */}
+      <div style={{ marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.12)", paddingTop: 6 }}>
+        <button type="button" onClick={() => { setDrawerOpen(false); setSettingsOpen(true); }} style={rowStyle(false)}>
+          <span style={{ display: "flex", flexShrink: 0, opacity: 0.9 }}><SettingsIcon size={16} /></span>
+          {t("menu.settings")}
+        </button>
+      </div>
     </nav>
   );
 
@@ -414,11 +461,9 @@ export default function Layout() {
                 <div title={greetLine} style={{ fontWeight: 800, fontSize: 12, lineHeight: 1.35, wordBreak: "break-word" }}>{greetLine}</div>
               </div>
             </div>
-            {/* Bell stacked directly under Settings (not side-by-side) so the
-                greeting text above has the full header width to itself and
-                never gets squeezed into an awkward 3-line wrap on desktop. */}
+            {/* Settings moved into the module list below; only the
+                notification bell stays in the header now. */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flexShrink: 0 }}>
-              <SettingsMenu navigate={navigate} user={user} />
               <NotificationBell />
             </div>
           </div>
@@ -447,7 +492,6 @@ export default function Layout() {
 
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               <NotificationBell />
-              <SettingsMenu navigate={navigate} user={user} />
             </div>
           </div>
 
@@ -554,27 +598,29 @@ export default function Layout() {
         </div>
       )}
 
+      {settingsOpen && (
+        <SettingsPanel navigate={navigate} user={user} onClose={() => setSettingsOpen(false)} />
+      )}
+
       <ChatBot />
       {ConfirmDialogPortal}
     </div>
   );
 }
 
-// Settings dropdown - reachable from every dashboard page, top-left area,
-// next to the school name / teacher name / role. Houses Change Password
-// and Theme only - Logout now lives on the Avatar itself (tap/click the
-// avatar to log out), so this menu never needs to carry it.
-function SettingsMenu({ navigate, user }) {
+// Settings panel - opened from the "Settings" entry at the bottom of the
+// sidebar module list (it used to be a gear dropdown in the header). Houses
+// Change Password, Login Security, Signature, SMS, Backups (by role) plus
+// Font, Language and Theme. Logout lives on the Avatar itself, so this panel
+// never needs to carry it. Rendered as a centered modal so it behaves the
+// same on desktop and on the mobile drawer.
+function SettingsPanel({ navigate, user, onClose }) {
   const { t } = useLang();
-  const [open, setOpen] = useState(false);
-  const [themeOpen, setThemeOpen] = useState(false);
-  const wrapRef = useRef(null);
   const { theme, setTheme } = useTheme();
   const { font, setFont } = useFont();
   const { token, updateUser } = useAuth();
   const [fontNote, setFontNote] = useState("");
   const [fontOpen, setFontOpen] = useState(false);
-  const gearRef = useRef(null);
   // Apply at once, then save on the account so it follows the user to other devices.
   const chooseFont = async (value) => {
     if (!setFont(value)) return;
@@ -590,127 +636,109 @@ function SettingsMenu({ navigate, user }) {
   const canManageSignature = myRoles.some((r) => ["admin", "second_master", "academic", "class_teacher"].includes(r));
   const canManageSms = myRoles.some((r) => ["admin", "second_master", "academic"].includes(r));
   const isHeadMaster = myRoles.includes("admin");
+  const go = (path) => { onClose(); navigate(path); };
 
   useEffect(() => {
-    if (!open) return;
-    const onOutside = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) { setOpen(false); setThemeOpen(false); }
-    };
-    document.addEventListener("mousedown", onOutside);
-    document.addEventListener("touchstart", onOutside);
-    return () => {
-      document.removeEventListener("mousedown", onOutside);
-      document.removeEventListener("touchstart", onOutside);
-    };
-  }, [open]);
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   return (
-    <div ref={wrapRef} style={{ position: "relative", flexShrink: 0 }}>
-      <button
-        ref={gearRef}
-        onClick={() => setOpen((o) => !o)}
-        aria-label={t("set.title")}
-        title={t("set.title")}
-        style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          width: 34, height: 34, borderRadius: 4, border: "1px solid rgba(255,255,255,0.28)",
-          background: open ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)",
-          color: "#fff", cursor: "pointer",
-        }}
-      ><SettingsIcon size={18} /></button>
-
+    <div
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 10080,
+        display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "56px 16px 24px", overflowY: "auto" }}
+    >
       <FontChooser
         open={fontOpen}
         onClose={() => setFontOpen(false)}
-        returnFocusRef={gearRef}
         value={font}
         onChange={chooseFont}
         note={fontNote}
         labels={{ title: t("font.label"), hint: t("font.staffHint"), defaultName: t("font.default"),
           reset: t("font.reset"), done: t("font.done"), close: t("common.close"), sample: t("font.sample") }}
       />
-      {open && (
+      <div style={{
+        width: "100%", maxWidth: 360, background: THEME.surface, color: THEME.text,
+        border: `1px solid ${THEME.border}`, borderRadius: 8, boxShadow: "0 18px 48px rgba(0,0,0,0.3)", overflow: "hidden",
+      }}>
         <div style={{
-          position: "absolute", right: 0, top: 42, minWidth: 226,
-          background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}`,
-          borderRadius: 4, boxShadow: "0 12px 32px rgba(0,0,0,0.22)", zIndex: 100, overflow: "hidden",
+          display: "flex", alignItems: "center", gap: 10, padding: "14px 16px",
+          borderBottom: `1px solid ${THEME.border}`, background: THEME.navy, color: "#fff",
         }}>
-          <SettingsItem icon={<LockIcon />} onClick={() => { setOpen(false); navigate("/dashboard/change-password"); }}>
-            {t("pw.changeTitle")}
+          <SettingsIcon size={18} />
+          <span style={{ flex: 1, fontWeight: 700, fontSize: 15 }}>{t("set.title")}</span>
+          <button onClick={onClose} aria-label={t("common.close")} style={{
+            background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 4, display: "flex",
+          }}><CloseIcon /></button>
+        </div>
+
+        <SettingsItem icon={<LockIcon />} onClick={() => go("/dashboard/change-password")}>
+          {t("pw.changeTitle")}
+        </SettingsItem>
+
+        <SettingsItem icon={<ShieldIcon />} onClick={() => go("/dashboard/login-security")}>
+          {t("set.loginSecurity")}
+        </SettingsItem>
+
+        {canManageSignature && (
+          <SettingsItem icon={<EditIcon />} onClick={() => go("/dashboard/signature-stamp")}>
+            {t("set.signature")}
           </SettingsItem>
+        )}
 
-          <SettingsItem icon={<ShieldIcon />} onClick={() => { setOpen(false); navigate("/dashboard/login-security"); }}>
-            {t("set.loginSecurity")}
+        {canManageSms && (
+          <SettingsItem icon={<MessageIcon />} onClick={() => go("/dashboard/sms-gateway")}>
+            {t("set.sms")}
           </SettingsItem>
+        )}
 
-          {canManageSignature && (
-            <SettingsItem icon={<EditIcon />} onClick={() => { setOpen(false); navigate("/dashboard/signature-stamp"); }}>
-              {t("set.signature")}
-            </SettingsItem>
-          )}
+        {isHeadMaster && (
+          <SettingsItem icon={<ShieldIcon />} onClick={() => go("/dashboard/backups")}>
+            {t("set.backup")}
+          </SettingsItem>
+        )}
 
-          {canManageSms && (
-            <SettingsItem icon={<MessageIcon />} onClick={() => { setOpen(false); navigate("/dashboard/sms-gateway"); }}>
-              {t("set.sms")}
-            </SettingsItem>
-          )}
+        <button type="button" aria-haspopup="dialog" onClick={() => setFontOpen(true)} style={{
+          display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
+          padding: "13px 16px", background: "none", border: "none", borderTop: `1px solid ${THEME.border}`, cursor: "pointer",
+          fontSize: 13.5, color: THEME.text,
+        }}>
+          <span aria-hidden="true" style={{ width: 16, textAlign: "center", fontWeight: 800, fontSize: 12 }}>Aa</span>
+          <span style={{ flex: 1 }}>{t("font.label")}</span>
+        </button>
 
-          {isHeadMaster && (
-            <SettingsItem icon={<ShieldIcon />} onClick={() => { setOpen(false); navigate("/dashboard/backups"); }}>
-              {t("set.backup")}
-            </SettingsItem>
-          )}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 16px", borderTop: `1px solid ${THEME.border}`, fontSize: 13.5, color: THEME.text }}>
+          <span style={{ flex: 1 }}>{t("common.language")}</span>
+          <StaffLangToggle dark={false} />
+        </div>
 
-          <button type="button" aria-haspopup="dialog" onClick={() => { setOpen(false); setThemeOpen(false); setFontOpen(true); }} style={{
-            display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
-            padding: "11px 14px", background: "none", border: "none", borderTop: `1px solid ${THEME.border}`, cursor: "pointer",
-            fontSize: 13, color: THEME.text,
-          }}>
-            <span aria-hidden="true" style={{ width: 15, textAlign: "center", fontWeight: 800, fontSize: 12 }}>Aa</span>
-            <span style={{ flex: 1 }}>{t("font.label")}</span>
-          </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", borderTop: `1px solid ${THEME.border}`, fontSize: 13, color: THEME.text }}>
-            <span style={{ flex: 1 }}>{t("common.language")}</span>
-            <StaffLangToggle dark={false} />
+        <div style={{ borderTop: `1px solid ${THEME.border}`, padding: "11px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, color: THEME.text, marginBottom: 8 }}>
+            <PaletteIcon />
+            <span style={{ flex: 1 }}>{t("set.theme")}</span>
           </div>
-
-          <div style={{ borderTop: `1px solid ${THEME.border}` }}>
-            <button
-              onClick={() => setThemeOpen((t) => !t)}
-              style={{
-                display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
-                padding: "11px 14px", background: "none", border: "none", cursor: "pointer",
-                fontSize: 13, color: THEME.text,
-              }}
-            >
-              <PaletteIcon />
-              <span style={{ flex: 1 }}>{t("set.theme")}</span>
-              <span style={{ display: "flex", transform: themeOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s ease" }}>
-                <ChevronDownIcon />
-              </span>
-            </button>
-            {themeOpen && (
-              <div style={{ padding: "2px 6px 8px" }}>
-                {THEME_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setTheme(opt.value)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
-                      padding: "8px 10px", background: theme === opt.value ? THEME.bg : "none",
-                      border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12.5, color: THEME.text,
-                    }}
-                  >
-                    <span style={{ width: 14, height: 14, borderRadius: "50%", background: opt.swatch, border: `1px solid ${THEME.border}`, flexShrink: 0 }} />
-                    <span style={{ flex: 1 }}>{t(`theme.${opt.value}`)}</span>
-                    {theme === opt.value && <CheckIcon size={13} />}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
+            {THEME_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setTheme(opt.value)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8, textAlign: "left",
+                  padding: "8px 10px", background: theme === opt.value ? THEME.bg : "none",
+                  border: `1px solid ${theme === opt.value ? THEME.border : "transparent"}`,
+                  borderRadius: 6, cursor: "pointer", fontSize: 12.5, color: THEME.text,
+                }}
+              >
+                <span style={{ width: 14, height: 14, borderRadius: "50%", background: opt.swatch, border: `1px solid ${THEME.border}`, flexShrink: 0 }} />
+                <span style={{ flex: 1 }}>{t(`theme.${opt.value}`)}</span>
+                {theme === opt.value && <CheckIcon size={13} />}
+              </button>
+            ))}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
