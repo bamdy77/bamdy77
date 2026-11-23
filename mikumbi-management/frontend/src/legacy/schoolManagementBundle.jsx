@@ -5,7 +5,13 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import { BedIcon, ReceiptIcon, ClockIcon, ShieldIcon, CalendarPlusIcon, DownloadIcon, CloseIcon, CheckIcon, SaveIcon, CameraIcon, ArrowUpCircleIcon, SearchIcon, PrinterIcon, SpinnerIcon } from "../components/icons";
 import { replaceBackgroundLightBlue } from "../utils/photoBackground";
 import { REGIONS, getDistricts, getWards, getVillages, findRegionForDistrict } from "../data/locations";
-import { getLang } from "../i18n";
+import { getLang, translate, useLang } from "../i18n";
+
+// Non-reactive translator for this bundle's module-level helpers and shared
+// components. The top-level feature components (StudentModule, TimetableModule,
+// HostelModule, ContributionsModule) subscribe via useLang() so their whole
+// subtree re-renders when the language is switched.
+const tr = (key, vars) => translate(getLang(), key, vars);
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 // Local development - the Vite dev proxy forwards /api → http://localhost:5000/api.
@@ -151,7 +157,7 @@ const handlePhotoFile = async (e, setForm) => {
     // to silently fall through with the original huge file and crash later
     // with a "low memory" error. Tell the user plainly instead.
     setForm(p => ({ ...p, photoProcessing: false }));
-    window.alert("Imeshindikana kusoma picha hii kwenye kifaa chako (huenda ni kubwa/aina isiyotambulika). Tafadhali jaribu picha nyingine au punguza ukubwa wake kisha jaribu tena.");
+    window.alert(tr("lg.photoReadFail"));
     return;
   }
   // Background replacement runs its own ML segmentation model on a full
@@ -272,7 +278,7 @@ const apiFetch = async (path, options = {}, token) => {
     // Network-level failure - most commonly the free-tier backend is
     // asleep/restarting and the connection never completes. Surface this
     // as a normal, catchable error (never let it look like a silent freeze).
-    throw new Error("Could not reach the server. The system may be restarting (this can take up to a minute) - please wait, then try again.");
+    throw new Error(tr("lg.serverUnreachable"));
   }
   // A cold-starting/restarting Render backend can return an HTML gateway
   // page (502/504) instead of JSON. Without this check, res.json() throws
@@ -280,14 +286,14 @@ const apiFetch = async (path, options = {}, token) => {
   // nothing - this turns it into the same friendly, catchable message.
   const isJson = res.headers.get("content-type")?.includes("application/json");
   if (!isJson) {
-    throw new Error(res.ok ? "The server did not send a valid response. Please try again." : "The system is restarting (the server was asleep). Please wait a few seconds, then try again.");
+    throw new Error(res.ok ? tr("lg.badResponse") : tr("lg.serverRestarting"));
   }
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Request failed");
+  if (!res.ok) throw new Error(data.message || tr("lg.requestFailed"));
   const method = (options.method || "GET").toUpperCase();
   if (!options.silent && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-    const defaultMsg = method === "DELETE" ? "Successfully removed." : "Successfully saved.";
-    showSuccess("Success", data.message || defaultMsg);
+    const defaultMsg = method === "DELETE" ? tr("lg.removedOk") : tr("lg.savedOk");
+    showSuccess(tr("lg.success"), data.message || defaultMsg);
   }
   return data;
 };
@@ -317,14 +323,14 @@ const Btn = ({ variant="primary", size="md", onClick, children, style={}, disabl
   // over the variant's default color - it's applied LAST, not merged into
   // `base` before the variant, which used to let the variant silently
   // override any custom background/color passed in.
-  return <button style={{...base,...v[variant],...style}} onClick={onClick} disabled={disabled||loading}>{loading?<><SpinnerIcon size={13} />Loading…</>:children}</button>;
+  return <button style={{...base,...v[variant],...style}} onClick={onClick} disabled={disabled||loading}>{loading?<><SpinnerIcon size={13} />{tr("lg.loading")}</>:children}</button>;
 };
 
 const Inp = ({ label, value, onChange, type="text", options, placeholder, required, readOnly }) => (
   <div style={{display:"flex",flexDirection:"column",gap:4}}>
     {label && <label style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"0.05em"}}>{label}{required&&" *"}</label>}
     {options
-      ? <select value={value} onChange={e=>onChange(e.target.value)} style={IS} disabled={readOnly}><option value="">Select…</option>{options.map(o=><option key={o.value??o} value={o.value??o}>{o.label??o}</option>)}</select>
+      ? <select value={value} onChange={e=>onChange(e.target.value)} style={IS} disabled={readOnly}><option value="">{tr("lg.selectDots")}</option>{options.map(o=><option key={o.value??o} value={o.value??o}>{o.label??o}</option>)}</select>
       : <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{...IS,background:readOnly?C.bg:C.surface}} readOnly={readOnly}/>}
   </div>
 );
@@ -358,11 +364,9 @@ const LocationField = ({ label, value, onChange, options, required, isMobile, is
     return (
       <div style={{display:"flex",flexDirection:"column",gap:touch?8:4}}>
         {labelEl}
-        <input value={value} onChange={e=>onChange(e.target.value)} placeholder="Type here..." style={fieldStyle}/>
+        <input value={value} onChange={e=>onChange(e.target.value)} placeholder={tr("lg.typeHere")} style={fieldStyle}/>
         <button type="button" onClick={()=>{onChange("");setManual(false);}}
-          style={{alignSelf:"flex-start",background:"none",border:"none",color:C.accentText,fontWeight:touch?600:400,fontSize:touch?13:11,cursor:"pointer",padding:touch?"6px 2px":0,minHeight:touch?32:"auto",textDecoration:"underline"}}>
-          Choose from list
-        </button>
+          style={{alignSelf:"flex-start",background:"none",border:"none",color:C.accentText,fontWeight:touch?600:400,fontSize:touch?13:11,cursor:"pointer",padding:touch?"6px 2px":0,minHeight:touch?32:"auto",textDecoration:"underline"}}>{tr("lg.chooseFromList")}</button>
       </div>
     );
   }
@@ -374,9 +378,9 @@ const LocationField = ({ label, value, onChange, options, required, isMobile, is
         onChange={e => { const v = e.target.value; if (v===LOCATION_OTHER) { onChange(""); setManual(true); } else { onChange(v); } }}
         style={fieldStyle}
       >
-        <option value="">Select…</option>
+        <option value="">{tr("lg.selectDots")}</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
-        <option value={LOCATION_OTHER}>Other (Not in the list)</option>
+        <option value={LOCATION_OTHER}>{tr("lg.otherNotInList")}</option>
       </select>
     </div>
   );
@@ -454,7 +458,7 @@ const iconForLabel = (label = "") => {
 // mobile/tablet toolbars from turning into a tall pile of stacked full-width
 // buttons. `items` is [{ label, onClick, variant }] - variant "danger"
 // colors the label red. Renders nothing (returns null) if items is empty.
-const MoreMenu = ({ items, label="More" }) => {
+const MoreMenu = ({ items, label=tr("lg.more") }) => {
   const [open, setOpen] = useState(false);
   if (!items || !items.length) return null;
   return (
@@ -494,7 +498,7 @@ const SchoolLogo = ({ size = 56 }) => {
       </div>
     );
   }
-  return <img src="/logo.png" alt="School Logo" onError={()=>setFailed(true)}
+  return <img src="/logo.png" alt={tr("lg.schoolLogoAlt")} onError={()=>setFailed(true)}
     style={{width:size,height:size,objectFit:"contain",borderRadius:4,margin:"0 auto 16px",display:"block"}}/>;
 };
 
@@ -560,7 +564,7 @@ const ActionsMenu = ({ items }) => {
 
   return (
     <div style={{ display: "inline-block" }}>
-      <button ref={btnRef} onClick={toggle} aria-label="More actions" style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:4,border:`1px solid ${C.border}`,background:C.bg,cursor:"pointer",color:C.muted}}>
+      <button ref={btnRef} onClick={toggle} aria-label={tr("lg.moreActions")} style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:4,border:`1px solid ${C.border}`,background:C.bg,cursor:"pointer",color:C.muted}}>
         <Icon.MoreVertical size={16}/>
       </button>
       {open && createPortal(
@@ -612,12 +616,12 @@ const NECTA_BORDER = "#7C93B8";
 // of sitting on plain white.
 const NECTA_PANEL_BG = "#ADD8E6";
 
-const Tbl = ({ columns, rows, emptyMsg="No records found.", loading, theme }) => {
+const Tbl = ({ columns, rows, emptyMsg=tr("lg.noRecords"), loading, theme }) => {
   const necta = theme === "necta";
   return (
   <div style={{overflowX:"auto", ...(necta ? {border:`1px solid ${NECTA_BORDER}`, borderRadius:4} : {})}}>
     {loading
-      ? <div style={{padding:40,textAlign:"center",color:C.muted,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><SpinnerIcon size={16} />Loading…</div>
+      ? <div style={{padding:40,textAlign:"center",color:C.muted,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><SpinnerIcon size={16} />{tr("lg.loading")}</div>
       : <table style={{width:"100%",borderCollapse:"collapse",fontSize:14,...(necta?{background:NECTA_BG}:{})}}>
           <thead>
             <tr style={{background:necta?NECTA_HEAD_BG:C.bg}}>
@@ -655,7 +659,7 @@ const Modal = ({ title, onClose, children, wide }) => (
 
 // In-app confirmation dialog - replaces the browser's native window.confirm()
 // popup (which shows "localhost:3000 says…") with the system's own styled UI.
-const ConfirmDialog = ({ message, confirmLabel="Yes", cancelLabel="No", danger=true, onConfirm, onCancel }) => (
+const ConfirmDialog = ({ message, confirmLabel=tr("common.yes"), cancelLabel=tr("common.no"), danger=true, onConfirm, onCancel }) => (
   <div style={{position:"fixed",inset:0,background:"rgba(15,23,42,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9500,padding:16}}
     onClick={e=>e.target===e.currentTarget&&onCancel()}>
     <div style={{background:C.surface,borderRadius:4,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,.25)",padding:24}}>
@@ -755,7 +759,7 @@ function StudentResultLookupModal({ token, student, onClose }) {
     setBusyPdf(true); setErr("");
     try {
       const res = await fetch(`${API_BASE}/results-mgmt/student-result/export-pdf?sheet_id=${matched.sheet_id}&student_id=${student.id}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      if (!res.ok) throw new Error("Could not generate the result PDF.");
+      if (!res.ok) throw new Error(tr("lg.couldNotResultPdf"));
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       if (mode === "print") {
@@ -771,22 +775,22 @@ function StudentResultLookupModal({ token, student, onClose }) {
   };
 
   return (
-    <Modal title={`Search Results - ${fullName}`} onClose={onClose} wide>
+    <Modal title={tr("lg.searchResultsFor", { name: fullName })} onClose={onClose} wide>
       {err && <Alert type="error" message={err} onClose={() => setErr("")} />}
       {loadingPeriods ? (
-        <div style={{ padding: 24, textAlign: "center", color: C.muted }}>Loading available exam periods…</div>
+        <div style={{ padding: 24, textAlign: "center", color: C.muted }}>{tr("lg.loadingPeriods")}</div>
       ) : !periods.length ? (
-        <p style={{ color: C.muted, fontSize: 14 }}>No published results found for {fullName} yet.</p>
+        <p style={{ color: C.muted, fontSize: 14 }}>{tr("lg.noPublishedFor", { name: fullName })}</p>
       ) : (
         <>
           <div style={isMobile ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 } : { display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-            <Inp label="Class/Form" value={sel.form} onChange={(v) => setSel({ form: v, exam_type: "", month: "", year: "" })} options={forms} />
-            <Inp label="Exam Type" value={sel.exam_type} onChange={(v) => setSel((p) => ({ ...p, exam_type: v, month: "", year: "" }))} options={examTypes} />
-            <Inp label="Month" value={sel.month} onChange={(v) => setSel((p) => ({ ...p, month: v, year: "" }))} options={months} />
-            <Inp label="Year" value={sel.year} onChange={(v) => setSel((p) => ({ ...p, year: v }))} options={years} />
+            <Inp label={tr("lg.classForm")} value={sel.form} onChange={(v) => setSel({ form: v, exam_type: "", month: "", year: "" })} options={forms} />
+            <Inp label={tr("lg.examType")} value={sel.exam_type} onChange={(v) => setSel((p) => ({ ...p, exam_type: v, month: "", year: "" }))} options={examTypes} />
+            <Inp label={tr("lg.month")} value={sel.month} onChange={(v) => setSel((p) => ({ ...p, month: v, year: "" }))} options={months} />
+            <Inp label={tr("lg.year")} value={sel.year} onChange={(v) => setSel((p) => ({ ...p, year: v }))} options={years} />
           </div>
           <Btn onClick={viewResult} disabled={!matched} loading={loadingResult} style={{ marginBottom: 18, display: "inline-flex", alignItems: "center", gap: 7 }}>
-            <SearchIcon size={14} />View Results
+            <SearchIcon size={14} />{tr("lg.viewResults")}
           </Btn>
 
           {result && (
@@ -796,7 +800,7 @@ function StudentResultLookupModal({ token, student, onClose }) {
         </>
       )}
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
-        <Btn variant="secondary" onClick={onClose}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><CloseIcon size={13} />Close</span></Btn>
+        <Btn variant="secondary" onClick={onClose}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><CloseIcon size={13} />{tr("common.close")}</span></Btn>
       </div>
     </Modal>
   );
@@ -815,18 +819,18 @@ function StudentResultCard({ result, isMobile, onPrint, onExport, busy }) {
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 14 }}>
         <div>
           <div style={{ fontWeight: 800, fontSize: 15, color: NECTA_TEXT }}>{student.full_name}</div>
-          <div style={{ fontSize: 12, color: NECTA_TEXT }}>{sheet.form} · {sheet.exam_type} · {sheet.month} {sheet.year} · Reg No: {student.reg_no || student.entry_no || "-"}</div>
+          <div style={{ fontSize: 12, color: NECTA_TEXT }}>{sheet.form} · {sheet.exam_type} · {sheet.month} {sheet.year} · {tr("lg.regNoLabel")} {student.reg_no || student.entry_no || "-"}</div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <Btn variant="secondary" size="sm" loading={busy} onClick={onPrint}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><PrinterIcon size={13} />Print</span></Btn>
-          <Btn variant="secondary" size="sm" loading={busy} onClick={onExport}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><DownloadIcon size={13} />Export PDF</span></Btn>
+          <Btn variant="secondary" size="sm" loading={busy} onClick={onPrint}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><PrinterIcon size={13} />{tr("lg.print")}</span></Btn>
+          <Btn variant="secondary" size="sm" loading={busy} onClick={onExport}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><DownloadIcon size={13} />{tr("lg.exportPdf")}</span></Btn>
         </div>
       </div>
       <div style={{ overflowX: "auto", border: `1px solid ${NECTA_BORDER}`, borderRadius: 4 }}>
         <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 13, background: NECTA_BG }}>
           <thead>
             <tr style={{ background: NECTA_HEAD_BG }}>
-              <th style={thS}>Subject</th><th style={thS}>Marks</th><th style={thS}>Grade</th>
+              <th style={thS}>{tr("lg.subject")}</th><th style={thS}>{tr("lg.marks")}</th><th style={thS}>{tr("lg.grade")}</th>
             </tr>
           </thead>
           <tbody>
@@ -835,17 +839,17 @@ function StudentResultCard({ result, isMobile, onPrint, onExport, busy }) {
                 <td style={tdS}>{s.subject_name}</td><td style={tdS}>{s.marks ?? "-"}</td><td style={tdS}>{s.grade || "-"}</td>
               </tr>
             ))}
-            {!student.scores.length && <tr><td style={tdS} colSpan={3}>No subject scores found for this period.</td></tr>}
+            {!student.scores.length && <tr><td style={tdS} colSpan={3}>{tr("lg.noSubjectScores")}</td></tr>}
           </tbody>
         </table>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 16 }}>
-        <SummaryStat label="Division" value={student.division ?? "-"} />
-        <SummaryStat label="Points" value={student.points ?? "-"} />
-        <SummaryStat label="Position" value={student.position != null && student.total_students != null ? `${student.position} out of ${student.total_students}` : (student.position ?? "-")} />
-        <SummaryStat label="Average Grade" value={student.avg_grade ?? "-"} />
+        <SummaryStat label={tr("lg.division")} value={student.division ?? "-"} />
+        <SummaryStat label={tr("lg.points")} value={student.points ?? "-"} />
+        <SummaryStat label={tr("lg.position")} value={student.position != null && student.total_students != null ? tr("lg.outOf", { pos: student.position, total: student.total_students }) : (student.position ?? "-")} />
+        <SummaryStat label={tr("lg.avgGrade")} value={student.avg_grade ?? "-"} />
         <SummaryStat label="GPA" value={student.gpa ?? "-"} />
-        <SummaryStat label="Subjects Sat" value={student.subjects_sat ?? "-"} />
+        <SummaryStat label={tr("lg.subjectsSat")} value={student.subjects_sat ?? "-"} />
       </div>
     </div>
   );
@@ -861,6 +865,7 @@ const SummaryStat = ({ label, value }) => (
 
 // ─── STUDENTS MODULE ──────────────────────────────────────────────────────────
 function StudentModule({ token, role, extraMoreItems=[] }) {
+  useLang();
   const { confirm, ConfirmDialogPortal } = useConfirm();
   const { isMobile, isTablet } = useBreakpoint();
   const [students, setStudents] = useState([]);
@@ -934,7 +939,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
 
   const save = async () => {
     if (!form.first_name||!form.last_name||!form.form) {
-      setError("First name, last name and form are required.");
+      setError(tr("lg.nameFormRequired"));
       return;
     }
     // NOTE: entry_no used to be required here (backend once enforced a
@@ -950,10 +955,10 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
       if (modal==="add") {
         const res = await apiFetch("/students", { method:"POST", body:cleanForm }, token);
         studentId = res.data.id;
-        setSuccess(`Student enrolled successfully. Namba ya Kuingia (Matokeo): ${res.data.results_login_no || "-"}`);
+        setSuccess(tr("lg.enrolledOk", { login: res.data.results_login_no || "-" }));
       } else {
         await apiFetch(`/students/${form.id}`, { method:"PUT", body:cleanForm }, token);
-        setSuccess("Student updated.");
+        setSuccess(tr("lg.studentUpdated"));
       }
       if (photoFile && studentId) {
         const fd = new FormData();
@@ -963,7 +968,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           headers: token ? { Authorization:`Bearer ${token}` } : {},
           body: fd,
         });
-        if (!photoRes.ok) { const j = await photoRes.json().catch(()=>({})); setError(j.message || "Photo upload failed (student was saved)."); }
+        if (!photoRes.ok) { const j = await photoRes.json().catch(()=>({})); setError(j.message || tr("lg.photoUploadFail")); }
       }
       setModal(null); load();
     } catch (err) { setError(err.message); }
@@ -976,21 +981,21 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
   // server call. This is what makes "Remove Photo" actually work for a
   // student who was registered earlier with a photo already on file.
   const removeSavedPhoto = () => {
-    confirm("Futa picha ya mwanafunzi huyu?", async () => {
+    confirm(tr("lg.deletePhotoConfirm"), async () => {
       try {
         await apiFetch(`/students/${form.id}/photo`, { method:"DELETE" }, token);
         setForm(p => ({ ...p, photo_url:null }));
-        setSuccess("Picha imefutwa.");
+        setSuccess(tr("lg.photoDeleted"));
         load();
       } catch (err) { setError(err.message); }
     });
   };
 
   const remove = (id) => {
-    confirm("Remove this student permanently?", async () => {
+    confirm(tr("lg.removeStudentConfirm"), async () => {
       try {
         await apiFetch(`/students/${id}`, { method:"DELETE" }, token);
-        setSuccess("Student removed."); load();
+        setSuccess(tr("lg.studentRemoved")); load();
       } catch (err) { setError(err.message); }
     });
   };
@@ -1007,7 +1012,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
       const res = await apiFetch(`/students/${chargeModal.id}`, {}, token);
       setChargeModal(res.data);
       setChargeForm({ charge_type:"", amount:"", note:"", reamBrought:false });
-      setSuccess("Charge added.");
+      setSuccess(tr("lg.chargeAdded"));
       load();
     } catch (err) { setError(err.message); }
     finally { setSaving(false); }
@@ -1015,10 +1020,10 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
 
   const addCharge = () => {
     const isItem = chargeForm.charge_type === "Ream";
-    if (!chargeForm.charge_type || (!isItem && !chargeForm.amount)) { setError("Type and amount required."); return; }
-    if (isItem && !chargeForm.reamBrought) { setError("Tick the checkbox first to confirm they've brought Ream."); return; }
+    if (!chargeForm.charge_type || (!isItem && !chargeForm.amount)) { setError(tr("lg.typeAmountRequired")); return; }
+    if (isItem && !chargeForm.reamBrought) { setError(tr("lg.tickReam")); return; }
     if (isItem) {
-      confirm("Are you sure you want to submit that Ream was brought? This action cannot be undone.", submitCharge);
+      confirm(tr("lg.reamConfirm"), submitCharge);
     } else {
       submitCharge();
     }
@@ -1069,7 +1074,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
     setExportingPdf(true);
     try {
       const res = await fetch(`${API_BASE}${path}`, { headers: token ? { Authorization:`Bearer ${token}` } : {} });
-      if (!res.ok) throw new Error("Could not generate PDF.");
+      if (!res.ok) throw new Error(tr("lg.couldNotPdf"));
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -1096,17 +1101,17 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
   // cleanup in the backend.
   const deleteOldGraduates = () => {
     confirm(
-      "Remove every Graduated student who graduated 2+ years ago? This permanently deletes their full record (history, charges, hostel/contribution links) and cannot be undone.",
+      tr("lg.removeOldGradsConfirm"),
       async () => {
         setCleaningGraduates(true); setError("");
         try {
           const res = await apiFetch("/students/graduated/cleanup", { method:"DELETE" }, token);
-          setSuccess(res.message || "Old graduated students removed.");
+          setSuccess(res.message || tr("lg.oldGradsRemoved"));
           load();
         } catch (err) { setError(err.message); }
         finally { setCleaningGraduates(false); }
       },
-      { confirmLabel:"Yes, Remove", cancelLabel:"Cancel" }
+      { confirmLabel:tr("lg.yesRemove"), cancelLabel:tr("common.cancel") }
     );
   };
 
@@ -1131,26 +1136,26 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
     <div style={{display:"flex",flexDirection:"column",gap:20,padding:isMobile?"16px 12px":isTablet?"24px 20px":32,boxSizing:"border-box",width:"100%"}}>
       <div style={{display:"flex",flexDirection:isMobile?"column":"row",justifyContent:"space-between",alignItems:isMobile?"stretch":"flex-start",flexWrap:"wrap",gap:12}}>
         <div>
-          <h2 style={{margin:0,fontSize:isMobile?18:22,fontWeight:800,color:C.text}}>Student Management</h2>
-          <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:14}}>Form I–IV · {SCHOOL.line3}</p>
+          <h2 style={{margin:0,fontSize:isMobile?18:22,fontWeight:800,color:C.text}}>{tr("lg.studentMgmt")}</h2>
+          <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:14}}>{tr("lg.formIiv")} · {SCHOOL.line3}</p>
         </div>
         {(isMobile || isTablet) ? (
           <div style={{display:"flex",gap:8,width:isMobile?"100%":"auto"}}>
-            <Btn onClick={openAdd} style={isMobile?{flex:1,justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UserPlus size={14}/>Enroll Student</span></Btn>
-            <MoreMenu label="More" items={[
-              { label:"Import from CSV/Excel", icon:Icon.UploadCloud, onClick:()=>setImportOpen(true) },
-              { label:"Promote Students", onClick:()=>setPromoteOpen(true) },
+            <Btn onClick={openAdd} style={isMobile?{flex:1,justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UserPlus size={14}/>{tr("lg.enrollStudent")}</span></Btn>
+            <MoreMenu label={tr("lg.more")} items={[
+              { label:tr("lg.importCsv"), icon:Icon.UploadCloud, onClick:()=>setImportOpen(true) },
+              { label:tr("lg.promoteStudents"), onClick:()=>setPromoteOpen(true) },
               ...extraMoreItems,
             ]}/>
           </div>
         ) : (
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <Btn variant="secondary" onClick={()=>setPromoteOpen(true)}><span style={{display:"flex",alignItems:"center",gap:6}}><ArrowUpCircleIcon size={14}/>Promote Students</span></Btn>
-            <Btn variant="secondary" onClick={()=>setImportOpen(true)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UploadCloud size={14}/>Import from CSV/Excel</span></Btn>
+            <Btn variant="secondary" onClick={()=>setPromoteOpen(true)}><span style={{display:"flex",alignItems:"center",gap:6}}><ArrowUpCircleIcon size={14}/>{tr("lg.promoteStudents")}</span></Btn>
+            <Btn variant="secondary" onClick={()=>setImportOpen(true)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UploadCloud size={14}/>{tr("lg.importCsv")}</span></Btn>
             {extraMoreItems.map((it,i)=>(
               <Btn key={i} variant="secondary" onClick={it.onClick}><span style={{display:"flex",alignItems:"center",gap:6}}>{it.icon && <it.icon size={14}/>}{it.label}</span></Btn>
             ))}
-            <Btn onClick={openAdd}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UserPlus size={14}/>Enroll Student</span></Btn>
+            <Btn onClick={openAdd}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UserPlus size={14}/>{tr("lg.enrollStudent")}</span></Btn>
           </div>
         )}
       </div>
@@ -1159,16 +1164,16 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
       {success && <Alert type="success" message={success} onClose={()=>setSuccess("")}/>}
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:14}}>
-        <StatCard label="Total Enrolled" value={total}  color={C.accentText}/>
-        <StatCard label="Active"         value={active} color={C.success}/>
+        <StatCard label={tr("lg.totalEnrolled")} value={total}  color={C.accentText}/>
+        <StatCard label={tr("lg.active")} value={active} color={C.success}/>
         {/* Male/Female cards in the neutral text colour (no blue/purple), per school request. */}
-        <StatCard label="Male"           value={male}   color={C.text}/>
-        <StatCard label="Female"         value={female} color={C.text}/>
-        <div onClick={()=>setFilterForm("GRADUATED")} style={{cursor:"pointer"}} title="View graduated students">
-          <StatCard label="Graduated" value={graduated} color="#6366F1"/>
+        <StatCard label={tr("lg.male")} value={male}   color={C.text}/>
+        <StatCard label={tr("lg.female")} value={female} color={C.text}/>
+        <div onClick={()=>setFilterForm("GRADUATED")} style={{cursor:"pointer"}} title={tr("lg.viewGraduated")}>
+          <StatCard label={tr("lg.graduated")} value={graduated} color="#6366F1"/>
         </div>
-        <div onClick={()=>setFilterForm("TRANSFERRED")} style={{cursor:"pointer"}} title="View transferred students">
-          <StatCard label="Transferred" value={transferred} color="#F59E0B"/>
+        <div onClick={()=>setFilterForm("TRANSFERRED")} style={{cursor:"pointer"}} title={tr("lg.viewTransferred")}>
+          <StatCard label={tr("lg.transferred")} value={transferred} color="#F59E0B"/>
         </div>
       </div>
 
@@ -1178,17 +1183,17 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           : isTablet
             ? {display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}
             : {display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, reg. or prem. no…" style={{...IS,maxWidth:isMobile||isTablet?"none":300, gridColumn:isTablet?"1 / -1":"auto"}}/>
-          <select value={filterForm}   onChange={e=>setFilterForm(e.target.value)}   style={{...IS,width:isMobile||isTablet?"100%":140}}><option value="">All Forms</option>{FORMS.map(f=><option key={f}>{f}</option>)}<option value="GRADUATED">Graduated</option><option value="TRANSFERRED">Transferred</option></select>
-          <select value={filterGender} onChange={e=>setFilterGender(e.target.value)} style={{...IS,width:isMobile||isTablet?"100%":130}}><option value="">All Genders</option><option>Male</option><option>Female</option></select>
-          <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{...IS,width:isMobile||isTablet?"100%":140}}><option value="">All Statuses</option><option>Active</option><option>Inactive</option><option>Transferred</option><option>Graduated</option></select>
-          <Btn variant="secondary" size="sm" onClick={load} style={isMobile||isTablet?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.RefreshCw size={13}/>Refresh</span></Btn>
-          <Btn variant="secondary" size="sm" onClick={exportListPdf} loading={exportingPdf} style={isMobile||isTablet?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={13}/>Export PDF</span></Btn>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={tr("lg.searchStudents")} style={{...IS,maxWidth:isMobile||isTablet?"none":300, gridColumn:isTablet?"1 / -1":"auto"}}/>
+          <select value={filterForm}   onChange={e=>setFilterForm(e.target.value)}   style={{...IS,width:isMobile||isTablet?"100%":140}}><option value="">{tr("lg.allForms")}</option>{FORMS.map(f=><option key={f}>{f}</option>)}<option value="GRADUATED">{tr("lg.graduated")}</option><option value="TRANSFERRED">{tr("lg.transferred")}</option></select>
+          <select value={filterGender} onChange={e=>setFilterGender(e.target.value)} style={{...IS,width:isMobile||isTablet?"100%":130}}><option value="">{tr("lg.allGenders")}</option><option value="Male">{tr("lg.male")}</option><option value="Female">{tr("lg.female")}</option></select>
+          <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{...IS,width:isMobile||isTablet?"100%":140}}><option value="">{tr("lg.allStatuses")}</option><option value="Active">{tr("lg.active")}</option><option value="Inactive">{tr("lg.inactive")}</option><option value="Transferred">{tr("lg.transferred")}</option><option value="Graduated">{tr("lg.graduated")}</option></select>
+          <Btn variant="secondary" size="sm" onClick={load} style={isMobile||isTablet?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.RefreshCw size={13}/>{tr("lg.refresh")}</span></Btn>
+          <Btn variant="secondary" size="sm" onClick={exportListPdf} loading={exportingPdf} style={isMobile||isTablet?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={13}/>{tr("lg.exportPdf")}</span></Btn>
         </div>
         {filterForm==="GRADUATED" && (role==="admin"||role==="second_master") && (
           <div style={{display:"flex",justifyContent:"flex-end",marginBottom:14}}>
             <Btn variant="danger" size="sm" loading={cleaningGraduates} onClick={deleteOldGraduates} style={{display:"inline-flex",alignItems:"center",gap:6,...(isMobile?{width:"100%",justifyContent:"center"}:{})}}>
-              <Icon.Trash size={13}/>Remove Graduated 2+ Years Old
+              <Icon.Trash size={13}/>{tr("lg.removeOldGrads")}
             </Btn>
           </div>
         )}
@@ -1198,61 +1203,61 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
               {r.photo_url ? <img src={photoSrc(r.photo_url)} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span style={{fontSize:12,fontWeight:700,color:C.muted}}>{(r.first_name?.[0]||"").toUpperCase()}</span>}
             </div>
           )},
-          {key:"reg_no",    label:"Reg. No.", render:r=>r.reg_no||<span style={{color:C.muted}}>-</span>},
-          {key:"name",      label:"Full Name", render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
+          {key:"reg_no",    label:tr("lg.regNoCol"), render:r=>r.reg_no||<span style={{color:C.muted}}>-</span>},
+          {key:"name",      label:tr("lg.fullName"), render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
           filterForm==="GRADUATED"
-            ? {key:"graduated_year", label:"Graduated Year", render:r=>r.graduated_at ? <Badge color="indigo">{new Date(r.graduated_at).getFullYear()}</Badge> : <span style={{color:C.muted}}>-</span>}
+            ? {key:"graduated_year", label:tr("lg.gradYear"), render:r=>r.graduated_at ? <Badge color="indigo">{new Date(r.graduated_at).getFullYear()}</Badge> : <span style={{color:C.muted}}>-</span>}
             : filterForm==="TRANSFERRED"
-              ? {key:"transferred_to", label:"Transferred To", render:r=>r.dest_school ? <span>{r.dest_school}{r.dest_district?`, ${r.dest_district}`:""}{r.dest_region?`, ${r.dest_region}`:""}</span> : <span style={{color:C.muted}}>-</span>}
-              : {key:"form", label:"Form"},
-          {key:"gender",    label:"Gender", render:r=>r.gender||"-"},
-          {key:"registered_by", label:"Registered By", render:r=>r.registered_by||<span style={{color:C.muted}}>-</span>},
+              ? {key:"transferred_to", label:tr("lg.transferredTo"), render:r=>r.dest_school ? <span>{r.dest_school}{r.dest_district?`, ${r.dest_district}`:""}{r.dest_region?`, ${r.dest_region}`:""}</span> : <span style={{color:C.muted}}>-</span>}
+              : {key:"form", label:tr("lg.form")},
+          {key:"gender",    label:tr("lg.gender"), render:r=>r.gender||"-"},
+          {key:"registered_by", label:tr("lg.registeredBy"), render:r=>r.registered_by||<span style={{color:C.muted}}>-</span>},
           filterForm==="GRADUATED"
-            ? {key:"graduated_at", label:"Graduated On", render:r=>r.graduated_at?.slice(0,10)||"-"}
+            ? {key:"graduated_at", label:tr("lg.gradOn"), render:r=>r.graduated_at?.slice(0,10)||"-"}
             : filterForm==="TRANSFERRED"
-              ? {key:"transfer_out_date", label:"Transferred On", render:r=>r.transfer_out_date?.slice(0,10)||"-"}
-              : {key:"admission_date", label:"Admission Date", render:r=>r.admission_date?.slice(0,10)||"-"},
-          {key:"parent_name", label:"Parent"},
-          {key:"parent_phone",label:"Phone"},
-          {key:"status",    label:"Status", render:r=><Badge color={r.status==="Active"?"green":r.status==="Graduated"?"indigo":r.status==="Transferred"?"amber":"red"}>{r.status}</Badge>},
+              ? {key:"transfer_out_date", label:tr("lg.transferredOn"), render:r=>r.transfer_out_date?.slice(0,10)||"-"}
+              : {key:"admission_date", label:tr("lg.admissionDate"), render:r=>r.admission_date?.slice(0,10)||"-"},
+          {key:"parent_name", label:tr("lg.parent")},
+          {key:"parent_phone",label:tr("lg.phone")},
+          {key:"status",    label:tr("lg.status"), render:r=><Badge color={r.status==="Active"?"green":r.status==="Graduated"?"indigo":r.status==="Transferred"?"amber":"red"}>{r.status}</Badge>},
           {key:"actions",   label:"", render:r=>(
             <ActionsMenu items={[
-              { label:"Edit",     onClick:()=>{setForm({...r,dob:r.dob?.slice(0,10),admission_date:r.admission_date?.slice(0,10),_region:findRegionForDistrict(r.district)});setModal(r);} },
-              { label:"Login No.", onClick:()=>{setLoginNoCopied(false);setLoginNoStudent(r);} },
-              { label:"Prem No.", onClick:()=>{setPremError("");setPremValue(r.prem_no||"");setPremStudent(r);} },
-              { label:"Contributions", onClick:()=>openChargeModal(r) },
-              ...(r.status!=="Transferred" ? [{ label:"Mark Transferred", onClick:()=>{setTransferForm({dest_region:"",dest_district:"",dest_school:"",transfer_out_date:new Date().toISOString().slice(0,10)});setTransferModal(r);} }] : []),
-              { label:"Search Results", icon:SearchIcon, onClick:()=>setResultsModalStudent(r) },
-              ...(role==="admin" ? [{ label:"Download Report", onClick:()=>{setReportInclude({hostel:false,contributions:false,results:false});setReportResultPeriods([]);setReportResultsSheetId("");setReportModal(r);} }] : []),
-              { label:"Remove",   onClick:()=>remove(r.id), danger:true },
+              { label:tr("lg.edit"),     onClick:()=>{setForm({...r,dob:r.dob?.slice(0,10),admission_date:r.admission_date?.slice(0,10),_region:findRegionForDistrict(r.district)});setModal(r);} },
+              { label:tr("lg.loginNo"), onClick:()=>{setLoginNoCopied(false);setLoginNoStudent(r);} },
+              { label:tr("lg.premNo"), onClick:()=>{setPremError("");setPremValue(r.prem_no||"");setPremStudent(r);} },
+              { label:tr("lg.contributions"), onClick:()=>openChargeModal(r) },
+              ...(r.status!=="Transferred" ? [{ label:tr("lg.markTransferred"), onClick:()=>{setTransferForm({dest_region:"",dest_district:"",dest_school:"",transfer_out_date:new Date().toISOString().slice(0,10)});setTransferModal(r);} }] : []),
+              { label:tr("lg.searchResults"), icon:SearchIcon, onClick:()=>setResultsModalStudent(r) },
+              ...(role==="admin" ? [{ label:tr("lg.downloadReport"), onClick:()=>{setReportInclude({hostel:false,contributions:false,results:false});setReportResultPeriods([]);setReportResultsSheetId("");setReportModal(r);} }] : []),
+              { label:tr("lg.remove"),   onClick:()=>remove(r.id), danger:true },
             ]}/>
           )},
         ]}/>
       </Card>
 
       {loginNoStudent && (
-        <Modal title="Login No. (Results)" onClose={()=>setLoginNoStudent(null)}>
+        <Modal title={tr("lg.loginNoResults")} onClose={()=>setLoginNoStudent(null)}>
           <div style={{fontSize:13,color:C.muted,marginBottom:4}}>{[loginNoStudent.first_name,loginNoStudent.middle_name,loginNoStudent.last_name].filter(Boolean).join(" ")} · {loginNoStudent.form}</div>
           <div style={{fontFamily:"monospace",fontSize:30,fontWeight:800,letterSpacing:"0.04em",color:C.text,margin:"10px 0 14px"}}>{loginNoStudent.results_login_no || "-"}</div>
           <p style={{fontSize:12.5,color:C.muted,margin:"0 0 16px",lineHeight:1.6}}>
-            Mzazi anaingia kwenye Matokeo kwa namba hii, na password ni namba ya simu ya mzazi iliyosajiliwa{loginNoStudent.parent_phone ? <> (<b>{loginNoStudent.parent_phone}</b>)</> : ""}.
+            {tr("lg.parentLoginInfo")}{loginNoStudent.parent_phone ? <> (<b>{loginNoStudent.parent_phone}</b>)</> : ""}.
           </p>
           <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
             {loginNoStudent.results_login_no && (
-              <Btn variant="secondary" onClick={()=>{ try { navigator.clipboard.writeText(loginNoStudent.results_login_no); setLoginNoCopied(true); } catch { /* clipboard blocked */ } }}>{loginNoCopied ? "Copied" : "Copy"}</Btn>
+              <Btn variant="secondary" onClick={()=>{ try { navigator.clipboard.writeText(loginNoStudent.results_login_no); setLoginNoCopied(true); } catch { /* clipboard blocked */ } }}>{loginNoCopied ? tr("lg.copied") : tr("lg.copy")}</Btn>
             )}
-            <Btn onClick={()=>setLoginNoStudent(null)}>Close</Btn>
+            <Btn onClick={()=>setLoginNoStudent(null)}>{tr("common.close")}</Btn>
           </div>
         </Modal>
       )}
 
       {premStudent && (
-        <Modal title="Prem No." onClose={()=>setPremStudent(null)}>
+        <Modal title={tr("lg.premNo")} onClose={()=>setPremStudent(null)}>
           <div style={{fontSize:13,color:C.muted,marginBottom:10}}>{[premStudent.first_name,premStudent.middle_name,premStudent.last_name].filter(Boolean).join(" ")} · {premStudent.form}</div>
-          <Inp label="PREM number" value={premValue} onChange={v=>setPremValue(v)} placeholder="Type the PREM number (leave blank to remove)"/>
+          <Inp label={tr("lg.premNumber")} value={premValue} onChange={v=>setPremValue(v)} placeholder={tr("lg.premPlaceholder")}/>
           {premError && <div style={{color:C.danger,fontSize:13,marginTop:8}}>{premError}</div>}
           <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:16}}>
-            <Btn variant="secondary" onClick={()=>setPremStudent(null)}>Cancel</Btn>
+            <Btn variant="secondary" onClick={()=>setPremStudent(null)}>{tr("common.cancel")}</Btn>
             <Btn disabled={premBusy} onClick={async()=>{
               setPremBusy(true); setPremError("");
               try{
@@ -1260,52 +1265,52 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
                 const d = await r.json();
                 if(!d.success) throw new Error(d.message);
                 setPremStudent(null); setSuccess(d.message); load();
-              }catch(e){ setPremError(e.message||"Failed to save PREM number."); }
+              }catch(e){ setPremError(e.message||tr("lg.premSaveFail")); }
               finally{ setPremBusy(false); }
-            }}>{premBusy?"Saving...":"Save"}</Btn>
+            }}>{premBusy?tr("lg.savingDots"):tr("common.save")}</Btn>
           </div>
         </Modal>
       )}
 
       {transferModal && (
-        <Modal title={`Mark Transferred - ${transferModal.first_name} ${transferModal.last_name}`} onClose={()=>setTransferModal(null)}>
+        <Modal title={tr("lg.markTransferredTitle", { name: `${transferModal.first_name} ${transferModal.last_name}` })} onClose={()=>setTransferModal(null)}>
           {error && <div style={{color:C.danger,fontSize:13,marginBottom:10}}>{error}</div>}
           <div style={gridCols(2,12,16)}>
-            <Inp label="Region"      value={transferForm.dest_region}   onChange={v=>setTransferForm(p=>({...p,dest_region:v}))}/>
-            <Inp label="District"    value={transferForm.dest_district} onChange={v=>setTransferForm(p=>({...p,dest_district:v}))}/>
-            <Inp label="School"      value={transferForm.dest_school}   onChange={v=>setTransferForm(p=>({...p,dest_school:v}))}/>
-            <Inp label="Transfer Date" type="date" value={transferForm.transfer_out_date} onChange={v=>setTransferForm(p=>({...p,transfer_out_date:v}))}/>
+            <Inp label={tr("lg.region")}      value={transferForm.dest_region}   onChange={v=>setTransferForm(p=>({...p,dest_region:v}))}/>
+            <Inp label={tr("lg.district")}    value={transferForm.dest_district} onChange={v=>setTransferForm(p=>({...p,dest_district:v}))}/>
+            <Inp label={tr("lg.school")}      value={transferForm.dest_school}   onChange={v=>setTransferForm(p=>({...p,dest_school:v}))}/>
+            <Inp label={tr("lg.transferDate")} type="date" value={transferForm.transfer_out_date} onChange={v=>setTransferForm(p=>({...p,transfer_out_date:v}))}/>
           </div>
           <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
-            <Btn variant="ghost" onClick={()=>setTransferModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn>
+            <Btn variant="ghost" onClick={()=>setTransferModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
             <Btn onClick={()=>{
               if(!transferForm.dest_region||!transferForm.dest_district||!transferForm.dest_school||!transferForm.transfer_out_date){
-                setError("Please fill in Region, District, School and Transfer Date."); return;
+                setError(tr("lg.transferFieldsRequired")); return;
               }
-              confirm(`Mark ${transferModal.first_name} ${transferModal.last_name} as transferred to ${transferForm.dest_school}? This cannot be easily undone.`, async ()=>{
+              confirm(tr("lg.transferConfirm", { name: `${transferModal.first_name} ${transferModal.last_name}`, school: transferForm.dest_school }), async ()=>{
                 try{
                   const r = await fetch(`${API_BASE}/students/${transferModal.id}/transfer-out`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify(transferForm)});
                   const d = await r.json();
                   if(!d.success) throw new Error(d.message);
                   setTransferModal(null); setError(""); load();
-                }catch(e){ setError(e.message||"Failed to record transfer."); }
+                }catch(e){ setError(e.message||tr("lg.transferFail")); }
               });
-            }}>Confirm Transfer</Btn>
+            }}>{tr("lg.confirmTransfer")}</Btn>
           </div>
         </Modal>
       )}
 
       {reportModal && (
-        <Modal title={`Download Report - ${reportModal.first_name} ${reportModal.last_name}`} onClose={()=>setReportModal(null)}>
-          <div style={{fontSize:13,color:C.muted,marginBottom:12}}>Enrollment information is always included. Choose what else to add:</div>
+        <Modal title={tr("lg.downloadReportTitle", { name: `${reportModal.first_name} ${reportModal.last_name}` })} onClose={()=>setReportModal(null)}>
+          <div style={{fontSize:13,color:C.muted,marginBottom:12}}>{tr("lg.reportIntro")}</div>
           <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13}}>
               <input type="checkbox" checked={reportInclude.hostel} onChange={e=>setReportInclude(p=>({...p,hostel:e.target.checked}))}/>
-              Hostel information (or a note that the student does not live in the hostel)
+              {tr("lg.reportHostel")}
             </label>
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13}}>
               <input type="checkbox" checked={reportInclude.contributions} onChange={e=>setReportInclude(p=>({...p,contributions:e.target.checked}))}/>
-              School Contributions
+              {tr("lg.reportContributions")}
             </label>
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13}}>
               <input type="checkbox" checked={reportInclude.results} onChange={async e=>{
@@ -1321,12 +1326,12 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
                   finally { setLoadingReportResultPeriods(false); }
                 }
               }}/>
-              Student Results
+              {tr("lg.reportResults")}
             </label>
             {reportInclude.results && (
               <div style={{marginLeft:26}}>
                 {loadingReportResultPeriods ? (
-                  <div style={{fontSize:12.5,color:C.muted}}>Loading exam periods…</div>
+                  <div style={{fontSize:12.5,color:C.muted}}>{tr("lg.loadingExamPeriods")}</div>
                 ) : reportResultPeriods.length ? (
                   <select value={reportResultsSheetId} onChange={e=>setReportResultsSheetId(e.target.value)} style={{...IS,width:"100%"}}>
                     {reportResultPeriods.map(p=>(
@@ -1334,29 +1339,29 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
                     ))}
                   </select>
                 ) : (
-                  <div style={{fontSize:12.5,color:C.muted}}>No exam results found for this student yet.</div>
+                  <div style={{fontSize:12.5,color:C.muted}}>{tr("lg.noExamResults")}</div>
                 )}
               </div>
             )}
           </div>
           <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
-            <Btn variant="ghost" onClick={()=>setReportModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn>
+            <Btn variant="ghost" onClick={()=>setReportModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
             <Btn onClick={async()=>{
-              if (reportInclude.results && !reportResultsSheetId) { setError("Please choose which exam's results to include, or untick Student Results."); return; }
+              if (reportInclude.results && !reportResultsSheetId) { setError(tr("lg.chooseExamResults")); return; }
               const include = Object.entries(reportInclude).filter(([,v])=>v).map(([k])=>k).join(",");
               const sheetParam = (reportInclude.results && reportResultsSheetId) ? `&results_sheet_id=${reportResultsSheetId}` : "";
               await downloadPdf(`/students/${reportModal.id}/report?include=${include}${sheetParam}&lang=${getLang()}`, `${digitsOnly(reportModal.reg_no || reportModal.id)}-report.pdf`);
               setReportModal(null);
-            }}>Download PDF</Btn>
+            }}>{tr("lg.downloadPdf")}</Btn>
           </div>
         </Modal>
       )}
 
       {modal && (
-        <Modal wide title={modal==="add"?"Enroll New Student":`Edit - ${form.first_name} ${form.last_name}`} onClose={()=>{setModal(null);setError("");}}>
+        <Modal wide title={modal==="add"?tr("lg.enrollNewStudent"):tr("lg.editName", { name: `${form.first_name} ${form.last_name}` })} onClose={()=>{setModal(null);setError("");}}>
           {error && <Alert type="error" message={error} onClose={()=>setError("")}/>}
 
-          <SLabel>Photo (optional)</SLabel>
+          <SLabel>{tr("lg.photoOptional")}</SLabel>
           <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:6}}>
             <div style={{width:76,height:92,borderRadius:4,overflow:"hidden",background:C.bg,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
               {form.photoPreview
@@ -1371,41 +1376,41 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
               <input type="file" accept="image/*" id="studentPhotoFileInput" style={{display:"none"}}
                 onChange={e=>handlePhotoFile(e, setForm)}/>
               <div style={{display:"flex",gap:6}}>
-                <Btn size="sm" variant="secondary" disabled={form.photoProcessing} onClick={()=>document.getElementById("studentPhotoCameraInput").click()}><span style={{display:"flex",alignItems:"center",gap:6}}><CameraIcon size={13}/>Take Photo</span></Btn>
-                <Btn size="sm" variant="secondary" disabled={form.photoProcessing} onClick={()=>document.getElementById("studentPhotoFileInput").click()}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.FileText size={13}/>Choose File</span></Btn>
+                <Btn size="sm" variant="secondary" disabled={form.photoProcessing} onClick={()=>document.getElementById("studentPhotoCameraInput").click()}><span style={{display:"flex",alignItems:"center",gap:6}}><CameraIcon size={13}/>{tr("lg.takePhoto")}</span></Btn>
+                <Btn size="sm" variant="secondary" disabled={form.photoProcessing} onClick={()=>document.getElementById("studentPhotoFileInput").click()}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.FileText size={13}/>{tr("lg.chooseFile")}</span></Btn>
               </div>
-              {(form.photoFile||form.photoPreview) && !form.photoProcessing && <Btn size="sm" variant="ghost" onClick={()=>setForm(p=>({...p,photoFile:null,photoPreview:null}))}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Trash size={13}/>Remove Photo</span></Btn>}
-              {!(form.photoFile||form.photoPreview) && form.photo_url && !form.photoProcessing && <Btn size="sm" variant="ghost" onClick={removeSavedPhoto}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Trash size={13}/>Remove Photo</span></Btn>}
+              {(form.photoFile||form.photoPreview) && !form.photoProcessing && <Btn size="sm" variant="ghost" onClick={()=>setForm(p=>({...p,photoFile:null,photoPreview:null}))}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Trash size={13}/>{tr("lg.removePhoto")}</span></Btn>}
+              {!(form.photoFile||form.photoPreview) && form.photo_url && !form.photoProcessing && <Btn size="sm" variant="ghost" onClick={removeSavedPhoto}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Trash size={13}/>{tr("lg.removePhoto")}</span></Btn>}
             </div>
           </div>
-          {form.photoProcessing && <div style={{fontSize:12,color:C.muted,marginBottom:18}}>Inatengeneza background ya buluu... subiri kidogo.</div>}
-          {!form.photoProcessing && <div style={{fontSize:12,color:C.muted,marginBottom:18}}>Background nyuma ya mwanafunzi itabadilishwa kiotomatiki kuwa buluu (light blue) hata kama hakuna shuka/nguo ya blue nyuma yake.</div>}
+          {form.photoProcessing && <div style={{fontSize:12,color:C.muted,marginBottom:18}}>{tr("lg.makingBlueBg")}</div>}
+          {!form.photoProcessing && <div style={{fontSize:12,color:C.muted,marginBottom:18}}>{tr("lg.blueBgNote")}</div>}
 
-          <SLabel>Identification Numbers (Prem &amp; Reg. No. are optional)</SLabel>
+          <SLabel>{tr("lg.idNumbers")}</SLabel>
           <div style={gridCols(2)}>
-            <Inp label="Reg. No. (optional, auto if blank)" value={form.reg_no||""} onChange={v=>setForm(p=>({...p,reg_no:v}))} placeholder={modal==="add"?"Auto-generated if blank":""}/>
+            <Inp label={tr("lg.regNoOptional")} value={form.reg_no||""} onChange={v=>setForm(p=>({...p,reg_no:v}))} placeholder={modal==="add"?tr("lg.autoIfBlank"):""}/>
           </div>
-          <SLabel>Personal Details</SLabel>
+          <SLabel>{tr("lg.personalDetails")}</SLabel>
           <div style={gridCols(3)}>
-            <Inp label="First Name"     value={form.first_name||""}   onChange={v=>setForm(p=>({...p,first_name:v}))}   required/>
-            <Inp label="Middle Name"    value={form.middle_name||""}  onChange={v=>setForm(p=>({...p,middle_name:v}))}/>
-            <Inp label="Last Name"      value={form.last_name||""}    onChange={v=>setForm(p=>({...p,last_name:v}))}    required/>
-            <Inp label="Gender"         value={form.gender||""}       onChange={v=>setForm(p=>({...p,gender:v}))}       options={[{value:"Female",label:"Female"},{value:"Male",label:"Male"}]} required/>
-            <Inp label="Date of Birth"  type="date" value={form.dob||""} onChange={v=>setForm(p=>({...p,dob:v}))}/>
-            <Inp label="Admission Date" type="date" value={form.admission_date||""} onChange={v=>setForm(p=>({...p,admission_date:v}))}/>
-            <LocationField key="region" label="Mkoa (Region)" isMobile={isMobile} isTablet={isTablet}
+            <Inp label={tr("lg.firstName")}     value={form.first_name||""}   onChange={v=>setForm(p=>({...p,first_name:v}))}   required/>
+            <Inp label={tr("lg.middleName")}    value={form.middle_name||""}  onChange={v=>setForm(p=>({...p,middle_name:v}))}/>
+            <Inp label={tr("lg.lastName")}      value={form.last_name||""}    onChange={v=>setForm(p=>({...p,last_name:v}))}    required/>
+            <Inp label={tr("lg.gender")}         value={form.gender||""}       onChange={v=>setForm(p=>({...p,gender:v}))}       options={[{value:"Female",label:tr("lg.female")},{value:"Male",label:tr("lg.male")}]} required/>
+            <Inp label={tr("lg.dob")}  type="date" value={form.dob||""} onChange={v=>setForm(p=>({...p,dob:v}))}/>
+            <Inp label={tr("lg.admissionDate")} type="date" value={form.admission_date||""} onChange={v=>setForm(p=>({...p,admission_date:v}))}/>
+            <LocationField key="region" label={tr("lg.regionMkoa")} isMobile={isMobile} isTablet={isTablet}
               value={form._region||""}
               onChange={v=>setForm(p=>({...p,_region:v,district:"",ward:"",village:""}))}
               options={REGIONS}/>
-            <LocationField key={`district-${form._region||""}`} label="Wilaya (District)" isMobile={isMobile} isTablet={isTablet}
+            <LocationField key={`district-${form._region||""}`} label={tr("lg.districtWilaya")} isMobile={isMobile} isTablet={isTablet}
               value={form.district||""}
               onChange={v=>setForm(p=>({...p,district:v,ward:"",village:""}))}
               options={getDistricts(form._region)}/>
-            <LocationField key={`ward-${form._region||""}-${form.district||""}`} label="Kata (Ward)" isMobile={isMobile} isTablet={isTablet}
+            <LocationField key={`ward-${form._region||""}-${form.district||""}`} label={tr("lg.wardKata")} isMobile={isMobile} isTablet={isTablet}
               value={form.ward||""}
               onChange={v=>setForm(p=>({...p,ward:v,village:""}))}
               options={getWards(form._region, form.district)}/>
-            <LocationField key={`village-${form._region||""}-${form.district||""}-${form.ward||""}`} label="Kijiji / Mtaa" isMobile={isMobile} isTablet={isTablet}
+            <LocationField key={`village-${form._region||""}-${form.district||""}-${form.ward||""}`} label={tr("lg.villageKijiji")} isMobile={isMobile} isTablet={isTablet}
               value={form.village||""}
               onChange={v=>setForm(p=>({...p,village:v}))}
               options={getVillages(form._region, form.district, form.ward)}/>
@@ -1414,57 +1419,57 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
             <input type="checkbox" id="isTransferIn" checked={!!form.is_transfer_in}
               onChange={e=>setForm(p=>({...p,is_transfer_in:e.target.checked}))}/>
-            <label htmlFor="isTransferIn" style={{fontSize:13,color:C.text}}>This student is a <strong>transfer</strong> from another school</label>
+            <label htmlFor="isTransferIn" style={{fontSize:13,color:C.text}}>{tr("lg.isTransferPre")}<strong>{tr("lg.transferWord")}</strong>{tr("lg.isTransferPost")}</label>
           </div>
           {form.is_transfer_in && (
             <>
-              <SLabel>Transfer - Where the student came from</SLabel>
+              <SLabel>{tr("lg.transferFrom")}</SLabel>
               <div style={gridCols(3)}>
-                <LocationField key="origin-region" label="Region" isMobile={isMobile} isTablet={isTablet}
+                <LocationField key="origin-region" label={tr("lg.region")} isMobile={isMobile} isTablet={isTablet}
                   value={form.origin_region||""}
                   onChange={v=>setForm(p=>({...p,origin_region:v,origin_district:""}))}
                   options={REGIONS}/>
-                <LocationField key={`origin-district-${form.origin_region||""}`} label="District" isMobile={isMobile} isTablet={isTablet}
+                <LocationField key={`origin-district-${form.origin_region||""}`} label={tr("lg.district")} isMobile={isMobile} isTablet={isTablet}
                   value={form.origin_district||""}
                   onChange={v=>setForm(p=>({...p,origin_district:v}))}
                   options={getDistricts(form.origin_region)}/>
-                <Inp label="Previous School"  value={form.origin_school||""}   onChange={v=>setForm(p=>({...p,origin_school:v}))}/>
-                <Inp label="Transfer Date" type="date" value={form.transfer_in_date||""} onChange={v=>setForm(p=>({...p,transfer_in_date:v}))}/>
+                <Inp label={tr("lg.previousSchool")}  value={form.origin_school||""}   onChange={v=>setForm(p=>({...p,origin_school:v}))}/>
+                <Inp label={tr("lg.transferDate")} type="date" value={form.transfer_in_date||""} onChange={v=>setForm(p=>({...p,transfer_in_date:v}))}/>
               </div>
             </>
           )}
 
-          <SLabel>Academic Placement</SLabel>
+          <SLabel>{tr("lg.academicPlacement")}</SLabel>
           <div style={gridCols(2)}>
-            <Inp label="Form"   value={form.form||""}   onChange={v=>setForm(p=>({...p,form:v}))}   options={FORMS.map(f=>({value:f,label:f}))} required/>
-            <Inp label="Status" value={form.status||""} onChange={v=>setForm(p=>({...p,status:v}))} options={[{value:"Active",label:"Active"},{value:"Inactive",label:"Inactive"},{value:"Transferred",label:"Transferred"},...(form.status==="Graduated"?[{value:"Graduated",label:"Graduated"}]:[])]}/>
+            <Inp label={tr("lg.form")}   value={form.form||""}   onChange={v=>setForm(p=>({...p,form:v}))}   options={FORMS.map(f=>({value:f,label:f}))} required/>
+            <Inp label={tr("lg.status")} value={form.status||""} onChange={v=>setForm(p=>({...p,status:v}))} options={[{value:"Active",label:tr("lg.active")},{value:"Inactive",label:tr("lg.inactive")},{value:"Transferred",label:tr("lg.transferred")},...(form.status==="Graduated"?[{value:"Graduated",label:tr("lg.graduated")}]:[])]}/>
           </div>
           {form.status==="Transferred" && form.dest_school && (
             <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:4,padding:14,marginBottom:18,fontSize:13}}>
-              <div style={{fontWeight:700,marginBottom:6,color:C.muted,textTransform:"uppercase",fontSize:11,letterSpacing:"0.06em"}}>Transferred Out</div>
-              <div>To: <strong>{form.dest_school}</strong>, {form.dest_district}, {form.dest_region}</div>
-              <div>Date: {form.transfer_out_date?.slice?.(0,10) || form.transfer_out_date}</div>
+              <div style={{fontWeight:700,marginBottom:6,color:C.muted,textTransform:"uppercase",fontSize:11,letterSpacing:"0.06em"}}>{tr("lg.transferredOut")}</div>
+              <div>{tr("lg.toColon")} <strong>{form.dest_school}</strong>, {form.dest_district}, {form.dest_region}</div>
+              <div>{tr("lg.dateColon")} {form.transfer_out_date?.slice?.(0,10) || form.transfer_out_date}</div>
             </div>
           )}
-          <SLabel>Parent / Guardian</SLabel>
+          <SLabel>{tr("lg.parentGuardianLbl")}</SLabel>
           <div style={gridCols(2,12,20)}>
-            <Inp label="Full Name" value={form.parent_name||""}  onChange={v=>setForm(p=>({...p,parent_name:v}))}/>
-            <Inp label="Phone"     value={form.parent_phone||""} onChange={v=>setForm(p=>({...p,parent_phone:v}))} placeholder="07XXXXXXXX"/>
+            <Inp label={tr("lg.fullName")} value={form.parent_name||""}  onChange={v=>setForm(p=>({...p,parent_name:v}))}/>
+            <Inp label={tr("lg.phone")}     value={form.parent_phone||""} onChange={v=>setForm(p=>({...p,parent_phone:v}))} placeholder="07XXXXXXXX"/>
           </div>
           <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-            <Btn variant="secondary" onClick={()=>{setModal(null);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn>
-            <Btn onClick={save} loading={saving} disabled={form.photoProcessing}><span style={{display:"flex",alignItems:"center",gap:6}}><SaveIcon size={13}/>Save Student</span></Btn>
+            <Btn variant="secondary" onClick={()=>{setModal(null);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
+            <Btn onClick={save} loading={saving} disabled={form.photoProcessing}><span style={{display:"flex",alignItems:"center",gap:6}}><SaveIcon size={13}/>{tr("lg.saveStudent")}</span></Btn>
           </div>
         </Modal>
       )}
 
       {chargeModal && (
-        <Modal wide title={`Contributions - ${[chargeModal.first_name, chargeModal.middle_name, chargeModal.last_name].filter(Boolean).join(" ")} (${chargeModal.reg_no})`} onClose={()=>{setChargeModal(null);setError("");}}>
+        <Modal wide title={tr("lg.contributionsTitle", { name: [chargeModal.first_name, chargeModal.middle_name, chargeModal.last_name].filter(Boolean).join(" "), reg: chargeModal.reg_no })} onClose={()=>{setChargeModal(null);setError("");}}>
           {error && <Alert type="error" message={error} onClose={()=>setError("")}/>}
 
           <div style={{background:NECTA_PANEL_BG,borderRadius:4,padding:14,marginBottom:16}}>
-          <SLabel>Part-Time Teachers / Ream / Other Expenses</SLabel>
-          <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>Read-only summary - recorded through Contributions Management.</div>
+          <SLabel>{tr("lg.ptReamOther")}</SLabel>
+          <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>{tr("lg.readonlyContrib")}</div>
           {(() => {
             // Part-Time Teachers contributions live in their own table
             // (contribution_parttime) - separate from Ream/Other Expenses
@@ -1478,15 +1483,15 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
                 key:`c${ch.id}`, type: ch.charge_type,
                 amountNote: ch.charge_type==="Ream" ? (ch.note||"-") : `TZS ${Number(ch.amount).toLocaleString()}${ch.note?` - ${ch.note}`:""}`,
                 date: ch.charge_date,
-                status: ch.charge_type==="Ream" ? (ch.paid?"Brought":"Not brought") : (ch.paid?"Paid":"Unpaid"),
+                status: ch.charge_type==="Ream" ? (ch.paid?tr("lg.brought"):tr("lg.notBrought")) : (ch.paid?tr("lg.paid"):tr("lg.unpaid")),
                 color: ch.paid?"green":"red",
                 amount: ch.charge_type!=="Ream" ? Number(ch.amount) : 0,
               })),
               ...(chargeModal.parttime_contributions||[]).map((p,idx) => ({
-                key:`p${p.year}-${p.month}-${idx}`, type: "Part-Time Teachers",
-                amountNote: `TZS ${Number(p.amount_paid).toLocaleString()} of 2,000 (${MONTHS[p.month-1]||p.month} ${p.year})`,
+                key:`p${p.year}-${p.month}-${idx}`, type: tr("lg.partTimeTeachers"),
+                amountNote: tr("lg.ptOf2000", { paid: Number(p.amount_paid).toLocaleString(), month: (MONTHS[p.month-1] ? tr("month."+p.month) : p.month), year: p.year }),
                 date: p.updated_at,
-                status: p.completed ? "Completed" : "Partial",
+                status: p.completed ? tr("lg.completed") : tr("lg.partial"),
                 color: p.completed ? "green" : "red",
                 amount: Number(p.amount_paid),
               })),
@@ -1496,18 +1501,18 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
                 <Tbl
                   theme="necta"
                   columns={[
-                    {key:"type", label:"Type"},
-                    {key:"amountNote", label:"Amount / Note"},
-                    {key:"date", label:"Date", render:r=>r.date?.slice(0,10) || "-"},
-                    {key:"status", label:"Status", render:r=><Badge color={r.color}>{r.status}</Badge>},
+                    {key:"type", label:tr("lg.type")},
+                    {key:"amountNote", label:tr("lg.amountNote")},
+                    {key:"date", label:tr("lg.date"), render:r=>r.date?.slice(0,10) || "-"},
+                    {key:"status", label:tr("lg.status"), render:r=><Badge color={r.color}>{r.status}</Badge>},
                   ]}
                   loading={chargeModalLoading}
                   rows={combined}
-                  emptyMsg="No contributions recorded."
+                  emptyMsg={tr("lg.noContribRecorded")}
                 />
                 {!!combined.length && (
                   <div style={{display:"flex",justifyContent:"flex-end",padding:"8px 2px",fontWeight:700,fontSize:14,color:NECTA_TEXT}}>
-                    Total: TZS {combined.reduce((a,r)=>a+r.amount,0).toLocaleString()}
+                    {tr("lg.totalColon")} TZS {combined.reduce((a,r)=>a+r.amount,0).toLocaleString()}
                   </div>
                 )}
               </>
@@ -1518,10 +1523,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           {(() => {
             const fs = chargeModal.food_summary || [];
             const curYear = fs[0]?.year || new Date().getFullYear();
-            const sw = getLang() === "sw";
-            const FL = sw
-              ? { title: "Michango ya Chakula (Food Contributions)", note: 'Muhtasari tu - michango inasajiliwa kupitia Manage Foods. "Anadaiwa" huhesabiwa kwa aina zenye kiasi kilichopangwa kwa mwaka.', type: "Aina (Type)", required: "Inatakiwa", brought: "Ametoa", owed: "Anadaiwa", status: "Hali", done: "Imekamilika", owes: "Anadaiwa", dates: "Alileta lini (dates)", empty: "Hakuna mchango wa chakula uliosajiliwa." }
-              : { title: "Food Contributions", note: 'Read-only summary - recorded through Manage Foods. "Owed" is calculated for foods that have a required yearly amount.', type: "Type", required: "Required", brought: "Brought", owed: "Owed", status: "Status", done: "Completed", owes: "Owes", dates: "Dates brought", empty: "No food contributions recorded." };
+            const FL = { title: tr("lg.food.title"), note: tr("lg.food.note"), type: tr("lg.food.type"), required: tr("lg.food.required"), brought: tr("lg.food.brought"), owed: tr("lg.food.owed"), status: tr("lg.food.status"), done: tr("lg.food.done"), owes: tr("lg.food.owes"), dates: tr("lg.food.dates"), empty: tr("lg.food.empty") };
             return (
               <div style={{marginTop:20,background:NECTA_PANEL_BG,borderRadius:4,padding:14}}>
                 <SLabel>{FL.title} — {curYear}</SLabel>
@@ -1561,38 +1563,38 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
           })()}
 
           <div style={{marginTop:20,background:NECTA_PANEL_BG,borderRadius:4,padding:14}}>
-            <SLabel>Hostel Fee</SLabel>
-            <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>Read-only summary - recorded through Hostel Management → Hostel Fees.</div>
+            <SLabel>{tr("lg.hostelFee")}</SLabel>
+            <div style={{fontSize:12,color:NECTA_TEXT,marginBottom:10}}>{tr("lg.readonlyHostel")}</div>
             <Tbl
               theme="necta"
               columns={[
-                {key:"hostel_fee", label:"Amount", render:r=>`TZS ${Number(r.hostel_fee).toLocaleString()}`},
-                {key:"term", label:"Term", render:r=>r.term || "—"},
-                {key:"academic_year", label:"Academic Year", render:r=>r.academic_year || "—"},
-                {key:"created_at", label:"Date", render:r=>r.created_at?.slice(0,10) || "—"},
-                {key:"comment", label:"Note", render:r=>r.comment || "—"},
+                {key:"hostel_fee", label:tr("lg.amount"), render:r=>`TZS ${Number(r.hostel_fee).toLocaleString()}`},
+                {key:"term", label:tr("lg.term"), render:r=>r.term || "—"},
+                {key:"academic_year", label:tr("lg.academicYear"), render:r=>r.academic_year || "—"},
+                {key:"created_at", label:tr("lg.date"), render:r=>r.created_at?.slice(0,10) || "—"},
+                {key:"comment", label:tr("lg.note"), render:r=>r.comment || "—"},
               ]}
               loading={chargeModalLoading}
               rows={chargeModal.hostel_fee_contributions||[]}
-              emptyMsg="No hostel fee recorded."
+              emptyMsg={tr("lg.noHostelFee")}
             />
           </div>
 
           <div style={{display:"flex",gap:10,marginTop:16,justifyContent:"flex-end"}}>
-            <Btn variant="secondary" onClick={()=>{setChargeModal(null);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Close</span></Btn>
+            <Btn variant="secondary" onClick={()=>{setChargeModal(null);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.close")}</span></Btn>
           </div>
         </Modal>
       )}
 
       {historyModal && (
-        <Modal title={`Enrollment History - ${[historyModal.first_name,historyModal.middle_name,historyModal.last_name].filter(Boolean).join(" ")}`} onClose={()=>setHistoryModal(null)}>
+        <Modal title={tr("lg.enrollHistoryTitle", { name: [historyModal.first_name,historyModal.middle_name,historyModal.last_name].filter(Boolean).join(" ") })} onClose={()=>setHistoryModal(null)}>
           <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",marginBottom:14}}>
-            <Btn size="sm" variant="secondary" onClick={()=>downloadPdf(`/students/${historyModal.id}/pdf`, `${digitsOnly(historyModal.reg_no || historyModal.id)}-profile.pdf`)}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={13}/>PDF</span></Btn>
+            <Btn size="sm" variant="secondary" onClick={()=>downloadPdf(`/students/${historyModal.id}/pdf`, `${digitsOnly(historyModal.reg_no || historyModal.id)}-profile.pdf`)}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={13}/>{tr("lg.pdf")}</span></Btn>
           </div>
           {historyLoading
-            ? <div style={{padding:24,textAlign:"center",color:C.muted,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><SpinnerIcon size={14} />Loading…</div>
+            ? <div style={{padding:24,textAlign:"center",color:C.muted,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><SpinnerIcon size={14} />{tr("lg.loading")}</div>
             : !history.length
-              ? <p style={{color:C.muted,fontSize:14}}>No history recorded yet.</p>
+              ? <p style={{color:C.muted,fontSize:14}}>{tr("lg.noHistory")}</p>
               : <div style={{display:"flex",flexDirection:"column",gap:0}}>
                   {history.map(h=>(
                     <div key={h.id} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:`1px solid ${C.border}`}}>
@@ -1688,7 +1690,7 @@ function PromoteStudentsModal({ token, onClose, onDone }) {
         </div>
       )}
       <div style={{display:"flex",justifyContent:"flex-end",gap:10,marginTop:18}}>
-        <Btn variant="cancel" onClick={onClose}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Close</span></Btn>
+        <Btn variant="cancel" onClick={onClose}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.close")}</span></Btn>
         <Btn onClick={doPromote} loading={busy} disabled={!roster.length}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>Confirm Promotion</span></Btn>
       </div>
       {ConfirmDialogPortal}
@@ -2189,7 +2191,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
     setExportingPdf(true);
     try {
       const res = await fetch(`${API_BASE}${path}`, { headers: token ? { Authorization:`Bearer ${token}` } : {} });
-      if (!res.ok) throw new Error("Could not generate PDF.");
+      if (!res.ok) throw new Error(tr("lg.couldNotPdf"));
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -2549,7 +2551,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
               ))}
             </div>
             <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-              <Btn variant="secondary" onClick={()=>{setShowAddTeacher(false);setEditTeacher(null);setTForm({short_name:"",subject:"",classes:[]});setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn>
+              <Btn variant="secondary" onClick={()=>{setShowAddTeacher(false);setEditTeacher(null);setTForm({short_name:"",subject:"",classes:[]});setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
               <Btn onClick={saveTeacher}><span style={{display:"flex",alignItems:"center",gap:6}}><SaveIcon size={13}/>Save Teacher</span></Btn>
             </div>
           </Modal>
@@ -2662,7 +2664,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
             </div>
           </div>
           <div style={{display:"flex",justifyContent:"flex-end",marginTop:18}}>
-            <Btn variant="secondary" onClick={()=>setShowPeriodMgr(false)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Close</span></Btn>
+            <Btn variant="secondary" onClick={()=>setShowPeriodMgr(false)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.close")}</span></Btn>
           </div>
         </Modal>
       )}
@@ -2698,7 +2700,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
             </div>
           ))}
           <div style={{display:"flex",justifyContent:"flex-end",marginTop:10}}>
-            <Btn variant="secondary" onClick={()=>setShowClassMgr(false)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Close</span></Btn>
+            <Btn variant="secondary" onClick={()=>setShowClassMgr(false)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.close")}</span></Btn>
           </div>
         </Modal>
       )}
@@ -2900,7 +2902,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
           </div>
           <div style={{display:"flex",gap:10,marginTop:20,justifyContent:"space-between"}}>
             <Btn variant="danger" onClick={clearEditCell}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Clear Cell</span></Btn>
-            <div style={{display:"flex",gap:10}}><Btn variant="secondary" onClick={()=>setEditingCell(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn><Btn onClick={saveEditCell}><span style={{display:"flex",alignItems:"center",gap:6}}><SaveIcon size={13}/>Save</span></Btn></div>
+            <div style={{display:"flex",gap:10}}><Btn variant="secondary" onClick={()=>setEditingCell(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn><Btn onClick={saveEditCell}><span style={{display:"flex",alignItems:"center",gap:6}}><SaveIcon size={13}/>Save</span></Btn></div>
           </div>
         </Modal>
       )}
@@ -3155,7 +3157,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
     setExportingPdf(true);
     try {
       const res = await fetch(`${API_BASE}${path}`, { headers: token ? { Authorization:`Bearer ${token}` } : {} });
-      if (!res.ok) throw new Error("Could not generate PDF.");
+      if (!res.ok) throw new Error(tr("lg.couldNotPdf"));
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -3268,7 +3270,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
             <Btn variant="ghost" onClick={()=>{setRoomForm({room_number:"",capacity:6});setRoomModal("add");}} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><BedIcon size={14}/>Add Room</span></Btn>
           </div>
 
-          {loading ? <div style={{padding:40,textAlign:"center",color:C.muted,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><SpinnerIcon size={16} />Loading…</div> : (
+          {loading ? <div style={{padding:40,textAlign:"center",color:C.muted,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><SpinnerIcon size={16} />{tr("lg.loading")}</div> : (
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16}}>
               {rooms.map(room=>{
                 const occ  = room.occupants||[];
@@ -3306,7 +3308,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
           <Card style={{padding:0}}>
             <Tbl loading={loading} rows={boys} columns={[
               {key:"name", label:"Full Name", render:r=>fullNameOf(r)},
-              {key:"form", label:"Form"},
+              {key:"form", label:tr("lg.form")},
               {key:"admitted_date", label:"Admitted", render:r=>r.admitted_date?.slice(0,10)},
               {key:"actions", label:"", render:r=>(
                 <ActionsMenu items={[
@@ -3324,7 +3326,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
       <Card>
         <div style={{display:"flex",flexDirection:isMobile?"column":"row",justifyContent:"space-between",alignItems:isMobile?"stretch":"center",gap:10,marginBottom:14}}>
           <h3 style={{margin:0,fontSize:16,fontWeight:700}}>Discipline Records</h3>
-          <Btn size="sm" variant="secondary" loading={exportingPdf} onClick={()=>downloadPdf(`/hostel/discipline/pdf?hostel=${encodeURIComponent(selHostel)}`, `discipline-${selHostel}.pdf`)} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={13}/>Export PDF</span></Btn>
+          <Btn size="sm" variant="secondary" loading={exportingPdf} onClick={()=>downloadPdf(`/hostel/discipline/pdf?hostel=${encodeURIComponent(selHostel)}`, `discipline-${selHostel}.pdf`)} style={isMobile?{width:"100%",justifyContent:"center"}:{}}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={13}/>{tr("lg.exportPdf")}</span></Btn>
         </div>
         <Tbl rows={disc} columns={[
           {key:"incident_date", label:"Date",     render:r=>r.incident_date?.slice(0,10)},
@@ -3388,7 +3390,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
           <Inp label="Admission Date" type="date" value={af.admitted_date} onChange={v=>setAf(p=>({...p,admitted_date:v}))}/>
 
           <div style={{display:"flex",gap:10,marginTop:20,justifyContent:"flex-end"}}>
-            <Btn variant="secondary" onClick={()=>{setAssignModal(null);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn>
+            <Btn variant="secondary" onClick={()=>{setAssignModal(null);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
             <Btn onClick={assign} loading={saving} disabled={!af.student_id}>Admit</Btn>
           </div>
         </Modal>
@@ -3403,7 +3405,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
             <Inp label="Bed Capacity" type="number" value={roomForm.capacity} onChange={v=>setRoomForm(p=>({...p,capacity:v}))} required/>
           </div>
           <div style={{display:"flex",gap:10,marginTop:20,justifyContent:"flex-end"}}>
-            <Btn variant="secondary" onClick={()=>setRoomModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn>
+            <Btn variant="secondary" onClick={()=>setRoomModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
             <Btn onClick={saveRoom}>Save</Btn>
           </div>
         </Modal>
@@ -3443,7 +3445,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
             ? <p style={{fontSize:13,color:C.muted}}>No contributions recorded yet.</p>
             : <Tbl rows={contribs} columns={[
                 {key:"created_at_tz", label:"Recorded"},
-                {key:"term", label:"Term", render:r=>`${r.term||"-"} ${r.academic_year||""}`},
+                {key:"term", label:tr("lg.term"), render:r=>`${r.term||"-"} ${r.academic_year||""}`},
                 {key:"maize_kg", label:"Maize (kg)"},
                 {key:"vegetables_kg", label:"Vegetables", render:r=>Number(r.vegetables_kg)?`${r.vegetable_type||""} ${r.vegetables_kg}kg`:"-"},
                 {key:"oil_litres", label:"Cooking Oil (L)"},
@@ -3455,7 +3457,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
               ]}/>}
 
           <div style={{display:"flex",justifyContent:"flex-end",marginTop:16}}>
-            <Btn variant="secondary" onClick={()=>{setContribModal(null);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Close</span></Btn>
+            <Btn variant="secondary" onClick={()=>{setContribModal(null);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.close")}</span></Btn>
           </div>
         </Modal>
       )}
@@ -3464,12 +3466,12 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
       {historyModal && (
         <Modal title={`History - ${fullNameOf(historyModal)}`} onClose={()=>setHistoryModal(null)}>
           <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",marginBottom:14}}>
-            <Btn size="sm" variant="secondary" onClick={()=>downloadPdf(`/hostel/occupants/${historyModal.id}/pdf`, `${fullNameOf(historyModal)}.pdf`)}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={13}/>PDF</span></Btn>
+            <Btn size="sm" variant="secondary" onClick={()=>downloadPdf(`/hostel/occupants/${historyModal.id}/pdf`, `${fullNameOf(historyModal)}.pdf`)}><span style={{display:"flex",alignItems:"center",gap:6}}><DownloadIcon size={13}/>{tr("lg.pdf")}</span></Btn>
           </div>
           {historyLoading
-            ? <div style={{padding:24,textAlign:"center",color:C.muted,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><SpinnerIcon size={14} />Loading…</div>
+            ? <div style={{padding:24,textAlign:"center",color:C.muted,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><SpinnerIcon size={14} />{tr("lg.loading")}</div>
             : !history.length
-              ? <p style={{color:C.muted,fontSize:14}}>No history recorded yet.</p>
+              ? <p style={{color:C.muted,fontSize:14}}>{tr("lg.noHistory")}</p>
               : <div style={{display:"flex",flexDirection:"column"}}>
                   {history.map(h=>(
                     <div key={h.id} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:`1px solid ${C.border}`}}>
@@ -3499,7 +3501,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
             <div style={{gridColumn:"1/-1"}}><Inp label="Action Taken"      value={df.action_taken} onChange={v=>setDf(p=>({...p,action_taken:v}))}/></div>
           </div>
           <div style={{display:"flex",gap:10,marginTop:20,justifyContent:"flex-end"}}>
-            <Btn variant="secondary" onClick={()=>{setDiscModal(false);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn>
+            <Btn variant="secondary" onClick={()=>{setDiscModal(false);setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
             <Btn onClick={addDisc} loading={saving}>Save Record</Btn>
           </div>
         </Modal>
@@ -3966,7 +3968,7 @@ function ContributionsModule({ token, role }) {
                 ? <p style={{color:C.muted,fontSize:14}}>No contribution is billed for {MONTHS[Number(ptMonth)-1]} - this is a school holiday month.</p>
                 : <Tbl loading={ptLoading} rows={ptRows} columns={[
                     {key:"name", label:"Full Name", render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
-                    {key:"form", label:"Form"},
+                    {key:"form", label:tr("lg.form")},
                     {key:"amount_paid", label:"Paid (of TZS 2,000)", render:r=>`TZS ${Number(r.amount_paid).toLocaleString()}`},
                     {key:"installments", label:"Installments", render:r=>`${r.installments} of 4`},
                     {key:"completed", label:"Status", render:r=><Badge color={r.completed?"green":"red"}>{r.completed?"Completed":"Pending"}</Badge>},
@@ -3987,7 +3989,7 @@ function ContributionsModule({ token, role }) {
               </div>
               <Tbl loading={chargesLoading} rows={reamRows} columns={[
                 {key:"name", label:"Full Name", render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
-                {key:"form", label:"Form"},
+                {key:"form", label:tr("lg.form")},
                 {key:"charge_date", label:"Date", render:r=>r.charge_date?.slice(0,10)},
                 {key:"paid", label:"Status", render:r=><Badge color={r.paid?"green":"red"}>{r.paid?"Brought":"Not brought"}</Badge>},
                 {key:"actions", label:"", render:r=>(
@@ -4007,7 +4009,7 @@ function ContributionsModule({ token, role }) {
               </div>
               <Tbl loading={chargesLoading} rows={otherRows} columns={[
                 {key:"name", label:"Full Name", render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
-                {key:"form", label:"Form"},
+                {key:"form", label:tr("lg.form")},
                 {key:"amount", label:"Amount (TZS)", render:r=>Number(r.amount).toLocaleString()},
                 {key:"note", label:"Note"},
                 {key:"charge_date", label:"Date", render:r=>r.charge_date?.slice(0,10)},
@@ -4070,7 +4072,7 @@ function ContributionsModule({ token, role }) {
                 ? <p style={{fontSize:13,color:C.muted}}>No contributions recorded yet.</p>
                 : <Tbl rows={hContribs} columns={[
                     {key:"created_at_tz", label:"Recorded"},
-                    {key:"term", label:"Term", render:r=>`${r.term||"-"} ${r.academic_year||""}`},
+                    {key:"term", label:tr("lg.term"), render:r=>`${r.term||"-"} ${r.academic_year||""}`},
                     {key:"maize_kg", label:"Maize (kg)"},
                     {key:"vegetables_kg", label:"Vegetables", render:r=>Number(r.vegetables_kg)?`${r.vegetable_type||""} ${r.vegetables_kg}kg`:"-"},
                     {key:"oil_litres", label:"Oil (L)"},
@@ -4093,7 +4095,7 @@ function ContributionsModule({ token, role }) {
           <p style={{fontSize:13,color:C.muted,marginBottom:12}}>{MONTHS[Number(ptMonth)-1]} {ptYear} · Already paid TZS {Number(payModal.amount_paid).toLocaleString()} of 2,000 in {payModal.installments} installment(s).</p>
           <Inp label="Amount (TZS)" type="number" value={payAmount} onChange={setPayAmount}/>
           <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:16}}>
-            <Btn variant="ghost" onClick={()=>setPayModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn>
+            <Btn variant="ghost" onClick={()=>setPayModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
             <Btn onClick={submitPayment} loading={saving}>Save Payment</Btn>
           </div>
         </Modal>
@@ -4140,7 +4142,7 @@ function ContributionsModule({ token, role }) {
               </>}
 
           <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:16}}>
-            <Btn variant="ghost" onClick={()=>setAddModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn>
+            <Btn variant="ghost" onClick={()=>setAddModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
             <Btn onClick={submitAdd} loading={saving} disabled={addModal==="ream" && !reamBrought}>Submit</Btn>
           </div>
         </Modal>
@@ -4151,7 +4153,7 @@ function ContributionsModule({ token, role }) {
           <Inp label="Amount (TZS)" type="number" value={editAmount} onChange={setEditAmount}/>
           <Inp label="Note (optional)" value={editNote} onChange={setEditNote}/>
           <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:16}}>
-            <Btn variant="ghost" onClick={()=>setEditChargeModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Cancel</span></Btn>
+            <Btn variant="ghost" onClick={()=>setEditChargeModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
             <Btn onClick={submitEditCharge} loading={saving}>Save Changes</Btn>
           </div>
         </Modal>
