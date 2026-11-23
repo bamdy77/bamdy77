@@ -243,12 +243,13 @@ export default function Landing() {
       </section>
 
       {/* About */}
-      <section id="about" style={{ background: "#415d43", padding: isMobile ? "44px 18px" : isTablet ? "50px 22px" : "60px 24px" }}>
+      <section id="about" style={{ background: "#E3A51A", color: "#0c2c6b", padding: isMobile ? "44px 18px" : isTablet ? "50px 22px" : "60px 24px" }}>
         <div style={{ maxWidth: 820, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: isMobile ? 22 : 30 }}>
             <img src="/assets/shule.svg" alt={t("login.logoAlt")} style={{ height: isMobile ? 48 : 64, marginBottom: 14 }} onError={(e) => (e.currentTarget.style.display = "none")} />
-            <h2 style={{ color: "#fff", fontSize: isMobile ? 20 : 24, fontWeight: 800, marginBottom: 8 }}>{t("about.title")}</h2>
-            <p style={{ color: "rgba(255,255,255,0.92)", fontSize: isMobile ? 13 : 14.5, maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
+            <h2 style={{ color: "#0c2c6b", fontSize: isMobile ? 20 : 24, fontWeight: 800, marginBottom: 8 }}>{t("about.title")}</h2>
+            <div style={{ width: 64, height: 4, borderRadius: 2, background: "#0c2c6b", margin: "0 auto 14px" }} />
+            <p style={{ color: "#0c2c6b", fontSize: isMobile ? 13 : 14.5, maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
               {t("about.text")}
             </p>
           </div>
@@ -256,7 +257,7 @@ export default function Landing() {
             display: "grid",
             gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(auto-fit, minmax(160px, 1fr))",
             gap: isMobile ? 16 : 16,
-            background: "#2f4431", border: "1px solid #243826", borderRadius: 4,
+            background: "#0e2d73", border: "1px solid #0a2258", borderRadius: 4,
             padding: isMobile ? "20px 14px" : 24,
           }}>
             <AboutFact label={t("fact.postal")} value={SCHOOL.poBox} />
@@ -301,7 +302,7 @@ const mobileMenuLink = {
 function AboutFact({ label, value }) {
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 10.5, fontWeight: 700, color: "#F3C14B", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 13.5, fontWeight: 600, color: "#fff" }}>{value}</div>
     </div>
   );
