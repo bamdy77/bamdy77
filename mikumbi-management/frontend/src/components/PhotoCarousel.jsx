@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 
-// Rotates through picha1.png..picha5.png every 5 seconds. Deliberately no
+// Rotates through the poster photos every 5 seconds. Deliberately no
 // captions/labels on top - per spec, each photo is poster-style and
 // self-explanatory. Place the actual files in /public/assets/.
-const PHOTOS = ["/assets/picha1.png", "/assets/picha2.png", "/assets/picha3.png", "/assets/picha4.png", "/assets/picha5.png"];
+// (picha3 is intentionally left out of the rotation.)
+const PHOTOS = ["/assets/picha1.png", "/assets/picha2.png", "/assets/picha4.png", "/assets/picha5.png"];
 
 export default function PhotoCarousel({ style = {} }) {
   const [index, setIndex] = useState(0);
