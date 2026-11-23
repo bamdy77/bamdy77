@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { StudentModule } from "../legacy/schoolManagementBundle";
 import { THEME } from "../styles/theme";
+import { useLang } from "../i18n";
 
 function JoiningIcon() {
   return (
@@ -23,17 +24,18 @@ function IdCardIcon() {
 // merged into its single "More" menu on mobile/tablet — one source of
 // truth, so a page-header link can never be added to one and forgotten
 // in the other.
-function useStudentMgmtLinks(navigate) {
+function useStudentMgmtLinks(navigate, t) {
   return [
-    { label: "Joining Instructions", icon: JoiningIcon, onClick: () => navigate("/dashboard/joining-instructions") },
-    { label: "Identity Cards", icon: IdCardIcon, onClick: () => navigate("/dashboard/identity-cards") },
+    { label: t("ji.title"), icon: JoiningIcon, onClick: () => navigate("/dashboard/joining-instructions") },
+    { label: t("idc.title"), icon: IdCardIcon, onClick: () => navigate("/dashboard/identity-cards") },
   ];
 }
 
 export default function StudentManagement() {
   const { token, user } = useAuth();
+  const { t } = useLang();
   const navigate = useNavigate();
-  const links = useStudentMgmtLinks(navigate);
+  const links = useStudentMgmtLinks(navigate, t);
 
   // This legacy module's own Card/table/text pieces already read the same
   // --mk-xxx CSS variables as the rest of the app (see the `C` palette at

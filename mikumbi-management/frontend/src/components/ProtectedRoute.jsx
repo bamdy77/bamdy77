@@ -1,16 +1,18 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import MikumbiLoader from "./MikumbiLoader";
+import { useLang } from "../i18n";
 
 // Wrap any authenticated page: <ProtectedRoute roles={["admin","academic"]}>...</ProtectedRoute>
 // roles=[] (default) means "any logged-in user, any role" is allowed.
 export default function ProtectedRoute({ children, roles = [] }) {
   const { user, token, loading } = useAuth();
+  const { t } = useLang();
 
   if (loading) {
     return (
       <div style={{ padding: 40, display: "flex", justifyContent: "center" }}>
-        <MikumbiLoader size={90} caption="Loading..." />
+        <MikumbiLoader size={90} caption={t("common.loading")} />
       </div>
     );
   }

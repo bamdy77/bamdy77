@@ -65,6 +65,8 @@ const COMMON_STRINGS = {
   "common.add": { en: "Add", sw: "Ongeza" },
   "common.yes": { en: "Yes", sw: "Ndiyo" },
   "common.no": { en: "No", sw: "Hapana" },
+  "common.comingSoon": { en: "This section is coming soon.", sw: "Sehemu hii inakuja hivi karibuni." },
+  "common.loading": { en: "Loading...", sw: "Inapakia..." },
   "common.ok": { en: "OK", sw: "Sawa" },
   "common.done": { en: "Done", sw: "Sawa" },
   "common.back": { en: "Back", sw: "Rudi" },

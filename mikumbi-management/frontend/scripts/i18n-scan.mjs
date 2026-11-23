@@ -32,6 +32,7 @@ export const DONE = [
   "src/components/ExamTypesManager.jsx", "src/pages/AuditLog.jsx", "src/pages/TAMS.jsx", "src/pages/LoginSecurity.jsx", "src/pages/UserAccounts.jsx", "src/pages/BackupSettings.jsx", "src/pages/SmsGatewaySettings.jsx", "src/pages/FoodContributions.jsx", "src/pages/Contributions.jsx", "src/pages/JoiningInstructions.jsx", "src/pages/ResultsManagement.jsx",
   "src/pages/SignatureSettings.jsx", "src/pages/IdentityCards.jsx", "src/pages/ParentVideosTab.jsx", "src/pages/Communications.jsx", "src/pages/AnalyticsDashboard.jsx", "src/components/TrendChart.jsx",
   "src/legacy/schoolManagementBundle.jsx",
+  "src/pages/StudentManagement.jsx", "src/pages/ComingSoon.jsx", "src/App.jsx", "src/components/ProtectedRoute.jsx",
 ];
 // Never visible text (icons, data, generated files).
 const IGNORE = ["src/components/icons.jsx", "src/data/locations.js", "src/components/FeatureIcons.jsx"];
@@ -41,7 +42,7 @@ const MSG_FUNCS = new Set(["showError", "showSuccess", "confirm", "alert", "setE
 const KEY_LIKE = /^[a-z][a-zA-Z0-9_-]*(\.[a-zA-Z0-9_ -]+)+\.?$/; // i18n keys such as "menu.students"
 const hasWords = (s) => !KEY_LIKE.test(s) && /[A-Za-zÀ-ɏ]{2,}/.test(s) && !/^[\s\d.,:;%/()+\-–—|·•*#&@!?'"]*$/.test(s);
 // Strings that are not language (units, codes, proper names that never change).
-const ALLOW = /^(-[a-z]+|NEXTSMS|Android SMS Gateway|https?:\/\/\S+|[A-Z]{1,3}\d+[-\d]*|TZS|NECTA|GPA|PDF|SMS|CSV|Excel|OK|ID|EN|SW|Aa|Aa Bb 123 -|Mikumbi Secondary School|MIKUMBI SECONDARY SCHOOL|Poppins|Arial|Open Sans|Times New Roman|Form I{1,3}V?|Form IV|[A-Z]\/[A-Z]+|kg|pcs|Africa\/Dar_es_Salaam|NB:|\{MWAKA\}|DIVISION PERFORMANCE SUMMARY|SEX|Reg\.No|CAND NAME|AGGT|DIV|POS|DETAILS SUBJECTS|SCHOOL EXAMINATION SUBJECT PERFORMANCE|SUBJECT|SAT|PASS %|COMPETENCY LEVEL|SUBJECT PERFORMANCE|SOMO|AC|AD|PASS|TOP 10 PERFORMING STUDENTS|BOTTOM 10 PERFORMING STUDENTS|RANK|NAME|POINTS|TATHMINI YA MATOKEO YA MTIHANI WA|JINA LA MWALIMU:|ULINGANISHO WA UFAULU NA MTIHANI ULIOPITA|var\(--.*|BREAK|LUNCH|MSS|month\.|Term [1-3]|\d+.*)$/;
+const ALLOW = /^(-[a-z]+|NEXTSMS|Android SMS Gateway|https?:\/\/\S+|[A-Z]{1,3}\d+[-\d]*|TZS|NECTA|GPA|PDF|SMS|CSV|Excel|OK|ID|EN|SW|Aa|Aa Bb 123 -|Mikumbi Secondary School|MIKUMBI SECONDARY SCHOOL|Poppins|Arial|Open Sans|Times New Roman|Form I{1,3}V?|Form IV|[A-Z]\/[A-Z]+|kg|pcs|Africa\/Dar_es_Salaam|NB:|\{MWAKA\}|DIVISION PERFORMANCE SUMMARY|SEX|Reg\.No|CAND NAME|AGGT|DIV|POS|DETAILS SUBJECTS|SCHOOL EXAMINATION SUBJECT PERFORMANCE|SUBJECT|SAT|PASS %|COMPETENCY LEVEL|SUBJECT PERFORMANCE|SOMO|AC|AD|PASS|TOP 10 PERFORMING STUDENTS|BOTTOM 10 PERFORMING STUDENTS|RANK|NAME|POINTS|TATHMINI YA MATOKEO YA MTIHANI WA|JINA LA MWALIMU:|ULINGANISHO WA UFAULU NA MTIHANI ULIOPITA|var\(--.*|BREAK|LUNCH|MSS|month\.|Term [1-3]|#[0-9a-fA-F]{3,8}|rgba?\([^)]*\)|Facebook|Instagram|YouTube|[a-z-]+ [0-9.]+s(,.*)?|\d+.*)$/;
 
 const rel = (f) => path.relative(ROOT, f).split(path.sep).join("/");
 const under = (f, list) => list.some((p) => rel(f) === p || rel(f).startsWith(p + "/"));
