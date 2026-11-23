@@ -1606,7 +1606,7 @@ function StudentModule({ token, role, extraMoreItems=[] }) {
                         </div>
                         {h.note && <div style={{fontSize:13,color:C.muted,marginTop:2}}>{h.note}</div>}
                         <div style={{fontSize:11,color:C.muted,marginTop:3}}>
-                          {h.event_at_tz}{h.recorded_by_name?` · by ${h.recorded_by_name}`:""}
+                          {h.event_at_tz}{h.recorded_by_name?tr("lg.byName",{name:h.recorded_by_name}):""}
                         </div>
                       </div>
                     </div>
@@ -2445,7 +2445,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
         <div style={{display:"flex",flexDirection:isMobile?"column":"row",gap:isMobile?8:10,flexWrap:"wrap",alignItems:isMobile?"stretch":"center"}}>
           <div style={{display:"flex",gap:8}}>
             <select value={ttYear} onChange={e=>setTTYear(e.target.value)} style={{...IS,width:isMobile?"auto":90,flex:isMobile?1:"none"}}>{YEARS.map(y=><option key={y}>{y}</option>)}</select>
-            <select value={ttTerm} onChange={e=>setTTTerm(e.target.value)} style={{...IS,width:isMobile?"auto":120,flex:isMobile?1:"none"}}>{["Term 1","Term 2","Term 3"].map(t=><option key={t}>{t}</option>)}</select>
+            <select value={ttTerm} onChange={e=>setTTTerm(e.target.value)} style={{...IS,width:isMobile?"auto":120,flex:isMobile?1:"none"}}>{[["Term 1",tr("tt.term1")],["Term 2",tr("tt.term2")],["Term 3",tr("tt.term3")]].map(([v,l])=><option key={v} value={v}>{l}</option>)}</select>
           </div>
           {(isMobile || isTablet) ? (
             <div style={{display:"flex",gap:8}}>
@@ -2532,7 +2532,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                       <div key={cls} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:6}}>
                         <div style={{display:"flex",alignItems:"center",gap:6}}>
                           <div onClick={()=>toggleClass(cls)} style={{flex:1,padding:"7px 10px",borderRadius:4,cursor:"pointer",border:`1px solid ${sel?C.accent:C.border}`,background:sel?C.accentLight:C.bg,color:sel?C.accentText:C.muted,fontWeight:sel?700:400,fontSize:13,userSelect:"none"}}>{cls}</div>
-                          {sel && <input type="number" min={1} max={10} value={sel.periods_per_week} onChange={e=>setClassPeriods(cls,e.target.value)} onBlur={e=>clampClassPeriods(cls,e.target.value)} title="Periods per week" style={{width:44,padding:"6px 4px",borderRadius:4,border:`1px solid ${C.border}`,fontSize:12,textAlign:"center"}}/>}
+                          {sel && <input type="number" min={1} max={10} value={sel.periods_per_week} onChange={e=>setClassPeriods(cls,e.target.value)} onBlur={e=>clampClassPeriods(cls,e.target.value)} title={tr("tt.periodsPerWeekTitle")} style={{width:44,padding:"6px 4px",borderRadius:4,border:`1px solid ${C.border}`,fontSize:12,textAlign:"center"}}/>}
                         </div>
                         {sel && (
                           <select value={sel.subject||tForm.subject} onChange={e=>setClassSubject(cls,e.target.value)} style={{...IS,fontSize:11,padding:"4px 6px"}}>
@@ -3471,7 +3471,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
                       <div>
                         <div style={{fontWeight:700,fontSize:14,color:C.text}}>{h.event_type}</div>
                         {h.note && <div style={{fontSize:13,color:C.muted,marginTop:2}}>{h.note}</div>}
-                        <div style={{fontSize:11,color:C.muted,marginTop:3}}>{h.event_at_tz}{h.recorded_by_name?` · by ${h.recorded_by_name}`:""}</div>
+                        <div style={{fontSize:11,color:C.muted,marginTop:3}}>{h.event_at_tz}{h.recorded_by_name?tr("lg.byName",{name:h.recorded_by_name}):""}</div>
                       </div>
                     </div>
                   ))}
@@ -3602,7 +3602,7 @@ function HostelFeesTab({ token }) {
                   <span>TZS {Number(en.hostel_fee).toLocaleString()} {en.comment ? `- ${en.comment}` : ""}</span>
                   <button onClick={() => removeFee(en.id)} style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 12 }}>{tr("lg.remove")}</button>
                 </div>
-                <span style={{ color: C.muted, fontSize: 11 }}>{en.created_at_tz}{en.recorded_by_name ? ` · by ${en.recorded_by_name}` : ""}</span>
+                <span style={{ color: C.muted, fontSize: 11 }}>{en.created_at_tz}{en.recorded_by_name ? tr("lg.byName",{name:en.recorded_by_name}) : ""}</span>
               </div>
             ))}
             {!(entries[feeModal.id] || []).length && <p style={{ fontSize: 12.5, color: C.muted }}>{tr("hf.noFeeEntries")}</p>}
@@ -3760,6 +3760,7 @@ function HostelEditModal({ token, occ, onClose, onSaved }) {
 // Hostel: the same contribution-recording that used to live inside the Hostel
 // module (moved here per request - Hostel module no longer has its own).
 function ContributionsModule({ token, role }) {
+  useLang();
   const { confirm, ConfirmDialogPortal } = useConfirm();
   const [officeTab, setOfficeTab] = useState("academic"); // academic | hostel
   const [subTab, setSubTab]       = useState("parttime");  // parttime | ream | other
@@ -3780,18 +3781,18 @@ function ContributionsModule({ token, role }) {
     if (isHoliday) { setPtRows([]); return; }
     setPtLoading(true);
     try { const r = await apiFetch(`/contributions/parttime?year=${ptYear}&month=${ptMonth}`, {}, token); setPtRows(r.data||[]); }
-    catch (e) { setError(e.message||"Failed to load Part-time Teachers contributions."); }
+    catch (e) { setError(e.message||tr("co.failLoadPt")); }
     finally { setPtLoading(false); }
   };
   useEffect(()=>{ if(officeTab==="academic" && subTab==="parttime") loadPartTime(); }, [officeTab, subTab, ptYear, ptMonth]);
 
   const submitPayment = async () => {
-    if (!payAmount || Number(payAmount) <= 0) { setError("Enter a valid amount."); return; }
+    if (!payAmount || Number(payAmount) <= 0) { setError(tr("co.enterValidAmount")); return; }
     setSaving(true); setError("");
     try {
       await apiFetch(`/contributions/parttime/${payModal.student_id}`, { method:"POST", body:{ year: ptYear, month: Number(ptMonth), amount: Number(payAmount) } }, token);
-      setPayModal(null); setPayAmount(""); setSuccess("Payment recorded."); loadPartTime();
-    } catch (e) { setError(e.message||"Failed to record payment."); }
+      setPayModal(null); setPayAmount(""); setSuccess(tr("co.paymentRecorded")); loadPartTime();
+    } catch (e) { setError(e.message||tr("co.failRecordPayment")); }
     finally { setSaving(false); }
   };
 
@@ -3837,13 +3838,13 @@ function ContributionsModule({ token, role }) {
   };
 
   const submitAdd = () => {
-    if (!pickedStudent) { setError("Please search and select a student first."); return; }
-    if (addModal==="ream" && !reamBrought) { setError("Tick the box to confirm Ream was brought before submitting."); return; }
-    if (addModal==="other" && (!otherAmount || Number(otherAmount)<=0)) { setError("Enter a valid amount."); return; }
+    if (!pickedStudent) { setError(tr("co.searchSelectStudent")); return; }
+    if (addModal==="ream" && !reamBrought) { setError(tr("co.tickReam")); return; }
+    if (addModal==="other" && (!otherAmount || Number(otherAmount)<=0)) { setError(tr("co.enterValidAmount")); return; }
 
     const message = addModal==="ream"
-      ? `Submit that ${pickedStudent.label} has brought Ream? This cannot be edited once submitted.`
-      : `Add an Other Expense of TZS ${Number(otherAmount).toLocaleString()} for ${pickedStudent.label}?`;
+      ? tr("co.reamConfirm", { name: pickedStudent.label })
+      : tr("co.otherConfirm", { amount: Number(otherAmount).toLocaleString(), name: pickedStudent.label });
 
     confirm(message, async ()=>{
       setSaving(true); setError("");
@@ -3856,26 +3857,26 @@ function ContributionsModule({ token, role }) {
           await apiFetch(`/students/${pickedStudent.id}/charges`, { method:"POST", body:{ charge_type:"Other", amount:Number(otherAmount), note:otherNote } }, token);
           loadOther();
         }
-        setAddModal(null); setSuccess("Saved successfully.");
-      } catch (e) { setError(e.message||"Failed to save."); }
+        setAddModal(null); setSuccess(tr("co.savedOk"));
+      } catch (e) { setError(e.message||tr("co.failSave")); }
       finally { setSaving(false); }
     }, { danger: addModal==="ream" });
   };
 
   const submitEditCharge = async () => {
-    if (!editAmount || Number(editAmount) <= 0) { setError("Enter a valid amount."); return; }
+    if (!editAmount || Number(editAmount) <= 0) { setError(tr("co.enterValidAmount")); return; }
     setSaving(true); setError("");
     try {
       await apiFetch(`/contributions/charge/${editChargeModal.id}`, { method:"PUT", body:{ amount:Number(editAmount), note:editNote } }, token);
-      setEditChargeModal(null); setSuccess("Updated."); loadOther();
-    } catch (e) { setError(e.message||"Failed to update."); }
+      setEditChargeModal(null); setSuccess(tr("co.updated")); loadOther();
+    } catch (e) { setError(e.message||tr("co.failUpdate")); }
     finally { setSaving(false); }
   };
 
   const removeCharge = (studentId, chargeId) => {
-    confirm("Remove this contribution record permanently?", async ()=>{
+    confirm(tr("co.removeConfirm"), async ()=>{
       try { await apiFetch(`/students/${studentId}/charges/${chargeId}`, { method:"DELETE" }, token); loadReam(); loadOther(); }
-      catch(e){ setError(e.message||"Failed to remove - Admin access is required."); }
+      catch(e){ setError(e.message||tr("co.failRemove")); }
     }, { danger:true });
   };
 
@@ -3915,12 +3916,12 @@ function ContributionsModule({ token, role }) {
       await apiFetch(`/hostel/occupants/${hOcc.id}/contributions`, { method:"POST", body:cf }, token);
       const r = await apiFetch(`/hostel/occupants/${hOcc.id}/contributions`, {}, token); setHContribs(r.data||[]);
       setCf({ term:"", academic_year:"", maize_kg:"", vegetable_type:"", vegetables_kg:"", oil_litres:"", salt_kg:"", rice_kg:"", hostel_fee:"", owes:false, comment:"" });
-      setSuccess("Hostel contribution recorded.");
-    } catch (e) { setError(e.message||"Failed to record contribution."); }
+      setSuccess(tr("co.hostelContribRecorded"));
+    } catch (e) { setError(e.message||tr("co.failRecordContrib")); }
     finally { setSaving(false); }
   };
   const removeHostelContribution = (id) => {
-    confirm("Remove this hostel contribution record?", async ()=>{
+    confirm(tr("co.removeHostelConfirm"), async ()=>{
       try { await apiFetch(`/hostel/contributions/${id}`, { method:"DELETE" }, token); const r = await apiFetch(`/hostel/occupants/${hOcc.id}/contributions`, {}, token); setHContribs(r.data||[]); }
       catch(e){ setError(e.message); }
     }, { danger:true });
@@ -3938,8 +3939,8 @@ function ContributionsModule({ token, role }) {
   return (
     <div style={{display:"flex",flexDirection:"column",gap:16}}>
       <div style={{display:"flex",flexWrap:"wrap",gap:8,background:C.surface,border:`1px solid ${C.border}`,borderRadius:4,padding:8}}>
-        <TabBtn active_={officeTab==="academic"} onClick={()=>setOfficeTab("academic")}>Academic Office</TabBtn>
-        <TabBtn active_={officeTab==="hostel"}   onClick={()=>setOfficeTab("hostel")}>Hostel</TabBtn>
+        <TabBtn active_={officeTab==="academic"} onClick={()=>setOfficeTab("academic")}>{tr("co.academicOffice")}</TabBtn>
+        <TabBtn active_={officeTab==="hostel"}   onClick={()=>setOfficeTab("hostel")}>{tr("ho.hostel")}</TabBtn>
       </div>
 
       {error   && <Alert type="error"   message={error}   onClose={()=>setError("")}/>}
@@ -3948,29 +3949,29 @@ function ContributionsModule({ token, role }) {
       {officeTab==="academic" && (
         <>
           <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-            <TabBtn active_={subTab==="parttime"} onClick={()=>setSubTab("parttime")}>Part-time Teachers</TabBtn>
-            <TabBtn active_={subTab==="ream"}     onClick={()=>setSubTab("ream")}>Ream</TabBtn>
-            <TabBtn active_={subTab==="other"}    onClick={()=>setSubTab("other")}>Other Expenses</TabBtn>
+            <TabBtn active_={subTab==="parttime"} onClick={()=>setSubTab("parttime")}>{tr("co.partTimeTeachers")}</TabBtn>
+            <TabBtn active_={subTab==="ream"}     onClick={()=>setSubTab("ream")}>{tr("co.ream")}</TabBtn>
+            <TabBtn active_={subTab==="other"}    onClick={()=>setSubTab("other")}>{tr("co.otherExpenses")}</TabBtn>
           </div>
 
           {subTab==="parttime" && (
             <Card style={{padding:16}}>
               <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:16}}>
-                <Inp label="Academic Year" value={ptYear}  onChange={setPtYear}  options={YEARS.map(y=>({value:y,label:y}))}/>
-                <Inp label="Month" value={ptMonth} onChange={setPtMonth} options={MONTHS.map((m,i)=>({value:String(i+1),label:m}))}/>
+                <Inp label={tr("lg.academicYear")} value={ptYear}  onChange={setPtYear}  options={YEARS.map(y=>({value:y,label:y}))}/>
+                <Inp label={tr("lg.month")} value={ptMonth} onChange={setPtMonth} options={MONTHS.map((m,i)=>({value:String(i+1),label:tr("month."+(i+1))}))}/>
               </div>
               {isHoliday
-                ? <p style={{color:C.muted,fontSize:14}}>No contribution is billed for {MONTHS[Number(ptMonth)-1]} - this is a school holiday month.</p>
+                ? <p style={{color:C.muted,fontSize:14}}>{tr("co.noBilled", { month: tr("month."+ptMonth) })}</p>
                 : <Tbl loading={ptLoading} rows={ptRows} columns={[
-                    {key:"name", label:"Full Name", render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
+                    {key:"name", label:tr("lg.fullName"), render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
                     {key:"form", label:tr("lg.form")},
-                    {key:"amount_paid", label:"Paid (of TZS 2,000)", render:r=>`TZS ${Number(r.amount_paid).toLocaleString()}`},
-                    {key:"installments", label:"Installments", render:r=>`${r.installments} of 4`},
-                    {key:"completed", label:"Status", render:r=><Badge color={r.completed?"green":"red"}>{r.completed?"Completed":"Pending"}</Badge>},
+                    {key:"amount_paid", label:tr("co.paidOf2000"), render:r=>`TZS ${Number(r.amount_paid).toLocaleString()}`},
+                    {key:"installments", label:tr("co.installments"), render:r=>tr("co.installmentsOf4", { n: r.installments })},
+                    {key:"completed", label:tr("lg.status"), render:r=><Badge color={r.completed?"green":"red"}>{r.completed?tr("lg.completed"):tr("co.pending")}</Badge>},
                     {key:"actions", label:"", render:r=>(
                       <ActionsMenu items={[
-                        ...(!r.completed && r.installments<4 ? [{ label:"Add Payment", onClick:()=>{setPayModal(r);setPayAmount("");} }] : []),
-                        ...(r.contribution_id ? [{ label:"Print Receipt", onClick:()=>downloadReceiptPartTime(r.contribution_id) }] : []),
+                        ...(!r.completed && r.installments<4 ? [{ label:tr("co.addPayment"), onClick:()=>{setPayModal(r);setPayAmount("");} }] : []),
+                        ...(r.contribution_id ? [{ label:tr("co.printReceipt"), onClick:()=>downloadReceiptPartTime(r.contribution_id) }] : []),
                       ]}/>
                     )},
                   ]}/>}
@@ -3980,17 +3981,17 @@ function ContributionsModule({ token, role }) {
           {subTab==="ream" && (
             <Card style={{padding:16}}>
               <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12}}>
-                <Btn onClick={()=>openAdd("ream")}>+ Add Ream Record</Btn>
+                <Btn onClick={()=>openAdd("ream")}>{tr("co.addReamRecord")}</Btn>
               </div>
               <Tbl loading={chargesLoading} rows={reamRows} columns={[
-                {key:"name", label:"Full Name", render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
+                {key:"name", label:tr("lg.fullName"), render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
                 {key:"form", label:tr("lg.form")},
-                {key:"charge_date", label:"Date", render:r=>r.charge_date?.slice(0,10)},
-                {key:"paid", label:"Status", render:r=><Badge color={r.paid?"green":"red"}>{r.paid?"Brought":"Not brought"}</Badge>},
+                {key:"charge_date", label:tr("lg.date"), render:r=>r.charge_date?.slice(0,10)},
+                {key:"paid", label:tr("lg.status"), render:r=><Badge color={r.paid?"green":"red"}>{r.paid?tr("lg.brought"):tr("lg.notBrought")}</Badge>},
                 {key:"actions", label:"", render:r=>(
                   <ActionsMenu items={[
-                    { label:"Print Receipt", onClick:()=>downloadReceiptCharge(r.id, "ream") },
-                    ...(role==="admin" ? [{ label:"Delete", onClick:()=>removeCharge(r.student_id, r.id), danger:true }] : []),
+                    { label:tr("co.printReceipt"), onClick:()=>downloadReceiptCharge(r.id, "ream") },
+                    ...(role==="admin" ? [{ label:tr("common.delete"), onClick:()=>removeCharge(r.student_id, r.id), danger:true }] : []),
                   ]}/>
                 )},
               ]}/>
@@ -4000,19 +4001,19 @@ function ContributionsModule({ token, role }) {
           {subTab==="other" && (
             <Card style={{padding:16}}>
               <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12}}>
-                <Btn onClick={()=>openAdd("other")}>+ Add Other Expense</Btn>
+                <Btn onClick={()=>openAdd("other")}>{tr("co.addOtherExpense")}</Btn>
               </div>
               <Tbl loading={chargesLoading} rows={otherRows} columns={[
-                {key:"name", label:"Full Name", render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
+                {key:"name", label:tr("lg.fullName"), render:r=>[r.first_name,r.middle_name,r.last_name].filter(Boolean).join(" ")},
                 {key:"form", label:tr("lg.form")},
-                {key:"amount", label:"Amount (TZS)", render:r=>Number(r.amount).toLocaleString()},
-                {key:"note", label:"Note"},
-                {key:"charge_date", label:"Date", render:r=>r.charge_date?.slice(0,10)},
+                {key:"amount", label:tr("hf.amountTzs"), render:r=>Number(r.amount).toLocaleString()},
+                {key:"note", label:tr("lg.note")},
+                {key:"charge_date", label:tr("lg.date"), render:r=>r.charge_date?.slice(0,10)},
                 {key:"actions", label:"", render:r=>(
                   <ActionsMenu items={[
-                    ...(!r.locked ? [{ label:"Edit Payment", onClick:()=>{setEditChargeModal(r);setEditAmount(String(r.amount));setEditNote(r.note||"");} }] : []),
-                    { label:"Print Receipt", onClick:()=>downloadReceiptCharge(r.id, "other") },
-                    ...(role==="admin" ? [{ label:"Delete", onClick:()=>removeCharge(r.student_id, r.id), danger:true }] : []),
+                    ...(!r.locked ? [{ label:tr("co.editPayment"), onClick:()=>{setEditChargeModal(r);setEditAmount(String(r.amount));setEditNote(r.note||"");} }] : []),
+                    { label:tr("co.printReceipt"), onClick:()=>downloadReceiptCharge(r.id, "other") },
+                    ...(role==="admin" ? [{ label:tr("common.delete"), onClick:()=>removeCharge(r.student_id, r.id), danger:true }] : []),
                   ]}/>
                 )},
               ]}/>
@@ -4023,9 +4024,9 @@ function ContributionsModule({ token, role }) {
 
       {officeTab==="hostel" && (
         <Card style={{padding:16}}>
-          <SLabel>Find Resident</SLabel>
+          <SLabel>{tr("co.findResident")}</SLabel>
           <div style={{position:"relative",marginBottom:16,maxWidth:420}}>
-            <input value={hOccSearch} onChange={e=>{setHOccSearch(e.target.value);searchOccupants(e.target.value);if(hOcc)setHOcc(null);}} placeholder="Type resident's name…" style={{...IS,width:"100%"}}/>
+            <input value={hOccSearch} onChange={e=>{setHOccSearch(e.target.value);searchOccupants(e.target.value);if(hOcc)setHOcc(null);}} placeholder={tr("co.typeResidentName")} style={{...IS,width:"100%"}}/>
             {hOccSearch && !hOcc && hOccResults.length>0 && (
               <div style={{position:"absolute",top:40,left:0,right:0,zIndex:20,background:C.surface,border:`1px solid ${C.border}`,borderRadius:4,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",maxHeight:220,overflowY:"auto"}}>
                 {hOccResults.map(o=>(
@@ -4050,19 +4051,19 @@ function ContributionsModule({ token, role }) {
                 </div>
                 <Inp label={tr("ho.oilLitres")} type="number" value={cf.oil_litres} onChange={v=>setCf(p=>({...p,oil_litres:v}))}/>
                 <Inp label={tr("ho.saltKg")}            type="number" value={cf.salt_kg}   onChange={v=>setCf(p=>({...p,salt_kg:v}))}/>
-                <Inp label="Rice (Kg)"            type="number" value={cf.rice_kg}   onChange={v=>setCf(p=>({...p,rice_kg:v}))}/>
-                <Inp label="Hostel Fee (TZS)"     type="number" value={cf.hostel_fee} onChange={v=>setCf(p=>({...p,hostel_fee:v}))}/>
+                <Inp label={tr("co.riceKg")}            type="number" value={cf.rice_kg}   onChange={v=>setCf(p=>({...p,rice_kg:v}))}/>
+                <Inp label={tr("co.hostelFeeTzs")}     type="number" value={cf.hostel_fee} onChange={v=>setCf(p=>({...p,hostel_fee:v}))}/>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
                 <input type="checkbox" id="owes2" checked={cf.owes} onChange={e=>setCf(p=>({...p,owes:e.target.checked}))}/>
-                <label htmlFor="owes2" style={{fontSize:13,color:C.text}}>This student still has an <strong>outstanding contribution</strong></label>
+                <label htmlFor="owes2" style={{fontSize:13,color:C.text}}>{tr("ho.owesPre")}<strong>{tr("ho.outstandingWord")}</strong></label>
               </div>
               <Inp label={tr("ho.comment")} value={cf.comment} onChange={v=>setCf(p=>({...p,comment:v}))} placeholder={tr("ho.commentPh")}/>
               <div style={{display:"flex",justifyContent:"flex-end",marginTop:10,marginBottom:20}}>
-                <Btn onClick={addHostelContribution} loading={saving}>+ Add Contribution</Btn>
+                <Btn onClick={addHostelContribution} loading={saving}>{tr("ho.addContribution")}</Btn>
               </div>
 
-              <SLabel>History</SLabel>
+              <SLabel>{tr("ho.history")}</SLabel>
               {!hContribs.length
                 ? <p style={{fontSize:13,color:C.muted}}>{tr("ho.noContribYet")}</p>
                 : <Tbl rows={hContribs} columns={[
@@ -4070,14 +4071,14 @@ function ContributionsModule({ token, role }) {
                     {key:"term", label:tr("lg.term"), render:r=>`${r.term||"-"} ${r.academic_year||""}`},
                     {key:"maize_kg", label:tr("ho.maizeKg")},
                     {key:"vegetables_kg", label:tr("ho.vegetables"), render:r=>Number(r.vegetables_kg)?`${r.vegetable_type||""} ${r.vegetables_kg}kg`:"-"},
-                    {key:"oil_litres", label:"Oil (L)"},
+                    {key:"oil_litres", label:tr("co.oilL2")},
                     {key:"salt_kg", label:tr("ho.saltKg")},
-                    {key:"rice_kg", label:"Rice (kg)"},
-                    {key:"hostel_fee", label:"Fee (TZS)", render:r=>Number(r.hostel_fee).toLocaleString()},
+                    {key:"rice_kg", label:tr("co.riceKg2")},
+                    {key:"hostel_fee", label:tr("co.feeTzs"), render:r=>Number(r.hostel_fee).toLocaleString()},
                     {key:"owes", label:tr("lg.status"), render:r=><Badge color={r.owes?"red":"green"}>{r.owes?tr("ho.outstanding"):tr("lg.paid")}</Badge>},
                     {key:"actions", label:"", render:r=><ActionsMenu items={[
-                      { label:"Print Receipt", onClick:()=>downloadHostelReceipt(r.id) },
-                      { label:"Remove", onClick:()=>removeHostelContribution(r.id), danger:true },
+                      { label:tr("co.printReceipt"), onClick:()=>downloadHostelReceipt(r.id) },
+                      { label:tr("lg.remove"), onClick:()=>removeHostelContribution(r.id), danger:true },
                     ]}/>},
                   ]}/>}
             </>
@@ -4086,20 +4087,20 @@ function ContributionsModule({ token, role }) {
       )}
 
       {payModal && (
-        <Modal title={`Add Payment - ${[payModal.first_name,payModal.middle_name,payModal.last_name].filter(Boolean).join(" ")}`} onClose={()=>setPayModal(null)}>
-          <p style={{fontSize:13,color:C.muted,marginBottom:12}}>{MONTHS[Number(ptMonth)-1]} {ptYear} · Already paid TZS {Number(payModal.amount_paid).toLocaleString()} of 2,000 in {payModal.installments} installment(s).</p>
-          <Inp label="Amount (TZS)" type="number" value={payAmount} onChange={setPayAmount}/>
+        <Modal title={tr("co.addPaymentTitle", { name: [payModal.first_name,payModal.middle_name,payModal.last_name].filter(Boolean).join(" ") })} onClose={()=>setPayModal(null)}>
+          <p style={{fontSize:13,color:C.muted,marginBottom:12}}>{tr("co.alreadyPaidPt", { month: tr("month."+ptMonth), year: ptYear, amount: Number(payModal.amount_paid).toLocaleString(), n: payModal.installments })}</p>
+          <Inp label={tr("hf.amountTzs")} type="number" value={payAmount} onChange={setPayAmount}/>
           <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:16}}>
             <Btn variant="ghost" onClick={()=>setPayModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
-            <Btn onClick={submitPayment} loading={saving}>Save Payment</Btn>
+            <Btn onClick={submitPayment} loading={saving}>{tr("co.savePayment")}</Btn>
           </div>
         </Modal>
       )}
 
       {addModal && (
-        <Modal title={addModal==="ream" ? "Add Ream Record" : "Add Other Expense"} onClose={()=>setAddModal(null)}>
+        <Modal title={addModal==="ream" ? tr("co.addReamRecord") : tr("co.addOtherExpense")} onClose={()=>setAddModal(null)}>
           <SLabel>{tr("ho.findStudent")}</SLabel>
-          <p style={{fontSize:12,color:C.muted,marginTop:-4,marginBottom:10}}>Only students already enrolled in Student Management can be selected.</p>
+          <p style={{fontSize:12,color:C.muted,marginTop:-4,marginBottom:10}}>{tr("co.onlyEnrolled2")}</p>
           <div style={{position:"relative",marginBottom:14}}>
             <input value={studentSearch} onChange={e=>{setStudentSearch(e.target.value);searchStudents(e.target.value);if(pickedStudent)setPickedStudent(null);}} placeholder={tr("ho.typeNameReg")} style={{...IS,width:"100%"}}/>
             {studentSearch && !pickedStudent && (
@@ -4116,40 +4117,40 @@ function ContributionsModule({ token, role }) {
                           </button>
                         );
                       })
-                    : <div style={{padding:12,fontSize:13,color:C.muted}}>No enrolled student found. Make sure they are registered in Student Management.</div>}
+                    : <div style={{padding:12,fontSize:13,color:C.muted}}>{tr("co.noEnrolledFound")}</div>}
               </div>
             )}
           </div>
           {pickedStudent && (
             <div style={{background:C.successLight,border:`1px solid ${C.success}30`,borderRadius:4,padding:"8px 12px",marginBottom:14,fontSize:13,fontWeight:600,color:C.success}}>
-              Selected: {pickedStudent.label}
+              {tr("ho.selected", { name: pickedStudent.label })}
             </div>
           )}
 
           {addModal==="ream"
             ? <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
                 <input type="checkbox" id="reamBrought2" checked={reamBrought} onChange={e=>setReamBrought(e.target.checked)}/>
-                <label htmlFor="reamBrought2" style={{fontSize:13,color:C.text}}>Confirm Ream has been brought</label>
+                <label htmlFor="reamBrought2" style={{fontSize:13,color:C.text}}>{tr("co.confirmReamBrought")}</label>
               </div>
             : <>
-                <Inp label="Amount (TZS)" type="number" value={otherAmount} onChange={setOtherAmount}/>
-                <Inp label="Note (optional)" value={otherNote} onChange={setOtherNote} placeholder="e.g. Exam paper printing"/>
+                <Inp label={tr("hf.amountTzs")} type="number" value={otherAmount} onChange={setOtherAmount}/>
+                <Inp label={tr("hf.noteOptional")} value={otherNote} onChange={setOtherNote} placeholder={tr("co.exampleExpensePh")}/>
               </>}
 
           <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:16}}>
             <Btn variant="ghost" onClick={()=>setAddModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
-            <Btn onClick={submitAdd} loading={saving} disabled={addModal==="ream" && !reamBrought}>Submit</Btn>
+            <Btn onClick={submitAdd} loading={saving} disabled={addModal==="ream" && !reamBrought}>{tr("co.submit")}</Btn>
           </div>
         </Modal>
       )}
 
       {editChargeModal && (
-        <Modal title="Edit Payment" onClose={()=>setEditChargeModal(null)}>
-          <Inp label="Amount (TZS)" type="number" value={editAmount} onChange={setEditAmount}/>
-          <Inp label="Note (optional)" value={editNote} onChange={setEditNote}/>
+        <Modal title={tr("co.editPayment")} onClose={()=>setEditChargeModal(null)}>
+          <Inp label={tr("hf.amountTzs")} type="number" value={editAmount} onChange={setEditAmount}/>
+          <Inp label={tr("hf.noteOptional")} value={editNote} onChange={setEditNote}/>
           <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:16}}>
             <Btn variant="ghost" onClick={()=>setEditChargeModal(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
-            <Btn onClick={submitEditCharge} loading={saving}>Save Changes</Btn>
+            <Btn onClick={submitEditCharge} loading={saving}>{tr("co.saveChanges")}</Btn>
           </div>
         </Modal>
       )}
