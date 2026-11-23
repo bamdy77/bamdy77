@@ -1866,6 +1866,7 @@ function ImportStudentsModal({ token, onClose, onDone }) {
 
 // ─── TIMETABLE MODULE ─────────────────────────────────────────────────────────
 function TimetableModule({ token, canGenerate = true, restrictedForms = null, myTeacherLabel = null }) {
+  useLang();
   const { confirm, ConfirmDialogPortal } = useConfirm();
   const { isMobile, isTablet } = useBreakpoint();
   const stackCols = isMobile ? "1fr" : isTablet ? "1fr 1fr" : "repeat(4,1fr)"; // class-picker grids (Step 1 & 2)
@@ -1969,33 +1970,33 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
   const shareCurrentDraft = (label) => {
     const lbl = label || selectedDraft;
     if (!lbl) return;
-    confirm(`Unataka ku-share ${lbl} kwa walimu wengine wote?`, async () => {
+    confirm(tr("tt.shareConfirm", { label: lbl }), async () => {
       try {
         await apiFetch("/timetable/share", { method:"POST", body:{ academic_year:ttYear, term:ttTerm, draft_label:lbl } }, token);
-        setSuccess(`Umefanikiwa ku-share ${lbl} kwa walimu wote.`);
+        setSuccess(tr("tt.shareOk", { label: lbl }));
         loadSharedStatus();
-      } catch (err) { setError(err.message || "Imeshindikana ku-share timetable."); }
+      } catch (err) { setError(err.message || tr("tt.shareFail")); }
     }, { danger:false });
   };
   const openSharePicker = () => requestDraftLabel(
-    "Chagua Draft ya Ku-share",
-    "Chagua draft (1st, 2nd, 3rd au 4th) itakayoonekana kwa walimu wengine.",
+    tr("tt.chooseDraftShare"),
+    tr("tt.chooseDraftShareHint"),
     (label) => shareCurrentDraft(label)
   );
-  const unshareTimetable = () => confirm("Unataka kuondoa timetable isionekane tena kwa walimu wengine?", async () => {
+  const unshareTimetable = () => confirm(tr("tt.unshareConfirm"), async () => {
     try {
       await apiFetch("/timetable/unshare", { method:"POST", body:{ academic_year:ttYear, term:ttTerm } }, token);
-      setSuccess("Timetable haishirikiwi tena na walimu.");
+      setSuccess(tr("tt.unshareOk"));
       loadSharedStatus();
-    } catch (err) { setError(err.message || "Imeshindikana kuondoa share."); }
+    } catch (err) { setError(err.message || tr("tt.unshareFail")); }
   });
 
   const deleteSelectedDraft = () => {
     if (!selectedDraft) return;
-    confirm(`Permanently delete ${selectedDraft}? This cannot be undone. (Use this once you've decided you won't use this trial.)`, async () => {
+    confirm(tr("tt.deleteDraftConfirm", { draft: selectedDraft }), async () => {
       try {
         await apiFetch("/timetable/draft", { method:"DELETE", body:{ academic_year:ttYear, term:ttTerm, draft_label:selectedDraft } }, token);
-        setSuccess(`${selectedDraft} deleted.`);
+        setSuccess(tr("tt.draftDeleted", { draft: selectedDraft }));
         setSelectedDraft("");
         await loadDrafts();
       } catch (err) { setError(err.message); }
@@ -2013,7 +2014,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
   }, [token]);
 
   const addClass = async () => {
-    if (!classForm.form) { setError("Choose a Form."); return; }
+    if (!classForm.form) { setError(tr("tt.chooseForm")); return; }
     try {
       await apiFetch("/classes", { method:"POST", body:classForm }, token);
       setClassForm({ form:"Form I", stream:"" });
@@ -2021,10 +2022,10 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
     } catch (err) { setError(err.message); }
   };
   const removeClass = id => {
-    confirm("Remove this class? (Existing timetable rows for it are kept, but it won't appear in future setup.)", async () => {
+    confirm(tr("tt.removeClassConfirm"), async () => {
       setError("");
       try { await apiFetch(`/classes/${id}`, { method:"DELETE" }, token); loadClasses(); }
-      catch (err) { setError(err.message || "Could not remove this class."); }
+      catch (err) { setError(err.message || tr("tt.couldNotRemoveClass")); }
     });
   };
 
@@ -2085,19 +2086,19 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
   }));
 
   const saveTeacher = async () => {
-    if (!tForm.short_name.trim()||!tForm.subject) { setError("Name and subject required."); return; }
+    if (!tForm.short_name.trim()||!tForm.subject) { setError(tr("tt.nameSubjectRequired")); return; }
     const payload = { ...tForm, classes: tForm.classes.map(c => ({ ...c, periods_per_week: Math.max(1, Math.min(10, Number(c.periods_per_week) || 1)) })) };
     try {
       if (editTeacher) await apiFetch(`/teachers/${editTeacher.id}`, { method:"PUT", body:payload }, token);
       else             await apiFetch("/teachers", { method:"POST", body:payload }, token);
       setShowAddTeacher(false); setEditTeacher(null);
       setTForm({ short_name:"", subject:"", classes:[] });
-      setSuccess("Teacher saved."); loadTeachers();
+      setSuccess(tr("tt.teacherSaved")); loadTeachers();
     } catch (err) { setError(err.message); }
   };
 
   const removeTeacher = id => {
-    confirm("Remove teacher?", async () => {
+    confirm(tr("tt.removeTeacherConfirm"), async () => {
       try { await apiFetch(`/teachers/${id}`, { method:"DELETE" }, token); loadTeachers(); }
       catch (err) { setError(err.message); }
     });
@@ -2126,13 +2127,13 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
 
   const addScheduledEvent = async () => {
     if (!evForm.event_type_id||!evForm.day||!evForm.period_label||!evForm.classes.length) {
-      setError("Choose an event, day, time and at least one class."); return;
+      setError(tr("tt.chooseEventFields")); return;
     }
     const fromIdx = lessonPeriods.findIndex(p=>p.label===evForm.period_label);
     const toLabel = evForm.period_label_to || evForm.period_label;
     const toIdx = lessonPeriods.findIndex(p=>p.label===toLabel);
     if (fromIdx === -1 || toIdx === -1 || toIdx < fromIdx) {
-      setError("'To' period must be the same as or after 'From' period."); return;
+      setError(tr("tt.toAfterFrom")); return;
     }
     const rangeLabels = lessonPeriods.slice(fromIdx, toIdx + 1).map(p=>p.label);
     try {
@@ -2140,7 +2141,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
         await apiFetch("/timetable/event-schedule", { method:"POST", body:{ ...evForm, period_label:label, academic_year:ttYear, term:ttTerm } }, token);
       }
       setEvForm(p => ({ ...p, classes:[] }));
-      setSuccess(rangeLabels.length > 1 ? `Event scheduled across ${rangeLabels.join(", ")}.` : "Event scheduled.");
+      setSuccess(rangeLabels.length > 1 ? tr("tt.eventScheduledAcross", { periods: rangeLabels.join(", ") }) : tr("tt.eventScheduled"));
       loadEventSchedule();
     } catch (err) { setError(err.message); }
   };
@@ -2154,7 +2155,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
 
   // ── Periods manager (optional afternoon periods, from 14:10, admin-added) ──
   const addPeriod = async () => {
-    if (!periodForm.label||!periodForm.start_time||!periodForm.end_time) { setError("Label, start and end time required."); return; }
+    if (!periodForm.label||!periodForm.start_time||!periodForm.end_time) { setError(tr("tt.periodFieldsRequired")); return; }
     try {
       await apiFetch("/timetable/periods", { method:"POST", body:periodForm }, token);
       setPeriodForm({ label:"", start_time:"", end_time:"" });
@@ -2166,7 +2167,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
     catch (err) { setError(err.message); }
   };
   const removePeriod = id => {
-    confirm("Remove this optional period?", async () => {
+    confirm(tr("tt.removePeriodConfirm"), async () => {
       try { await apiFetch(`/timetable/periods/${id}`, { method:"DELETE" }, token); loadAllPeriods(); loadPeriods(); }
       catch (err) { setError(err.message); }
     });
@@ -2356,7 +2357,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:compact?12:13,minWidth:compact?820:1060}}>
                 <thead>
                   <tr style={{background:C.bg}}>
-                    <th style={{...TH,fontSize:compact?10:11,minWidth:compact?70:90}}>Class</th>
+                    <th style={{...TH,fontSize:compact?10:11,minWidth:compact?70:90}}>{tr("tt.classCol")}</th>
                     {periods.map(p=><th key={p.label} style={{...TH,fontSize:compact?9.5:11,textAlign:"center",minWidth:compact?58:74,color:p.isBreak?C.muted:C.text}}>
                       {p.label}<br/><span style={{fontWeight:400,fontSize:compact?8:9.5,color:C.muted}}>{p.time}</span>
                     </th>)}
@@ -2387,9 +2388,9 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
   // ── Maelezo ya chini ya kila Ratiba - kwa Kiswahili, kama inavyotakiwa. ──
   const TimetableFooterNote = () => (
     <div style={{marginTop:2,padding:isMobile?"12px 14px":"14px 18px",fontSize:isMobile?11:11.5,color:C.muted,lineHeight:1.9,borderTop:`1px dashed ${C.border}`}}>
-      <div>*This timetable is subject to change depending on requirements</div>
-      <div>*If there is a clash of periods, please visit the Academic Office to resolve the issue</div>
-      <div>*For any other issue related to the Timetable, please visit the Academic Office</div>
+      <div>{tr("tt.footer1")}</div>
+      <div>{tr("tt.footer2")}</div>
+      <div>{tr("tt.footer3")}</div>
     </div>
   );
 
@@ -2424,8 +2425,8 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
   // since `view` starts at "result" and nothing here flips it back).
   const viewToggle = canGenerate && (
     <div style={{display:"flex",gap:4,background:C.bg,border:`1px solid ${C.border}`,borderRadius:4,padding:4,width:isMobile?"100%":"fit-content"}}>
-      <button type="button" onClick={()=>setView("setup")} style={{flex:isMobile?1:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"8px 16px",border:"none",borderRadius:4,background:view==="setup"?C.accent:"transparent",fontWeight:700,color:view==="setup"?"#fff":C.muted,cursor:"pointer",fontSize:12.5,whiteSpace:"nowrap"}}><Icon.RefreshCw size={13}/>Generate Timetable</button>
-      <button type="button" onClick={()=>setView("result")} style={{flex:isMobile?1:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"8px 16px",border:"none",borderRadius:4,background:view==="result"?C.accent:"transparent",fontWeight:700,color:view==="result"?"#fff":C.muted,cursor:"pointer",fontSize:12.5,whiteSpace:"nowrap"}}><ClockIcon size={13}/>View Timetable</button>
+      <button type="button" onClick={()=>setView("setup")} style={{flex:isMobile?1:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"8px 16px",border:"none",borderRadius:4,background:view==="setup"?C.accent:"transparent",fontWeight:700,color:view==="setup"?"#fff":C.muted,cursor:"pointer",fontSize:12.5,whiteSpace:"nowrap"}}><Icon.RefreshCw size={13}/>{tr("tt.generateTimetable")}</button>
+      <button type="button" onClick={()=>setView("result")} style={{flex:isMobile?1:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"8px 16px",border:"none",borderRadius:4,background:view==="result"?C.accent:"transparent",fontWeight:700,color:view==="result"?"#fff":C.muted,cursor:"pointer",fontSize:12.5,whiteSpace:"nowrap"}}><ClockIcon size={13}/>{tr("tt.viewTimetable")}</button>
     </div>
   );
 
@@ -2435,10 +2436,10 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       {viewToggle}
       <div style={{display:"flex",flexDirection:isMobile?"column":"row",justifyContent:"space-between",alignItems:isMobile?"stretch":"flex-start",flexWrap:"wrap",gap:12}}>
         <div>
-          <h2 style={{margin:0,fontSize:isMobile?18:22,fontWeight:800,color:C.text}}>Timetable Generator</h2>
+          <h2 style={{margin:0,fontSize:isMobile?18:22,fontWeight:800,color:C.text}}>{tr("tt.timetableGenerator")}</h2>
           <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:14,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-            <span>Step {wizardStep} of 2 - {wizardStep===1 ? "Teachers, Subject, Class & Stream" : "Events, Day, Time & Class Selection"}</span>
-            <Badge color={genStatus.remaining>0?"green":"red"}>{genStatus.used}/{genStatus.max} generated today</Badge>
+            <span>{tr("tt.stepOf", { n: wizardStep })} - {wizardStep===1 ? tr("tt.step1Name") : tr("tt.step2Name")}</span>
+            <Badge color={genStatus.remaining>0?"green":"red"}>{tr("tt.generatedToday", { used: genStatus.used, max: genStatus.max })}</Badge>
           </p>
         </div>
         <div style={{display:"flex",flexDirection:isMobile?"column":"row",gap:isMobile?8:10,flexWrap:"wrap",alignItems:isMobile?"stretch":"center"}}>
@@ -2449,19 +2450,19 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
           {(isMobile || isTablet) ? (
             <div style={{display:"flex",gap:8}}>
               <div style={{flex:1}}>
-                <MoreMenu label="Manage" items={[
-                  { label: "Classes", onClick: ()=>setShowClassMgr(true) },
-                  { label: "Periods", onClick: ()=>{loadAllPeriods();setShowPeriodMgr(true);} },
+                <MoreMenu label={tr("tt.manage")} items={[
+                  { label: tr("tt.classes"), onClick: ()=>setShowClassMgr(true) },
+                  { label: tr("tt.periods"), onClick: ()=>{loadAllPeriods();setShowPeriodMgr(true);} },
                 ]}/>
               </div>
-              {drafts.length>0 && <Btn variant="secondary" onClick={()=>setView("result")} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><ClockIcon size={13}/>View Saved</span></Btn>}
+              {drafts.length>0 && <Btn variant="secondary" onClick={()=>setView("result")} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><ClockIcon size={13}/>{tr("tt.viewSaved")}</span></Btn>}
             </div>
           ) : (<>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              <Btn variant="ghost" onClick={()=>setShowClassMgr(true)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Layers size={13}/>Classes</span></Btn>
-              <Btn variant="ghost" onClick={()=>{loadAllPeriods();setShowPeriodMgr(true);}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Calendar size={13}/>Periods</span></Btn>
+              <Btn variant="ghost" onClick={()=>setShowClassMgr(true)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Layers size={13}/>{tr("tt.classes")}</span></Btn>
+              <Btn variant="ghost" onClick={()=>{loadAllPeriods();setShowPeriodMgr(true);}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Calendar size={13}/>{tr("tt.periods")}</span></Btn>
             </div>
-            {drafts.length>0 && <Btn variant="secondary" onClick={()=>setView("result")}><span style={{display:"flex",alignItems:"center",gap:6}}><ClockIcon size={13}/>View Saved Timetables</span></Btn>}
+            {drafts.length>0 && <Btn variant="secondary" onClick={()=>setView("result")}><span style={{display:"flex",alignItems:"center",gap:6}}><ClockIcon size={13}/>{tr("tt.viewSavedFull")}</span></Btn>}
           </>)}
         </div>
       </div>
@@ -2471,56 +2472,55 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       {/* ── STEP 1 : Teachers / Subject / Class & Stream ─────────────────── */}
       {wizardStep===1 && <>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:14}}>
-          <StatCard label="Teachers"    value={teachers.length} color={C.accentText}/>
-          <StatCard label="Assignments" value={teachers.reduce((a,t)=>a+(t.assignments?.length||0),0)} sub="teacher–class pairs" color={C.success}/>
-          <StatCard label="Classes"     value={classList.length} sub={classes.length? "configured":"default Form I–IV, A–C"} color={C.boy}/>
+          <StatCard label={tr("tt.teachers")}    value={teachers.length} color={C.accentText}/>
+          <StatCard label={tr("tt.assignments")} value={teachers.reduce((a,t)=>a+(t.assignments?.length||0),0)} sub={tr("tt.teacherClassPairs")} color={C.success}/>
+          <StatCard label={tr("tt.classes")}     value={classList.length} sub={classes.length? tr("tt.configured"):tr("tt.defaultGrid")} color={C.boy}/>
         </div>
         <div style={{display:"flex",justifyContent:"flex-end"}}>
-          <span style={{fontSize:12,color:C.muted}}>New teachers appear here automatically once the Head Master creates their User Account - click "Edit" on a row to assign classes.</span>
+          <span style={{fontSize:12,color:C.muted}}>{tr("tt.newTeachersNote")}</span>
         </div>
         <Card style={{padding:0}}>
-          <div style={{padding:"14px 20px",borderBottom:`1px solid ${C.border}`,fontWeight:700,fontSize:15}}>Teacher Assignment Table</div>
+          <div style={{padding:"14px 20px",borderBottom:`1px solid ${C.border}`,fontWeight:700,fontSize:15}}>{tr("tt.teacherAssignTable")}</div>
           <Tbl rows={teachers} columns={[
-            {key:"short_name",label:"Teacher", render:r=>r.registered_username||r.short_name},
-            {key:"subject",   label:"Subject(s)", render:r=><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{(r.subjects||[r.subject]).map(s=><span key={s} style={{fontWeight:600,color:SUBJ_COLORS[s]||C.accentText}}>{s}</span>)}</div>},
-            {key:"classes",   label:"Assigned Classes (subject · periods/week)", render:r=><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{(r.assignments||[]).map(a=><Badge key={a.id} color="indigo">{[a.form,a.stream].filter(Boolean).join(" ")} · {a.subject} · {a.periods_per_week||4}p</Badge>)}</div>},
+            {key:"short_name",label:tr("tt.teacher"), render:r=>r.registered_username||r.short_name},
+            {key:"subject",   label:tr("tt.subjects"), render:r=><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{(r.subjects||[r.subject]).map(s=><span key={s} style={{fontWeight:600,color:SUBJ_COLORS[s]||C.accentText}}>{s}</span>)}</div>},
+            {key:"classes",   label:tr("tt.assignedClassesCol"), render:r=><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{(r.assignments||[]).map(a=><Badge key={a.id} color="indigo">{[a.form,a.stream].filter(Boolean).join(" ")} · {a.subject} · {a.periods_per_week||4}p</Badge>)}</div>},
             {key:"actions",   label:"", render:r=>(
               <ActionsMenu items={[
-                { label:"Edit",   onClick:()=>openEditTeacher(r) },
-                { label:"Remove", onClick:()=>removeTeacher(r.id), danger:true },
+                { label:tr("lg.edit"),   onClick:()=>openEditTeacher(r) },
+                { label:tr("lg.remove"), onClick:()=>removeTeacher(r.id), danger:true },
               ]}/>
             )},
           ]}/>
         </Card>
         <div style={{display:"flex",justifyContent:"flex-end"}}>
-          <Btn onClick={()=>setWizardStep(2)} disabled={!teachers.length}>Next: Events & Classes →</Btn>
+          <Btn onClick={()=>setWizardStep(2)} disabled={!teachers.length}>{tr("tt.nextEvents")}</Btn>
         </div>
 
         {showAddTeacher && editTeacher && (
-          <Modal wide title={`Edit - ${editTeacher.registered_username||editTeacher.short_name}`} onClose={()=>{setShowAddTeacher(false);setEditTeacher(null);setTForm({short_name:"",subject:"",classes:[]});setError("");}}>
+          <Modal wide title={tr("lg.editName", { name: editTeacher.registered_username||editTeacher.short_name })} onClose={()=>{setShowAddTeacher(false);setEditTeacher(null);setTForm({short_name:"",subject:"",classes:[]});setError("");}}>
             {error && <Alert type="error" message={error} onClose={()=>setError("")}/>}
             {!editTeacher.registered_username && (
-              <Alert type="error" message="This teacher has no linked User Account yet - ask the Head Master to create one for them in User Accounts. Assignments made here won't let this teacher log in, use TAMS, or enter Results until that's done." />
+              <Alert type="error" message={tr("tt.noUserAccount")} />
             )}
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:14,marginBottom:20}}>
               <div>
-                <SLabel>Teacher (Username, from User Accounts)</SLabel>
+                <SLabel>{tr("tt.teacherUsername")}</SLabel>
                 <div style={{padding:"9px 12px",borderRadius:4,border:`1px solid ${C.border}`,background:C.bg,fontSize:13,color:C.text}}>
                   {editTeacher.registered_username ? `@${editTeacher.registered_username}` : editTeacher.short_name}
                 </div>
               </div>
-              <Inp label="Subject" value={tForm.subject} onChange={v=>setTForm(p=>({...p,subject:v,classes:p.classes.map(c=>({...c,subject:v}))}))}
+              <Inp label={tr("tt.subject")} value={tForm.subject} onChange={v=>setTForm(p=>({...p,subject:v,classes:p.classes.map(c=>({...c,subject:v}))}))}
                 options={(editTeacher.registered_subjects?.length ? editTeacher.registered_subjects : (subjects.length?subjects.map(s=>s.name):SUBJECTS)).map(s=>({value:s,label:s}))} required/>
             </div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-              <SLabel style={{marginBottom:0}}>Assigned Classes, Subject &amp; Periods/Week - click a class to select ({tForm.classes.length} selected)</SLabel>
+              <SLabel style={{marginBottom:0}}>{tr("tt.assignClassesLabel", { n: tForm.classes.length })}</SLabel>
               <div style={{display:"flex",gap:8}}>
-                <Btn size="sm" variant="ghost" onClick={()=>setShowClassMgr(true)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Layers size={13}/>Manage Classes</span></Btn>
+                <Btn size="sm" variant="ghost" onClick={()=>setShowClassMgr(true)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Layers size={13}/>{tr("tt.manageClasses")}</span></Btn>
               </div>
             </div>
             <p style={{fontSize:12,color:C.muted,marginTop:-2,marginBottom:10}}>
-              If this teacher teaches more than one subject, change the subject dropdown per class below
-              (defaults to the main subject above). New subjects are added from User Accounts.
+              {tr("tt.multiSubjectNote")}
             </p>
             <div style={{display:"grid",gridTemplateColumns:stackCols,gap:8,marginBottom:20}}>
               {classesByForm.map(({form,items})=>(
@@ -2542,13 +2542,13 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                       </div>
                     );
                   })}
-                  {!items.length && <div style={{fontSize:11,color:C.muted,fontStyle:"italic"}}>No classes yet</div>}
+                  {!items.length && <div style={{fontSize:11,color:C.muted,fontStyle:"italic"}}>{tr("tt.noClassesYet")}</div>}
                 </div>
               ))}
             </div>
             <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
               <Btn variant="secondary" onClick={()=>{setShowAddTeacher(false);setEditTeacher(null);setTForm({short_name:"",subject:"",classes:[]});setError("");}}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
-              <Btn onClick={saveTeacher}><span style={{display:"flex",alignItems:"center",gap:6}}><SaveIcon size={13}/>Save Teacher</span></Btn>
+              <Btn onClick={saveTeacher}><span style={{display:"flex",alignItems:"center",gap:6}}><SaveIcon size={13}/>{tr("tt.saveTeacher")}</span></Btn>
             </div>
           </Modal>
         )}
@@ -2557,27 +2557,27 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       {/* ── STEP 2 : Events, Day, Time & Class Selection ─────────────────── */}
       {wizardStep===2 && <>
         <Card style={{padding:"16px 20px"}}>
-          <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>Special Events</div>
-          <p style={{margin:"0 0 14px",fontSize:13,color:C.muted}}>Debate, Subject Club, Religion, Sports and Games, Free Period, etc. - reserved before subjects are placed.</p>
+          <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>{tr("tt.specialEvents")}</div>
+          <p style={{margin:"0 0 14px",fontSize:13,color:C.muted}}>{tr("tt.specialEventsNote")}</p>
           <div style={{display:"grid",gridTemplateColumns:stackCols,gap:10,marginBottom:10}}>
-            <Inp label="Event"  value={evForm.event_type_id} onChange={v=>setEvForm(p=>({...p,event_type_id:v}))} options={eventTypes.map(e=>({value:e.id,label:e.name}))} required/>
-            <Inp label="Day"    value={evForm.day}            onChange={v=>setEvForm(p=>({...p,day:v}))}            options={DAYS.map(d=>({value:d,label:d}))} required/>
-            <Inp label="From Period"   value={evForm.period_label}   onChange={v=>setEvForm(p=>{
+            <Inp label={tr("tt.event")}  value={evForm.event_type_id} onChange={v=>setEvForm(p=>({...p,event_type_id:v}))} options={eventTypes.map(e=>({value:e.id,label:e.name}))} required/>
+            <Inp label={tr("tt.day")}    value={evForm.day}            onChange={v=>setEvForm(p=>({...p,day:v}))}            options={DAYS.map(d=>({value:d,label:d}))} required/>
+            <Inp label={tr("tt.fromPeriod")}   value={evForm.period_label}   onChange={v=>setEvForm(p=>{
               const fromIdx = lessonPeriods.findIndex(x=>x.label===v);
               const toIdx = lessonPeriods.findIndex(x=>x.label===p.period_label_to);
               return { ...p, period_label:v, period_label_to: toIdx >= fromIdx ? p.period_label_to : v };
             })}   options={lessonPeriods.map(p=>({value:p.label,label:`${p.label} (${p.time})`}))} required/>
-            <Inp label="To Period (optional - for a block of periods)" value={evForm.period_label_to} onChange={v=>setEvForm(p=>({...p,period_label_to:v}))} options={lessonPeriods.map(p=>({value:p.label,label:`${p.label} (${p.time})`}))} />
+            <Inp label={tr("tt.toPeriod")} value={evForm.period_label_to} onChange={v=>setEvForm(p=>({...p,period_label_to:v}))} options={lessonPeriods.map(p=>({value:p.label,label:`${p.label} (${p.time})`}))} />
           </div>
           <div style={{display:"flex",gap:8,marginBottom:14}}>
-            <input placeholder="+ Add a new event type…" value={newEventName} onChange={e=>setNewEventName(e.target.value)} style={{...IS,flex:1}}/>
-            <Btn variant="ghost" onClick={addNewEventType}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Plus size={13}/>Add Event Type</span></Btn>
+            <input placeholder={tr("tt.addEventTypePh")} value={newEventName} onChange={e=>setNewEventName(e.target.value)} style={{...IS,flex:1}}/>
+            <Btn variant="ghost" onClick={addNewEventType}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Plus size={13}/>{tr("tt.addEventType")}</span></Btn>
           </div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-            <SLabel style={{marginBottom:0}}>Classes for this event ({evForm.classes.length} selected) - from Teacher Assignment Tables</SLabel>
+            <SLabel style={{marginBottom:0}}>{tr("tt.classesForEvent", { n: evForm.classes.length })}</SLabel>
             <div style={{display:"flex",gap:8}}>
-              <Btn size="sm" variant="ghost" onClick={()=>setEvForm(p=>({...p,classes:assignedClassList}))}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>Select All</span></Btn>
-              <Btn size="sm" variant="ghost" onClick={()=>setEvForm(p=>({...p,classes:[]}))}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Clear</span></Btn>
+              <Btn size="sm" variant="ghost" onClick={()=>setEvForm(p=>({...p,classes:assignedClassList}))}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>{tr("tt.selectAll")}</span></Btn>
+              <Btn size="sm" variant="ghost" onClick={()=>setEvForm(p=>({...p,classes:[]}))}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("tt.clear")}</span></Btn>
             </div>
           </div>
           <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
@@ -2585,30 +2585,30 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
               const sel = evForm.classes.includes(cls);
               return <div key={cls} onClick={()=>toggleEvClass(cls)} style={{padding:"5px 10px",borderRadius:4,cursor:"pointer",border:`1px solid ${sel?C.accent:C.border}`,background:sel?C.accentLight:C.bg,color:sel?C.accentText:C.muted,fontWeight:sel?700:400,fontSize:12}}>{cls}</div>;
             })}
-            {!assignedClassList.length && <span style={{fontSize:12,color:C.muted,fontStyle:"italic"}}>No classes have a teacher assignment yet - go to Step 1 first.</span>}
+            {!assignedClassList.length && <span style={{fontSize:12,color:C.muted,fontStyle:"italic"}}>{tr("tt.noAssignedClasses")}</span>}
           </div>
-          <Btn onClick={addScheduledEvent}><span style={{display:"flex",alignItems:"center",gap:6}}><CalendarPlusIcon size={13}/>Schedule Event</span></Btn>
+          <Btn onClick={addScheduledEvent}><span style={{display:"flex",alignItems:"center",gap:6}}><CalendarPlusIcon size={13}/>{tr("tt.scheduleEvent")}</span></Btn>
 
           {!!eventSchedule.length && (
             <div style={{marginTop:18}}>
-              <SLabel>Scheduled Events ({ttYear} · {ttTerm})</SLabel>
+              <SLabel>{tr("tt.scheduledEvents", { year: ttYear, term: ttTerm })}</SLabel>
               <Tbl rows={eventSchedule} columns={[
-                {key:"event_name",label:"Event"},
-                {key:"day",label:"Day"},
-                {key:"period_label",label:"Time"},
-                {key:"classes",label:"Classes",render:r=><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{r.classes.map(c=><Badge key={c} color="purple">{c}</Badge>)}</div>},
-                {key:"actions",label:"",render:r=><ActionsMenu items={[{ label:"Remove", onClick:()=>removeScheduledEvent(r.id), danger:true }]}/>},
+                {key:"event_name",label:tr("tt.event")},
+                {key:"day",label:tr("tt.day")},
+                {key:"period_label",label:tr("tt.time")},
+                {key:"classes",label:tr("tt.classesCol"),render:r=><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{r.classes.map(c=><Badge key={c} color="purple">{c}</Badge>)}</div>},
+                {key:"actions",label:"",render:r=><ActionsMenu items={[{ label:tr("lg.remove"), onClick:()=>removeScheduledEvent(r.id), danger:true }]}/>},
               ]}/>
             </div>
           )}
         </Card>
 
         <Card style={{padding:"16px 20px"}}>
-          <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>Classes to Generate</div>
-          <p style={{margin:"0 0 12px",fontSize:13,color:C.muted}}>Only the classes you select here will appear anywhere in the timetable (incl. the General View) once generated.</p>
+          <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>{tr("tt.classesToGenerate")}</div>
+          <p style={{margin:"0 0 12px",fontSize:13,color:C.muted}}>{tr("tt.classesToGenNote")}</p>
           <div style={{display:"flex",gap:10,marginBottom:10}}>
-            <Btn size="sm" variant="ghost" onClick={()=>setGenClasses(classList)}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>Select All</span></Btn>
-            <Btn size="sm" variant="ghost" onClick={()=>setGenClasses([])}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Clear</span></Btn>
+            <Btn size="sm" variant="ghost" onClick={()=>setGenClasses(classList)}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>{tr("tt.selectAll")}</span></Btn>
+            <Btn size="sm" variant="ghost" onClick={()=>setGenClasses([])}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("tt.clear")}</span></Btn>
           </div>
           <div style={{display:"grid",gridTemplateColumns:stackCols,gap:8}}>
             {classesByForm.map(({form,items})=>(
@@ -2618,45 +2618,44 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                   const sel=genClasses.includes(cls);
                   return <div key={cls} onClick={()=>toggleGenClass(cls)} style={{padding:"7px 10px",borderRadius:4,marginBottom:5,cursor:"pointer",border:`1px solid ${sel?C.success:C.border}`,background:sel?C.successLight:C.bg,color:sel?C.success:C.muted,fontWeight:sel?700:400,fontSize:13,userSelect:"none"}}>{cls}</div>;
                 })}
-                {!items.length && <div style={{fontSize:11,color:C.muted,fontStyle:"italic"}}>No classes yet</div>}
+                {!items.length && <div style={{fontSize:11,color:C.muted,fontStyle:"italic"}}>{tr("tt.noClassesYet")}</div>}
               </div>
             ))}
           </div>
         </Card>
 
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <Btn variant="secondary" onClick={()=>setWizardStep(1)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.ArrowLeft size={13}/>Back</span></Btn>
+          <Btn variant="secondary" onClick={()=>setWizardStep(1)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.ArrowLeft size={13}/>{tr("tt.back")}</span></Btn>
           <Btn variant="success" onClick={generate} loading={generating} disabled={!genClasses.length || genStatus.remaining<=0}>
-            {genStatus.remaining<=0 ? `Daily limit reached (${genStatus.max}/${genStatus.max})` : `Generate Timetable  (${genStatus.remaining} of ${genStatus.max} left today)`}
+            {genStatus.remaining<=0 ? tr("tt.dailyLimit", { max: genStatus.max }) : tr("tt.generateWithLeft", { remaining: genStatus.remaining, max: genStatus.max })}
           </Btn>
         </div>
       </>}
 
       {showPeriodMgr && (
-        <Modal title="Manage Periods" onClose={()=>setShowPeriodMgr(false)}>
+        <Modal title={tr("tt.managePeriods")} onClose={()=>setShowPeriodMgr(false)}>
           <p style={{fontSize:13,color:C.muted,marginBottom:12}}>
-            Core periods (P1–P7, plus the break and 13:00–13:30 lunch) are fixed. Afternoon periods from 14:10 onward
-            up to 15:30 are optional - add them here if extra lessons are needed on a given day.
+            {tr("tt.periodsNote")}
           </p>
           <Tbl rows={allPeriods} columns={[
-            {key:"label",label:"Label"},
-            {key:"time",label:"Time",render:r=>`${r.start_time}–${r.end_time}`},
-            {key:"type",label:"Type",render:r=>r.is_break?<Badge color="red">Break</Badge>:r.is_core?<Badge color="blue">Core</Badge>:<Badge color="green">Optional</Badge>},
-            {key:"active",label:"Active",render:r=>r.is_active?"Active":"Inactive"},
+            {key:"label",label:tr("tt.label")},
+            {key:"time",label:tr("tt.time"),render:r=>`${r.start_time}–${r.end_time}`},
+            {key:"type",label:tr("tt.type"),render:r=>r.is_break?<Badge color="red">{tr("tt.break")}</Badge>:r.is_core?<Badge color="blue">{tr("tt.core")}</Badge>:<Badge color="green">{tr("tt.optional")}</Badge>},
+            {key:"active",label:tr("tt.activeCol"),render:r=>r.is_active?tr("tt.active"):tr("tt.inactive")},
             {key:"actions",label:"",render:r=>r.is_core?null:(
               <ActionsMenu items={[
-                { label: r.is_active?"Disable":"Enable", onClick:()=>togglePeriodActive(r.id) },
-                { label:"Delete", onClick:()=>removePeriod(r.id), danger:true },
+                { label: r.is_active?tr("tt.disable"):tr("tt.enable"), onClick:()=>togglePeriodActive(r.id) },
+                { label:tr("tt.delete"), onClick:()=>removePeriod(r.id), danger:true },
               ]}/>
             )},
           ]}/>
           <div style={{marginTop:18}}>
-            <SLabel>+ Add Optional Afternoon Period</SLabel>
+            <SLabel>{tr("tt.addAfternoon")}</SLabel>
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr 1fr auto",gap:8,alignItems:"end"}}>
-              <Inp label="Label" value={periodForm.label} onChange={v=>setPeriodForm(p=>({...p,label:v}))} placeholder="e.g. P8"/>
-              <Inp label="Start (HH:MM)" value={periodForm.start_time} onChange={v=>setPeriodForm(p=>({...p,start_time:v}))} placeholder="14:10"/>
-              <Inp label="End (HH:MM)" value={periodForm.end_time} onChange={v=>setPeriodForm(p=>({...p,end_time:v}))} placeholder="14:50"/>
-              <Btn onClick={addPeriod}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Plus size={13}/>Add</span></Btn>
+              <Inp label={tr("tt.label")} value={periodForm.label} onChange={v=>setPeriodForm(p=>({...p,label:v}))} placeholder="e.g. P8"/>
+              <Inp label={tr("tt.start")} value={periodForm.start_time} onChange={v=>setPeriodForm(p=>({...p,start_time:v}))} placeholder="14:10"/>
+              <Inp label={tr("tt.end")} value={periodForm.end_time} onChange={v=>setPeriodForm(p=>({...p,end_time:v}))} placeholder="14:50"/>
+              <Btn onClick={addPeriod}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Plus size={13}/>{tr("tt.add")}</span></Btn>
             </div>
           </div>
           <div style={{display:"flex",justifyContent:"flex-end",marginTop:18}}>
@@ -2666,17 +2665,15 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       )}
 
       {showClassMgr && (
-        <Modal title="Manage Classes" onClose={()=>{setShowClassMgr(false);setError("");}}>
+        <Modal title={tr("tt.manageClasses")} onClose={()=>{setShowClassMgr(false);setError("");}}>
           {error && <Alert type="error" message={error} onClose={()=>setError("")}/>}
           <p style={{fontSize:13,color:C.muted,marginBottom:12}}>
-            Configure exactly the classes your school has. Leave "Stream" blank if a Form has only one
-            single class with no stream split at all (e.g. just "Form I"). Otherwise enter a stream
-            letter - you're not limited to A–C, you can add as many as you need (A, B, C, D, E…).
+            {tr("tt.classesNote")}
           </p>
           <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr auto",gap:8,alignItems:"end",marginBottom:18}}>
-            <Inp label="Form" value={classForm.form} onChange={v=>setClassForm(p=>({...p,form:v}))} options={FORMS.map(f=>({value:f,label:f}))}/>
-            <Inp label="Stream (optional)" value={classForm.stream} onChange={v=>setClassForm(p=>({...p,stream:v}))} placeholder="e.g. A, B, C, D… (blank = no stream)"/>
-            <Btn onClick={addClass}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Plus size={13}/>Add Class</span></Btn>
+            <Inp label={tr("lg.form")} value={classForm.form} onChange={v=>setClassForm(p=>({...p,form:v}))} options={FORMS.map(f=>({value:f,label:f}))}/>
+            <Inp label={tr("tt.streamOptional")} value={classForm.stream} onChange={v=>setClassForm(p=>({...p,stream:v}))} placeholder={tr("tt.streamPh")}/>
+            <Btn onClick={addClass}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Plus size={13}/>{tr("tt.addClass")}</span></Btn>
           </div>
           {classesByForm.map(({form,items})=>(
             <div key={form} style={{marginBottom:12}}>
@@ -2691,7 +2688,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                       <button onClick={()=>removeClass(cls.id)} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,lineHeight:1,display:"flex",alignItems:"center"}}><CloseIcon size={12}/></button>
                     </div>
                   );
-                }) : <span style={{fontSize:12,color:C.muted,fontStyle:"italic"}}>No classes configured for {form} yet.</span>}
+                }) : <span style={{fontSize:12,color:C.muted,fontStyle:"italic"}}>{tr("tt.noClassesConfigured", { form })}</span>}
               </div>
             </div>
           ))}
@@ -2712,8 +2709,8 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
 
       <div style={{display:"flex",flexDirection:isMobile?"column":"row",justifyContent:"space-between",alignItems:isMobile?"stretch":"flex-start",flexWrap:"wrap",gap:12}}>
         <div>
-          <h2 style={{margin:0,fontSize:isMobile?18:22,fontWeight:800,color:C.text}}>School Timetable</h2>
-          <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:14}}>{ttYear} · {ttTerm}{canGenerate && <> · <Badge color={genStatus.remaining>0?"green":"red"}>{genStatus.used}/{genStatus.max} generated today</Badge></>}</p>
+          <h2 style={{margin:0,fontSize:isMobile?18:22,fontWeight:800,color:C.text}}>{tr("tt.schoolTimetable")}</h2>
+          <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:14}}>{ttYear} · {ttTerm}{canGenerate && <> · <Badge color={genStatus.remaining>0?"green":"red"}>{tr("tt.generatedToday", { used: genStatus.used, max: genStatus.max })}</Badge></>}</p>
         </div>
         <div style={{display:"flex",flexDirection:isMobile?"column":"row",gap:8,flexWrap:"wrap",alignItems:isMobile?"stretch":"center"}}>
           <div style={{display:"flex",gap:8}}>
@@ -2728,54 +2725,54 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               {selectedDraft
                 ? (sharedInfo?.shared && sharedInfo?.draft_label===selectedDraft
-                    ? <Btn variant="warning" onClick={unshareTimetable} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.EyeOff size={13}/>Acha Ku-share</span></Btn>
-                    : <Btn variant="primary" onClick={openSharePicker} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UploadCloud size={13}/>Share kwa Walimu</span></Btn>)
-                : <Btn variant="ghost" onClick={()=>{setView("setup");setWizardStep(2);}} disabled={genStatus.remaining<=0} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.RefreshCw size={13}/>Generate New Draft ({genStatus.remaining} left)</span></Btn>
+                    ? <Btn variant="warning" onClick={unshareTimetable} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.EyeOff size={13}/>{tr("tt.stopShare")}</span></Btn>
+                    : <Btn variant="primary" onClick={openSharePicker} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UploadCloud size={13}/>{tr("tt.shareToTeachers")}</span></Btn>)
+                : <Btn variant="ghost" onClick={()=>{setView("setup");setWizardStep(2);}} disabled={genStatus.remaining<=0} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.RefreshCw size={13}/>{tr("tt.generateNewDraft", { remaining: genStatus.remaining })}</span></Btn>
               }
               <MoreMenu items={[
-                { label: editMode?"Exit Edit Mode":"Edit Cells", onClick: ()=>setEditMode(p=>!p) },
-                { label: `Generate New Draft (${genStatus.remaining} left)`, onClick: ()=>{setView("setup");setWizardStep(2);}, disabled: genStatus.remaining<=0 },
-                { label: "Back to Setup", onClick: ()=>{setView("setup");setWizardStep(2);setEditMode(false);} },
-                ...(selectedDraft ? [{ label: "Delete This Draft", onClick: deleteSelectedDraft, variant: "danger" }] : []),
+                { label: editMode?tr("tt.exitEditMode"):tr("tt.editCells"), onClick: ()=>setEditMode(p=>!p) },
+                { label: tr("tt.generateNewDraft", { remaining: genStatus.remaining }), onClick: ()=>{setView("setup");setWizardStep(2);}, disabled: genStatus.remaining<=0 },
+                { label: tr("tt.backToSetup"), onClick: ()=>{setView("setup");setWizardStep(2);setEditMode(false);} },
+                ...(selectedDraft ? [{ label: tr("tt.deleteThisDraft"), onClick: deleteSelectedDraft, variant: "danger" }] : []),
               ]}/>
             </div>
           ) : (<>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <Btn variant={editMode?"warning":"ghost"} onClick={()=>setEditMode(p=>!p)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Edit size={13}/>{editMode?"Exit Edit":"Edit"}</span></Btn>
-            <Btn variant="secondary" onClick={()=>{setView("setup");setWizardStep(2);setEditMode(false);}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.ArrowLeft size={13}/>Back to Setup</span></Btn>
+            <Btn variant={editMode?"warning":"ghost"} onClick={()=>setEditMode(p=>!p)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Edit size={13}/>{editMode?tr("tt.exitEdit"):tr("lg.edit")}</span></Btn>
+            <Btn variant="secondary" onClick={()=>{setView("setup");setWizardStep(2);setEditMode(false);}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.ArrowLeft size={13}/>{tr("tt.backToSetup")}</span></Btn>
           </div>
-          <Btn variant="ghost" onClick={()=>{setView("setup");setWizardStep(2);}} disabled={genStatus.remaining<=0}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.RefreshCw size={13}/>Generate New Draft ({genStatus.remaining} left)</span></Btn>
+          <Btn variant="ghost" onClick={()=>{setView("setup");setWizardStep(2);}} disabled={genStatus.remaining<=0}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.RefreshCw size={13}/>{tr("tt.generateNewDraft", { remaining: genStatus.remaining })}</span></Btn>
           {selectedDraft && (sharedInfo?.shared && sharedInfo?.draft_label===selectedDraft
-            ? <Btn variant="warning" onClick={unshareTimetable}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.EyeOff size={13}/>Acha Ku-share</span></Btn>
-            : <Btn variant="secondary" onClick={openSharePicker}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UploadCloud size={13}/>Share kwa Walimu</span></Btn>
+            ? <Btn variant="warning" onClick={unshareTimetable}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.EyeOff size={13}/>{tr("tt.stopShare")}</span></Btn>
+            : <Btn variant="secondary" onClick={openSharePicker}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UploadCloud size={13}/>{tr("tt.shareToTeachers")}</span></Btn>
           )}
-          {selectedDraft && <Btn variant="danger" onClick={deleteSelectedDraft}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Trash size={13}/>Delete This Draft</span></Btn>}
+          {selectedDraft && <Btn variant="danger" onClick={deleteSelectedDraft}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Trash size={13}/>{tr("tt.deleteThisDraft")}</span></Btn>}
           </>)}
         </div>
       </div>
       {!canGenerate && (
         <p style={{margin:0,fontSize:12,color:C.muted}}>
-          {sharedInfo===null ? "Inapakia..." : sharedInfo.shared
-            ? <>Timetable iliyoshirikiwa: <strong>{sharedInfo.draft_label}</strong></>
-            : "Hakuna Timetable iliyoshirikiwa na Admin/Academic Master bado."}
+          {sharedInfo===null ? tr("tt.loadingDots") : sharedInfo.shared
+            ? <>{tr("tt.sharedTimetable")} <strong>{sharedInfo.draft_label}</strong></>
+            : tr("tt.noSharedTimetable")}
         </p>
       )}
-      {canGenerate && selectedDraft && <p style={{margin:0,fontSize:12,color:C.muted}}>Viewing: <strong>{selectedDraft}</strong></p>}
+      {canGenerate && selectedDraft && <p style={{margin:0,fontSize:12,color:C.muted}}>{tr("tt.viewing")} <strong>{selectedDraft}</strong></p>}
 
       {error   && <Alert type="error"   message={error}   onClose={()=>setError("")}/>}
       {success && <Alert type="success" message={success} onClose={()=>setSuccess("")}/>}
-      {editMode && <Alert type="success" message="Edit mode ON - click any cell to modify it."/>}
+      {editMode && <Alert type="success" message={tr("tt.editModeOn")}/>}
 
       {(canGenerate || sharedInfo?.shared) && (<>
       {(isMobile || isTablet) ? (
         <div style={{display:"flex",gap:4,background:C.bg,border:`1px solid ${C.border}`,borderRadius:4,padding:4}}>
-          {[["class","Per Class"],["master","General View"],["teacher","Per Teacher"]].map(([id,label])=>(
+          {[["class",tr("tt.perClass")],["master",tr("tt.generalView")],["teacher",tr("tt.perTeacher")]].map(([id,label])=>(
             <button key={id} onClick={()=>setViewTab(id)} style={{flex:1,whiteSpace:"nowrap",padding:"9px 6px",border:"none",borderRadius:4,background:viewTab===id?C.accent:"transparent",fontWeight:viewTab===id?700:600,color:viewTab===id?"#fff":C.muted,cursor:"pointer",fontSize:12.5,transition:"background 0.15s,color 0.15s"}}>{label}</button>
           ))}
         </div>
       ) : (
         <div style={{display:"flex",gap:0,borderBottom:`1px solid ${C.border}`}}>
-          {[["class","Per Class"],["master","General View"],["teacher","Per Teacher"]].map(([id,label])=>(
+          {[["class",tr("tt.perClass")],["master",tr("tt.generalView")],["teacher",tr("tt.perTeacher")]].map(([id,label])=>(
             <button key={id} onClick={()=>setViewTab(id)} style={{flex:"none",whiteSpace:"nowrap",padding:"9px 20px",border:"none",borderBottom:viewTab===id?`3px solid ${C.accent}`:"3px solid transparent",background:"transparent",fontWeight:viewTab===id?700:500,color:viewTab===id?C.accentText:C.muted,cursor:"pointer",fontSize:14}}>{label}</button>
           ))}
         </div>
@@ -2784,20 +2781,20 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       {viewTab==="class" && (
         <>
           <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-            <span style={{fontSize:13,fontWeight:600,color:C.muted}}>Class:</span>
+            <span style={{fontSize:13,fontWeight:600,color:C.muted}}>{tr("tt.classColon")}</span>
             <select value={viewClass} onChange={e=>setViewClass(e.target.value)} style={{...IS,width:isMobile?"100%":160,flex:isMobile?"1 1 100%":"none"}}>{classList.map(c=><option key={c}>{c}</option>)}</select>
             <Btn size="sm" variant="secondary" loading={exportingPdf} style={isMobile?{flex:"1 1 100%",justifyContent:"center"}:{}} onClick={()=>requestDraftLabel(
-              "Choose the Draft to Print",
-              `Choose which draft should appear on the ${viewClass} PDF.`,
+              tr("tt.chooseDraftPrint"),
+              tr("tt.chooseDraftHintClass", { name: viewClass }),
               (label) => {
                 const { form, stream } = classFormStream(viewClass);
                 downloadPdf(`/timetable/pdf/class?form=${encodeURIComponent(form)}&stream=${encodeURIComponent(stream)}&academic_year=${ttYear}&term=${encodeURIComponent(ttTerm)}&draft=${encodeURIComponent(label)}`, `${viewClass}-${label}-timetable.pdf`);
               }
-            )}>Export PDF</Btn>
+            )}>{tr("lg.exportPdf")}</Btn>
           </div>
           <Card style={{padding:0}}>
             <div style={{padding:isMobile?"11px 14px":"13px 18px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
-              <span style={{fontWeight:700,fontSize:isMobile?13.5:15}}>{viewClass} - Weekly Timetable</span>
+              <span style={{fontWeight:700,fontSize:isMobile?13.5:15}}>{tr("tt.weeklyTimetable", { name: viewClass })}</span>
               <span style={{fontSize:12,color:C.muted}}>{ttMonth} {ttYear}</span>
             </div>
             <WeekGrid renderCell={(d,p)=><CellView cls={viewClass} day={d} period={p} compact={isMobile||isTablet}/>}/>
@@ -2809,12 +2806,12 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       {viewTab==="master" && (
         <>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-            <span style={{fontSize:13,fontWeight:600,color:C.muted}}>Ratiba ya Jumla - jedwali tano (5), moja kwa kila siku, likiwa na madarasa yote.</span>
+            <span style={{fontSize:13,fontWeight:600,color:C.muted}}>{tr("tt.generalViewNote")}</span>
             <Btn size="sm" variant="secondary" loading={exportingPdf} style={isMobile?{width:"100%",justifyContent:"center"}:{}} onClick={()=>requestDraftLabel(
-              "Choose the Draft to Print",
-              "Choose which draft should appear on the General School Timetable PDF.",
+              tr("tt.chooseDraftPrint"),
+              tr("tt.chooseDraftHintMaster"),
               (label) => downloadPdf(`/timetable/pdf/master?academic_year=${ttYear}&term=${encodeURIComponent(ttTerm)}&draft=${encodeURIComponent(label)}`, `general-school-timetable-${label}.pdf`)
-            )}>Export PDF (All Classes)</Btn>
+            )}>{tr("tt.exportPdfAll")}</Btn>
           </div>
           <Card style={{padding:isMobile?"14px 16px":"16px 20px"}}>
             <div style={{textAlign:"center",lineHeight:1.8}}>
@@ -2823,7 +2820,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
               <div style={{fontWeight:700,fontSize:isMobile?12.5:14,color:C.accentText}}>{SCHOOL.line3}</div>
               <div style={{fontWeight:600,fontSize:isMobile?12:13}}>{SCHOOL.line4}</div>
               <div style={{fontSize:12,color:C.muted,marginTop:4}}>{ttMonth} {ttYear} · {ttTerm}</div>
-              {!masterClasses && <div style={{fontSize:11,color:C.warning,marginTop:6}}>No timetable generated yet for this year/term.</div>}
+              {!masterClasses && <div style={{fontSize:11,color:C.warning,marginTop:6}}>{tr("tt.noTimetableYet")}</div>}
             </div>
           </Card>
 
@@ -2839,30 +2836,30 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       {viewTab==="teacher" && (
         <>
           <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-            <span style={{fontSize:13,fontWeight:600,color:C.muted}}>Teacher:</span>
+            <span style={{fontSize:13,fontWeight:600,color:C.muted}}>{tr("tt.teacherColon")}</span>
             {myTeacherLabel ? (
               <strong style={{fontSize:13.5,color:C.text}}>{myTeacherLabel}</strong>
             ) : (
               <select value={viewTeacher} onChange={e=>setViewTeacher(e.target.value)} style={{...IS,width:isMobile?"100%":200,flex:isMobile?"1 1 100%":"none"}}>
-                <option value="">Select teacher…</option>
+                <option value="">{tr("tt.selectTeacher")}</option>
                 {teachers.map(t=><option key={t.id} value={t.registered_username||t.short_name}>{t.registered_username||t.short_name}</option>)}
               </select>
             )}
             {viewTeacher && <Btn size="sm" variant="secondary" loading={exportingPdf} style={isMobile?{flex:"1 1 100%",justifyContent:"center"}:{}} onClick={()=>requestDraftLabel(
-              "Choose the Draft to Print",
-              `Choose which draft should appear on the ${viewTeacher} PDF.`,
+              tr("tt.chooseDraftPrint"),
+              tr("tt.chooseDraftHintTeacher", { name: viewTeacher }),
               (label) => {
                 const t = teachers.find(t=>(t.registered_username||t.short_name)===viewTeacher);
                 if (t) downloadPdf(`/timetable/pdf/teacher/${t.id}?academic_year=${ttYear}&term=${encodeURIComponent(ttTerm)}&draft=${encodeURIComponent(label)}`, `${viewTeacher}-${label}-timetable.pdf`);
               }
-            )}>Export PDF</Btn>}
+            )}>{tr("lg.exportPdf")}</Btn>}
           </div>
           {viewTeacher && (
             <Card style={{padding:0}}>
               <div style={{padding:isMobile?"11px 14px":"13px 18px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
-                <span style={{fontWeight:700,fontSize:isMobile?13.5:15}}>{viewTeacher} - Weekly Timetable</span>
+                <span style={{fontWeight:700,fontSize:isMobile?13.5:15}}>{tr("tt.weeklyTimetable", { name: viewTeacher })}</span>
                 <span style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-                  <Badge color="indigo">{countTeacherWeeklyPeriods(viewTeacher)} periods per week</Badge>
+                  <Badge color="indigo">{tr("tt.periodsPerWeek", { n: countTeacherWeeklyPeriods(viewTeacher) })}</Badge>
                   <span style={{fontSize:12,color:C.muted}}>{ttMonth} {ttYear}</span>
                 </span>
               </div>
@@ -2883,10 +2880,10 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       </>)}
 
       {editingCell && (
-        <Modal title={`Edit - ${editingCell.cls} · ${editingCell.day} · ${editingCell.period.label}`} onClose={()=>setEditingCell(null)}>
+        <Modal title={tr("tt.editCellTitle", { cls: editingCell.cls, day: editingCell.day, period: editingCell.period.label })} onClose={()=>setEditingCell(null)}>
           <div style={{display:"flex",flexDirection:"column",gap:14}}>
-            <Inp label="Subject" value={editCellForm.subject} onChange={v=>setEditCellForm(p=>({...p,subject:v}))} options={(subjects.length?subjects.map(s=>s.name):SUBJECTS).map(s=>({value:s,label:s}))} required/>
-            <Inp label="Teacher" value={editCellForm.teacher_id && editCellForm.subject ? `${editCellForm.teacher_id}|${editCellForm.subject}` : ""} onChange={v=>{ const [tid,subj]=v.split("|"); setEditCellForm(p=>({...p,teacher_id:tid,subject:subj||p.subject})); }}
+            <Inp label={tr("tt.subject")} value={editCellForm.subject} onChange={v=>setEditCellForm(p=>({...p,subject:v}))} options={(subjects.length?subjects.map(s=>s.name):SUBJECTS).map(s=>({value:s,label:s}))} required/>
+            <Inp label={tr("tt.teacher")} value={editCellForm.teacher_id && editCellForm.subject ? `${editCellForm.teacher_id}|${editCellForm.subject}` : ""} onChange={v=>{ const [tid,subj]=v.split("|"); setEditCellForm(p=>({...p,teacher_id:tid,subject:subj||p.subject})); }}
               options={teachers.flatMap(t=>{
                 const label = t.registered_username || t.short_name;
                 const subs = (t.subjects && t.subjects.length ? t.subjects : [t.subject]).filter(Boolean);
@@ -2897,8 +2894,8 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
               })}/>
           </div>
           <div style={{display:"flex",gap:10,marginTop:20,justifyContent:"space-between"}}>
-            <Btn variant="danger" onClick={clearEditCell}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Clear Cell</span></Btn>
-            <div style={{display:"flex",gap:10}}><Btn variant="secondary" onClick={()=>setEditingCell(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn><Btn onClick={saveEditCell}><span style={{display:"flex",alignItems:"center",gap:6}}><SaveIcon size={13}/>Save</span></Btn></div>
+            <Btn variant="danger" onClick={clearEditCell}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("tt.clearCell")}</span></Btn>
+            <div style={{display:"flex",gap:10}}><Btn variant="secondary" onClick={()=>setEditingCell(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn><Btn onClick={saveEditCell}><span style={{display:"flex",alignItems:"center",gap:6}}><SaveIcon size={13}/>{tr("common.save")}</span></Btn></div>
           </div>
         </Modal>
       )}
@@ -2906,11 +2903,11 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       {draftPicker && (
         <Modal title={draftPicker.title} onClose={()=>setDraftPicker(null)}>
           <p style={{fontSize:13,color:C.muted,marginBottom:14,lineHeight:1.5}}>{draftPicker.hint}</p>
-          <Inp label="Draft" value={draftPicker.label} onChange={v=>setDraftPicker(p=>({...p,label:v}))}
+          <Inp label={tr("tt.draft")} value={draftPicker.label} onChange={v=>setDraftPicker(p=>({...p,label:v}))}
             options={(drafts.length?drafts:DRAFT_LABELS).map(d=>({value:d,label:d}))}/>
           <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:20}}>
-            <Btn variant="secondary" onClick={()=>setDraftPicker(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>Ghairi</span></Btn>
-            <Btn onClick={()=>{ const { label, run } = draftPicker; setDraftPicker(null); run(label); }}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>Endelea</span></Btn>
+            <Btn variant="secondary" onClick={()=>setDraftPicker(null)}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.cancel")}</span></Btn>
+            <Btn onClick={()=>{ const { label, run } = draftPicker; setDraftPicker(null); run(label); }}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>{tr("tt.continue")}</span></Btn>
           </div>
         </Modal>
       )}
