@@ -11,15 +11,15 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 import ExamTypesManager from "../components/ExamTypesManager";
 import { ActionMenu, MenuItem } from "../components/ActionMenu";
 import { EditIcon, KeyIcon, PauseCircleIcon, RefreshIcon, TrashIcon, BookIcon, SchoolIcon, ShieldIcon, ClockIcon, PlusCircleIcon, UserHistoryIcon, CheckIcon, CloseIcon, PersonSilhouetteIcon, SpinnerIcon } from "../components/icons";
+import { useLang } from "../i18n";
+import { roleLabel as roleLabelT } from "../i18n/display";
 
+// Labels come from the i18n role.* keys (roleLabelT), so only the value is
+// stored here.
 const ROLES = [
-  { value: "academic", label: "Academic Master" },
-  { value: "teacher", label: "Teacher" },
-  { value: "patron", label: "School Patron" },
-  { value: "matron", label: "School Matron" },
-  { value: "second_master", label: "Second Master" },
-  { value: "class_teacher", label: "Class Teacher" },
-  { value: "food_teacher", label: "Food Teacher" },
+  { value: "academic" }, { value: "teacher" }, { value: "patron" },
+  { value: "matron" }, { value: "second_master" },
+  { value: "class_teacher" }, { value: "food_teacher" },
 ];
 const FORMS = ["Form I", "Form II", "Form III", "Form IV"];
 
@@ -46,13 +46,14 @@ const isClassTeacherRole = (role, extraRoles) => allHeldRoles(role, extraRoles).
 // show a plain person-silhouette icon (WhatsApp/Instagram-style default
 // avatar) instead of initials.
 function AccountAvatar({ name, photoUrl, size = 36, onClick }) {
+  const { t } = useLang();
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={!onClick}
-      aria-label={photoUrl ? `View ${name}'s photo` : undefined}
-      title={photoUrl ? "View photo" : undefined}
+      aria-label={photoUrl ? t("ua.viewPhotoOf", { name }) : undefined}
+      title={photoUrl ? t("ua.viewPhoto") : undefined}
       style={{
         width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
         background: THEME.navy, color: "rgba(255,255,255,0.85)", display: "flex", alignItems: "center", justifyContent: "center",
@@ -68,6 +69,7 @@ function AccountAvatar({ name, photoUrl, size = 36, onClick }) {
 }
 
 export default function UserAccounts() {
+  const { t, lang } = useLang();
   const { token, user: me } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompactList = isMobile || isTablet;
@@ -126,7 +128,7 @@ export default function UserAccounts() {
     try {
       const data = await apiFetch("/users", { method: "POST", body: JSON.stringify(form) }, token);
       setResult({ ok: true, text: data.message });
-      showSuccess("Account", data.message || "Account Successfully Created.");
+      showSuccess(t("ua.account"), data.message || t("ua.updated"));
       setForm({ username: "", full_name: "", role: "teacher", extra_roles: [], email: "", phone: "", subject_ids: [], assigned_forms: [], class_teacher_of: "", teacher_id: "", employment_type: "Permanent" });
       load();
     } catch (err) {
@@ -134,10 +136,10 @@ export default function UserAccounts() {
     } finally { setBusy(false); }
   };
 
-  const deactivate = (id, name) => confirm(`Are you sure you want to deactivate the account for ${name}?`, async () => {
+  const deactivate = (id, name) => confirm(t("ua.deactivateConfirm", { name }), async () => {
     try {
       await apiFetch(`/users/${id}`, { method: "DELETE" }, token);
-      showSuccess("Account", `${name}'s account has been deactivated.`);
+      showSuccess(t("ua.account"), t("ua.deactivated", { name }));
       load();
     } catch (err) {
       setResult({ ok: false, text: err.message });
@@ -147,15 +149,15 @@ export default function UserAccounts() {
   const reactivate = async (id, name) => {
     try {
       await apiFetch(`/users/${id}`, { method: "PATCH", body: JSON.stringify({ is_active: true }) }, token);
-      showSuccess("Account", `${name ? name + "'s" : "The"} account has been reactivated.`);
+      showSuccess(t("ua.account"), name ? t("ua.reactivatedNamed", { name }) : t("ua.reactivatedThe"));
       load();
     } catch (err) { setResult({ ok: false, text: err.message }); }
   };
 
-  const removeUser = (id, name) => confirm(`Permanently delete the account for ${name}? This cannot be undone.`, async () => {
+  const removeUser = (id, name) => confirm(t("ua.deleteConfirm", { name }), async () => {
     try {
       await apiFetch(`/users/${id}/permanent`, { method: "DELETE" }, token);
-      showSuccess("Account", `${name}'s account has been permanently deleted.`);
+      showSuccess(t("ua.account"), t("ua.deleted", { name }));
       load();
     } catch (err) {
       setResult({ ok: false, text: err.message });
@@ -165,10 +167,10 @@ export default function UserAccounts() {
   const saveEdit = async (updated) => {
     try {
       await apiFetch(`/users/${updated.id}`, { method: "PATCH", body: JSON.stringify(updated) }, token);
-      showSuccess("Account", "Account Successfully Updated.");
+      showSuccess(t("ua.account"), t("ua.updated"));
       setEditUser(null);
       load();
-    } catch (err) { showError("Could Not Update Account", err.message); } // modal is on top of the list - the list's error banner wouldn't be visible here
+    } catch (err) { showError(t("ua.couldNotUpdate"), err.message); } // modal is on top of the list - the list's error banner wouldn't be visible here
   };
 
   const resetUserPassword = async (id, newPassword) => {
@@ -177,11 +179,11 @@ export default function UserAccounts() {
 
   return (
     <div style={{ padding: isMobile ? "16px 12px" : isTablet ? "24px 20px" : 40 }}>
-      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : isTablet ? 18 : 20, marginBottom: 18 }}>User Accounts</h2>
+      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : isTablet ? 18 : 20, marginBottom: 18 }}>{t("ua.title")}</h2>
       {loadError && (
         <div style={{ marginBottom: 16, padding: 12, borderRadius: 4, fontSize: 13, background: THEME.dangerLight, color: THEME.danger, maxWidth: 480, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
           <span>⚠ {loadError}</span>
-          <button onClick={() => { setLoadError(""); load(); }} style={{ background: "none", border: `1px solid ${THEME.danger}`, color: THEME.danger, borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 5 }}><RefreshIcon size={12} />Retry</button>
+          <button onClick={() => { setLoadError(""); load(); }} style={{ background: "none", border: `1px solid ${THEME.danger}`, color: THEME.danger, borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 5 }}><RefreshIcon size={12} />{t("common.retry")}</button>
         </div>
       )}
 
@@ -189,54 +191,54 @@ export default function UserAccounts() {
           Two columns on tablet/desktop, one column on phones. */}
       <form onSubmit={submit} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 6, marginBottom: 28, maxWidth: PANEL_MAX, boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
         <div style={{ padding: isMobile ? "14px 16px" : "16px 22px", borderBottom: `1px solid ${THEME.border}` }}>
-          <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading }}>Create New Account</h3>
-          <p style={{ margin: "4px 0 0", fontSize: 12.5, color: THEME.muted }}>Fill in the staff member's details, choose their role, then press Create Account.</p>
+          <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading }}>{t("ua.createNew")}</h3>
+          <p style={{ margin: "4px 0 0", fontSize: 12.5, color: THEME.muted }}>{t("ua.createIntro")}</p>
         </div>
 
         <div style={{ padding: isMobile ? 14 : 22, display: "grid", gap: isMobile ? 14 : 18, background: THEME.bg }}>
-          <FormSection step={1} title="Account Details" desc="Who the person is and how they sign in." isMobile={isMobile}>
+          <FormSection step={1} title={t("ua.sec1Title")} desc={t("ua.sec1Desc")} isMobile={isMobile}>
             <div style={grid2(isMobile)}>
-              <Field label="Username" required>
-                <input placeholder="e.g. MR.BEYANGA" required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={fieldInput} />
+              <Field label={t("ua.username")} required>
+                <input placeholder={t("ua.usernamePh")} required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={fieldInput} />
               </Field>
-              <Field label="Full Name" required>
-                <input placeholder="e.g. LINUS SAMORA MADAMA" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} style={fieldInput} />
+              <Field label={t("ua.fullName")} required>
+                <input placeholder={t("ua.fullNamePh")} required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} style={fieldInput} />
               </Field>
-              <Field label="Phone Number" hint="Shows under Communications → SMS Service automatically.">
-                <input type="tel" placeholder="e.g. 0677123443" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={fieldInput} />
+              <Field label={t("ua.phone")} hint={t("ua.phoneHint")}>
+                <input type="tel" placeholder={t("ua.phonePh") || "e.g. 0677123443"} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} style={fieldInput} />
               </Field>
-              <Field label="Email" required hint="Used for Forgot Password and sign-in codes.">
-                <input type="email" placeholder="e.g. shaibujuma@gmail.com" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={fieldInput} />
+              <Field label={t("ua.email")} required hint={t("ua.emailHint")}>
+                <input type="email" placeholder={t("ua.emailPh")} required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={fieldInput} />
               </Field>
             </div>
           </FormSection>
 
-          <FormSection step={2} title="Role & Employment" desc="What this person does at school - this decides which menus they see." isMobile={isMobile}>
+          <FormSection step={2} title={t("ua.sec2Title")} desc={t("ua.sec2Desc")} isMobile={isMobile}>
             <div style={{ ...grid2(isMobile), alignItems: "start" }}>
-              <Field label="Main Role" required>
+              <Field label={t("ua.mainRole")} required>
                 <select value={form.role} onChange={(e) => {
                   const newRole = e.target.value;
                   setForm((f) => ({ ...f, role: newRole, extra_roles: f.extra_roles.filter((x) => x !== newRole) }));
                 }} style={{ ...fieldInput, background: THEME.surface }}>
-                  {ROLES.filter((r) => r.value !== "second_master" || me.role === "admin").map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  {ROLES.filter((r) => r.value !== "second_master" || me.role === "admin").map((r) => <option key={r.value} value={r.value}>{roleLabelT(lang, r.value)}</option>)}
                 </select>
               </Field>
-              <Field label="Employment">
+              <Field label={t("ua.employment")}>
                 <EmploymentTypeCheckbox value={form.employment_type} onChange={(v) => setForm({ ...form, employment_type: v })} />
               </Field>
             </div>
-            <Field label="Additional Roles (optional)" hint="A teacher can hold more than one role at once.">
+            <Field label={t("ua.extraRoles")} hint={t("ua.extraRolesHint")}>
               <div style={chipsBox}>
                 {ROLES.filter((r) => r.value !== form.role && (r.value !== "second_master" || me.role === "admin")).map((r) => (
-                  <Chip key={r.value} active={form.extra_roles.includes(r.value)} onClick={() => toggleExtraRole(r.value)}>{r.label}</Chip>
+                  <Chip key={r.value} active={form.extra_roles.includes(r.value)} onClick={() => toggleExtraRole(r.value)}>{roleLabelT(lang, r.value)}</Chip>
                 ))}
               </div>
             </Field>
           </FormSection>
 
           {needsTeachingFields(form.role, form.extra_roles) && (
-            <FormSection step={3} title="Teaching" desc="The subjects and classes this teacher handles." isMobile={isMobile}>
-              <Field label="Subjects" hint="A teacher may teach more than one subject.">
+            <FormSection step={3} title={t("ua.sec3Title")} desc={t("ua.sec3Desc")} isMobile={isMobile}>
+              <Field label={t("ua.subjects")} hint={t("ua.subjectsHint")}>
                 <div style={chipsBox}>
                   {subjects.map((s) => (
                     <Chip key={s.id} active={form.subject_ids.includes(s.id)} onClick={() => toggleSubject(s.id)}>{s.name}</Chip>
@@ -244,16 +246,16 @@ export default function UserAccounts() {
                 </div>
               </Field>
               <div style={{ background: THEME.bg, border: `1px dashed ${THEME.border}`, borderRadius: 4, padding: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: THEME.text, marginBottom: 8 }}>Subject missing? Add it here</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: THEME.text, marginBottom: 8 }}>{t("ua.subjectMissing")}</div>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr auto", gap: 8 }}>
-                  <input placeholder="Full subject name" value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} style={{ ...fieldInput, background: THEME.surface }} aria-label="New subject name" />
-                  <input placeholder="Abbreviation (e.g. B/MATH)" value={newSubjectCode} onChange={(e) => setNewSubjectCode(e.target.value)} style={{ ...fieldInput, background: THEME.surface }} aria-label="New subject abbreviation" />
-                  <button type="button" onClick={addSubject} disabled={!newSubjectName.trim() || !newSubjectCode.trim()} style={{ padding: "9px 16px", background: THEME.surface, color: THEME.link, border: `1px solid ${THEME.navy}`, borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: !newSubjectName.trim() || !newSubjectCode.trim() ? 0.5 : 1 }}><PlusCircleIcon size={13} />Add</button>
+                  <input placeholder={t("ua.subjectNamePh")} value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} style={{ ...fieldInput, background: THEME.surface }} aria-label={t("ua.subjectNameAria")} />
+                  <input placeholder={t("ua.subjectCodePh")} value={newSubjectCode} onChange={(e) => setNewSubjectCode(e.target.value)} style={{ ...fieldInput, background: THEME.surface }} aria-label={t("ua.subjectCodeAria")} />
+                  <button type="button" onClick={addSubject} disabled={!newSubjectName.trim() || !newSubjectCode.trim()} style={{ padding: "9px 16px", background: THEME.surface, color: THEME.link, border: `1px solid ${THEME.navy}`, borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: !newSubjectName.trim() || !newSubjectCode.trim() ? 0.5 : 1 }}><PlusCircleIcon size={13} />{t("common.add")}</button>
                 </div>
-                <p style={{ fontSize: 11.5, color: THEME.muted, margin: "6px 0 0" }}>Both are required. The abbreviation is what appears in Results Management.</p>
+                <p style={{ fontSize: 11.5, color: THEME.muted, margin: "6px 0 0" }}>{t("ua.subjectBothRequired")}</p>
               </div>
               <div style={{ ...grid2(isMobile), alignItems: "start" }}>
-                <Field label="Classes / Forms Taught" hint="Decides which classes' results this account can enter.">
+                <Field label={t("ua.classesTaught")} hint={t("ua.classesHint")}>
                   <div style={chipsBox}>
                     {FORMS.map((f) => (
                       <Chip key={f} active={form.assigned_forms.includes(f)} onClick={() => toggleForm(f)}>{f}</Chip>
@@ -261,9 +263,9 @@ export default function UserAccounts() {
                   </div>
                 </Field>
                 {isClassTeacherRole(form.role, form.extra_roles) && (
-                  <Field label="Class Teacher Of" hint="Its students appear automatically in Contributions Management.">
+                  <Field label={t("ua.classTeacherOf")} hint={t("ua.classTeacherOfHint")}>
                     <select value={form.class_teacher_of} onChange={(e) => setForm({ ...form, class_teacher_of: e.target.value })} style={{ ...fieldInput, background: THEME.surface }}>
-                      <option value="">- Select class -</option>
+                      <option value="">{t("ua.selectClass")}</option>
                       {FORMS.map((f) => <option key={f} value={f}>{f}</option>)}
                     </select>
                   </Field>
@@ -275,10 +277,10 @@ export default function UserAccounts() {
 
         <div style={{ padding: isMobile ? "14px 16px" : "14px 22px", borderTop: `1px solid ${THEME.border}`, background: THEME.bg, display: "flex", flexDirection: isMobile ? "column-reverse" : "row", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between", gap: 10, borderRadius: "0 0 6px 6px" }}>
           <div style={{ fontSize: 12.5, color: result ? (result.ok ? THEME.success : THEME.danger) : THEME.muted }}>
-            {result ? result.text : <>Fields marked <span style={{ color: THEME.danger }}>*</span> are required.</>}
+            {result ? result.text : <>{t("ua.fieldsMarkedPre")} <span style={{ color: THEME.danger }}>*</span> {t("ua.fieldsMarkedPost")}</>}
           </div>
           <button disabled={busy} style={{ padding: "10px 22px", minWidth: isMobile ? undefined : 190, background: THEME.navy, color: "#fff", border: "none", borderRadius: 4, fontWeight: 700, fontSize: 13.5, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-            {busy ? <SpinnerIcon size={14} /> : <UserHistoryIcon size={14} />}{busy ? "Creating..." : "Create Account"}
+            {busy ? <SpinnerIcon size={14} /> : <UserHistoryIcon size={14} />}{busy ? t("ua.creating") : t("ua.createAccount")}
           </button>
         </div>
       </form>
@@ -295,24 +297,24 @@ export default function UserAccounts() {
           const canManageThisTarget = u.role !== "second_master" || me.role === "admin";
           const menu = ((u.role !== "admin" && u.role !== "developer") || u.id === me.id) && (
             <ActionMenu>
-              <MenuItem icon={<EditIcon />} onClick={() => setEditUser(u)}>Edit</MenuItem>
-              <MenuItem icon={<KeyIcon />} onClick={() => setResetPwdUser(u)}>Reset Password</MenuItem>
+              <MenuItem icon={<EditIcon />} onClick={() => setEditUser(u)}>{t("common.edit")}</MenuItem>
+              <MenuItem icon={<KeyIcon />} onClick={() => setResetPwdUser(u)}>{t("ua.resetPassword")}</MenuItem>
               {u.role !== "admin" && canManageThisTarget && (u.is_active
-                ? <MenuItem icon={<PauseCircleIcon />} onClick={() => deactivate(u.id, u.full_name)}>Deactivate</MenuItem>
-                : <MenuItem icon={<RefreshIcon />} onClick={() => reactivate(u.id, u.full_name)}>Reactivate</MenuItem>)}
+                ? <MenuItem icon={<PauseCircleIcon />} onClick={() => deactivate(u.id, u.full_name)}>{t("ua.deactivate")}</MenuItem>
+                : <MenuItem icon={<RefreshIcon />} onClick={() => reactivate(u.id, u.full_name)}>{t("ua.reactivate")}</MenuItem>)}
               {u.role !== "admin" && canManageThisTarget && (
-                <MenuItem icon={<TrashIcon />} danger onClick={() => removeUser(u.id, u.full_name)}>Delete / Remove</MenuItem>
+                <MenuItem icon={<TrashIcon />} danger onClick={() => removeUser(u.id, u.full_name)}>{t("ua.deleteRemove")}</MenuItem>
               )}
             </ActionMenu>
           );
           const statusBadge = (
             <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: u.is_active ? THEME.successLight : THEME.dangerLight, color: u.is_active ? THEME.success : THEME.danger }}>
-              {u.is_active ? "Active" : "Inactive"}
+              {u.is_active ? t("ua.active") : t("ua.inactive")}
             </span>
           );
           const rolePill = (
             <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: THEME.navy, padding: "3px 10px", borderRadius: 4, lineHeight: 1.4 }}>
-              {allHeldRoles(u.role, u.extra_roles).map(roleLabel).join(" + ")}
+              {allHeldRoles(u.role, u.extra_roles).map((r) => roleLabelT(lang, r)).join(" + ")}
             </span>
           );
           const employmentBadge = (
@@ -322,7 +324,7 @@ export default function UserAccounts() {
               color: u.employment_type === "Temporary" ? THEME.warning : THEME.success,
             }}>
               {u.employment_type === "Temporary" ? <ClockIcon size={11} /> : <ShieldIcon size={11} />}
-              {u.employment_type === "Temporary" ? "Part-Time" : "Government"}
+              {u.employment_type === "Temporary" ? t("ua.partTime") : t("ua.government")}
             </span>
           );
           return isCompactList ? (
@@ -357,13 +359,13 @@ export default function UserAccounts() {
                   {u.assigned_forms?.length > 0 && (
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 11.5, color: THEME.muted }}>
                       <span style={{ display: "flex", flexShrink: 0, marginTop: 1, color: THEME.heading, opacity: 0.75 }}><SchoolIcon size={13} /></span>
-                      <span style={{ overflowWrap: "anywhere" }}>Teaches: {u.assigned_forms.join(", ")}</span>
+                      <span style={{ overflowWrap: "anywhere" }}>{t("ua.teaches", { forms: u.assigned_forms.join(", ") })}</span>
                     </div>
                   )}
                   {u.class_teacher_of && (
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 11.5, color: THEME.muted }}>
                       <span style={{ display: "flex", flexShrink: 0, marginTop: 1, color: THEME.heading, opacity: 0.75 }}><SchoolIcon size={13} /></span>
-                      <span style={{ overflowWrap: "anywhere" }}>Class Teacher of: <b>{u.class_teacher_of}</b></span>
+                      <span style={{ overflowWrap: "anywhere" }}>{t("ua.classTeacherOfLabel")} <b>{u.class_teacher_of}</b></span>
                     </div>
                   )}
                 </div>
@@ -384,10 +386,10 @@ export default function UserAccounts() {
                 onClick={u.photo_url ? () => setViewPhoto({ photoUrl: u.photo_url, name: u.full_name }) : undefined} />
               <div style={{ flex: 1, minWidth: 160, display: "flex", flexWrap: "wrap", alignItems: "center", rowGap: 6, columnGap: 14 }}>
                 <span>{u.full_name} <span style={{ color: THEME.muted, fontSize: 11 }}>({u.username}{u.phone ? ` · ${u.phone}` : ""})</span></span>
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: THEME.heading }}>{allHeldRoles(u.role, u.extra_roles).map(roleLabel).join(" + ")}</span>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: THEME.heading }}>{allHeldRoles(u.role, u.extra_roles).map((r) => roleLabelT(lang, r)).join(" + ")}</span>
                 {u.subject_names?.length > 0 && <span style={{ fontSize: 11.5, color: THEME.muted }}>{u.subject_names.join(", ")}</span>}
-                {u.assigned_forms?.length > 0 && <span style={{ fontSize: 11.5, color: THEME.muted }}>Teaches: {u.assigned_forms.join(", ")}</span>}
-                {u.class_teacher_of && <span style={{ fontSize: 11.5, color: THEME.muted }}>Class Teacher of: <b>{u.class_teacher_of}</b></span>}
+                {u.assigned_forms?.length > 0 && <span style={{ fontSize: 11.5, color: THEME.muted }}>{t("ua.teaches", { forms: u.assigned_forms.join(", ") })}</span>}
+                {u.class_teacher_of && <span style={{ fontSize: 11.5, color: THEME.muted }}>{t("ua.classTeacherOfLabel")} <b>{u.class_teacher_of}</b></span>}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                 {employmentBadge}
@@ -413,7 +415,7 @@ export default function UserAccounts() {
           onClose={() => setResetPwdUser(null)}
           onSubmit={async (newPassword) => {
             await resetUserPassword(resetPwdUser.id, newPassword);
-            showSuccess("Password Reset", `${resetPwdUser.full_name}'s password has been reset. Share the new password with them directly.`);
+            showSuccess(t("ua.passwordResetTitle"), t("ua.passwordResetDone", { name: resetPwdUser.full_name }));
             setResetPwdUser(null);
           }}
         />
@@ -429,7 +431,7 @@ export default function UserAccounts() {
             </div>
             <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>{viewPhoto.name}</div>
             <button onClick={() => setViewPhoto(null)} style={{ marginTop: 14, padding: "9px 20px", background: THEME.gold, color: THEME.navyDark, border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
-              Close
+              {t("common.close")}
             </button>
           </div>
         </div>
@@ -439,6 +441,7 @@ export default function UserAccounts() {
 }
 
 function EditUserModal({ user, subjects, onClose, onSave, myRole }) {
+  const { t, lang } = useLang();
   const isHeadMaster = user.role === "admin";
   const [f, setF] = useState({
     id: user.id, username: user.username, full_name: user.full_name, email: user.email || "", phone: user.phone || "",
@@ -464,47 +467,47 @@ function EditUserModal({ user, subjects, onClose, onSave, myRole }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
       <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 460, maxHeight: "85vh", overflowY: "auto" }}>
-        <h3 style={{ marginTop: 0, marginBottom: 16, color: THEME.heading, fontSize: 16 }}>Edit - {user.username}</h3>
+        <h3 style={{ marginTop: 0, marginBottom: 16, color: THEME.heading, fontSize: 16 }}>{t("ua.editTitle", { name: user.username })}</h3>
         <div style={{ display: "grid", gap: 10 }}>
           <div>
-            <label style={labelStyle}>Username (also used to log in)</label>
-            <input placeholder="Username" value={f.username} onChange={(e) => setF({ ...f, username: e.target.value })} style={inputStyle} />
+            <label style={labelStyle}>{t("ua.usernameLogin")}</label>
+            <input placeholder={t("ua.username")} value={f.username} onChange={(e) => setF({ ...f, username: e.target.value })} style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Phone Number (for SMS Service)</label>
+            <label style={labelStyle}>{t("ua.phoneSms")}</label>
             <input type="tel" placeholder="e.g. 0677123443" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} style={inputStyle} />
           </div>
           <EmploymentTypeCheckbox value={f.employment_type} onChange={(v) => setF({ ...f, employment_type: v })} />
           {isHeadMaster ? (
             <p style={{ margin: 0, fontSize: 12, color: THEME.muted }}>
-              The Head Master account's Name and Role stay fixed - only the Username (shown on the Timetable), Subjects, and Email can be changed here.
+              {t("ua.headMasterFixed")}
             </p>
           ) : (
             <>
-              <input placeholder="Full Name" value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} style={inputStyle} />
+              <input placeholder={t("ua.fullName")} value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} style={inputStyle} />
               <div>
-                <label style={labelStyle}>Role</label>
+                <label style={labelStyle}>{t("ua.role")}</label>
                 <select value={f.role} onChange={(e) => {
                   const newRole = e.target.value;
                   setF((p) => ({ ...p, role: newRole, extra_roles: p.extra_roles.filter((x) => x !== newRole) }));
                 }} style={inputStyle}>
-                  {ROLES.filter((r) => r.value !== "second_master" || myRole === "admin").map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  {ROLES.filter((r) => r.value !== "second_master" || myRole === "admin").map((r) => <option key={r.value} value={r.value}>{roleLabelT(lang, r.value)}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Additional Roles (optional) - a teacher can hold more than one Role at once</label>
+                <label style={labelStyle}>{t("ua.extraRolesLong")}</label>
                 <div style={chipsBox}>
                   {ROLES.filter((r) => r.value !== f.role && (r.value !== "second_master" || myRole === "admin")).map((r) => (
-                    <Chip key={r.value} active={f.extra_roles.includes(r.value)} onClick={() => toggleExtraRole(r.value)}>{r.label}</Chip>
+                    <Chip key={r.value} active={f.extra_roles.includes(r.value)} onClick={() => toggleExtraRole(r.value)}>{roleLabelT(lang, r.value)}</Chip>
                   ))}
                 </div>
               </div>
             </>
           )}
-          <input type="email" placeholder="Gmail (for Forgot Password)" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} style={inputStyle} />
+          <input type="email" placeholder={t("ua.gmailPh")} required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} style={inputStyle} />
           {showsSubjects && (
             <div>
-              <label style={labelStyle}>Subjects Taught</label>
+              <label style={labelStyle}>{t("ua.subjectsTaught")}</label>
               <div style={chipsBox}>
                 {subjects.map((s) => <Chip key={s.id} active={f.subject_ids.includes(s.id)} onClick={() => toggleSubject(s.id)}>{s.name}</Chip>)}
               </div>
@@ -512,7 +515,7 @@ function EditUserModal({ user, subjects, onClose, onSave, myRole }) {
           )}
           {showsForms && (
             <div>
-              <label style={labelStyle}>Classes / Forms Taught - determines which class's results/subjects this account can enter</label>
+              <label style={labelStyle}>{t("ua.classesLong")}</label>
               <div style={chipsBox}>
                 {FORMS.map((fm) => <Chip key={fm} active={f.assigned_forms.includes(fm)} onClick={() => toggleForm(fm)}>{fm}</Chip>)}
               </div>
@@ -520,17 +523,17 @@ function EditUserModal({ user, subjects, onClose, onSave, myRole }) {
           )}
           {isClassTeacherRole(f.role, f.extra_roles) && (
             <div>
-              <label style={labelStyle}>Class Teacher Of - the ONE class whose students appear automatically in Contribution Management</label>
+              <label style={labelStyle}>{t("ua.classTeacherOfLong")}</label>
               <select value={f.class_teacher_of} onChange={(e) => setF({ ...f, class_teacher_of: e.target.value })} style={inputStyle}>
-                <option value="">- Select class -</option>
+                <option value="">{t("ua.selectClass")}</option>
                 {FORMS.map((fm) => <option key={fm} value={fm}>{fm}</option>)}
               </select>
             </div>
           )}
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
-          <button onClick={onClose} style={{ padding: "9px 16px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, cursor: "pointer", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}><CloseIcon size={13} />Cancel</button>
-          <button onClick={() => onSave(isHeadMaster ? { ...f, role: undefined, extra_roles: undefined } : f)} style={{ padding: "9px 16px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}><CheckIcon size={13} />Save</button>
+          <button onClick={onClose} style={{ padding: "9px 16px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, cursor: "pointer", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}><CloseIcon size={13} />{t("common.cancel")}</button>
+          <button onClick={() => onSave(isHeadMaster ? { ...f, role: undefined, extra_roles: undefined } : f)} style={{ padding: "9px 16px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}><CheckIcon size={13} />{t("common.save")}</button>
         </div>
       </div>
     </div>
@@ -538,6 +541,7 @@ function EditUserModal({ user, subjects, onClose, onSave, myRole }) {
 }
 
 function ResetPasswordModal({ user, onClose, onSubmit }) {
+  const { t } = useLang();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -552,7 +556,7 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("Password and confirmation do not match.");
+      setError(t("ua.pwMismatch"));
       return;
     }
     setBusy(true);
@@ -562,7 +566,7 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
       // don't touch state here, or React will warn about setting state
       // on an unmounted component.
     } catch (err) {
-      setError(err.message || "Could not reset password. Please try again.");
+      setError(err.message || t("ua.resetFail"));
       setBusy(false);
     }
   };
@@ -570,27 +574,27 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
       <form onSubmit={submit} style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: 380, maxWidth: "100%" }}>
-        <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>Reset Password</h3>
+        <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>{t("ua.resetPassword")}</h3>
         <p style={{ margin: "0 0 16px", fontSize: 12.5, color: THEME.muted }}>
-          Set a new password for <b>{user.full_name}</b> ({user.username}). They will need this new password next time they log in.
+          {t("ua.resetIntro", { name: user.full_name, username: user.username })}
         </p>
         <div style={{ display: "grid", gap: 10 }}>
           <div>
-            <label style={labelStyle}>New Password</label>
-            <PasswordInput value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="At least 8 characters, letters and numbers" autoFocus />
+            <label style={labelStyle}>{t("ua.newPassword")}</label>
+            <PasswordInput value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t("ua.pwPh")} autoFocus />
           </div>
           <div>
-            <label style={labelStyle}>Confirm New Password</label>
-            <PasswordInput value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter the new password" />
+            <label style={labelStyle}>{t("ua.confirmPassword")}</label>
+            <PasswordInput value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder={t("ua.confirmPwPh")} />
           </div>
         </div>
         {error && (
           <div style={{ marginTop: 12, color: THEME.danger, background: THEME.dangerLight, fontSize: 12.5, padding: "9px 12px", borderRadius: 4 }}>{error}</div>
         )}
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
-          <button type="button" onClick={onClose} style={{ padding: "9px 16px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, cursor: "pointer", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}><CloseIcon size={13} />Cancel</button>
+          <button type="button" onClick={onClose} style={{ padding: "9px 16px", background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, cursor: "pointer", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}><CloseIcon size={13} />{t("common.cancel")}</button>
           <button type="submit" disabled={busy} style={{ padding: "9px 16px", background: THEME.navy, color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13, fontWeight: 600, opacity: busy ? 0.7 : 1, display: "inline-flex", alignItems: "center", gap: 6 }}>
-            {busy ? <SpinnerIcon size={13} /> : <KeyIcon size={13} />}{busy ? "Saving..." : "Reset Password"}
+            {busy ? <SpinnerIcon size={13} /> : <KeyIcon size={13} />}{busy ? t("common.saving") : t("ua.resetPassword")}
           </button>
         </div>
       </form>
@@ -603,6 +607,7 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
 // line under it so the meaning is unambiguous on a phone/tablet, where a
 // bare checkbox + label is easy to mis-tap or misread.
 function EmploymentTypeCheckbox({ value, onChange }) {
+  const { t } = useLang();
   const checked = value !== "Temporary";
   return (
     <label style={{
@@ -616,12 +621,12 @@ function EmploymentTypeCheckbox({ value, onChange }) {
         style={{ width: 19, height: 19, marginTop: 1, accentColor: THEME.navy, cursor: "pointer", flexShrink: 0 }}
       />
       <span style={{ fontSize: 12.5, color: THEME.text, lineHeight: 1.5 }}>
-        <b>Permanent Employee (Government)</b>
+        <b>{t("ua.permanentGov")}</b>
         <br />
         <span style={{ color: THEME.muted, fontSize: 11.5 }}>
           {checked
-            ? "Checked - will appear as \"Government\"."
-            : "Unchecked - will appear as \"Part-Time\" (not yet employed by the Government)."}
+            ? t("ua.checkedGov")
+            : t("ua.uncheckedPartTime")}
         </span>
       </span>
     </label>
@@ -638,13 +643,6 @@ function Chip({ active, onClick, children }) {
   );
 }
 
-function roleLabel(role) {
-  return {
-    admin: "Head Master", second_master: "Second Master", academic: "Academic Master",
-    teacher: "Teacher", patron: "School Patron", matron: "School Matron",
-    class_teacher: "Class Teacher", food_teacher: "Food Teacher", developer: "System Developer",
-  }[role] || role;
-}
 
 const inputStyle = { padding: "9px 12px", border: `1px solid ${THEME.border}`, borderRadius: 4, fontSize: 13 };
 // Create-account form layout helpers.

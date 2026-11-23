@@ -29,7 +29,7 @@ export const DONE = [
   "src/components/ErrorBoundary.jsx", "src/components/WakingUp.jsx", "src/components/ImageCropModal.jsx",
   "src/components/FontChooser.jsx", "src/components/PasswordInput.jsx", "src/components/InstallAppButton.jsx",
   "src/components/ActionMenu.jsx", "src/pages/DashboardHome.jsx", "src/components/VisitorStats.jsx", "src/components/ChatBot.jsx",
-  "src/components/ExamTypesManager.jsx", "src/pages/AuditLog.jsx", "src/pages/TAMS.jsx", "src/pages/LoginSecurity.jsx", "src/pages/BackupSettings.jsx", "src/pages/SmsGatewaySettings.jsx",
+  "src/components/ExamTypesManager.jsx", "src/pages/AuditLog.jsx", "src/pages/TAMS.jsx", "src/pages/LoginSecurity.jsx", "src/pages/UserAccounts.jsx", "src/pages/BackupSettings.jsx", "src/pages/SmsGatewaySettings.jsx",
   "src/pages/SignatureSettings.jsx", "src/pages/IdentityCards.jsx", "src/pages/ParentVideosTab.jsx", "src/pages/Communications.jsx", "src/pages/AnalyticsDashboard.jsx", "src/components/TrendChart.jsx",
 ];
 // Never visible text (icons, data, generated files).
