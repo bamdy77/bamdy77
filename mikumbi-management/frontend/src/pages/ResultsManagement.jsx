@@ -7,6 +7,7 @@ import { THEME, COMPETENCY_COLORS, competencyGrade } from "../styles/theme";
 import { useConfirm } from "../components/ConfirmDialog";
 import { showSuccess } from "../components/SuccessModal";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { useLang } from "../i18n";
 import { DotsVerticalIcon, RefreshIcon, KeyIcon, TrashIcon, CheckIcon, PauseCircleIcon, CalendarIcon, EditIcon, LayersIcon, CheckCircleIcon, MegaphoneIcon, ClockIcon, DownloadIcon, SaveIcon, LockIcon, SendIcon, ChevronRightIcon, TrophyIcon, TrendingDownIcon, SearchIcon, PrinterIcon, CloseIcon, SpinnerIcon, MessageIcon, InfoIcon, ChevronDownIcon } from "../components/icons";
 
 const FORMS = ["Form I", "Form II", "Form III", "Form IV"];
@@ -17,6 +18,7 @@ const MHULA_OPTIONS_FRONT = ["Nusu Mhula wa I", "Mhula Wa I", "Nusu Mhula wa II"
 const sexLabel = (gender) => (gender === "Female" ? "F" : gender === "Male" ? "M" : (gender || "-"));
 
 export default function ResultsManagement() {
+  const { t } = useLang();
   const { user, token } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
@@ -133,7 +135,7 @@ export default function ResultsManagement() {
       // Ensure a score sheet exists for this period+form too.
       await apiFetch("/results-mgmt/sheet", { method: "POST", body: JSON.stringify({ period_id: data.id, form: selection.form }) }, token);
     } catch (err) {
-      setPeriodError(err.message || "Could not select this period - please try again.");
+      setPeriodError(err.message || t("rm.couldNotSelect"));
       setPeriod(null);
     } finally { setPeriodBusy(false); }
   }, [selection, token]);
@@ -145,28 +147,28 @@ export default function ResultsManagement() {
       const data = await apiFetch("/results-mgmt/periods", { method: "POST", body: JSON.stringify({ form: p.form, exam_type: p.exam_type, month: p.month, year: p.year }) }, token);
       setPeriod(data);
       setTab("results");
-    } catch (err) { setPeriodError(err.message || "Could not open this period."); }
+    } catch (err) { setPeriodError(err.message || t("rm.couldNotOpen")); }
   };
 
   const tabLabels = {
-    enter: "Enter Marks", sheets: "Sheets & Status", results: "Results", reports: "Parents Reports",
-    published: "Published Results", history: "History",
+    enter: t("rm.tab.enter"), sheets: t("rm.tab.sheets"), results: t("rm.tab.results"), reports: t("rm.tab.reports"),
+    published: t("rm.tab.published"), history: t("rm.tab.history"),
   };
   const tabIcons = { enter: EditIcon, sheets: LayersIcon, results: CheckCircleIcon, reports: SendIcon, published: MegaphoneIcon, history: ClockIcon };
 
   return (
     <div style={{ padding: isMobile ? "16px 12px" : isTablet ? "24px 20px" : 40 }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 18 }}>
-        <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : isTablet ? 18 : 20, margin: 0 }}>Results Management</h2>
+        <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : isTablet ? 18 : 20, margin: 0 }}>{t("rm.title")}</h2>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", ...(isMobile ? { width: "100%" } : {}) }}>
           {canTeacherEval && (
             <button onClick={() => setTeacherEvalOpen(true)} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { width: "100%" } : {}) }}>
-              <CheckCircleIcon size={14} />TEACHERS ASSESMENT
+              <CheckCircleIcon size={14} />{t("rm.teachersAssessment")}
             </button>
           )}
           {canSearchStudent && (
             <button onClick={() => setStudentLookupOpen(true)} style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { width: "100%" } : {}) }}>
-              <SearchIcon size={14} />Search Student Results
+              <SearchIcon size={14} />{t("rm.searchStudentResults")}
             </button>
           )}
         </div>
@@ -177,7 +179,7 @@ export default function ResultsManagement() {
       {/* Period selector - shared across tabs */}
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 10, flexWrap: "wrap", alignItems: isMobile ? "stretch" : "flex-end", marginBottom: 24, background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 12 : 16 }}>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Field label="Form">
+          <Field label={t("rm.form")}>
             <select
               value={selection.form}
               onChange={(e) => setSelection({ ...selection, form: e.target.value })}
@@ -188,26 +190,26 @@ export default function ResultsManagement() {
                 ? FORMS.map((f) => <option key={f}>{f}</option>)
                 : myForms.length
                   ? myForms.map((f) => <option key={f}>{f}</option>)
-                  : <option value="">No class assigned</option>}
+                  : <option value="">{t("rm.noClassAssigned")}</option>}
             </select>
           </Field>
-          <Field label="Exam Type">
+          <Field label={t("rm.examType")}>
             <select value={selection.exam_type} onChange={(e) => setSelection({ ...selection, exam_type: e.target.value })} style={{ ...selectStyle, ...(isCompact ? { flex: 1, minWidth: 140 } : {}) }}>
               {examTypes.map((f) => <option key={f}>{f}</option>)}
             </select>
           </Field>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Field label="Month">
+          <Field label={t("rm.month")}>
             <select value={selection.month} onChange={(e) => setSelection({ ...selection, month: e.target.value })} style={{ ...selectStyle, ...(isCompact ? { flex: 1, minWidth: 100 } : {}) }}>
               {MONTHS.map((f) => <option key={f}>{f}</option>)}
             </select>
           </Field>
-          <Field label="Year">
+          <Field label={t("rm.year")}>
             <input type="number" value={selection.year} onChange={(e) => setSelection({ ...selection, year: Number(e.target.value) })} style={{ ...selectStyle, width: isMobile ? 80 : 90 }} />
           </Field>
         </div>
-        <button onClick={findOrCreatePeriod} style={{ ...btnPrimary, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }} disabled={periodBusy}><CalendarIcon size={14} />{periodBusy ? "Selecting..." : "Select Period"}</button>
+        <button onClick={findOrCreatePeriod} style={{ ...btnPrimary, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }} disabled={periodBusy}><CalendarIcon size={14} />{periodBusy ? t("rm.selecting") : t("rm.selectPeriod")}</button>
         {period && <span style={{ fontSize: 12.5, color: THEME.success, alignSelf: isMobile ? "flex-start" : "center" }}>✓ {period.form} · {period.exam_type} · {period.month} {period.year}</span>}
         {periodError && <span style={{ fontSize: 12.5, color: THEME.danger, alignSelf: isMobile ? "flex-start" : "center" }}>⚠ {periodError}</span>}
       </div>
@@ -219,22 +221,22 @@ export default function ResultsManagement() {
           other tabs, which stay clickable and just show the "Select a
           period" placeholder message. */}
       <div className={isCompact ? "table-scroll" : undefined} style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: isCompact ? "nowrap" : "wrap", paddingBottom: isCompact ? 4 : 0 }}>
-        {tabs.map((t) => {
-          const TIcon = tabIcons[t];
-          const disabled = t === "reports" && !period;
+        {tabs.map((tk) => {
+          const TIcon = tabIcons[tk];
+          const disabled = tk === "reports" && !period;
           return (
             <button
-              key={t}
-              onClick={() => !disabled && setTab(t)}
+              key={tk}
+              onClick={() => !disabled && setTab(tk)}
               disabled={disabled}
-              title={disabled ? "Select a period above first" : undefined}
+              title={disabled ? t("rm.selectPeriodFirst") : undefined}
               style={{
-                ...(tab === t ? tabActive : tabInactive),
+                ...(tab === tk ? tabActive : tabInactive),
                 ...(isCompact ? { padding: "7px 12px", fontSize: 12, flexShrink: 0, whiteSpace: "nowrap" } : {}),
                 display: "inline-flex", alignItems: "center", gap: 6,
                 ...(disabled ? { opacity: 0.45, cursor: "not-allowed" } : {}),
               }}
-            >{TIcon && <TIcon size={13} />}{tabLabels[t]}</button>
+            >{TIcon && <TIcon size={13} />}{tabLabels[tk]}</button>
           );
         })}
       </div>
@@ -244,7 +246,7 @@ export default function ResultsManagement() {
       ) : tab === "published" ? (
         <PublishedResults period={period} />
       ) : !period ? (
-        <p style={{ color: THEME.muted, fontSize: 13.5 }}>Select a period above to begin.</p>
+        <p style={{ color: THEME.muted, fontSize: 13.5 }}>{t("rm.selectToBegin")}</p>
       ) : (
         <>
           {tab === "enter" && <EnterMarks period={period} subjects={subjects} />}
@@ -259,6 +261,7 @@ export default function ResultsManagement() {
 
 // ══════════════════ ADMIN/ACADEMIC: FULL RESULTS HISTORY ══════════════════
 function ResultsHistory({ onOpenPeriod }) {
+  const { t } = useLang();
   const { token } = useAuth();
   const { isMobile } = useBreakpoint();
   const [rows, setRows] = useState([]);
@@ -274,35 +277,35 @@ function ResultsHistory({ onOpenPeriod }) {
   return (
     <div>
       <div style={{ marginBottom: 14, maxWidth: 220 }}>
-        <Field label="Filter by Form">
+        <Field label={t("rm.filterByForm")}>
           <select value={formFilter} onChange={(e) => setFormFilter(e.target.value)} style={selectStyle}>
-            <option value="">All Forms</option>
+            <option value="">{t("rm.allForms")}</option>
             {FORMS.map((f) => <option key={f}>{f}</option>)}
           </select>
         </Field>
       </div>
-      {isMobile && <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 6 }}>↔ Swipe sideways to see every column</div>}
+      {isMobile && <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 6 }}>{t("rm.swipeHint")}</div>}
       <div style={{ overflowX: "auto" }}>
       <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden", minWidth: isMobile ? 640 : "auto" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg }}>
-          <span style={{ flex: 1.5 }}>Form / Exam</span>
-          <span style={{ flex: 1 }}>Period</span>
-          <span style={{ flex: 1 }}>Submitted</span>
-          <span style={{ flex: 1 }}>Candidates</span>
-          <span style={{ flex: 1 }}>Passed</span>
-          <span style={{ flex: 1 }}>School GPA</span>
+          <span style={{ flex: 1.5 }}>{t("rm.col.formExam")}</span>
+          <span style={{ flex: 1 }}>{t("rm.col.period")}</span>
+          <span style={{ flex: 1 }}>{t("rm.col.submitted")}</span>
+          <span style={{ flex: 1 }}>{t("rm.col.candidates")}</span>
+          <span style={{ flex: 1 }}>{t("rm.col.passed")}</span>
+          <span style={{ flex: 1 }}>{t("rm.col.schoolGpa")}</span>
           <span style={{ width: 90 }} />
         </div>
-        {rows.length === 0 && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>No submitted results yet.</p>}
+        {rows.length === 0 && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{t("rm.noSubmitted")}</p>}
         {rows.map((r, i) => (
           <div key={r.sheet_id} style={{ display: "flex", alignItems: "center", padding: "9px 16px", fontSize: 12.5, borderTop: i > 0 ? `1px solid ${THEME.border}` : "none" }}>
             <span style={{ flex: 1.5 }}>{r.form} - {r.exam_type}</span>
             <span style={{ flex: 1 }}>{r.month} {r.year}</span>
-            <span style={{ flex: 1 }}>{r.submitted_teachers} teacher(s)</span>
+            <span style={{ flex: 1 }}>{t("rm.teachersN", { n: r.submitted_teachers })}</span>
             <span style={{ flex: 1 }}>{r.total_candidates ?? "-"}</span>
             <span style={{ flex: 1 }}>{r.total_passed ?? "-"}</span>
             <span style={{ flex: 1 }}>{r.school_gpa ?? "-"}</span>
-            <span style={{ width: 90 }}><button onClick={() => onOpenPeriod(r)} style={{ ...btnTiny, display: "inline-flex", alignItems: "center", gap: 4 }}>Open<ChevronRightIcon size={12} /></button></span>
+            <span style={{ width: 90 }}><button onClick={() => onOpenPeriod(r)} style={{ ...btnTiny, display: "inline-flex", alignItems: "center", gap: 4 }}>{t("rm.open")}<ChevronRightIcon size={12} /></button></span>
           </div>
         ))}
       </div>
@@ -317,6 +320,7 @@ function Field({ label, children }) {
 
 // ══════════════════ TEACHER: ENTER MARKS ══════════════════
 function EnterMarks({ period, subjects }) {
+  const { t } = useLang();
   const { user, token } = useAuth();
   const { isMobile } = useBreakpoint();
   const [sheet, setSheet] = useState(null);
@@ -371,7 +375,7 @@ function EnterMarks({ period, subjects }) {
 
   useEffect(() => { load(); }, [load]);
 
-  if (!user.subject_ids || !user.subject_ids.length) return <Warn>You have no subject assigned to your account. Please contact the Head Master.</Warn>;
+  if (!user.subject_ids || !user.subject_ids.length) return <Warn>{t("rm.noSubject")}</Warn>;
 
   const save = async (silent) => {
     if (!sheet) return;
@@ -379,19 +383,19 @@ function EnterMarks({ period, subjects }) {
     try {
       const scores = students.map((s) => ({ student_id: s.id, subject_id: subjectId, marks: marks[s.id] === "" ? null : marks[s.id] }));
       await apiFetch("/results-mgmt/save", { method: "PUT", body: JSON.stringify({ sheet_id: sheet.id, scores }) }, token);
-      setMsg("Marks saved.");
-      if (!silent) showSuccess("Marks", "Marks Successfully Saved.");
+      setMsg(t("rm.marksSaved"));
+      if (!silent) showSuccess(t("rm.marks"), t("rm.marksSavedOk"));
     } catch (err) { setMsg(err.message); } finally { setSaving(false); }
   };
 
   const doSubmitLock = async () => {
     await save(true);
     await apiFetch("/results-mgmt/lock-teacher", { method: "POST", body: JSON.stringify({ sheet_id: sheet.id, subject_id: subjectId }) }, token);
-    showSuccess("Marks", "Marks Successfully Submitted - locked until the Academic Master unlocks them.");
+    showSuccess(t("rm.marks"), t("rm.marksSubmitted"));
     load();
   };
   const submitLock = () => confirm(
-    "Are you sure you want to submit these marks? Once submitted, you won't be able to edit them again until the Academic Master unlocks your submission.",
+    t("rm.submitConfirm"),
     doSubmitLock,
     { danger: false }
   );
@@ -404,7 +408,7 @@ function EnterMarks({ period, subjects }) {
     try {
       await apiFetch("/results-mgmt/unlock-request", { method: "POST", body: JSON.stringify({ sheet_id: sheet.id, subject_id: subjectId }) }, token);
       setUnlockReqSent(true);
-      showSuccess("Request Sent", "Your unlock request has been sent to the Academic Master.");
+      showSuccess(t("rm.requestSent"), t("rm.unlockRequestSent"));
     } catch (err) { setMsg(err.message); } finally { setUnlockReqBusy(false); }
   };
 
@@ -416,7 +420,7 @@ function EnterMarks({ period, subjects }) {
     setBusyPdf(true);
     try {
       const res = await fetch(`${API_BASE}/results-mgmt/my-scores/export-pdf?sheet_id=${sheet.id}&subject_id=${subjectId}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      if (!res.ok) throw new Error("Could not generate the PDF.");
+      if (!res.ok) throw new Error(t("rm.couldNotPdf"));
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       if (mode === "print") {
@@ -436,7 +440,7 @@ function EnterMarks({ period, subjects }) {
     <div>
       {user.subject_ids.length > 1 && (
         <div style={{ marginBottom: 14 }}>
-          <Field label="Subject">
+          <Field label={t("rm.subject")}>
             <select value={subjectId || ""} onChange={(e) => setSubjectId(Number(e.target.value))} style={selectStyle}>
               {user.subject_ids.map((id) => (
                 <option key={id} value={id}>{subjects.find((s) => s.id === id)?.name || id}</option>
@@ -445,11 +449,11 @@ function EnterMarks({ period, subjects }) {
           </Field>
         </div>
       )}
-      <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 14 }}>Your subject: <b>{mySubjectName}</b> · Students: {students.length}</p>
+      <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 14 }}>{t("rm.yourSubject")} <b>{mySubjectName}</b> {t("rm.studentsCount")} {students.length}</p>
       {locked && (
         <Warn>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
-            <span style={{ flex: 1, minWidth: 200 }}>You have already submitted {mySubjectName} marks (locked). Contact the Academic Master if you need them unlocked. (Your other subjects, if any, are unaffected - switch subject above to enter them.)</span>
+            <span style={{ flex: 1, minWidth: 200 }}>{t("rm.alreadyPre")}{mySubjectName}{t("rm.alreadyPost")}</span>
             <button
               onClick={requestUnlock}
               disabled={unlockReqBusy || unlockReqSent}
@@ -459,7 +463,7 @@ function EnterMarks({ period, subjects }) {
               }}
             >
               {unlockReqBusy ? <SpinnerIcon size={14} /> : <SendIcon size={14} />}
-              {unlockReqSent ? "Request Sent" : "Request Unlock"}
+              {unlockReqSent ? t("rm.requestSent") : t("rm.requestUnlock")}
             </button>
           </div>
         </Warn>
@@ -468,11 +472,11 @@ function EnterMarks({ period, subjects }) {
       <div style={{ overflowX: "auto" }}>
       <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden", maxWidth: 700, minWidth: isMobile ? 440 : "auto" }}>
         <div style={{ display: "flex", padding: "8px 14px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg }}>
-          <span style={{ width: 90 }}>Reg.No</span>
-          <span style={{ flex: 1 }}>Name</span>
-          <span style={{ width: 50, textAlign: "center" }}>Sex</span>
-          <span style={{ width: 70, textAlign: "center" }}>Score</span>
-          <span style={{ width: 60, textAlign: "center" }}>Grade</span>
+          <span style={{ width: 90 }}>{t("rm.regNo")}</span>
+          <span style={{ flex: 1 }}>{t("rm.name")}</span>
+          <span style={{ width: 50, textAlign: "center" }}>{t("rm.sex")}</span>
+          <span style={{ width: 70, textAlign: "center" }}>{t("rm.score")}</span>
+          <span style={{ width: 60, textAlign: "center" }}>{t("rm.grade")}</span>
         </div>
         {students.map((s, i) => (
           <div key={s.id} style={{ display: "flex", alignItems: "center", padding: "9px 14px", borderTop: i > 0 ? `1px solid ${THEME.border}` : "none" }}>
@@ -488,7 +492,7 @@ function EnterMarks({ period, subjects }) {
                 // cell) instead of storing an out-of-range mark - short
                 // inline error, no silent clamping.
                 if (v !== "" && (!Number.isFinite(Number(v)) || Number(v) < 0 || Number(v) > 100)) {
-                  setMarkErr("Marks must be 0–100.");
+                  setMarkErr(t("rm.marks0100"));
                   return;
                 }
                 setMarkErr("");
@@ -508,12 +512,12 @@ function EnterMarks({ period, subjects }) {
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 10, marginTop: 16 }}>
         {!locked && (
           <>
-            <button onClick={save} disabled={saving} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>{saving ? <SpinnerIcon size={14} /> : <SaveIcon size={14} />}{saving ? "Saving..." : "Save (Draft)"}</button>
-            <button onClick={submitLock} disabled={saving} style={{ ...btnPrimary, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>{saving ? <SpinnerIcon size={14} /> : <LockIcon size={14} />}Submit Marks (Submit &amp; Lock)</button>
+            <button onClick={save} disabled={saving} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>{saving ? <SpinnerIcon size={14} /> : <SaveIcon size={14} />}{saving ? t("common.saving") : t("rm.saveDraft")}</button>
+            <button onClick={submitLock} disabled={saving} style={{ ...btnPrimary, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>{saving ? <SpinnerIcon size={14} /> : <LockIcon size={14} />}{t("rm.submitLock")}</button>
           </>
         )}
-        <button onClick={() => pdfAction("print")} disabled={!sheet || busyPdf} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>{busyPdf ? <SpinnerIcon size={14} /> : <PrinterIcon size={14} />}Print</button>
-        <button onClick={() => pdfAction("export")} disabled={!sheet || busyPdf} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>{busyPdf ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}Export PDF</button>
+        <button onClick={() => pdfAction("print")} disabled={!sheet || busyPdf} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>{busyPdf ? <SpinnerIcon size={14} /> : <PrinterIcon size={14} />}{t("rm.print")}</button>
+        <button onClick={() => pdfAction("export")} disabled={!sheet || busyPdf} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7 }}>{busyPdf ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}{t("rm.exportPdf")}</button>
       </div>
       {ConfirmDialogPortal}
     </div>
@@ -522,6 +526,7 @@ function EnterMarks({ period, subjects }) {
 
 // ══════════════════ ADMIN/ACADEMIC: TEACHER STATUS ══════════════════
 function TeacherStatus({ period }) {
+  const { t } = useLang();
   const { token } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
@@ -536,17 +541,17 @@ function TeacherStatus({ period }) {
 
   const unlock = async (r) => {
     await apiFetch("/results-mgmt/unlock", { method: "POST", body: JSON.stringify({ sheet_id: r.sheet_id, teacher_id: r.id, subject_id: r.subject_id }) }, token);
-    showSuccess("Marks", `${r.full_name}'s ${r.subject_name} submission has been unlocked for editing.`);
+    showSuccess(t("rm.marks"), t("rm.unlockedMsg", { name: r.full_name, subject: r.subject_name }));
     load();
   };
   const toggleInclude = async (r) => {
     await apiFetch("/results-mgmt/teacher-status/include", { method: "PATCH", body: JSON.stringify({ sheet_id: r.sheet_id, teacher_id: r.id, subject_id: r.subject_id }) }, token);
-    showSuccess("Marks", "Successfully updated.");
+    showSuccess(t("rm.marks"), t("rm.updatedOk"));
     load();
   };
-  const deleteTeacherScores = (r) => confirm(`Are you sure you want to delete all marks by ${r.full_name} (${r.subject_name}) for this period?`, async () => {
+  const deleteTeacherScores = (r) => confirm(t("rm.deleteMarksConfirm", { name: r.full_name, subject: r.subject_name }), async () => {
     await apiFetch("/results-mgmt/teacher-results", { method: "DELETE", body: JSON.stringify({ sheet_id: r.sheet_id, teacher_id: r.id, subject_id: r.subject_id }) }, token);
-    showSuccess("Marks", "Marks Successfully Deleted.");
+    showSuccess(t("rm.marks"), t("rm.marksDeleted"));
     load();
   });
 
@@ -560,36 +565,36 @@ function TeacherStatus({ period }) {
                 <span style={{ flex: 1 }}>{r.full_name} <span style={{ color: THEME.muted, fontSize: 11.5 }}>({r.subject_name})</span></span>
                 {r.submitted && (
                   <ActionMenu>
-                    <MenuItem icon={r.included_in_results ? <PauseCircleIcon /> : <CheckIcon />} onClick={() => toggleInclude(r)}>{r.included_in_results ? "Exclude from Results" : "Include in Results"}</MenuItem>
-                    <MenuItem icon={<KeyIcon />} onClick={() => unlock(r)}>Unlock</MenuItem>
-                    <MenuItem icon={<TrashIcon />} danger onClick={() => deleteTeacherScores(r)}>Delete Marks</MenuItem>
+                    <MenuItem icon={r.included_in_results ? <PauseCircleIcon /> : <CheckIcon />} onClick={() => toggleInclude(r)}>{r.included_in_results ? t("rm.excludeResults") : t("rm.includeResults")}</MenuItem>
+                    <MenuItem icon={<KeyIcon />} onClick={() => unlock(r)}>{t("rm.unlock")}</MenuItem>
+                    <MenuItem icon={<TrashIcon />} danger onClick={() => deleteTeacherScores(r)}>{t("rm.deleteMarks")}</MenuItem>
                   </ActionMenu>
                 )}
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <StatusPill ok={r.submitted}>{r.submitted ? "Submitted" : "Pending"}</StatusPill>
-                <StatusPill ok={r.included_in_results}>{r.included_in_results ? "Included" : "Not Included"}</StatusPill>
-                {r.pending_unlock_request && <StatusPill ok={false}>Unlock Requested</StatusPill>}
+                <StatusPill ok={r.submitted}>{r.submitted ? t("rm.submitted") : t("rm.pending")}</StatusPill>
+                <StatusPill ok={r.included_in_results}>{r.included_in_results ? t("rm.included") : t("rm.notIncluded")}</StatusPill>
+                {r.pending_unlock_request && <StatusPill ok={false}>{t("rm.unlockRequested")}</StatusPill>}
               </div>
             </div>
           ) : (
             <div style={{ display: "flex", flexWrap: isCompact ? "wrap" : "nowrap", alignItems: "center", gap: isCompact ? 8 : 14 }}>
               <span style={{ flex: isCompact ? "1 1 100%" : 1 }}>{r.full_name} <span style={{ color: THEME.muted, fontSize: 11.5 }}>({r.subject_name})</span></span>
-              <StatusPill ok={r.submitted}>{r.submitted ? "Submitted" : "Pending"}</StatusPill>
-              <StatusPill ok={r.included_in_results}>{r.included_in_results ? "Included" : "Not Included"}</StatusPill>
-              {r.pending_unlock_request && <StatusPill ok={false}>Unlock Requested</StatusPill>}
+              <StatusPill ok={r.submitted}>{r.submitted ? t("rm.submitted") : t("rm.pending")}</StatusPill>
+              <StatusPill ok={r.included_in_results}>{r.included_in_results ? t("rm.included") : t("rm.notIncluded")}</StatusPill>
+              {r.pending_unlock_request && <StatusPill ok={false}>{t("rm.unlockRequested")}</StatusPill>}
               {r.submitted && (
                 <ActionMenu>
-                  <MenuItem icon={r.included_in_results ? <PauseCircleIcon /> : <CheckIcon />} onClick={() => toggleInclude(r)}>{r.included_in_results ? "Exclude from Results" : "Include in Results"}</MenuItem>
-                  <MenuItem icon={<KeyIcon />} onClick={() => unlock(r)}>Unlock</MenuItem>
-                  <MenuItem icon={<TrashIcon />} danger onClick={() => deleteTeacherScores(r)}>Delete Marks</MenuItem>
+                  <MenuItem icon={r.included_in_results ? <PauseCircleIcon /> : <CheckIcon />} onClick={() => toggleInclude(r)}>{r.included_in_results ? t("rm.excludeResults") : t("rm.includeResults")}</MenuItem>
+                  <MenuItem icon={<KeyIcon />} onClick={() => unlock(r)}>{t("rm.unlock")}</MenuItem>
+                  <MenuItem icon={<TrashIcon />} danger onClick={() => deleteTeacherScores(r)}>{t("rm.deleteMarks")}</MenuItem>
                 </ActionMenu>
               )}
             </div>
           )}
         </div>
       ))}
-      {rows.length === 0 && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>No teachers have a subject assigned for this form.</p>}
+      {rows.length === 0 && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{t("rm.noTeachersForm")}</p>}
       {ConfirmDialogPortal}
     </div>
   );
@@ -603,6 +608,7 @@ function TeacherStatus({ period }) {
 // `flexWrap: "wrap"` row can end up mis-anchored or clipped once the row
 // wraps onto a narrower screen.
 function ActionMenu({ children }) {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const wrapRef = useRef(null);
@@ -647,8 +653,8 @@ function ActionMenu({ children }) {
   return (
     <div ref={wrapRef} style={{ position: "relative" }}>
       <button
-        ref={btnRef} onClick={toggle} aria-label="Actions" aria-haspopup="menu" aria-expanded={open}
-        title="Actions" data-open={open} className="mk-actionmenu-btn"
+        ref={btnRef} onClick={toggle} aria-label={t("common.actions")} aria-haspopup="menu" aria-expanded={open}
+        title={t("common.actions")} data-open={open} className="mk-actionmenu-btn"
         style={{
           width: 34, height: 34, borderRadius: 4, border: `1.5px solid ${THEME.border}`, background: THEME.surface,
           cursor: "pointer", color: THEME.text, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
@@ -704,6 +710,7 @@ function StatusPill({ ok, children }) {
 // is generated - the report itself is entirely in Kiswahili, but this
 // picker and its Download button stay English like the rest of the app UI.
 function ParentReportOptionsModal({ sheetId, studentId, studentName, onClose }) {
+  const { t } = useLang();
   const { token } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const now = new Date();
@@ -733,7 +740,7 @@ function ParentReportOptionsModal({ sheetId, studentId, studentName, onClose }) 
     if (studentId) params.set("student_id", studentId);
     const path = studentId ? "/results-mgmt/parent-report/export-pdf" : "/results-mgmt/parent-report/export-pdf-all";
     const res = await fetch(`${API_BASE}${path}?${params.toString()}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-    if (!res.ok) throw new Error("Could not generate the report.");
+    if (!res.ok) throw new Error(t("rm.couldNotReport"));
     return res.blob();
   };
 
@@ -773,7 +780,7 @@ function ParentReportOptionsModal({ sheetId, studentId, studentName, onClose }) 
     const useNewTab = isMobile || isTablet;
     const preOpenedWin = useNewTab ? window.open("", "_blank") : null;
     if (useNewTab && !preOpenedWin) {
-      setErr("Kivinjari kimezuia dirisha jipya (pop-up) - ruhusu pop-ups kwa tovuti hii kisha jaribu tena.");
+      setErr(t("rm.popupBlocked"));
       return;
     }
     setPrintBusy(true);
@@ -810,37 +817,37 @@ function ParentReportOptionsModal({ sheetId, studentId, studentName, onClose }) 
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 3100, display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20 }} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 460, maxHeight: isMobile ? "92vh" : "88vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading }}>{studentId ? `Parent Report — ${studentName}` : "Parent Reports — All Students"}</h3>
+          <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading }}>{studentId ? t("rm.parentReportOne", { name: studentName }) : t("rm.parentReportsAll")}</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: THEME.muted }}><CloseIcon size={18} /></button>
         </div>
 
         {err && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "8px 12px", borderRadius: 4, fontSize: 12.5, marginBottom: 12 }}>{err}</div>}
 
-        <label style={labelStyle}>Mhula</label>
+        <label style={labelStyle}>{t("rm.mhula")}</label>
         <select value={mhula} onChange={(e) => setMhula(e.target.value)} style={{ ...selectStyle, width: "100%", marginBottom: 14 }}>
           {MHULA_OPTIONS_FRONT.map((m) => <option key={m} value={m}>{m}</option>)}
         </select>
 
-        <label style={labelStyle}>Tarehe ya Kufunga Shule</label>
+        <label style={labelStyle}>{t("rm.closingDate")}</label>
         <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           <select value={closeDay} onChange={(e) => setCloseDay(e.target.value)} style={{ ...selectStyle, flex: 1 }}>
-            <option value="">Siku</option>{dayOptions.map((d) => <option key={d} value={d}>{d}</option>)}
+            <option value="">{t("rm.day")}</option>{dayOptions.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
           <select value={closeMonth} onChange={(e) => setCloseMonth(e.target.value)} style={{ ...selectStyle, flex: 1.7 }}>
-            <option value="">Mwezi</option>{SW_MONTHS_FRONT.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            <option value="">{t("rm.monthWord")}</option>{SW_MONTHS_FRONT.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
           </select>
           <select value={closeYear} onChange={(e) => setCloseYear(e.target.value)} style={{ ...selectStyle, flex: 1 }}>
             {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
 
-        <label style={labelStyle}>Tarehe ya Kufungua Shule</label>
+        <label style={labelStyle}>{t("rm.openingDate")}</label>
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
           <select value={openDay} onChange={(e) => setOpenDay(e.target.value)} style={{ ...selectStyle, flex: 1 }}>
-            <option value="">Siku</option>{dayOptions.map((d) => <option key={d} value={d}>{d}</option>)}
+            <option value="">{t("rm.day")}</option>{dayOptions.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
           <select value={openMonth} onChange={(e) => setOpenMonth(e.target.value)} style={{ ...selectStyle, flex: 1.7 }}>
-            <option value="">Mwezi</option>{SW_MONTHS_FRONT.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            <option value="">{t("rm.monthWord")}</option>{SW_MONTHS_FRONT.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
           </select>
           <select value={openYear} onChange={(e) => setOpenYear(e.target.value)} style={{ ...selectStyle, flex: 1 }}>
             {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -848,18 +855,18 @@ function ParentReportOptionsModal({ sheetId, studentId, studentName, onClose }) 
         </div>
 
         <div style={{ display: "flex", flexDirection: isMobile ? "column-reverse" : "row", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} disabled={busy || printBusy} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}) }}>Cancel</button>
+          <button onClick={onClose} disabled={busy || printBusy} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}) }}>{t("common.cancel")}</button>
           <button
             onClick={printReport} disabled={busy || printBusy}
             style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { width: "100%" } : {}) }}
           >
-            {printBusy ? <SpinnerIcon size={14} /> : <PrinterIcon size={14} />}{printBusy ? "Inatayarisha…" : "Print"}
+            {printBusy ? <SpinnerIcon size={14} /> : <PrinterIcon size={14} />}{printBusy ? t("rm.preparingDots") : t("rm.print")}
           </button>
           <button
             onClick={download} disabled={busy || printBusy}
             style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { width: "100%" } : {}) }}
           >
-            {busy ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}{busy ? "Generating…" : "Download PDF"}
+            {busy ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}{busy ? t("rm.generating") : t("rm.downloadPdf")}
           </button>
         </div>
       </div>
@@ -899,34 +906,35 @@ const DEFAULT_RESULTS_SMS_TEMPLATE_ANDROID =
   "Shule Imefungwa leo tarehe [tarehe], na Itafunguliwa tarehe [tarehe]";
 
 const RESULTS_SMS_PLACEHOLDERS = [
-  { token: "{school_name}", label: "School Name" },
-  { token: "{school_short}", label: "School Name (Short)" },
-  { token: "{student_name}", label: "Student Name" },
-  { token: "{parent_name}", label: "Parent/Guardian" },
-  { token: "{reg_no}", label: "Reg No" },
-  { token: "{login_no}", label: "Results Login No" },
-  { token: "{form}", label: "Form" },
-  { token: "{form_sw}", label: "Form (Kidato...)" },
-  { token: "{gender_letter}", label: "Gender (F/M)" },
-  { token: "{exam_type}", label: "Exam Type" },
-  { token: "{exam_type_sw}", label: "Exam Type (Kiswahili)" },
-  { token: "{month}", label: "Month" },
-  { token: "{month_sw}", label: "Month (Mwezi wa...)" },
-  { token: "{month_name_sw}", label: "Month (Agosti)" },
-  { token: "{year}", label: "Year" },
-  { token: "{subjects_breakdown}", label: "Subjects & Marks" },
-  { token: "{subjects_breakdown_long}", label: "Subjects, Marks, Grade & Comment" },
-  { token: "{total_marks}", label: "Total Marks" },
-  { token: "{subjects_sat}", label: "Subjects Sat" },
-  { token: "{average}", label: "Average (Wastani)" },
-  { token: "{division}", label: "Division" },
-  { token: "{avg_grade}", label: "Avg Grade" },
-  { token: "{points}", label: "Points" },
-  { token: "{position}", label: "Position" },
-  { token: "{total_students}", label: "Out Of" },
+  { token: "{school_name}", label: "rm.ph.schoolName" },
+  { token: "{school_short}", label: "rm.ph.schoolShort" },
+  { token: "{student_name}", label: "rm.ph.studentName" },
+  { token: "{parent_name}", label: "rm.parentGuardian" },
+  { token: "{reg_no}", label: "rm.ph.regNo" },
+  { token: "{login_no}", label: "rm.ph.loginNo" },
+  { token: "{form}", label: "rm.ph.form" },
+  { token: "{form_sw}", label: "rm.ph.formSw" },
+  { token: "{gender_letter}", label: "rm.ph.gender" },
+  { token: "{exam_type}", label: "rm.ph.examType" },
+  { token: "{exam_type_sw}", label: "rm.ph.examTypeSw" },
+  { token: "{month}", label: "rm.ph.month" },
+  { token: "{month_sw}", label: "rm.ph.monthSw" },
+  { token: "{month_name_sw}", label: "rm.ph.monthNameSw" },
+  { token: "{year}", label: "rm.ph.year" },
+  { token: "{subjects_breakdown}", label: "rm.ph.subjectsMarks" },
+  { token: "{subjects_breakdown_long}", label: "rm.ph.subjectsLong" },
+  { token: "{total_marks}", label: "rm.ph.totalMarks" },
+  { token: "{subjects_sat}", label: "rm.ph.subjectsSat" },
+  { token: "{average}", label: "rm.ph.average" },
+  { token: "{division}", label: "rm.ph.division" },
+  { token: "{avg_grade}", label: "rm.ph.avgGrade" },
+  { token: "{points}", label: "rm.ph.points" },
+  { token: "{position}", label: "rm.ph.position" },
+  { token: "{total_students}", label: "rm.ph.outOf" },
 ];
 
 function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
+  const { t, tn } = useLang();
   const { token } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const { confirm, ConfirmDialogPortal } = useConfirm();
@@ -970,14 +978,14 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
   };
 
   const runPreview = async () => {
-    if (!template.trim()) { setErr("Write a message template first."); return; }
+    if (!template.trim()) { setErr(t("rm.writeTemplate")); return; }
     setBusy(true); setErr("");
     try {
       const data = await apiFetch("/results-mgmt/results-sms/preview", { method: "POST", body: JSON.stringify({ sheet_id: sheetId, template, provider }) }, token);
       setPreview(data);
       setSelectedIds(data.matched.map((m) => m.student_id));
       setStep("review");
-    } catch (e) { setErr(e.message || "Could not build the preview."); } finally { setBusy(false); }
+    } catch (e) { setErr(e.message || t("rm.couldNotPreview")); } finally { setBusy(false); }
   };
 
   const toggleOne = (id) => setSelectedIds((ids) => ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
@@ -987,17 +995,17 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
   const doSend = () => {
     if (!selectedIds.length) return;
     confirm(
-      `Send this result message to ${selectedIds.length} parent${selectedIds.length === 1 ? "" : "s"}? This cannot be undone.`,
+      t("rm.sendConfirm", { n: selectedIds.length }),
       async () => {
         setBusy(true); setErr("");
         try {
           const data = await apiFetch("/results-mgmt/results-sms/send", { method: "POST", body: JSON.stringify({ sheet_id: sheetId, template, student_ids: selectedIds, provider }) }, token);
           setSendResult(data);
           setStep("done");
-          if (data.status === "sent") showSuccess("Results SMS", data.message);
-        } catch (e) { setErr(e.message || "Could not send the results SMS."); } finally { setBusy(false); }
+          if (data.status === "sent") showSuccess(t("rm.resultsSmsTitle"), data.message);
+        } catch (e) { setErr(e.message || t("rm.couldNotSendSms")); } finally { setBusy(false); }
       },
-      { confirmLabel: "Yes, Send", cancelLabel: "Cancel", danger: false }
+      { confirmLabel: t("common.yes"), cancelLabel: t("common.cancel"), danger: false }
     );
   };
 
@@ -1010,7 +1018,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
         <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 620, maxHeight: isMobile ? "94vh" : "90vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4, gap: 10 }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading, display: "flex", alignItems: "center", gap: 8 }}><MessageIcon size={16} />Send Results via SMS</h3>
+              <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading, display: "flex", alignItems: "center", gap: 8 }}><MessageIcon size={16} />{t("rm.sendViaSms")}</h3>
               <p style={{ margin: "3px 0 0", fontSize: 11.5, color: THEME.muted }}>{periodLabel}</p>
             </div>
             <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: THEME.muted, flexShrink: 0 }}><CloseIcon size={18} /></button>
@@ -1021,10 +1029,10 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
           {step === "compose" && (
             <div style={{ marginTop: 14 }}>
               <p style={{ fontSize: 12, color: THEME.muted, lineHeight: 1.5, margin: "0 0 12px" }}>
-                Every parent gets a message with their own child's details filled in automatically - nothing here is shared verbatim between students.
+                {t("rm.smsIntro")}
               </p>
 
-              <label style={labelStyle}>Provider</label>
+              <label style={labelStyle}>{t("rm.provider")}</label>
               <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
                 {[["nextsms", "NEXTSMS"], ["android_gateway", "Android SMS Gateway"]].map(([val, label]) => (
                   <label key={val} style={{
@@ -1038,7 +1046,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
                 ))}
               </div>
 
-              <label style={labelStyle}>Message Template</label>
+              <label style={labelStyle}>{t("rm.messageTemplate")}</label>
               <textarea
                 ref={textareaRef}
                 value={template}
@@ -1048,15 +1056,15 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
               />
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
                 {RESULTS_SMS_PLACEHOLDERS.map((p) => (
-                  <button type="button" key={p.token} onClick={() => insertPlaceholder(p.token)} style={chipBtnStyle}>+ {p.label}</button>
+                  <button type="button" key={p.token} onClick={() => insertPlaceholder(p.token)} style={chipBtnStyle}>+ {t(p.label)}</button>
                 ))}
               </div>
-              <p style={{ fontSize: 11, color: THEME.muted, marginTop: 10 }}>{template.length} characters · roughly {template.length <= 160 ? 1 : Math.ceil(template.length / 153)} SMS part(s) per student (varies slightly once names/marks are filled in).</p>
+              <p style={{ fontSize: 11, color: THEME.muted, marginTop: 10 }}>{t("rm.charsRoughly", { chars: template.length, parts: template.length <= 160 ? 1 : Math.ceil(template.length / 153) })}</p>
 
               <div style={{ display: "flex", flexDirection: isMobile ? "column-reverse" : "row", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
-                <button onClick={onClose} disabled={busy} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}) }}>Cancel</button>
+                <button onClick={onClose} disabled={busy} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}) }}>{t("common.cancel")}</button>
                 <button onClick={runPreview} disabled={busy} style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { width: "100%" } : {}) }}>
-                  {busy ? <SpinnerIcon size={14} /> : <SearchIcon size={14} />}{busy ? "Preparing…" : "Preview Messages"}
+                  {busy ? <SpinnerIcon size={14} /> : <SearchIcon size={14} />}{busy ? t("rm.preparing") : t("rm.previewMessages")}
                 </button>
               </div>
             </div>
@@ -1065,20 +1073,20 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
           {step === "review" && preview && (
             <div style={{ marginTop: 14 }}>
               <div style={{ background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "8px 12px", fontSize: 12, color: THEME.text, marginBottom: 12 }}>
-                {preview.total_students} student(s) with results · {preview.matched.length} have a parent phone on file · {preview.unmatched.length} do not
+                {t("rm.previewSummary", { total: preview.total_students, matched: preview.matched.length, unmatched: preview.unmatched.length })}
               </div>
 
               {preview.unmatched.length > 0 && (
                 <div style={{ marginBottom: 12 }}>
                   <button type="button" onClick={() => setShowUnmatched((v) => !v)} style={{ ...chipBtnStyle, background: THEME.warningLight, borderColor: THEME.warning, color: THEME.warning, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                    <InfoIcon size={12} />{preview.unmatched.length} student(s) will be skipped (no parent phone)
+                    <InfoIcon size={12} />{t("rm.willSkip", { n: preview.unmatched.length })}
                     <ChevronDownIcon size={11} style={{ transform: showUnmatched ? "rotate(180deg)" : "none" }} />
                   </button>
                   {showUnmatched && (
                     <div style={{ marginTop: 6, border: `1px solid ${THEME.border}`, borderRadius: 4, maxHeight: 140, overflowY: "auto" }}>
                       {preview.unmatched.map((u) => (
                         <div key={u.student_id} style={{ padding: "7px 12px", borderBottom: `1px solid ${THEME.border}`, fontSize: 12 }}>
-                          <b>{u.full_name}</b> <span style={{ color: THEME.muted }}>· Reg No: {u.reg_no || "-"}</span>
+                          <b>{u.full_name}</b> <span style={{ color: THEME.muted }}>· {t("rm.regNoLabel")} {u.reg_no || "-"}</span>
                           <div style={{ color: THEME.muted, fontSize: 11 }}>{u.reason}</div>
                         </div>
                       ))}
@@ -1088,16 +1096,16 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
               )}
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 11.5, color: THEME.muted }}>{selectedCount} of {preview.matched.length} selected · ~{selectedSegments} SMS part(s) total</span>
+                <span style={{ fontSize: 11.5, color: THEME.muted }}>{t("rm.selectedSummary", { sel: selectedCount, total: preview.matched.length, seg: selectedSegments })}</span>
                 <div style={{ display: "flex", gap: 12 }}>
-                  <button type="button" onClick={selectAll} style={{ ...linkBtnStyle, display: "inline-flex", alignItems: "center", gap: 4 }}><CheckIcon size={11} />Select all</button>
-                  <button type="button" onClick={clearAll} style={{ ...linkBtnStyle, display: "inline-flex", alignItems: "center", gap: 4 }}><CloseIcon size={11} />Clear</button>
+                  <button type="button" onClick={selectAll} style={{ ...linkBtnStyle, display: "inline-flex", alignItems: "center", gap: 4 }}><CheckIcon size={11} />{t("rm.selectAll")}</button>
+                  <button type="button" onClick={clearAll} style={{ ...linkBtnStyle, display: "inline-flex", alignItems: "center", gap: 4 }}><CloseIcon size={11} />{t("rm.clear")}</button>
                 </div>
               </div>
 
               <div style={{ maxHeight: 320, overflowY: "auto", border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
                 {preview.matched.length === 0 && (
-                  <div style={{ padding: 14, fontSize: 12.5, color: THEME.muted }}>No student on this sheet has a saved parent phone number yet.</div>
+                  <div style={{ padding: 14, fontSize: 12.5, color: THEME.muted }}>{t("rm.noParentPhone")}</div>
                 )}
                 {preview.matched.map((m) => (
                   <label key={m.student_id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderBottom: `1px solid ${THEME.border}`, cursor: "pointer" }}>
@@ -1107,18 +1115,18 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
                         <b style={{ fontSize: 12.5 }}>{m.full_name}</b>
                         <span style={{ color: THEME.muted, fontSize: 11, fontVariantNumeric: "tabular-nums" }}>{m.phone}</span>
                       </span>
-                      <span style={{ color: THEME.muted, fontSize: 11 }}>{m.parent_name || "Parent/Guardian"} · Reg No: {m.reg_no || "-"}</span>
+                      <span style={{ color: THEME.muted, fontSize: 11 }}>{m.parent_name || t("rm.parentGuardian")} · {t("rm.regNoLabel")} {m.reg_no || "-"}</span>
                       <span style={{ background: THEME.bg, borderRadius: 4, padding: "6px 8px", fontSize: 11.5, color: THEME.text, lineHeight: 1.5, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }}>{m.message}</span>
-                      <span style={{ color: THEME.muted, fontSize: 10.5 }}>{m.char_count} characters · {m.sms_segments} SMS part(s)</span>
+                      <span style={{ color: THEME.muted, fontSize: 10.5 }}>{t("rm.charsSmsParts", { chars: m.char_count, seg: m.sms_segments })}</span>
                     </span>
                   </label>
                 ))}
               </div>
 
               <div style={{ display: "flex", flexDirection: isMobile ? "column-reverse" : "row", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
-                <button onClick={() => setStep("compose")} disabled={busy} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}) }}>Back to Edit</button>
+                <button onClick={() => setStep("compose")} disabled={busy} style={{ ...btnSecondary, ...(isMobile ? { width: "100%" } : {}) }}>{t("rm.backToEdit")}</button>
                 <button onClick={doSend} disabled={busy || !selectedCount} style={{ ...btnPrimary, opacity: (busy || !selectedCount) ? 0.55 : 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { width: "100%" } : {}) }}>
-                  {busy ? <SpinnerIcon size={14} /> : <SendIcon size={14} />}{busy ? "Sending…" : `Send to ${selectedCount} Parent${selectedCount === 1 ? "" : "s"}`}
+                  {busy ? <SpinnerIcon size={14} /> : <SendIcon size={14} />}{busy ? t("rm.sending") : tn("rm.sendToN", selectedCount)}
                 </button>
               </div>
             </div>
@@ -1136,7 +1144,7 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
 
               {sendResult.failures && sendResult.failures.length > 0 && (
                 <div style={{ marginTop: 12 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: THEME.danger, margin: "0 0 6px" }}>Failed to send ({sendResult.failures.length}):</p>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: THEME.danger, margin: "0 0 6px" }}>{t("rm.failedToSend", { n: sendResult.failures.length })}</p>
                   <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, maxHeight: 140, overflowY: "auto" }}>
                     {sendResult.failures.map((f, i) => (
                       <div key={i} style={{ padding: "7px 12px", borderBottom: `1px solid ${THEME.border}`, fontSize: 12 }}>
@@ -1148,11 +1156,11 @@ function ResultsSmsModal({ sheetId, periodLabel, onClose }) {
               )}
 
               {sendResult.skipped && sendResult.skipped.length > 0 && (
-                <p style={{ fontSize: 11.5, color: THEME.muted, marginTop: 10 }}>Skipped (no parent phone): {sendResult.skipped.join(", ")}</p>
+                <p style={{ fontSize: 11.5, color: THEME.muted, marginTop: 10 }}>{t("rm.skippedNoPhone")} {sendResult.skipped.join(", ")}</p>
               )}
 
               <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
-                <button onClick={onClose} style={{ ...btnPrimary, ...(isMobile ? { width: "100%" } : {}) }}>Close</button>
+                <button onClick={onClose} style={{ ...btnPrimary, ...(isMobile ? { width: "100%" } : {}) }}>{t("common.close")}</button>
               </div>
             </div>
           )}
@@ -1168,6 +1176,7 @@ const chipBtnStyle = { padding: "5px 10px", borderRadius: 4, border: `1px solid 
 const linkBtnStyle = { background: "none", border: "none", color: THEME.heading, fontSize: 11.5, fontWeight: 600, cursor: "pointer", padding: 0 };
 
 function CompiledResults({ period }) {
+  const { t } = useLang();
   const { token } = useAuth();
   const { isMobile } = useBreakpoint();
   const [data, setData] = useState(null);
@@ -1190,7 +1199,7 @@ function CompiledResults({ period }) {
     setBusyPdf(true); setPdfErr("");
     try {
       const res = await fetch(`${API_BASE}/results-mgmt/export-pdf?sheet_id=${sheetId}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      if (!res.ok) throw new Error("Could not generate the PDF.");
+      if (!res.ok) throw new Error(t("rm.couldNotPdf"));
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       if (mode === "print") {
@@ -1204,8 +1213,8 @@ function CompiledResults({ period }) {
     } catch (err) { setPdfErr(err.message); } finally { setBusyPdf(false); }
   };
 
-  if (!data) return <p style={{ color: THEME.muted, fontSize: 13.5, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={14} /> Loading...</p>;
-  if (!data.students.length) return <p style={{ color: THEME.muted, fontSize: 13.5 }}>No results yet for this period.</p>;
+  if (!data) return <p style={{ color: THEME.muted, fontSize: 13.5, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={14} /> {t("rm.loadingDots")}</p>;
+  if (!data.students.length) return <p style={{ color: THEME.muted, fontSize: 13.5 }}>{t("rm.noResultsPeriod")}</p>;
 
   // Subject order/names come from subject_performance (already sorted by
   // sort_order server-side) so "DETAILS SUBJECTS" lists subjects in the
@@ -1227,8 +1236,8 @@ function CompiledResults({ period }) {
   return (
     <div className="mk-font-exempt" style={{ background: NECTA_SUMMARY_BG, padding: "14px 16px", borderRadius: 4 }}>
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-        <button onClick={() => pdfAction("print")} disabled={!sheetId || busyPdf} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { flex: 1, textAlign: "center" } : {}) }}>{busyPdf ? <SpinnerIcon size={14} /> : <PrinterIcon size={14} />}Print</button>
-        <button onClick={() => pdfAction("export")} disabled={!sheetId || busyPdf} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { flex: 1, textAlign: "center" } : {}) }}>{busyPdf ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}Export PDF</button>
+        <button onClick={() => pdfAction("print")} disabled={!sheetId || busyPdf} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { flex: 1, textAlign: "center" } : {}) }}>{busyPdf ? <SpinnerIcon size={14} /> : <PrinterIcon size={14} />}{t("rm.print")}</button>
+        <button onClick={() => pdfAction("export")} disabled={!sheetId || busyPdf} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { flex: 1, textAlign: "center" } : {}) }}>{busyPdf ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}{t("rm.exportPdf")}</button>
       </div>
       {pdfErr && <p style={{ fontSize: 12.5, color: THEME.danger, marginTop: -6, marginBottom: 12 }}>{pdfErr}</p>}
 
@@ -1269,7 +1278,7 @@ function CompiledResults({ period }) {
         </div>
       </div>
 
-      {isMobile && <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 6 }}>↔ Swipe sideways to see every column</div>}
+      {isMobile && <div style={{ fontSize: 11, color: THEME.muted, marginBottom: 6 }}>{t("rm.swipeHint")}</div>}
       <div style={{ overflowX: "auto" }}>
       <table style={{ borderCollapse: "collapse", fontSize: 12, minWidth: 720 }}>
         <thead>
@@ -1423,6 +1432,7 @@ function CompiledResults({ period }) {
 // enforces that scoping regardless of what the UI shows); Send Results via
 // SMS stays Admin/Second Master/Academic only, unchanged.
 function ParentsReports({ period }) {
+  const { t } = useLang();
   const { user, token } = useAuth();
   const { isMobile } = useBreakpoint();
   const [data, setData] = useState(null);
@@ -1446,23 +1456,23 @@ function ParentsReports({ period }) {
   }, [period, token]);
 
   if (loadErr) return <p style={{ color: THEME.danger, fontSize: 13.5 }}>{loadErr}</p>;
-  if (!data) return <p style={{ color: THEME.muted, fontSize: 13.5, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={14} /> Loading...</p>;
-  if (!data.students.length) return <p style={{ color: THEME.muted, fontSize: 13.5 }}>No results yet for this period.</p>;
+  if (!data) return <p style={{ color: THEME.muted, fontSize: 13.5, display: "flex", alignItems: "center", gap: 7 }}><SpinnerIcon size={14} /> {t("rm.loadingDots")}</p>;
+  if (!data.students.length) return <p style={{ color: THEME.muted, fontSize: 13.5 }}>{t("rm.noResultsPeriod")}</p>;
 
   return (
     <div>
       {canParentReport && sheetId && (
         <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 12 : 14, marginBottom: 18, maxWidth: 640 }}>
-          <p style={{ margin: "0 0 10px", fontSize: 12.5, fontWeight: 700, color: THEME.heading }}>Parent Report (PDF)</p>
+          <p style={{ margin: "0 0 10px", fontSize: 12.5, fontWeight: 700, color: THEME.heading }}>{t("rm.parentReportPdf")}</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 8, flexWrap: "wrap", alignItems: isMobile ? "stretch" : "center" }}>
             <input
               value={prSearch}
               onChange={(e) => setPrSearch(e.target.value)}
-              placeholder="Type student name for one report…"
+              placeholder={t("rm.searchOneReport")}
               style={{ ...inputStyle, flex: 1, minWidth: isMobile ? "auto" : 200 }}
             />
             <button onClick={() => setPrPicker("all")} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, whiteSpace: "nowrap", ...(isMobile ? { width: "100%" } : {}) }}>
-              <DownloadIcon size={14} />Download All (PDF)
+              <DownloadIcon size={14} />{t("rm.downloadAll")}
             </button>
           </div>
           {prSearch.trim().length >= 2 && (
@@ -1476,11 +1486,11 @@ function ParentsReports({ period }) {
                     onClick={() => { setPrPicker({ studentId: s.student_id, studentName: s.full_name }); setPrSearch(""); }}
                     style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 12px", border: "none", borderBottom: `1px solid ${THEME.border}`, background: THEME.surface, cursor: "pointer", fontSize: 13 }}
                   >
-                    {s.full_name} <span style={{ color: THEME.muted, fontSize: 11.5 }}>· Reg No: {s.reg_no || "-"}</span>
+                    {s.full_name} <span style={{ color: THEME.muted, fontSize: 11.5 }}>· {t("rm.regNoLabel")} {s.reg_no || "-"}</span>
                   </button>
                 ))}
               {!data.students.some((s) => s.full_name.toLowerCase().includes(prSearch.trim().toLowerCase())) && (
-                <div style={{ padding: 10, fontSize: 12.5, color: THEME.muted }}>No students matched "{prSearch}".</div>
+                <div style={{ padding: 10, fontSize: 12.5, color: THEME.muted }}>{t("rm.noMatchName", { name: prSearch })}</div>
               )}
             </div>
           )}
@@ -1498,13 +1508,12 @@ function ParentsReports({ period }) {
 
       {canSms && sheetId && (
         <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 12 : 14, marginBottom: 18, maxWidth: 640 }}>
-          <p style={{ margin: "0 0 4px", fontSize: 12.5, fontWeight: 700, color: THEME.heading }}>Send Results to Parents (SMS)</p>
+          <p style={{ margin: "0 0 4px", fontSize: 12.5, fontWeight: 700, color: THEME.heading }}>{t("rm.sendToParentsSms")}</p>
           <p style={{ margin: "0 0 10px", fontSize: 11.5, color: THEME.muted, lineHeight: 1.5 }}>
-            Automatically texts each student's own compiled result to their own registered parent number - matched by student, never mixed up.
-            You choose whether it goes to every matched parent or only the ones you select, and you can always review the exact message before anything is sent.
+            {t("rm.smsSectionIntro")}
           </p>
           <button onClick={() => setSmsModalOpen(true)} style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, ...(isMobile ? { width: "100%" } : {}) }}>
-            <MessageIcon size={14} />Send Results via SMS
+            <MessageIcon size={14} />{t("rm.sendViaSms")}
           </button>
         </div>
       )}
@@ -1518,7 +1527,7 @@ function ParentsReports({ period }) {
       )}
 
       {!canParentReport && !canSms && (
-        <p style={{ color: THEME.muted, fontSize: 13.5 }}>Nothing available here for your account.</p>
+        <p style={{ color: THEME.muted, fontSize: 13.5 }}>{t("rm.nothingAvailable")}</p>
       )}
     </div>
   );
@@ -1530,6 +1539,7 @@ function ParentsReports({ period }) {
 // used from Students Management (Admin/Second Master use the ⋮ menu there
 // instead, since they're already looking at one chosen student).
 function AcademicStudentResultsModal({ token, onClose }) {
+  const { t } = useLang();
   const { isMobile } = useBreakpoint();
   const [form, setForm] = useState(FORMS[0]);
   const [search, setSearch] = useState("");
@@ -1607,7 +1617,7 @@ function AcademicStudentResultsModal({ token, onClose }) {
     setBusyPdf(true); setErr("");
     try {
       const res = await fetch(`${API_BASE}/results-mgmt/student-result/export-pdf?sheet_id=${matched.sheet_id}&student_id=${student.id}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      if (!res.ok) throw new Error("Could not generate the result PDF.");
+      if (!res.ok) throw new Error(t("rm.couldNotResultPdf"));
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       if (mode === "print") {
@@ -1626,7 +1636,7 @@ function AcademicStudentResultsModal({ token, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 3000, display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20 }} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 720, maxHeight: isMobile ? "92vh" : "88vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading, display: "flex", alignItems: "center", gap: 8 }}><SearchIcon size={16} />Search Student Results</h3>
+          <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading, display: "flex", alignItems: "center", gap: 8 }}><SearchIcon size={16} />{t("rm.searchStudentResults")}</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: THEME.muted }}><CloseIcon size={18} /></button>
         </div>
 
@@ -1638,9 +1648,9 @@ function AcademicStudentResultsModal({ token, onClose }) {
               <select value={form} onChange={(e) => { setForm(e.target.value); setSearch(""); setMatches([]); }} style={selectStyle}>
                 {FORMS.map((f) => <option key={f} value={f}>{f}</option>)}
               </select>
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Type student name…" style={{ ...inputStyle, flex: 1, minWidth: 180 }} />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("rm.typeStudentName")} style={{ ...inputStyle, flex: 1, minWidth: 180 }} />
             </div>
-            {searching && <p style={{ fontSize: 12.5, color: THEME.muted }}>Searching…</p>}
+            {searching && <p style={{ fontSize: 12.5, color: THEME.muted }}>{t("rm.searching")}</p>}
             {!!matches.length && (
               <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
                 {matches.map((s) => {
@@ -1648,28 +1658,28 @@ function AcademicStudentResultsModal({ token, onClose }) {
                   return (
                     <button key={s.id} onClick={() => pickStudent(s)} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 12px", border: "none", borderBottom: `1px solid ${THEME.border}`, background: THEME.surface, cursor: "pointer", fontSize: 13.5 }}>
                       <div style={{ fontWeight: 700, color: THEME.text }}>{name}</div>
-                      <div style={{ fontSize: 11.5, color: THEME.muted }}>{s.form} · Reg No: {s.reg_no || s.entry_no || "-"}</div>
+                      <div style={{ fontSize: 11.5, color: THEME.muted }}>{s.form} · {t("rm.regNoLabel")} {s.reg_no || s.entry_no || "-"}</div>
                     </button>
                   );
                 })}
               </div>
             )}
-            {!searching && search.trim() && !matches.length && <p style={{ fontSize: 12.5, color: THEME.muted }}>No students matched "{search}" in {form}.</p>}
+            {!searching && search.trim() && !matches.length && <p style={{ fontSize: 12.5, color: THEME.muted }}>{t("rm.noMatchIn", { name: search, form })}</p>}
           </>
         ) : (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, padding: "8px 12px", background: THEME.bg, borderRadius: 4 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 13.5, color: THEME.text }}>{[student.first_name, student.middle_name, student.last_name].filter(Boolean).join(" ")}</div>
-                <div style={{ fontSize: 11.5, color: THEME.muted }}>{student.form} · Reg No: {student.reg_no || student.entry_no || "-"}</div>
+                <div style={{ fontSize: 11.5, color: THEME.muted }}>{student.form} · {t("rm.regNoLabel")} {student.reg_no || student.entry_no || "-"}</div>
               </div>
-              <button onClick={() => { setStudent(null); setResult(null); }} style={{ ...btnSecondary, padding: "6px 12px", fontSize: 12 }}>Change Student</button>
+              <button onClick={() => { setStudent(null); setResult(null); }} style={{ ...btnSecondary, padding: "6px 12px", fontSize: 12 }}>{t("rm.changeStudent")}</button>
             </div>
 
             {loadingPeriods ? (
-              <p style={{ color: THEME.muted, fontSize: 13 }}>Loading available exam periods…</p>
+              <p style={{ color: THEME.muted, fontSize: 13 }}>{t("rm.loadingPeriods")}</p>
             ) : !periods.length ? (
-              <p style={{ color: THEME.muted, fontSize: 13 }}>No published results found for this student yet.</p>
+              <p style={{ color: THEME.muted, fontSize: 13 }}>{t("rm.noPublishedStudent")}</p>
             ) : (
               <>
                 <div style={isMobile ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 } : { display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
@@ -1687,7 +1697,7 @@ function AcademicStudentResultsModal({ token, onClose }) {
                   </select>
                 </div>
                 <button onClick={viewResult} disabled={!matched || loadingResult} style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 18 }}>
-                  {loadingResult ? <SpinnerIcon size={14} /> : <SearchIcon size={14} />}{loadingResult ? "Loading…" : "View Results"}
+                  {loadingResult ? <SpinnerIcon size={14} /> : <SearchIcon size={14} />}{loadingResult ? t("rm.loadingDots") : t("rm.viewResults")}
                 </button>
 
                 {result && (
@@ -1720,6 +1730,7 @@ const RANGE_COLORS = { AC: { background: "#0EA5E9", color: "#FFFFFF" }, AD: { ba
 // numbers shown everywhere else in Results Management, plus POS (that
 // subject's rank against every other subject sat in the same exam).
 function TeacherEvaluationModal({ token, onClose }) {
+  const { t } = useLang();
   const { isMobile } = useBreakpoint();
   const evalExamTypes = useExamTypes(token);
   const [sel, setSel] = useState({ form: FORMS[0], exam_type: EXAM_TYPES[0], month: MONTHS[new Date().getMonth()], year: new Date().getFullYear() });
@@ -1762,7 +1773,7 @@ function TeacherEvaluationModal({ token, onClose }) {
     setBusyPdf(true); setErr("");
     try {
       const res = await fetch(`${API_BASE}/results-mgmt/teacher-evaluation/export-pdf?${query}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      if (!res.ok) throw new Error("Could not generate the evaluation PDF.");
+      if (!res.ok) throw new Error(t("rm.couldNotEvalPdf"));
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       if (mode === "print") {
@@ -1797,52 +1808,52 @@ function TeacherEvaluationModal({ token, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 3000, display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20 }} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.surface, borderRadius: 4, width: "100%", maxWidth: 900, maxHeight: isMobile ? "92vh" : "88vh", overflowY: "auto", padding: isMobile ? 16 : 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading, display: "flex", alignItems: "center", gap: 8 }}><CheckCircleIcon size={16} />TEACHERS ASSESMENT</h3>
+          <h3 style={{ margin: 0, fontSize: 16, color: THEME.heading, display: "flex", alignItems: "center", gap: 8 }}><CheckCircleIcon size={16} />{t("rm.teachersAssessment")}</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: THEME.muted }}><CloseIcon size={18} /></button>
         </div>
 
         {err && <div style={{ background: THEME.dangerLight, color: THEME.danger, padding: "8px 12px", borderRadius: 4, fontSize: 12.5, marginBottom: 14 }}>{err}</div>}
 
         <div style={isMobile ? { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } : { display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-          <Field label="Darasa (Form)">
+          <Field label={t("rm.darasaForm")}>
             <select value={sel.form} onChange={(e) => setSel((p) => ({ ...p, form: e.target.value }))} style={selectStyle}>
               {FORMS.map((f) => <option key={f}>{f}</option>)}
             </select>
           </Field>
-          <Field label="Exam Type">
+          <Field label={t("rm.examType")}>
             <select value={sel.exam_type} onChange={(e) => setSel((p) => ({ ...p, exam_type: e.target.value }))} style={selectStyle}>
               {evalExamTypes.map((f) => <option key={f}>{f}</option>)}
             </select>
           </Field>
-          <Field label="Month">
+          <Field label={t("rm.month")}>
             <select value={sel.month} onChange={(e) => setSel((p) => ({ ...p, month: e.target.value }))} style={selectStyle}>
               {MONTHS.map((f) => <option key={f}>{f}</option>)}
             </select>
           </Field>
-          <Field label="Year">
+          <Field label={t("rm.year")}>
             <input type="number" value={sel.year} onChange={(e) => setSel((p) => ({ ...p, year: Number(e.target.value) }))} style={{ ...selectStyle, width: 90 }} />
           </Field>
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <Field label="Jina la Mwalimu (Teacher)">
+          <Field label={t("rm.teacherNameLabel")}>
             <select value={teacherId} onChange={(e) => { setTeacherId(e.target.value); setData(null); }} style={{ ...selectStyle, width: "100%", maxWidth: 420, fontWeight: 700 }} disabled={loadingTeachers}>
-              <option value="">{loadingTeachers ? "Loading teachers…" : "Select a teacher…"}</option>
+              <option value="">{loadingTeachers ? t("rm.loadingTeachers") : t("rm.selectTeacher")}</option>
               {teachers.map((t) => <option key={t.id} value={t.id}>{t.full_name}</option>)}
             </select>
           </Field>
-          {!loadingTeachers && !teachers.length && <p style={{ fontSize: 12, color: THEME.muted, marginTop: 6 }}>No teacher is assigned to {sel.form} with a subject yet.</p>}
+          {!loadingTeachers && !teachers.length && <p style={{ fontSize: 12, color: THEME.muted, marginTop: 6 }}>{t("rm.noTeacherAssigned", { form: sel.form })}</p>}
         </div>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
           <button onClick={view} disabled={!teacherId || loading} style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 7 }}>
-            {loading ? <SpinnerIcon size={14} /> : <SearchIcon size={14} />}{loading ? "Loading…" : "View Evaluation"}
+            {loading ? <SpinnerIcon size={14} /> : <SearchIcon size={14} />}{loading ? t("rm.loadingDots") : t("rm.viewEvaluation")}
           </button>
           <button onClick={() => pdfAction("print")} disabled={!teacherId || busyPdf} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", gap: 7 }}>
-            {busyPdf ? <SpinnerIcon size={13} /> : <PrinterIcon size={13} />}{busyPdf ? "Please wait…" : "Print"}
+            {busyPdf ? <SpinnerIcon size={13} /> : <PrinterIcon size={13} />}{busyPdf ? t("rm.pleaseWait") : t("rm.print")}
           </button>
           <button onClick={() => pdfAction("export")} disabled={!teacherId || busyPdf} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", gap: 7 }}>
-            {busyPdf ? <SpinnerIcon size={13} /> : <DownloadIcon size={13} />}{busyPdf ? "Please wait…" : "Export PDF"}
+            {busyPdf ? <SpinnerIcon size={13} /> : <DownloadIcon size={13} />}{busyPdf ? t("rm.pleaseWait") : t("rm.exportPdf")}
           </button>
         </div>
 
@@ -1892,7 +1903,7 @@ function TeacherEvaluationModal({ token, onClose }) {
                       <td style={{ ...tdSmall, fontWeight: 800 }}>{sp.pos ?? "-"}</td>
                     </tr>
                   ))}
-                  {!data.subjects.length && <tr><td style={tdSmall} colSpan={1 + groups.length * 4 + 2}>No subject results found for this teacher in this exam period.</td></tr>}
+                  {!data.subjects.length && <tr><td style={tdSmall} colSpan={1 + groups.length * 4 + 2}>{t("rm.noSubjectResultsTeacher")}</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -1914,24 +1925,25 @@ function TeacherEvaluationModal({ token, onClose }) {
 }
 
 function StudentResultCard({ result, isMobile, onPrint, onExport, busy }) {
+  const { t } = useLang();
   const { sheet, student } = result;
   return (
     <div style={{ border: `1px solid ${THEME.border}`, borderRadius: 4, padding: isMobile ? 14 : 18, background: THEME.bg }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 14 }}>
         <div>
           <div style={{ fontWeight: 800, fontSize: 15, color: THEME.text }}>{student.full_name}</div>
-          <div style={{ fontSize: 12, color: THEME.muted }}>{sheet.form} · {sheet.exam_type} · {sheet.month} {sheet.year} · Reg No: {student.reg_no || student.entry_no || "-"}</div>
+          <div style={{ fontSize: 12, color: THEME.muted }}>{sheet.form} · {sheet.exam_type} · {sheet.month} {sheet.year} · {t("rm.regNoLabel")} {student.reg_no || student.entry_no || "-"}</div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button disabled={busy} onClick={onPrint} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px" }}>{busy ? <SpinnerIcon size={13} /> : <PrinterIcon size={13} />}{busy ? "Please wait…" : "Print"}</button>
-          <button disabled={busy} onClick={onExport} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px" }}>{busy ? <SpinnerIcon size={13} /> : <DownloadIcon size={13} />}{busy ? "Please wait…" : "Export PDF"}</button>
+          <button disabled={busy} onClick={onPrint} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px" }}>{busy ? <SpinnerIcon size={13} /> : <PrinterIcon size={13} />}{busy ? t("rm.pleaseWait") : t("rm.print")}</button>
+          <button disabled={busy} onClick={onExport} style={{ ...btnSecondary, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px" }}>{busy ? <SpinnerIcon size={13} /> : <DownloadIcon size={13} />}{busy ? t("rm.pleaseWait") : t("rm.exportPdf")}</button>
         </div>
       </div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 13 }}>
           <thead>
             <tr style={{ background: THEME.surface }}>
-              <th style={{ ...th, fontSize: 11.5 }}>Subject</th><th style={{ ...th, fontSize: 11.5 }}>Marks</th><th style={{ ...th, fontSize: 11.5 }}>Grade</th>
+              <th style={{ ...th, fontSize: 11.5 }}>{t("rm.subject")}</th><th style={{ ...th, fontSize: 11.5 }}>{t("rm.marksCol")}</th><th style={{ ...th, fontSize: 11.5 }}>{t("rm.grade")}</th>
             </tr>
           </thead>
           <tbody>
@@ -1940,18 +1952,18 @@ function StudentResultCard({ result, isMobile, onPrint, onExport, busy }) {
                 <td style={{ ...td, whiteSpace: "normal" }}>{s.subject_name}</td><td style={td}>{s.marks ?? "-"}</td><td style={td}>{s.grade || "-"}</td>
               </tr>
             ))}
-            {!student.scores.length && <tr><td style={td} colSpan={3}>No subject scores found for this period.</td></tr>}
+            {!student.scores.length && <tr><td style={td} colSpan={3}>{t("rm.noSubjectScores")}</td></tr>}
           </tbody>
         </table>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 16 }}>
         {[
-          ["Division", student.division],
-          ["Points", student.points],
-          ["Position", student.position != null && student.total_students != null ? `${student.position} out of ${student.total_students}` : (student.position ?? "-")],
-          ["Average Grade", student.avg_grade],
+          [t("rm.division"), student.division],
+          [t("rm.points"), student.points],
+          [t("rm.position"), student.position != null && student.total_students != null ? t("rm.outOf", { pos: student.position, total: student.total_students }) : (student.position ?? "-")],
+          [t("rm.avgGrade"), student.avg_grade],
           ["GPA", student.gpa],
-          ["Subjects Sat", student.subjects_sat],
+          [t("rm.subjectsSat"), student.subjects_sat],
         ].map(([label, value]) => (
           <div key={label} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "8px 12px" }}>
             <div style={{ fontSize: 10.5, fontWeight: 700, color: THEME.muted, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
@@ -2059,6 +2071,7 @@ function PerformersTable({ title, icon: TitleIcon, accent, rows }) {
 
 // ══════════════════ PUBLISHED RESULTS ══════════════════
 function PublishedResults({ period }) {
+  const { t } = useLang();
   const { token } = useAuth();
   const [sheetId, setSheetId] = useState(null); // resolved from the period selected in "Select Period" above
   const [onlinePublished, setOnlinePublished] = useState(false);
@@ -2090,16 +2103,16 @@ function PublishedResults({ period }) {
       await apiFetch(`/results-mgmt/online-publish/${sheetId}`, { method: "PATCH", body: JSON.stringify({ published: next }) }, token);
       setOnlinePublished(next);
       setListKey((k) => k + 1);
-      showSuccess("Results Portal", next ? "Results Successfully Published to the parent/student portal." : "Results removed from the parent/student portal.");
-    } catch (err) { showSuccess("Results Portal", err.message); } finally { setOnlineBusy(false); }
+      showSuccess(t("rm.resultsPortalTitle"), next ? t("rm.publishedOk") : t("rm.unpublishedOk"));
+    } catch (err) { showSuccess(t("rm.resultsPortalTitle"), err.message); } finally { setOnlineBusy(false); }
   };
 
   return (
     <div>
       <p style={{ fontSize: 11.5, color: THEME.muted, maxWidth: 520, marginBottom: 14 }}>
         {period
-          ? <>Controls online access for <b>{period.form}, {period.exam_type} - {period.month} {period.year}</b> (the period selected above). Each parent/student sees only their own child's result after logging in - never the whole class together.</>
-          : "Select a period above first."}
+          ? <>{t("rm.controlsPre")}<b>{period.form}, {period.exam_type} - {period.month} {period.year}</b>{t("rm.controlsPost")}</>
+          : t("rm.selectPeriodFirstDot")}
       </p>
 
       {sheetId ? (
@@ -2108,16 +2121,16 @@ function PublishedResults({ period }) {
           borderRadius: 4, padding: "12px 16px", maxWidth: 520,
         }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 12.5, color: THEME.heading }}>Results Portal (Parents/Students)</div>
-            <div style={{ fontSize: 11.5, color: THEME.muted, marginTop: 2 }}>Lets parents/students view THEIR OWN result online after logging in with their Results Login No (e.g. 2026-48319) + parent phone. View only, no download, one student at a time.</div>
+            <div style={{ fontWeight: 700, fontSize: 12.5, color: THEME.heading }}>{t("rm.portalName")}</div>
+            <div style={{ fontSize: 11.5, color: THEME.muted, marginTop: 2 }}>{t("rm.portalDesc")}</div>
           </div>
-          <StatusPill ok={onlinePublished}>{onlinePublished ? "Live" : "Hidden"}</StatusPill>
+          <StatusPill ok={onlinePublished}>{onlinePublished ? t("rm.live") : t("rm.hidden")}</StatusPill>
           <button onClick={toggleOnlinePublish} disabled={onlineBusy} style={onlinePublished ? btnSecondary : btnPrimary}>
-            {onlineBusy ? "..." : onlinePublished ? "Unpublish" : "Publish"}
+            {onlineBusy ? "..." : onlinePublished ? t("rm.unpublish") : t("rm.publish")}
           </button>
         </div>
       ) : period && (
-        <p style={{ fontSize: 12.5, color: THEME.muted }}>No results found for the selected period yet - enter and save results first.</p>
+        <p style={{ fontSize: 12.5, color: THEME.muted }}>{t("rm.noResultsEnterFirst")}</p>
       )}
 
       <OnlineSheetsList token={token} reloadKey={listKey} onChanged={(id, val) => { if (id === sheetId) setOnlinePublished(val); }} />
@@ -2129,6 +2142,7 @@ function PublishedResults({ period }) {
 // removes it from the public Results portal - nothing is deleted, and it can
 // be shown again at any time.
 function OnlineSheetsList({ token, reloadKey, onChanged }) {
+  const { t } = useLang();
   const [rows, setRows] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState("");
@@ -2148,18 +2162,18 @@ function OnlineSheetsList({ token, reloadKey, onChanged }) {
 
   return (
     <div style={{ marginTop: 24 }}>
-      <div style={{ fontWeight: 700, fontSize: 13.5, color: THEME.heading, marginBottom: 4 }}>All results - visible to parents?</div>
+      <div style={{ fontWeight: 700, fontSize: 13.5, color: THEME.heading, marginBottom: 4 }}>{t("rm.allVisible")}</div>
       <p style={{ fontSize: 11.5, color: THEME.muted, margin: "0 0 10px", maxWidth: 620 }}>
-        Show or hide any compiled exam on the parents' Results portal. Hiding does not delete anything - you can show it again at any time.
+        {t("rm.allVisibleDesc")}
       </p>
       {error && <p style={{ color: THEME.danger, fontSize: 12.5 }}>{error}</p>}
-      {!rows ? <p style={{ fontSize: 12.5, color: THEME.muted }}>Loading...</p> : !rows.length ? (
-        <p style={{ fontSize: 12.5, color: THEME.muted }}>No compiled results yet.</p>
+      {!rows ? <p style={{ fontSize: 12.5, color: THEME.muted }}>{t("rm.loadingDots")}</p> : !rows.length ? (
+        <p style={{ fontSize: 12.5, color: THEME.muted }}>{t("rm.noCompiled")}</p>
       ) : (
         <div style={{ overflowX: "auto", border: `1px solid ${THEME.border}`, background: THEME.surface }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
             <thead>
-              <tr>{["Form", "Exam", "Students", "Parents can see", ""].map((h) => <th key={h} style={{ textAlign: "left", padding: "8px 12px", borderBottom: `1px solid ${THEME.border}`, fontWeight: 700, whiteSpace: "nowrap" }}>{h}</th>)}</tr>
+              <tr>{[t("rm.col2.form"), t("rm.col2.exam"), t("rm.col2.students"), t("rm.col2.parentsCanSee"), ""].map((h, hi) => <th key={hi} style={{ textAlign: "left", padding: "8px 12px", borderBottom: `1px solid ${THEME.border}`, fontWeight: 700, whiteSpace: "nowrap" }}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {rows.map((r) => (
@@ -2167,10 +2181,10 @@ function OnlineSheetsList({ token, reloadKey, onChanged }) {
                   <td style={td}>{r.form}</td>
                   <td style={td}>{r.exam_type}{r.month ? ` - ${r.month}` : ""} {r.year}</td>
                   <td style={td}>{r.students}</td>
-                  <td style={td}><StatusPill ok={r.published_online}>{r.published_online ? "Visible" : "Hidden"}</StatusPill></td>
+                  <td style={td}><StatusPill ok={r.published_online}>{r.published_online ? t("rm.visible") : t("rm.hidden")}</StatusPill></td>
                   <td style={{ ...td, textAlign: "right" }}>
                     <button onClick={() => toggle(r)} disabled={busyId === r.id} style={r.published_online ? btnSecondary : btnPrimary}>
-                      {busyId === r.id ? "..." : r.published_online ? "Hide from parents" : "Show to parents"}
+                      {busyId === r.id ? "..." : r.published_online ? t("rm.hideFromParents") : t("rm.showToParents")}
                     </button>
                   </td>
                 </tr>
