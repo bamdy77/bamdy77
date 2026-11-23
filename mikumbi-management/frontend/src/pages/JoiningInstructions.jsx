@@ -7,6 +7,7 @@ import { useConfirm } from "../components/ConfirmDialog";
 import { showSuccess } from "../components/SuccessModal";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { SpinnerIcon } from "../components/icons";
+import { useLang, getLang, translate } from "../i18n";
 
 const LIST_ROLES = ["admin", "second_master"];
 const SETTINGS_ROLES = ["admin", "second_master"];
@@ -20,7 +21,7 @@ async function fetchAndSaveFile(path, token, filename) {
   const res = await fetch(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) {
     const d = await res.json().catch(() => ({}));
-    throw new Error(d.message || "Failed to download file.");
+    throw new Error(d.message || translate(getLang(), "ji.failDownload"));
   }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -31,6 +32,7 @@ async function fetchAndSaveFile(path, token, filename) {
 }
 
 export default function JoiningInstructions() {
+  const { t } = useLang();
   const { user, token } = useAuth();
   const { isMobile } = useBreakpoint();
   const navigate = useNavigate();
@@ -48,16 +50,16 @@ export default function JoiningInstructions() {
   if (!canList && !canSettings && !canManual) {
     return (
       <div style={{ padding: 40, maxWidth: 560 }}>
-        <h2 style={{ color: THEME.heading, fontSize: 20, marginBottom: 8 }}>Joining Instructions</h2>
-        <p style={{ color: THEME.muted, fontSize: 13.5 }}>This page is only available to Admin, Second Master, and Academic Master accounts.</p>
+        <h2 style={{ color: THEME.heading, fontSize: 20, marginBottom: 8 }}>{t("ji.title")}</h2>
+        <p style={{ color: THEME.muted, fontSize: 13.5 }}>{t("ji.noAccess")}</p>
       </div>
     );
   }
 
   const tabs = [
-    ...(canList ? [["applications", "Applications"]] : []),
-    ...(canManual ? [["manual", "Issue In Person"]] : []),
-    ...(canSettings ? [["settings", "Edit & Publish"]] : []),
+    ...(canList ? [["applications", t("ji.tab.applications")]] : []),
+    ...(canManual ? [["manual", t("ji.tab.manual")]] : []),
+    ...(canSettings ? [["settings", t("ji.tab.settings")]] : []),
   ];
 
   return (
@@ -67,16 +69,16 @@ export default function JoiningInstructions() {
           display: "inline-flex", alignItems: "center", gap: 6, background: THEME.surface,
           border: `1.5px solid ${THEME.border}`, borderRadius: 4, color: THEME.heading,
           fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 14, padding: "8px 14px",
-        }}>← Back to Student Management</button>
+        }}>{t("ji.backToStudents")}</button>
       )}
-      <h2 style={{ color: THEME.heading, fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Joining Instructions</h2>
-      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>Form I intake — public applications, in-person issuance, and admission requirements.</p>
+      <h2 style={{ color: THEME.heading, fontSize: 22, fontWeight: 800, marginBottom: 4 }}>{t("ji.title")}</h2>
+      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>{t("ji.subtitle")}</p>
 
       {stats && (
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 20 }}>
-          <StatChip label="Online" value={stats.online} color={THEME.link} />
-          <StatChip label="Issued at School" value={stats.manual} color="#B7791F" />
-          <StatChip label="Total Applicants" value={stats.total} color="#166534" />
+          <StatChip label={t("ji.online")} value={stats.online} color={THEME.link} />
+          <StatChip label={t("ji.issuedAtSchool")} value={stats.manual} color="#B7791F" />
+          <StatChip label={t("ji.totalApplicants")} value={stats.total} color="#166534" />
         </div>
       )}
 
@@ -107,6 +109,7 @@ function StatChip({ label, value, color }) {
 }
 
 function ApplicationsTab({ token }) {
+  const { t } = useLang();
   const [rows, setRows] = useState(null);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
@@ -125,7 +128,7 @@ function ApplicationsTab({ token }) {
   };
 
   const deleteOne = (row) => {
-    confirm(`Delete application for ${[row.first_name, row.middle_name, row.last_name].filter(Boolean).join(" ")}?`, async () => {
+    confirm(t("ji.delConfirm", { name: [row.first_name, row.middle_name, row.last_name].filter(Boolean).join(" ") }), async () => {
       setBusyId(row.id);
       try {
         await apiFetch(`/joining/applications/${row.id}`, { method: "DELETE" }, token);
@@ -135,32 +138,32 @@ function ApplicationsTab({ token }) {
   };
 
   const deleteAll = () => {
-    confirm(`Delete ALL (${rows.length}) applications? This cannot be undone.`, async () => {
+    confirm(t("ji.delAllConfirm", { n: rows.length }), async () => {
       setDeletingAll(true);
       try {
         await apiFetch("/joining/applications/all", { method: "DELETE" }, token);
         setRows([]);
-        showSuccess("Joining Instructions", "All applications have been deleted.");
+        showSuccess(t("ji.title"), t("ji.allDeleted"));
       } catch (err) { setError(err.message); } finally { setDeletingAll(false); }
     }, { danger: true });
   };
 
   if (error) return <p style={{ color: THEME.danger, fontSize: 13 }}>{error}</p>;
-  if (!rows) return <Muted><SpinnerIcon size={14} /> Loading...</Muted>;
+  if (!rows) return <Muted><SpinnerIcon size={14} /> {t("common.loading")}</Muted>;
 
   return (
     <div>
       <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-        <button onClick={downloadList} disabled={exporting || !rows.length} style={secondaryBtn}>{exporting ? "Downloading..." : "Download List (CSV)"}</button>
-        {!!rows.length && <button onClick={deleteAll} disabled={deletingAll} style={dangerBtn}>{deletingAll ? "Deleting..." : "Delete All"}</button>}
+        <button onClick={downloadList} disabled={exporting || !rows.length} style={secondaryBtn}>{exporting ? t("ji.downloading") : t("ji.downloadCsv")}</button>
+        {!!rows.length && <button onClick={deleteAll} disabled={deletingAll} style={dangerBtn}>{deletingAll ? t("ji.deleting") : t("ji.deleteAll")}</button>}
       </div>
-      {!rows.length ? <Muted>No applicants yet.</Muted> : (
+      {!rows.length ? <Muted>{t("ji.noApplicants")}</Muted> : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
             <thead>
               <tr style={{ background: THEME.surface }}>
-                {["Name", "District", "Ward", "Village/Street", "Exam Number", "Year", "Source", "Downloads", "Date", ""].map((h) => (
-                  <th key={h} style={thStyle}>{h}</th>
+                {[t("ji.col.name"), t("ji.col.district"), t("ji.col.ward"), t("ji.col.village"), t("ji.col.examNumber"), t("ji.col.year"), t("ji.col.source"), t("ji.col.downloads"), t("ji.col.date"), ""].map((h, hi) => (
+                  <th key={hi} style={thStyle}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -173,11 +176,11 @@ function ApplicationsTab({ token }) {
                   <td style={tdStyle}>{r.village}</td>
                   <td style={tdStyle}>{r.exam_number}</td>
                   <td style={tdStyle}>{r.exam_year}</td>
-                  <td style={tdStyle}>{r.source === "online" ? "Online" : "At School"}</td>
+                  <td style={tdStyle}>{r.source === "online" ? t("ji.online") : t("ji.atSchool")}</td>
                   <td style={tdStyle}>{r.download_count}</td>
                   <td style={{ ...tdStyle, fontSize: 10.5, color: THEME.muted }}>{new Date(r.created_at).toLocaleString("en-GB", { timeZone: "Africa/Dar_es_Salaam" })}</td>
                   <td style={tdStyle}>
-                    <button onClick={() => deleteOne(r)} disabled={busyId === r.id} style={smallDangerBtn}>{busyId === r.id ? "..." : "Delete"}</button>
+                    <button onClick={() => deleteOne(r)} disabled={busyId === r.id} style={smallDangerBtn}>{busyId === r.id ? "..." : t("common.delete")}</button>
                   </td>
                 </tr>
               ))}
@@ -191,6 +194,7 @@ function ApplicationsTab({ token }) {
 }
 
 function ManualIssueTab({ token, onIssued }) {
+  const { t } = useLang();
   const [fields, setFields] = useState(emptyFields);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -202,7 +206,7 @@ function ManualIssueTab({ token, onIssued }) {
   const submit = (e) => {
     e.preventDefault();
     setError("");
-    confirm("Issue a Joining Instruction for this student now?", async () => {
+    confirm(t("ji.issueConfirm"), async () => {
       setBusy(true);
       try {
         const res = await fetch(`${API_BASE}/joining/manual`, {
@@ -212,7 +216,7 @@ function ManualIssueTab({ token, onIssued }) {
         });
         if (!res.ok) {
           const d = await res.json().catch(() => ({}));
-          throw new Error(d.message || "Failed to issue Joining Instruction.");
+          throw new Error(d.message || t("ji.failIssue"));
         }
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -220,7 +224,7 @@ function ManualIssueTab({ token, onIssued }) {
         a.href = url; a.download = `Joining-Instruction-${fields.first_name}-${fields.last_name}.pdf`;
         document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
-        showSuccess("Joining Instruction", "Issued and downloaded successfully.");
+        showSuccess(t("ji.titleSingular"), t("ji.issuedOk"));
         setFields(emptyFields);
         onIssued && onIssued();
       } catch (err) {
@@ -239,22 +243,22 @@ function ManualIssueTab({ token, onIssued }) {
   return (
     <div style={{ maxWidth: 480 }}>
       <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 14, marginBottom: 18 }}>
-        <div style={{ fontWeight: 700, fontSize: 12.5, color: THEME.heading, marginBottom: 10 }}>Offline? Get blank form</div>
-        <button onClick={downloadBlank} disabled={blankBusy} style={secondaryBtn}>{blankBusy ? "Downloading..." : "Download Blank Form (PDF)"}</button>
+        <div style={{ fontWeight: 700, fontSize: 12.5, color: THEME.heading, marginBottom: 10 }}>{t("ji.offlineBlank")}</div>
+        <button onClick={downloadBlank} disabled={blankBusy} style={secondaryBtn}>{blankBusy ? t("ji.downloading") : t("ji.downloadBlank")}</button>
       </div>
 
-      <p style={{ fontSize: 12.5, color: THEME.muted, marginBottom: 14 }}>Fill in the details of a student applying in person — they'll receive the same Joining Instruction issued online.</p>
+      <p style={{ fontSize: 12.5, color: THEME.muted, marginBottom: 14 }}>{t("ji.manualIntro")}</p>
       <form onSubmit={submit} style={{ display: "grid", gap: 12 }}>
-        <FieldRow label="First Name" value={fields.first_name} onChange={set("first_name")} required />
-        <FieldRow label="Middle Name" value={fields.middle_name} onChange={set("middle_name")} />
-        <FieldRow label="Last Name" value={fields.last_name} onChange={set("last_name")} required />
-        <FieldRow label="District" value={fields.district} onChange={set("district")} required />
-        <FieldRow label="Ward" value={fields.ward} onChange={set("ward")} required />
-        <FieldRow label="Village/Street" value={fields.village} onChange={set("village")} required />
-        <FieldRow label="Exam Number (PS1234567-0001)" value={fields.exam_number} onChange={set("exam_number")} required />
-        <FieldRow label="Standard VII Completion Year" value={fields.exam_year} onChange={set("exam_year")} type="number" required />
+        <FieldRow label={t("ji.firstName")} value={fields.first_name} onChange={set("first_name")} required />
+        <FieldRow label={t("ji.middleName")} value={fields.middle_name} onChange={set("middle_name")} />
+        <FieldRow label={t("ji.lastName")} value={fields.last_name} onChange={set("last_name")} required />
+        <FieldRow label={t("ji.col.district")} value={fields.district} onChange={set("district")} required />
+        <FieldRow label={t("ji.col.ward")} value={fields.ward} onChange={set("ward")} required />
+        <FieldRow label={t("ji.col.village")} value={fields.village} onChange={set("village")} required />
+        <FieldRow label={t("ji.examNumberPs")} value={fields.exam_number} onChange={set("exam_number")} required />
+        <FieldRow label={t("ji.std7Year")} value={fields.exam_year} onChange={set("exam_year")} type="number" required />
         {error && <p style={{ color: THEME.danger, fontSize: 12.5, margin: 0 }}>{error}</p>}
-        <button type="submit" disabled={busy} style={primaryBtn}>{busy ? "Issuing..." : "Issue & Download Joining Instruction"}</button>
+        <button type="submit" disabled={busy} style={primaryBtn}>{busy ? t("ji.issuing") : t("ji.issueDownload")}</button>
       </form>
       {ConfirmDialogPortal}
     </div>
@@ -275,6 +279,7 @@ function FieldRow({ label, value, onChange, type = "text", required }) {
 // PDF parents will get, then publish. While published the content is locked
 // (the server refuses edits too) - turn the form off first to change it.
 function SettingsTab({ token }) {
+  const { t } = useLang();
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
   const [content, setContent] = useState(null);
@@ -304,15 +309,15 @@ function SettingsTab({ token }) {
     [next[idx], next[to]] = [next[to], next[idx]];
     update({ sections: next });
   };
-  const removeSection = (idx) => confirm(`Remove section "${content.sections[idx].title || idx + 1}"?`, () => update({ sections: content.sections.filter((_, i) => i !== idx) }), { danger: true });
-  const addSection = () => update({ sections: [...content.sections, { title: "SEHEMU MPYA", body: "- " }] });
+  const removeSection = (idx) => confirm(t("ji.removeSection", { title: content.sections[idx].title || idx + 1 }), () => update({ sections: content.sections.filter((_, i) => i !== idx) }), { danger: true });
+  const addSection = () => update({ sections: [...content.sections, { title: t("ji.newSectionTitle"), body: "- " }] });
 
   const save = async () => {
     setBusy(true); setError("");
     try {
       const d = await apiFetch("/joining/settings", { method: "PUT", body: JSON.stringify({ content, admission_year: Number(year) }) }, token);
       setSettings(d); setContent(d.content); setDirty(false);
-      showSuccess("Joining Instructions", "Changes saved. Use Preview to check the PDF, then Publish.");
+      showSuccess(t("ji.title"), t("ji.changesSaved"));
     } catch (err) { setError(err.message); } finally { setBusy(false); }
   };
 
@@ -328,7 +333,7 @@ function SettingsTab({ token }) {
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        throw new Error(d.message || "Could not generate the preview.");
+        throw new Error(d.message || t("ji.failPreview"));
       }
       const url = URL.createObjectURL(await res.blob());
       if (win) win.location.href = url;
@@ -340,113 +345,113 @@ function SettingsTab({ token }) {
     } finally { setPreviewing(false); }
   };
 
-  const resetDefault = () => confirm("Replace the current wording with the school's original Joining Instruction? (Nothing is saved until you press Save.)", () => {
+  const resetDefault = () => confirm(t("ji.resetConfirm"), () => {
     setContent(JSON.parse(JSON.stringify(settings.default_content))); setDirty(true);
   });
 
   const togglePublish = () => {
     const next = !settings.is_published;
-    if (next && dirty) { setError("You have unsaved changes - Save them (and Preview) before publishing."); return; }
-    confirm(next ? "Publish the Joining Instruction online now? Parents will be able to download it." : "Turn off the online Joining Instruction form? You can then edit it.", async () => {
+    if (next && dirty) { setError(t("ji.unsavedChanges")); return; }
+    confirm(next ? t("ji.publishConfirm") : t("ji.turnOffConfirm"), async () => {
       setBusy(true); setError("");
       try {
         await apiFetch("/joining/settings/publish", { method: "POST", body: JSON.stringify({ published: next }) }, token);
-        showSuccess("Joining Instructions", next ? "Published - parents can now download it." : "Turned off - you can edit it now.");
+        showSuccess(t("ji.title"), next ? t("ji.publishedMsg") : t("ji.turnedOffMsg"));
         load();
       } catch (err) { setError(err.message); } finally { setBusy(false); }
     }, { danger: !next });
   };
 
-  if (!settings || !content) return error ? <p style={{ color: THEME.danger, fontSize: 13 }}>{error}</p> : <Muted><SpinnerIcon size={14} /> Loading...</Muted>;
+  if (!settings || !content) return error ? <p style={{ color: THEME.danger, fontSize: 13 }}>{error}</p> : <Muted><SpinnerIcon size={14} /> {t("common.loading")}</Muted>;
 
   const ro = locked;
   return (
     <div style={{ maxWidth: 820 }}>
       <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Current status:</span>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>{t("ji.currentStatus")}</span>
         <span style={{ padding: "4px 12px", fontSize: 12, fontWeight: 700, background: settings.is_published ? "#DCFCE7" : "#FEE2E2", color: settings.is_published ? "#166534" : "#B91C1C" }}>
-          {settings.is_published ? "Published (Parents can apply)" : "Not Published (draft - editable)"}
+          {settings.is_published ? t("ji.statusPublished") : t("ji.statusDraft")}
         </span>
         <button onClick={togglePublish} disabled={busy} style={settings.is_published ? dangerBtn : primaryBtn}>
-          {settings.is_published ? "Turn Off to Edit" : "Publish"}
+          {settings.is_published ? t("ji.turnOff") : t("ji.publish")}
         </button>
-        <button onClick={preview} disabled={previewing} style={secondaryBtn}>{previewing ? "Preparing..." : "Preview PDF"}</button>
+        <button onClick={preview} disabled={previewing} style={secondaryBtn}>{previewing ? t("ji.preparing") : t("ji.previewPdf")}</button>
       </div>
 
       {locked && (
-        <div style={noteBox}>The Joining Instruction is published, so editing is locked. Press <b>Turn Off to Edit</b>, make your changes, Preview, then Publish again.</div>
+        <div style={noteBox}>{t("ji.lockedPre")}<b>{t("ji.turnOff")}</b>{t("ji.lockedPost")}</div>
       )}
       <div style={{ ...noteBox, background: hasSignature ? THEME.surface : THEME.warningLight }}>
         {hasSignature
-          ? "The Head Master's signature uploaded in Settings is placed on every Joining Instruction automatically."
-          : "No Head Master's signature has been uploaded yet - the PDF will show a dotted line instead. "}
-        {!hasSignature && <button onClick={() => navigate("/dashboard/signature-stamp")} style={linkBtn}>Upload it in Settings → Signature &amp; Stamp</button>}
+          ? t("ji.sigPresent")
+          : t("ji.sigMissing")}
+        {!hasSignature && <button onClick={() => navigate("/dashboard/signature-stamp")} style={linkBtn}>{t("ji.uploadSig")}</button>}
       </div>
 
       {error && <p style={{ color: THEME.danger, fontSize: 12.5, margin: "0 0 12px" }}>{error}</p>}
 
       <fieldset disabled={ro} style={{ border: "none", padding: 0, margin: 0, opacity: ro ? 0.7 : 1 }}>
         <div style={{ ...sectionCard, marginBottom: 16 }}>
-          <div style={{ fontWeight: 800, fontSize: 13.5, color: THEME.heading, marginBottom: 10 }}>PDF appearance (choose before publishing)</div>
-          <label style={labelStyle}>Watermark</label>
+          <div style={{ fontWeight: 800, fontSize: 13.5, color: THEME.heading, marginBottom: 10 }}>{t("ji.pdfAppearance")}</div>
+          <label style={labelStyle}>{t("ji.watermark")}</label>
           <select value={content.watermark || "text"} onChange={(e) => update({ watermark: e.target.value })} style={{ ...inputStyle, maxWidth: 320, marginBottom: 4 }}>
-            {WATERMARK_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+            {WATERMARK_OPTIONS.map((o) => <option key={o.id} value={o.id}>{t(`ji.wm.${o.id}`)}</option>)}
           </select>
           <p style={{ fontSize: 11.5, color: THEME.muted, margin: "0 0 14px" }}>
-            {(WATERMARK_OPTIONS.find((o) => o.id === (content.watermark || "text")) || WATERMARK_OPTIONS[0]).hint}
+            {t(`ji.wmHint.${content.watermark || "text"}`)}
           </p>
-          <label style={labelStyle}>Font</label>
+          <label style={labelStyle}>{t("ji.font")}</label>
           <select value={content.font || "arimo"} onChange={(e) => update({ font: e.target.value })} style={{ ...inputStyle, maxWidth: 320 }}>
-            {FONT_OPTIONS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+            {FONT_OPTIONS.map((f) => <option key={f.id} value={f.id}>{t(`ji.font.${f.id}`)}</option>)}
           </select>
-          <p style={{ fontSize: 11.5, color: THEME.muted, margin: "8px 0 0" }}>Press <b>Save Changes</b>, then <b>Preview PDF</b> to see how it looks.</p>
+          <p style={{ fontSize: 11.5, color: THEME.muted, margin: "8px 0 0" }}>{t("ji.pressPre")}<b>{t("ji.saveChanges")}</b>{t("ji.pressMid")}<b>{t("ji.previewPdf")}</b>{t("ji.pressPost")}</p>
         </div>
         <div style={grid2}>
-          <LabeledInput label="Admission year (Form I)" type="number" value={year} onChange={(v) => { setYear(v); setDirty(true); }} />
-          <LabeledInput label="Phone numbers (WASILIANA NASI), comma separated" value={content.phones} onChange={(v) => update({ phones: v })} />
+          <LabeledInput label={t("ji.admissionYear")} type="number" value={year} onChange={(v) => { setYear(v); setDirty(true); }} />
+          <LabeledInput label={t("ji.phones")} value={content.phones} onChange={(v) => update({ phones: v })} />
         </div>
-        <LabeledArea label="School address (top right)" rows={3} value={content.address} onChange={(v) => update({ address: v })} />
-        <LabeledInput label="Subject line (YAH)" value={content.subject} onChange={(v) => update({ subject: v })} />
-        <LabeledArea label="Opening paragraphs (one paragraph per line)" rows={6} value={content.intro} onChange={(v) => update({ intro: v })} />
+        <LabeledArea label={t("ji.schoolAddress")} rows={3} value={content.address} onChange={(v) => update({ address: v })} />
+        <LabeledInput label={t("ji.subjectLine")} value={content.subject} onChange={(v) => update({ subject: v })} />
+        <LabeledArea label={t("ji.openingParas")} rows={6} value={content.intro} onChange={(v) => update({ intro: v })} />
 
         <div style={{ ...noteBox, fontSize: 12 }}>
-          <b>How to write a section:</b> start a line with <code>- </code> for a numbered item (i, ii, iii…), <code>* </code> for a bullet,
-          <code> ## </code> for a sub-heading (e.g. WAVULANA), <code>**</code> for a bold line and <code>NB:</code> for a note.
-          Other lines are normal paragraphs. <code>{"{MWAKA}"}</code> is replaced by the admission year.
+          <b>{t("ji.howToTitle")}</b>{t("ji.howStart")}<code>- </code>{t("ji.howNumbered")}<code>* </code>{t("ji.howBullet")}
+          <code> ## </code>{t("ji.howSubheading")}<code>**</code>{t("ji.howBold")}<code>NB:</code>{t("ji.howNote")}
+          <code>{"{MWAKA}"}</code>{t("ji.howMwaka")}
         </div>
 
         {content.sections.map((sec, idx) => (
           <div key={idx} style={sectionCard}>
             <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
               <span style={{ fontWeight: 800, color: THEME.heading, minWidth: 22 }}>{idx + 1}.</span>
-              <input value={sec.title} onChange={(e) => updateSection(idx, { title: e.target.value })} style={{ ...inputStyle, fontWeight: 700 }} placeholder="Section title" />
-              <button type="button" onClick={() => moveSection(idx, -1)} disabled={idx === 0} style={iconBtn} title="Move up">↑</button>
-              <button type="button" onClick={() => moveSection(idx, 1)} disabled={idx === content.sections.length - 1} style={iconBtn} title="Move down">↓</button>
-              <button type="button" onClick={() => removeSection(idx)} style={{ ...iconBtn, color: THEME.danger }} title="Remove">✕</button>
+              <input value={sec.title} onChange={(e) => updateSection(idx, { title: e.target.value })} style={{ ...inputStyle, fontWeight: 700 }} placeholder={t("ji.sectionTitlePh")} />
+              <button type="button" onClick={() => moveSection(idx, -1)} disabled={idx === 0} style={iconBtn} title={t("ji.moveUp")}>↑</button>
+              <button type="button" onClick={() => moveSection(idx, 1)} disabled={idx === content.sections.length - 1} style={iconBtn} title={t("ji.moveDown")}>↓</button>
+              <button type="button" onClick={() => removeSection(idx)} style={{ ...iconBtn, color: THEME.danger }} title={t("ji.remove")}>✕</button>
             </div>
             <textarea value={sec.body} onChange={(e) => updateSection(idx, { body: e.target.value })} rows={Math.min(16, Math.max(4, sec.body.split("\n").length + 1))} style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit", lineHeight: 1.5 }} />
           </div>
         ))}
-        <button type="button" onClick={addSection} style={{ ...secondaryBtn, marginBottom: 18 }}>+ Add section</button>
+        <button type="button" onClick={addSection} style={{ ...secondaryBtn, marginBottom: 18 }}>{t("ji.addSection")}</button>
 
-        <LabeledInput label="Closing line" value={content.closing} onChange={(v) => update({ closing: v })} />
+        <LabeledInput label={t("ji.closingLine")} value={content.closing} onChange={(v) => update({ closing: v })} />
         <div style={grid2}>
-          <LabeledInput label="Head of School name" value={content.head_name} onChange={(v) => update({ head_name: v })} />
-          <LabeledInput label="Title" value={content.head_title} onChange={(v) => update({ head_title: v })} />
+          <LabeledInput label={t("ji.headName")} value={content.head_name} onChange={(v) => update({ head_name: v })} />
+          <LabeledInput label={t("ji.headTitleLabel")} value={content.head_title} onChange={(v) => update({ head_title: v })} />
         </div>
         <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, margin: "6px 0 16px" }}>
           <input type="checkbox" checked={content.include_forms !== false} onChange={(e) => update({ include_forms: e.target.checked })} />
-          Attach the forms (Fomu Na. 1 Ahadi ya Mzazi, Na. 2 Ahadi ya Mwanafunzi, Na. 3 Maelezo Binafsi, Na. 4 Medical Examination)
+          {t("ji.attachForms")}
         </label>
         <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, margin: "-8px 0 16px" }}>
           <input type="checkbox" checked={content.include_uniform_page !== false} onChange={(e) => update({ include_uniform_page: e.target.checked })} />
-          Add the uniform guide page (photos of allowed / not-allowed uniform, faces hidden)
+          {t("ji.uniformPage")}
         </label>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button onClick={save} disabled={busy || ro} style={primaryBtn}>{busy ? "Saving..." : dirty ? "Save Changes" : "Saved"}</button>
-          <button onClick={preview} disabled={previewing} type="button" style={secondaryBtn}>{previewing ? "Preparing..." : "Preview PDF"}</button>
-          <button onClick={resetDefault} disabled={ro} type="button" style={secondaryBtn}>Restore original wording</button>
+          <button onClick={save} disabled={busy || ro} style={primaryBtn}>{busy ? t("common.saving") : dirty ? t("ji.saveChanges") : t("ji.saved")}</button>
+          <button onClick={preview} disabled={previewing} type="button" style={secondaryBtn}>{previewing ? t("ji.preparing") : t("ji.previewPdf")}</button>
+          <button onClick={resetDefault} disabled={ro} type="button" style={secondaryBtn}>{t("ji.restoreOriginal")}</button>
         </div>
       </fieldset>
       {ConfirmDialogPortal}
@@ -470,17 +475,8 @@ function LabeledArea({ label, value, onChange, rows = 4 }) {
     </div>
   );
 }
-const WATERMARK_OPTIONS = [
-  { id: "text", label: "MIKUMBI SECONDARY SCHOOL", hint: "Faint school name across the page" },
-  { id: "logo", label: "School logo", hint: "Faint badge in the centre, like the ID card" },
-  { id: "none", label: "Plain", hint: "No watermark" },
-];
-const FONT_OPTIONS = [
-  { id: "arimo", label: "Arimo (Arial style)" },
-  { id: "times", label: "Times New Roman" },
-  { id: "helvetica", label: "Helvetica" },
-  { id: "courier", label: "Courier (typewriter)" },
-];
+const WATERMARK_OPTIONS = [{ id: "text" }, { id: "logo" }, { id: "none" }];
+const FONT_OPTIONS = [{ id: "arimo" }, { id: "times" }, { id: "helvetica" }, { id: "courier" }];
 const labelStyle = { display: "block", fontSize: 12.5, fontWeight: 600, color: THEME.text, marginBottom: 5 };
 const grid2 = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 };
 const noteBox = { border: `1px solid ${THEME.border}`, background: THEME.surface, padding: "10px 14px", fontSize: 12.5, color: THEME.text, marginBottom: 14, lineHeight: 1.6 };
