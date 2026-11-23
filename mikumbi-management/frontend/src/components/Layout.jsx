@@ -409,8 +409,8 @@ export default function Layout() {
     cursor: "pointer",
   });
   const groupHeaderStyle = {
-    padding: "15px 20px 6px", fontSize: 10.5, fontWeight: 800, letterSpacing: 1.4,
-    textTransform: "uppercase", color: "rgba(243,193,75,0.9)",
+    padding: "15px 20px 6px", fontSize: 10.5, fontWeight: 600, letterSpacing: 1,
+    textTransform: "uppercase", color: "rgba(255,255,255,0.4)",
   };
 
   const navLinks = (
