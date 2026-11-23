@@ -5,7 +5,7 @@ import { MegaphoneIcon, CloseIcon, CalendarIcon, ChevronRightIcon } from "../ico
 import { useLang } from "../../i18n";
 
 const NAVY = "#1a50c7";
-const ORANGE = "#F54927";
+const ORANGE = "#E3A51A"; // gold accent (matches the About band)
 const TZ = "Africa/Dar_es_Salaam";
 
 const fmtDate = (iso, lang = "en") => new Date(iso).toLocaleDateString(lang === "sw" ? "sw-TZ" : "en-GB", { timeZone: TZ, day: "2-digit", month: "short", year: "numeric" });
@@ -123,14 +123,14 @@ export function SectionTitle({ icon, title, subtitle, light = false }) {
 // announcements (animation lives in PublicLayout's <style>; it is switched
 // off for visitors who ask their device for reduced motion).
 function NewTag({ label = "NEW" }) {
-  return <span className="pub-new-tag" style={{ background: ORANGE, color: "#fff", fontSize: 12.5, fontWeight: 800, letterSpacing: "0.08em", padding: "3px 9px", borderRadius: 4, display: "inline-block" }}>{label}</span>;
+  return <span className="pub-new-tag" style={{ background: ORANGE, color: "#0c2c6b", fontSize: 12.5, fontWeight: 800, letterSpacing: "0.08em", padding: "3px 9px", borderRadius: 4, display: "inline-block" }}>{label}</span>;
 }
 
 function ReadMore({ onClick, label = "Read more" }) {
   return (
     <button type="button" className="pub-btn" onClick={onClick} style={{
       marginTop: 14, alignSelf: "flex-start", background: "none", border: "none", cursor: "pointer", padding: 0,
-      color: ORANGE, fontWeight: 800, fontSize: 15, display: "inline-flex", alignItems: "center", gap: 4,
+      color: "#B8860B", fontWeight: 800, fontSize: 15, display: "inline-flex", alignItems: "center", gap: 4,
     }}>{label} <ChevronRightIcon size={14} /></button>
   );
 }

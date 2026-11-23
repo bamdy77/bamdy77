@@ -15,7 +15,7 @@ import {
 } from "../../components/icons";
 
 const NAVY = "#1a50c7";
-const ORANGE = "#F54927";
+const ORANGE = "#E3A51A"; // gold accent (matches the About band)
 const GOLD = "#E3A51A"; // About section - warm gold band (UDOM-style), with navy text
 
 export default function PublicHome() {
@@ -67,7 +67,7 @@ function Hero() {
           {t("hero.text")}
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link to="/results" className="pub-btn" style={{ ...heroBtn, ...(isMobile ? heroBtnMobile : null), background: "#C2410C", color: "#fff", boxShadow: "0 2px 6px rgba(0,0,0,0.18)" }}>
+          <Link to="/results" className="pub-btn" style={{ ...heroBtn, ...(isMobile ? heroBtnMobile : null), background: "#E3A51A", color: "#0c2c6b", boxShadow: "0 2px 6px rgba(0,0,0,0.18)" }}>
             <CheckCircleIcon size={18} />{t("hero.results")}
           </Link>
           <Link to="/joining-instructions" className="pub-btn" style={{ ...heroBtn, ...(isMobile ? heroBtnMobile : null), background: "#fff", color: NAVY }}>
@@ -374,7 +374,7 @@ function Contact() {
               <div style={{ color: "#64748B", fontSize: 15.5, marginTop: 4 }}>{t("map.text")}</div>
             </div>
             <a href={siteConfig.location.directionsUrl} target="_blank" rel="noopener noreferrer" className="pub-btn"
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: ORANGE, color: "#fff", textDecoration: "none", fontWeight: 800, fontSize: 15.5, padding: "11px 18px", borderRadius: 4, ...(isMobile ? { width: "100%", justifyContent: "center" } : {}) }}>
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: ORANGE, color: "#0c2c6b", textDecoration: "none", fontWeight: 800, fontSize: 15.5, padding: "11px 18px", borderRadius: 4, ...(isMobile ? { width: "100%", justifyContent: "center" } : {}) }}>
               <LocationPinIcon size={16} />{t("map.directions")}
             </a>
           </div>

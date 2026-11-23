@@ -82,7 +82,7 @@ export default function Landing() {
           page (not sticky), mirrors the official UDOM OAS header layout:
           government emblem on the left, centered title block, school badge
           on the right, faint photo watermark behind everything. */}
-      <div style={{ position: "relative", overflow: "hidden", background: "#eef1f6", borderBottom: `3px solid #F54927` }}>
+      <div style={{ position: "relative", overflow: "hidden", background: "#eef1f6", borderBottom: `3px solid #E3A51A` }}>
         <div aria-hidden="true" style={{
           position: "absolute", inset: 0,
           backgroundImage: "url(/assets/picha.png)", backgroundSize: "cover",
@@ -108,7 +108,7 @@ export default function Landing() {
               fontSize: isMobile ? 15 : isTablet ? 22 : 32, fontWeight: 800, color: THEME.link,
               letterSpacing: "0.01em", lineHeight: 1.18, textTransform: "uppercase",
             }}>{SCHOOL.name}</div>
-            <div style={{ fontSize: isMobile ? 10.5 : isTablet ? 12.5 : 15, fontStyle: "italic", color: "#F54927", fontWeight: 600, marginTop: isMobile ? 3 : 6 }}>
+            <div style={{ fontSize: isMobile ? 10.5 : isTablet ? 12.5 : 15, fontStyle: "italic", color: "#B8860B", fontWeight: 600, marginTop: isMobile ? 3 : 6 }}>
               {t("school.motto")}
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function Landing() {
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         textAlign: "center",
         background: "#050d20",
-        borderBottom: `${isMobile ? 4 : 5}px solid #1E5FBF`,
+        borderBottom: `${isMobile ? 4 : 5}px solid #E3A51A`,
       }}>
         <div
           className="mk-hero-techbg"
@@ -217,13 +217,6 @@ export default function Landing() {
           ))}
         </div>
 
-        <div className="mk-hero-live" style={{
-          fontSize: isMobile ? 26 : isTablet ? 32 : 38,
-          marginBottom: 30, flexWrap: "wrap", justifyContent: "center", rowGap: 10,
-          maxWidth: isMobile ? 320 : 680,
-        }}>
-          {t("land.nowIs")} <span className="mk-live-badge"><LiveIcon /> {t("land.live")}</span>
-        </div>
         <a href="#features" className="mk-hero-cta" style={{ fontSize: isMobile ? 13 : 14 }}>{t("land.explore")}</a>
       </header>
 
@@ -290,17 +283,6 @@ export default function Landing() {
 
 const navLink = { color: "#fff", textDecoration: "none" };
 
-function LiveIcon() {
-  return (
-    <svg className="mk-live-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-      <circle cx="12" cy="12" r="2" fill="#fff" stroke="none" />
-      <path d="M8.5 8.5a5 5 0 0 0 0 7" />
-      <path d="M15.5 8.5a5 5 0 0 1 0 7" />
-      <path d="M5.3 5.3a9 9 0 0 0 0 13.4" />
-      <path d="M18.7 5.3a9 9 0 0 1 0 13.4" />
-    </svg>
-  );
-}
 
 function LocationPinIcon() {
   return (

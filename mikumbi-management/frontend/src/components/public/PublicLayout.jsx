@@ -83,7 +83,7 @@ function IdentityBanner() {
           <div style={{ fontSize: isMobile ? 17 : isTablet ? 23.5 : 34, fontWeight: 800, color: NAVY, letterSpacing: "0.01em", lineHeight: 1.18, textTransform: "uppercase" }}>
             {t("school.name")}
           </div>
-          <div style={{ fontSize: isMobile ? 12.5 : isTablet ? 15 : 17, fontStyle: "italic", color: ORANGE, fontWeight: 600, marginTop: isMobile ? 3 : 6 }}>
+          <div style={{ fontSize: isMobile ? 12.5 : isTablet ? 15 : 17, fontStyle: "italic", color: "#B8860B", fontWeight: 600, marginTop: isMobile ? 3 : 6 }}>
             {t("school.motto")}
           </div>
         </div>
