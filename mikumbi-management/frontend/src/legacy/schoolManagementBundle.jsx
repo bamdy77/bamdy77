@@ -478,7 +478,7 @@ const MoreMenu = ({ items, label=tr("lg.more") }) => {
               <button key={i} onClick={()=>{setOpen(false);it.onClick();}} disabled={it.disabled}
                 style={{display:"flex",alignItems:"center",gap:9,width:"100%",textAlign:"left",padding:"10px 14px",border:"none",background:"transparent",cursor:it.disabled?"not-allowed":"pointer",fontSize:13.5,fontWeight:600,color,opacity:it.disabled?0.5:1,borderBottom:i<items.length-1?`1px solid ${C.border}`:"none"}}>
                 <ItemIcon size={15}/>
-                <span>{it.label}</span>
+                <span style={{whiteSpace:"normal",wordBreak:"break-word"}}>{it.label}</span>
               </button>
             );
           })}
@@ -539,7 +539,7 @@ const ActionsMenu = ({ items }) => {
   const toggle = () => {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      const menuWidth = 170;
+      const menuWidth = 240;
       // Estimated dropdown height (each item ~38px) - needed because the OLD
       // logic only clamped the top edge to the viewport, never accounting for
       // how tall the menu itself is. For a row near the bottom of the screen
@@ -568,13 +568,13 @@ const ActionsMenu = ({ items }) => {
         <Icon.MoreVertical size={16}/>
       </button>
       {open && createPortal(
-        <div data-actionsmenu-portal style={{position:"fixed",top:pos.top,left:pos.left,zIndex:9600,background:C.surface,border:`1px solid ${C.border}`,borderRadius:4,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",minWidth:190,overflow:"hidden"}}>
+        <div data-actionsmenu-portal style={{position:"fixed",top:pos.top,left:pos.left,zIndex:9600,background:C.surface,border:`1px solid ${C.border}`,borderRadius:4,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",minWidth:190,maxWidth:"calc(100vw - 16px)",overflow:"hidden"}}>
           {items.filter(Boolean).map((it,i)=>{
             const ItemIcon = it.icon || iconForLabel(it.label);
             return (
               <button key={i} onClick={()=>{setOpen(false);it.onClick();}} style={{display:"flex",alignItems:"center",gap:9,width:"100%",textAlign:"left",padding:"9px 14px",border:"none",background:"none",cursor:"pointer",fontSize:13,fontWeight:500,color:it.danger?C.danger:C.text}}>
                 <ItemIcon size={15}/>
-                <span>{it.label}</span>
+                <span style={{whiteSpace:"normal",wordBreak:"break-word"}}>{it.label}</span>
               </button>
             );
           })}
