@@ -242,14 +242,22 @@ export default function ChatBot() {
   };
 
   const activePos = pos ? (open ? openPanelPos() : pos) : null;
-  // Keyboard up (visible area clearly shorter than the page): pin the panel
-  // to the top of the visible area and give it all of that height.
-  const keyboardUp = open && compact && vv && vv.h < window.innerHeight - 120;
+  // On a phone or tablet the OPEN panel always docks to the visible viewport
+  // (full width, anchored to the top of the visual viewport) and takes all of
+  // its height, so the header (with the close button) and the input box are
+  // never pushed off a short screen or left floating mid-page / behind the
+  // browser or keyboard UI. A dragged bubble position only moves the CLOSED
+  // bubble on these screens, never the open panel - which is what previously
+  // made the chat "hide" on small phones (an ordinary tap sets `pos`, which
+  // used to free-position the open panel partly off-screen).
+  const compactOpen = open && compact;
+  const visH = vv ? vv.h : (typeof window !== "undefined" ? window.innerHeight : 640);
+  const visTop = vv ? vv.top : 0;
 
   return (
-    <div ref={wrapRef} style={keyboardUp ? {
+    <div ref={wrapRef} style={compactOpen ? {
       position: "fixed", zIndex: 9999, fontFamily: "inherit",
-      display: "flex", flexDirection: "column", left: 12, right: 12, top: vv.top + 8,
+      display: "flex", flexDirection: "column", left: 12, right: 12, top: visTop + 8,
     } : activePos ? {
       position: "fixed", zIndex: 9999, fontFamily: "inherit",
       display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12,
@@ -282,7 +290,7 @@ export default function ChatBot() {
           // ambiguity entirely and fixes this on phones for good.
           width: compact ? "calc(100vw - 24px)" : 330,
           maxWidth: compact ? "calc(100vw - 24px)" : 330,
-          height: keyboardUp ? Math.max(160, vv.h - 16) : compact ? "min(70vh, 480px)" : "min(440px, calc(100vh - 110px))",
+          height: compactOpen ? Math.max(220, visH - 16) : "min(440px, calc(100vh - 110px))",
           background: THEME.surface, borderRadius: 4,
           boxShadow: "0 12px 32px rgba(15,23,42,0.25)", display: "flex", flexDirection: "column",
           overflow: "hidden", border: `1px solid ${THEME.border}`,
@@ -365,9 +373,10 @@ export default function ChatBot() {
         style={{
           width: 58, height: 58, borderRadius: "50%", background: THEME.navy, border: "none",
           boxShadow: "0 8px 20px rgba(42,60,127,0.4)", cursor: "grab",
-          // While the keyboard is up the round button is hidden (the panel's own
-          // close button is in its header) so the typing box gets the space.
-          display: keyboardUp ? "none" : "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          // On a phone/tablet with the panel open the round button is hidden
+          // (the panel fills the visible viewport and has its own close button
+          // in the header), so it never floats off-screen or over the panel.
+          display: compactOpen ? "none" : "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           touchAction: "none",
         }}
       >
