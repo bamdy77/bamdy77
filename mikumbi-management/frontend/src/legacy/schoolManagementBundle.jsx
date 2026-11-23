@@ -3509,6 +3509,7 @@ function HostelModule({ token, isHistoryOnly, canDeletePermanent }) {
 // costs), separate from Maladhi (room/bed allocation) and separate from
 // student contributions collected via Contributions Management.
 function HostelFeesTab({ token }) {
+  useLang();
   const { isMobile } = useBreakpoint();
   const { confirm, ConfirmDialogPortal } = useConfirm();
   const [hostel, setHostel] = useState("Girls Hostel");
@@ -3539,31 +3540,31 @@ function HostelFeesTab({ token }) {
   const openFeeModal = (occ) => { setFeeModal(occ); setAmount(""); setNote(""); loadEntries(occ); };
 
   const submitFee = async () => {
-    if (!amount || Number(amount) <= 0) { setError("Enter a valid amount in TZS."); return; }
+    if (!amount || Number(amount) <= 0) { setError(tr("hf.validAmount")); return; }
     setSaving(true); setError("");
     try {
       await apiFetch(`/hostel/occupants/${feeModal.id}/contributions`, { method: "POST", body: {
         term: "N/A", academic_year: String(new Date().getFullYear()), hostel_fee: amount, owes: false, comment: note,
       } }, token);
-      setSuccess("Hostel fee recorded.");
+      setSuccess(tr("hf.feeRecorded"));
       loadEntries(feeModal);
       setAmount(""); setNote("");
     } catch (e) { setError(e.message); } finally { setSaving(false); }
   };
 
-  const removeFee = (id) => confirm("Remove this hostel fee entry?", async () => {
+  const removeFee = (id) => confirm(tr("hf.removeFeeConfirm"), async () => {
     try { await apiFetch(`/hostel/contributions/${id}`, { method: "DELETE" }, token); loadEntries(feeModal); }
     catch (e) { setError(e.message); }
   });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>Record money spent on hostel boarding services (accommodation costs), in TZS, per student.</p>
+      <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>{tr("hf.intro")}</p>
       {error && <Alert type="error" message={error} onClose={() => setError("")} />}
       {success && <Alert type="success" message={success} onClose={() => setSuccess("")} />}
       <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${C.border}` }}>
         {HOSTELS.map(h => { const sel = hostel === h; const col = h === "Girls Hostel" ? C.girl : C.boy; return (
-          <button key={h} onClick={() => setHostel(h)} style={{ padding: "9px 22px", border: "none", borderBottom: sel ? `3px solid ${col}` : "3px solid transparent", background: "transparent", fontWeight: sel ? 700 : 500, fontSize: 14, color: sel ? col : C.muted, cursor: "pointer" }}>{h}</button>
+          <button key={h} onClick={() => setHostel(h)} style={{ padding: "9px 22px", border: "none", borderBottom: sel ? `3px solid ${col}` : "3px solid transparent", background: "transparent", fontWeight: sel ? 700 : 500, fontSize: 14, color: sel ? col : C.muted, cursor: "pointer" }}>{h==="Girls Hostel"?tr("ho.girlsHostel"):tr("ho.boysHostel")}</button>
         ); })}
       </div>
       <Card style={{ padding: 0, overflow: "hidden" }}>
@@ -3573,38 +3574,38 @@ function HostelFeesTab({ token }) {
               <div style={{ fontWeight: 700, fontSize: 13.5, marginBottom: 4 }}>{[o.first_name, o.middle_name, o.last_name].filter(Boolean).join(" ")}</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: 12, color: C.muted }}>{o.form}</span>
-                <span style={{ fontSize: 12, color:C.accentText, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><ReceiptIcon size={12} />Record fee</span>
+                <span style={{ fontSize: 12, color:C.accentText, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><ReceiptIcon size={12} />{tr("hf.recordFee")}</span>
               </div>
             </div>
           ) : (
             <div key={o.id} onClick={() => openFeeModal(o)} style={{ display: "flex", alignItems: "center", padding: "10px 16px", fontSize: 13, cursor: "pointer", borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
               <span style={{ flex: 1 }}>{[o.first_name, o.middle_name, o.last_name].filter(Boolean).join(" ")}</span>
               <span style={{ flex: 1, color: C.muted }}>{o.form}</span>
-              <span style={{ fontSize: 12, color:C.accentText, display: "flex", alignItems: "center", gap: 4 }}><ReceiptIcon size={12} />Record fee</span>
+              <span style={{ fontSize: 12, color:C.accentText, display: "flex", alignItems: "center", gap: 4 }}><ReceiptIcon size={12} />{tr("hf.recordFee")}</span>
             </div>
           )
         ))}
-        {!occupants.length && <p style={{ padding: 16, fontSize: 13, color: C.muted }}>No residents in {hostel} yet.</p>}
+        {!occupants.length && <p style={{ padding: 16, fontSize: 13, color: C.muted }}>{tr("hf.noResidents", { hostel: tr(hostel==="Girls Hostel"?"ho.girlsHostel":"ho.boysHostel") })}</p>}
       </Card>
       {feeModal && (
-        <Modal title={`Hostel Fees - ${[feeModal.first_name, feeModal.last_name].join(" ")}`} onClose={() => setFeeModal(null)}>
+        <Modal title={tr("hf.feesTitle", { name: [feeModal.first_name, feeModal.last_name].join(" ") })} onClose={() => setFeeModal(null)}>
           <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
-            <Inp label="Amount (TZS)" type="number" value={amount} onChange={setAmount} required />
-            <Inp label="Note (optional)" value={note} onChange={setNote} />
+            <Inp label={tr("hf.amountTzs")} type="number" value={amount} onChange={setAmount} required />
+            <Inp label={tr("hf.noteOptional")} value={note} onChange={setNote} />
           </div>
-          <Btn onClick={submitFee} loading={saving}>Record Fee</Btn>
+          <Btn onClick={submitFee} loading={saving}>{tr("hf.recordFeeBtn")}</Btn>
           <div style={{ marginTop: 18 }}>
-            <SLabel>Previous entries</SLabel>
+            <SLabel>{tr("hf.previousEntries")}</SLabel>
             {(entries[feeModal.id] || []).map(en => (
               <div key={en.id} style={{ display: "flex", flexDirection: "column", padding: "6px 0", fontSize: 12.5, borderTop: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span>TZS {Number(en.hostel_fee).toLocaleString()} {en.comment ? `- ${en.comment}` : ""}</span>
-                  <button onClick={() => removeFee(en.id)} style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 12 }}>Remove</button>
+                  <button onClick={() => removeFee(en.id)} style={{ background: "none", border: "none", color: C.danger, cursor: "pointer", fontSize: 12 }}>{tr("lg.remove")}</button>
                 </div>
                 <span style={{ color: C.muted, fontSize: 11 }}>{en.created_at_tz}{en.recorded_by_name ? ` · by ${en.recorded_by_name}` : ""}</span>
               </div>
             ))}
-            {!(entries[feeModal.id] || []).length && <p style={{ fontSize: 12.5, color: C.muted }}>No fee entries yet for this student.</p>}
+            {!(entries[feeModal.id] || []).length && <p style={{ fontSize: 12.5, color: C.muted }}>{tr("hf.noFeeEntries")}</p>}
           </div>
         </Modal>
       )}
@@ -3641,7 +3642,7 @@ function HostelHistoryTab({ token, canDeletePermanent, canEdit = true }) {
   // which no longer lists them once they're no longer a current occupant.
   const deletePermanent = (s) => {
     confirm(
-      "Delete this registration completely? Use this ONLY if the student was registered by mistake. This cannot be undone and the record will disappear from History entirely.",
+      tr("hh.deleteConfirm"),
       async () => {
         try { await apiFetch(`/hostel/occupants/${s.id}/permanent`, { method: "DELETE" }, token); load(); }
         catch (e) { setError(e.message); }
@@ -3652,11 +3653,11 @@ function HostelHistoryTab({ token, canDeletePermanent, canEdit = true }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {ConfirmDialogPortal}
-      <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>Every student ever admitted to this hostel, grouped by class - current residents and past ones.</p>
+      <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>{tr("hh.intro")}</p>
       {error && <Alert type="error" message={error} onClose={() => setError("")} />}
       <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${C.border}` }}>
         {HOSTELS.map(h => { const sel = hostel === h; const col = h === "Girls Hostel" ? C.girl : C.boy; return (
-          <button key={h} onClick={() => setHostel(h)} style={{ padding: "9px 22px", border: "none", borderBottom: sel ? `3px solid ${col}` : "3px solid transparent", background: "transparent", fontWeight: sel ? 700 : 500, fontSize: 14, color: sel ? col : C.muted, cursor: "pointer" }}>{h}</button>
+          <button key={h} onClick={() => setHostel(h)} style={{ padding: "9px 22px", border: "none", borderBottom: sel ? `3px solid ${col}` : "3px solid transparent", background: "transparent", fontWeight: sel ? 700 : 500, fontSize: 14, color: sel ? col : C.muted, cursor: "pointer" }}>{h==="Girls Hostel"?tr("ho.girlsHostel"):tr("ho.boysHostel")}</button>
         ); })}
       </div>
       {forms.map(form => (
@@ -3670,24 +3671,24 @@ function HostelHistoryTab({ token, canDeletePermanent, canEdit = true }) {
                   {(canEdit || canDeletePermanent) && <ActionsMenu items={[...(canEdit ? [{ label: tr("lg.edit"), onClick: () => setEditOcc({ ...s, hostel_name: hostel }) }] : []), ...(canDeletePermanent ? [{ label: tr("ho.deleteRegMistake"), onClick: () => deletePermanent(s), danger: true }] : [])]} />}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 11.5 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: C.muted }}>Room</span><span>{s.room_number || "-"}</span></div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: C.muted }}>Admitted</span><span>{s.admitted_date ? String(s.admitted_date).slice(0, 10) : "-"}</span></div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: C.muted }}>Status</span><span style={{ color: s.is_active ? C.girl : C.muted, fontWeight: 600 }}>{s.is_active ? "Current" : `Departed ${s.departed_date ? String(s.departed_date).slice(0, 10) : ""}`}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: C.muted }}>{tr("ho.room")}</span><span>{s.room_number || "-"}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: C.muted }}>{tr("ho.admitted")}</span><span>{s.admitted_date ? String(s.admitted_date).slice(0, 10) : "-"}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: C.muted }}>{tr("lg.status")}</span><span style={{ color: s.is_active ? C.girl : C.muted, fontWeight: 600 }}>{s.is_active ? tr("hh.current") : tr("hh.departed", { date: s.departed_date ? String(s.departed_date).slice(0, 10) : "" })}</span></div>
                 </div>
               </div>
             ) : (
               <div key={s.id} style={{ display: "flex", alignItems: "center", padding: "8px 16px", fontSize: 12.5, borderTop: i > 0 ? `1px solid ${C.border}` : "none" }}>
                 <span style={{ flex: 1.5 }}>{[s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ")}</span>
-                <span style={{ flex: 1, color: C.muted }}>Room: {s.room_number || "-"}</span>
-                <span style={{ flex: 1, color: C.muted }}>Admitted: {s.admitted_date ? String(s.admitted_date).slice(0, 10) : "-"}</span>
-                <span style={{ flex: 1, color: s.is_active ? C.girl : C.muted, fontWeight: 600 }}>{s.is_active ? "Current" : `Departed ${s.departed_date ? String(s.departed_date).slice(0, 10) : ""}`}</span>
+                <span style={{ flex: 1, color: C.muted }}>{tr("ho.room")}: {s.room_number || "-"}</span>
+                <span style={{ flex: 1, color: C.muted }}>{tr("ho.admitted")}: {s.admitted_date ? String(s.admitted_date).slice(0, 10) : "-"}</span>
+                <span style={{ flex: 1, color: s.is_active ? C.girl : C.muted, fontWeight: 600 }}>{s.is_active ? tr("hh.current") : tr("hh.departed", { date: s.departed_date ? String(s.departed_date).slice(0, 10) : "" })}</span>
                 {(canEdit || canDeletePermanent) && <span style={{ width: 40, textAlign: "right" }}><ActionsMenu items={[...(canEdit ? [{ label: tr("lg.edit"), onClick: () => setEditOcc({ ...s, hostel_name: hostel }) }] : []), ...(canDeletePermanent ? [{ label: tr("ho.deleteRegMistake"), onClick: () => deletePermanent(s), danger: true }] : [])]} /></span>}
               </div>
             )
           ))}
         </Card>
       ))}
-      {!forms.length && !error && <p style={{ fontSize: 13, color: C.muted }}>No history yet for {hostel}.</p>}
+      {!forms.length && !error && <p style={{ fontSize: 13, color: C.muted }}>{tr("hh.noHistoryFor", { hostel: tr(hostel==="Girls Hostel"?"ho.girlsHostel":"ho.boysHostel") })}</p>}
       {editOcc && <HostelEditModal token={token} occ={editOcc} onClose={() => setEditOcc(null)} onSaved={() => { setEditOcc(null); load(); }} />}
     </div>
   );
@@ -3697,6 +3698,7 @@ function HostelHistoryTab({ token, canDeletePermanent, canEdit = true }) {
 // only, for a current resident) the room. Name/class come from Student
 // Management and are not edited here.
 function HostelEditModal({ token, occ, onClose, onSaved }) {
+  useLang();
   const [date, setDate] = useState(occ.admitted_date ? String(occ.admitted_date).slice(0, 10) : "");
   const [roomId, setRoomId] = useState("");
   const [rooms, setRooms] = useState([]);
@@ -3726,26 +3728,26 @@ function HostelEditModal({ token, occ, onClose, onSaved }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ background: C.surface, borderRadius: 6, padding: 22, width: "100%", maxWidth: 420 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 4, color: C.heading, fontSize: 16 }}>Edit Registration</h3>
+        <h3 style={{ marginTop: 0, marginBottom: 4, color: C.heading, fontSize: 16 }}>{tr("he.editReg")}</h3>
         <p style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>{name} - {occ.hostel_name}</p>
         {error && <Alert type="error" message={error} onClose={() => setError("")} />}
-        <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: C.text, marginBottom: 14 }}>Admission date
+        <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: C.text, marginBottom: 14 }}>{tr("he.admissionDate")}
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 13.5, background: C.surface, color: C.text }} /></label>
         {canMoveRoom && (
-          <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: C.text, marginBottom: 14 }}>Move to room (optional)
+          <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: C.text, marginBottom: 14 }}>{tr("he.moveToRoom")}
             <select value={roomId} onChange={(e) => setRoomId(e.target.value)} style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 13.5, background: C.surface, color: C.text }}>
-              <option value="">Keep current room ({occ.room_number || "-"})</option>
+              <option value="">{tr("he.keepRoom", { room: occ.room_number || "-" })}</option>
               {rooms.filter((r) => Number(r.occupied_count) < Number(r.capacity) && r.room_number !== occ.room_number).map((r) => (
                 <option key={r.id} value={r.id}>{r.room_number} ({r.occupied_count}/{r.capacity})</option>
               ))}
             </select></label>
         )}
         {occ.hostel_name === "Girls Hostel" && !occ.is_active && (
-          <p style={{ fontSize: 11.5, color: C.muted, marginBottom: 14 }}>This student has left the hostel, so the room cannot be changed here.</p>
+          <p style={{ fontSize: 11.5, color: C.muted, marginBottom: 14 }}>{tr("he.leftHostel")}</p>
         )}
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <Btn variant="secondary" onClick={onClose}>Cancel</Btn>
-          <Btn variant="primary" onClick={save} loading={busy}>Save</Btn>
+          <Btn variant="secondary" onClick={onClose}>{tr("common.cancel")}</Btn>
+          <Btn variant="primary" onClick={save} loading={busy}>{tr("common.save")}</Btn>
         </div>
       </div>
     </div>
