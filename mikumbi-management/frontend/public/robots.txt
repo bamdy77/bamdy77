@@ -4,3 +4,5 @@ Disallow: /dashboard
 Disallow: /login
 Disallow: /reset-password
 Disallow: /forgot-password
+
+Sitemap: https://mikumbisecondary.com/sitemap.xml
