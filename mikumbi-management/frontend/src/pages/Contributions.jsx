@@ -8,12 +8,14 @@ import { useConfirm } from "../components/ConfirmDialog";
 import { showSuccess } from "../components/SuccessModal";
 import { showError } from "../components/ErrorModal";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { useLang, getLang, translate } from "../i18n";
 import { DotsVerticalIcon, CoinsIcon, CalendarIcon, ReamIcon, WalletIcon, UserHistoryIcon, ClockIcon, CheckCircleIcon, LayersIcon, CalendarPlusIcon, ReceiptIcon, EditIcon, SpinnerIcon } from "../components/icons";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const HOLIDAY_MONTHS = [6, 12];
 const FORMS = ["Form I", "Form II", "Form III", "Form IV"];
 const MONTHLY_FEE = 2000;
+const mName = (i) => translate(getLang(), `month.${i + 1}`);
 
 // Shared tab bar for Contributions Management.
 //
@@ -116,22 +118,23 @@ export default function Contributions() {
 }
 
 function OversightView() {
+  const { t } = useLang();
   const { token } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
   const [tab, setTab] = useState("parttime");
   const tabs = [
-    ["parttime", "Part-Time Teachers", CoinsIcon],
-    ["daily", "Daily Collections", CalendarIcon],
-    ["ream", "Ream(s)", ReamIcon],
-    ["other", "Other Expenses", WalletIcon],
-    ["students", "Student History", UserHistoryIcon],
-    ["history", "History", ClockIcon],
+    ["parttime", t("con.tab.parttime"), CoinsIcon],
+    ["daily", t("con.tab.daily"), CalendarIcon],
+    ["ream", t("con.tab.ream"), ReamIcon],
+    ["other", t("con.tab.other"), WalletIcon],
+    ["students", t("con.tab.students"), UserHistoryIcon],
+    ["history", t("con.tab.history"), ClockIcon],
   ];
   return (
     <div style={{ padding: isMobile ? "16px 12px" : isTablet ? "24px 20px" : 32 }}>
-      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : isTablet ? 18 : 20, marginBottom: 4 }}>Contributions Management</h2>
-      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>Full oversight of contributions collected by every class teacher.</p>
+      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : isTablet ? 18 : 20, marginBottom: 4 }}>{t("con.title")}</h2>
+      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>{t("con.subtitle")}</p>
       <TabBar tabs={tabs} active={tab} onChange={setTab} isCompact={isCompact} />
       {tab === "parttime" && <PartTimeOversight token={token} />}
       {tab === "daily" && <DailyCollections showClassFilter />}
@@ -144,6 +147,7 @@ function OversightView() {
 }
 
 function PartTimeOversight({ token }) {
+  const { t } = useLang();
   const { user } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
@@ -178,18 +182,18 @@ function PartTimeOversight({ token }) {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap", background: `color-mix(in srgb, ${THEME.link} 8%, ${THEME.surface})`, border: `1px solid ${THEME.border}`, borderRadius: 6, padding: "11px 16px" }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 11.5, color: THEME.muted }}>Monthly amount per student ({MONTHS[month - 1]} {year})</div>
+          <div style={{ fontSize: 11.5, color: THEME.muted }}>{t("con.monthlyAmountPer", { month: mName(month - 1), year })}</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: THEME.heading }}>{fee == null ? "…" : `TZS ${fee.toLocaleString()}`}</div>
         </div>
         {canEditFee && (
-          <button onClick={() => setEditFee(true)} style={{ ...btnSecondary, marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}><EditIcon size={13} />Change amount</button>
+          <button onClick={() => setEditFee(true)} style={{ ...btnSecondary, marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}><EditIcon size={13} />{t("con.changeAmount")}</button>
         )}
       </div>
       {editFee && <EditPartTimeFeeModal token={token} onClose={() => setEditFee(false)} onDone={() => { setEditFee(false); loadSummary(); }} />}
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <select value={month} onChange={(e) => { setMonth(Number(e.target.value)); setDrillForm(null); }} style={{ ...selectStyle, ...(isMobile ? { flex: 1, minWidth: 130 } : {}) }}>
-          {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+          {MONTHS.map((m, i) => <option key={m} value={i + 1}>{mName(i)}</option>)}
         </select>
         <select value={year} onChange={(e) => { setYear(Number(e.target.value)); setDrillForm(null); }} style={{ ...selectStyle, ...(isMobile ? { flex: 1, minWidth: 90 } : {}) }}>
           {[year - 1, year, year + 1].map((y) => <option key={y} value={y}>{y}</option>)}
@@ -197,7 +201,7 @@ function PartTimeOversight({ token }) {
       </div>
       {error && <ErrorBox msg={error} />}
       {isHoliday ? (
-        <p style={{ fontSize: 13.5, color: THEME.muted }}>No contribution is billed in {MONTHS[month - 1]} (school holiday).</p>
+        <p style={{ fontSize: 13.5, color: THEME.muted }}>{t("con.noBilled", { month: mName(month - 1) })}</p>
       ) : !drillForm ? (
         isCompact ? (
           <div style={cardList}>
@@ -207,20 +211,20 @@ function PartTimeOversight({ token }) {
                   <span style={cardTitle}>{r.form}</span>
                   <span style={cardChevron}>›</span>
                 </div>
-                <div style={cardField}><span style={cardFieldLabel}>Students Paid</span><span style={cardFieldValue}>{r.students_paid} / {r.total_students}</span></div>
-                <div style={cardField}><span style={cardFieldLabel}>Total Collected</span><span style={cardFieldValue}>TZS {Number(r.total_collected).toLocaleString()}</span></div>
-                <div style={cardField}><span style={cardFieldLabel}>Collected By</span><span style={{ ...cardFieldValue, fontWeight: 400 }}>{r.collected_by?.length ? r.collected_by.join(", ") : "-"}</span></div>
+                <div style={cardField}><span style={cardFieldLabel}>{t("con.studentsPaid")}</span><span style={cardFieldValue}>{r.students_paid} / {r.total_students}</span></div>
+                <div style={cardField}><span style={cardFieldLabel}>{t("con.totalCollected")}</span><span style={cardFieldValue}>TZS {Number(r.total_collected).toLocaleString()}</span></div>
+                <div style={cardField}><span style={cardFieldLabel}>{t("con.collectedBy")}</span><span style={{ ...cardFieldValue, fontWeight: 400 }}>{r.collected_by?.length ? r.collected_by.join(", ") : "-"}</span></div>
               </div>
             ))}
-            {!summary.length && <p style={{ fontSize: 13, color: THEME.muted }}>No classes found.</p>}
+            {!summary.length && <p style={{ fontSize: 13, color: THEME.muted }}>{t("con.noClasses")}</p>}
           </div>
         ) : (
         <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
           <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 560 }}>
-            <span style={{ flex: 1.5 }}>Class</span>
-            <span style={{ flex: 1 }}>Students Paid</span>
-            <span style={{ flex: 1 }}>Total Collected</span>
-            <span style={{ flex: 2 }}>Collected By</span>
+            <span style={{ flex: 1.5 }}>{t("con.class")}</span>
+            <span style={{ flex: 1 }}>{t("con.studentsPaid")}</span>
+            <span style={{ flex: 1 }}>{t("con.totalCollected")}</span>
+            <span style={{ flex: 2 }}>{t("con.collectedBy")}</span>
           </div>
           {summary.map((r, i) => (
             <div key={r.form} onClick={() => openClass(r.form)} style={{ display: "flex", alignItems: "center", padding: "10px 16px", fontSize: 13, cursor: "pointer", borderTop: i > 0 ? `1px solid ${THEME.border}` : "none", minWidth: 560 }}>
@@ -230,37 +234,37 @@ function PartTimeOversight({ token }) {
               <span style={{ flex: 2, fontSize: 12, color: THEME.muted }}>{r.collected_by?.length ? r.collected_by.join(", ") : "-"}</span>
             </div>
           ))}
-          {!summary.length && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>No classes found.</p>}
+          {!summary.length && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{t("con.noClasses")}</p>}
         </div>
         )
       ) : (
         <div>
-          <button onClick={() => setDrillForm(null)} style={{ ...btnSecondary, marginBottom: 12 }}>Back to all classes</button>
-          <h3 style={{ fontSize: 15, marginBottom: 10 }}>{drillForm} - {MONTHS[month - 1]} {year}</h3>
+          <button onClick={() => setDrillForm(null)} style={{ ...btnSecondary, marginBottom: 12 }}>{t("con.backToClasses")}</button>
+          <h3 style={{ fontSize: 15, marginBottom: 10 }}>{drillForm} - {mName(month - 1)} {year}</h3>
           {isCompact ? (
             <div style={cardList}>
               {drillRows.map((s) => (
                 <div key={s.student_id} className="mk-row-card" style={rowCard}>
                   <div style={cardHeadRow}>
                     <span style={{ ...cardTitle, color: THEME.text }}>{[s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ")}</span>
-                    <StatusPill ok={s.completed}>{s.completed ? "Completed" : s.amount_paid > 0 ? "Partial" : "Not Paid"}</StatusPill>
+                    <StatusPill ok={s.completed}>{s.completed ? t("con.status.completed") : s.amount_paid > 0 ? t("con.status.partial") : t("con.status.notPaid")}</StatusPill>
                   </div>
-                  <div style={cardField}><span style={cardFieldLabel}>Collected By</span><span style={{ ...cardFieldValue, fontWeight: 400 }}>{s.collected_by_name || "-"}</span></div>
+                  <div style={cardField}><span style={cardFieldLabel}>{t("con.collectedBy")}</span><span style={{ ...cardFieldValue, fontWeight: 400 }}>{s.collected_by_name || "-"}</span></div>
                 </div>
               ))}
-              {!drillRows.length && <p style={{ fontSize: 13, color: THEME.muted }}>No students found.</p>}
+              {!drillRows.length && <p style={{ fontSize: 13, color: THEME.muted }}>{t("con.noStudents")}</p>}
             </div>
           ) : (
           <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
             <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 460 }}>
-              <span style={{ flex: 2 }}>Name</span>
-              <span style={{ flex: 1 }}>Status</span>
-              <span style={{ flex: 1 }}>Collected By</span>
+              <span style={{ flex: 2 }}>{t("con.name")}</span>
+              <span style={{ flex: 1 }}>{t("con.status")}</span>
+              <span style={{ flex: 1 }}>{t("con.collectedBy")}</span>
             </div>
             {drillRows.map((s, i) => (
               <div key={s.student_id} style={{ display: "flex", alignItems: "center", padding: "9px 16px", fontSize: 13, borderTop: i > 0 ? `1px solid ${THEME.border}` : "none", minWidth: 460 }}>
                 <span style={{ flex: 2 }}>{[s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ")}</span>
-                <StatusPill ok={s.completed} style={{ flex: 1 }}>{s.completed ? "Completed" : s.amount_paid > 0 ? "Partial" : "Not Paid"}</StatusPill>
+                <StatusPill ok={s.completed} style={{ flex: 1 }}>{s.completed ? t("con.status.completed") : s.amount_paid > 0 ? t("con.status.partial") : t("con.status.notPaid")}</StatusPill>
                 <span style={{ flex: 1, fontSize: 12, color: THEME.muted }}>{s.collected_by_name || "-"}</span>
               </div>
             ))}
@@ -273,6 +277,7 @@ function PartTimeOversight({ token }) {
 }
 
 function PartTimeHistory({ token }) {
+  const { t } = useLang();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
   const [year, setYear] = useState(new Date().getFullYear());
@@ -288,13 +293,13 @@ function PartTimeHistory({ token }) {
 
   return (
     <div>
-      <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 12 }}>Browse any past (or future) year's collection record, month by month.</p>
+      <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 12 }}>{t("con.history.browse")}</p>
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={{ ...selectStyle, ...(isMobile ? { flex: 1, minWidth: 90 } : {}) }}>
           {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 3 + i).map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
         <select value={form} onChange={(e) => setForm(e.target.value)} style={{ ...selectStyle, ...(isMobile ? { flex: 1, minWidth: 130 } : {}) }}>
-          <option value="">All Classes</option>
+          <option value="">{t("con.allClasses")}</option>
           {FORMS.map((f) => <option key={f}>{f}</option>)}
         </select>
       </div>
@@ -304,32 +309,32 @@ function PartTimeHistory({ token }) {
           {rows.map((r) => (
             <div key={`${r.month}-${r.form}`} className="mk-row-card" style={rowCard}>
               <div style={cardHeadRow}>
-                <span style={cardTitle}>{MONTHS[r.month - 1]}</span>
+                <span style={cardTitle}>{mName(r.month - 1)}</span>
                 <span style={{ fontSize: 12, color: THEME.muted, fontWeight: 600 }}>{r.form}</span>
               </div>
-              <div style={cardField}><span style={cardFieldLabel}>Students Paid</span><span style={cardFieldValue}>{r.students_paid}</span></div>
-              <div style={cardField}><span style={cardFieldLabel}>Total Collected</span><span style={cardFieldValue}>TZS {Number(r.total_collected).toLocaleString()}</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.studentsPaid")}</span><span style={cardFieldValue}>{r.students_paid}</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.totalCollected")}</span><span style={cardFieldValue}>TZS {Number(r.total_collected).toLocaleString()}</span></div>
             </div>
           ))}
-          {!rows.length && <p style={{ fontSize: 13, color: THEME.muted }}>No records for {year}.</p>}
+          {!rows.length && <p style={{ fontSize: 13, color: THEME.muted }}>{t("con.noRecordsFor", { year })}</p>}
         </div>
       ) : (
       <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 480 }}>
-          <span style={{ flex: 1 }}>Month</span>
-          <span style={{ flex: 1 }}>Class</span>
-          <span style={{ flex: 1 }}>Students Paid</span>
-          <span style={{ flex: 1 }}>Total Collected</span>
+          <span style={{ flex: 1 }}>{t("con.month")}</span>
+          <span style={{ flex: 1 }}>{t("con.class")}</span>
+          <span style={{ flex: 1 }}>{t("con.studentsPaid")}</span>
+          <span style={{ flex: 1 }}>{t("con.totalCollected")}</span>
         </div>
         {rows.map((r, i) => (
           <div key={`${r.month}-${r.form}`} style={{ display: "flex", padding: "8px 16px", fontSize: 13, borderTop: i > 0 ? `1px solid ${THEME.border}` : "none", minWidth: 480 }}>
-            <span style={{ flex: 1 }}>{MONTHS[r.month - 1]}</span>
+            <span style={{ flex: 1 }}>{mName(r.month - 1)}</span>
             <span style={{ flex: 1 }}>{r.form}</span>
             <span style={{ flex: 1 }}>{r.students_paid}</span>
             <span style={{ flex: 1 }}>TZS {Number(r.total_collected).toLocaleString()}</span>
           </div>
         ))}
-        {!rows.length && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>No records for {year}.</p>}
+        {!rows.length && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{t("con.noRecordsFor", { year })}</p>}
       </div>
       )}
     </div>
@@ -342,6 +347,7 @@ function PartTimeHistory({ token }) {
 // EITHER Part-time Teachers or Ream this year. Click a student's name to
 // see every month they paid, with the date and who collected it.
 function PartTimeStudentHistory({ token }) {
+  const { t } = useLang();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
   const [year, setYear] = useState(new Date().getFullYear());
@@ -394,18 +400,18 @@ function PartTimeStudentHistory({ token }) {
 
   return (
     <div>
-      <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 12 }}>Each student who has contributed appears once - click "View History" for every month they paid, with the date and who collected it.</p>
+      <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 12 }}>{t("con.students.intro")}</p>
       <div style={{ display: "flex", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
-        <StatCard label={`Total Collected - Part-Time Teachers (${year})`} value={`TZS ${grandTotal.toLocaleString()}`} color={THEME.link} />
-        <StatCard label={`Students Contributed (${year})`} value={combinedCount} sub="Part-Time Teachers or Ream(s)" color={THEME.success} />
+        <StatCard label={t("con.totalCollectedPt", { year })} value={`TZS ${grandTotal.toLocaleString()}`} color={THEME.link} />
+        <StatCard label={t("con.studentsContributed", { year })} value={combinedCount} sub={t("con.ptOrReam")} color={THEME.success} />
       </div>
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={selectStyle}>
           {[year - 1, year, year + 1].map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
-        <input placeholder="Search student name..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...selectStyle, flex: 1, minWidth: 200 }} />
+        <input placeholder={t("con.searchPh")} value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...selectStyle, flex: 1, minWidth: 200 }} />
         <button onClick={() => setDownloadModal(true)} disabled={downloading} style={{ ...btnRecord, display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-          {downloading ? <SpinnerIcon size={13} /> : null}{downloading ? "Generating..." : "Download PDF"}
+          {downloading ? <SpinnerIcon size={13} /> : null}{downloading ? t("con.generating") : t("con.downloadPdf")}
         </button>
       </div>
       {error && <ErrorBox msg={error} />}
@@ -425,31 +431,31 @@ function PartTimeStudentHistory({ token }) {
                 <span style={{ ...cardTitle, color: THEME.text }}>{[s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ")}</span>
                 <span style={{ fontSize: 12, color: THEME.muted, fontWeight: 600 }}>{s.form}</span>
               </div>
-              <div style={cardField}><span style={cardFieldLabel}>Months Paid</span><span style={cardFieldValue}>{s.months_paid}</span></div>
-              <div style={cardField}><span style={cardFieldLabel}>Ream(s)</span><span style={{ ...cardFieldValue, color: s.ream_contributed ? THEME.success : THEME.muted }}>{s.ream_contributed ? "Brought" : "-"}</span></div>
-              <div style={cardField}><span style={cardFieldLabel}>Total Paid</span><span style={cardFieldValue}>TZS {Number(s.total_paid).toLocaleString()}</span></div>
-              <button onClick={() => setViewStudent(s)} style={{ ...btnRecord, width: "100%", marginTop: 8 }}>View History</button>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.monthsPaid")}</span><span style={cardFieldValue}>{s.months_paid}</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.ream")}</span><span style={{ ...cardFieldValue, color: s.ream_contributed ? THEME.success : THEME.muted }}>{s.ream_contributed ? t("con.brought") : "-"}</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.totalPaid")}</span><span style={cardFieldValue}>TZS {Number(s.total_paid).toLocaleString()}</span></div>
+              <button onClick={() => setViewStudent(s)} style={{ ...btnRecord, width: "100%", marginTop: 8 }}>{t("con.viewHistory")}</button>
             </div>
           ))}
-          {!filtered.length && <p style={{ fontSize: 13, color: THEME.muted }}>{search ? "No matching student found." : `No contributions recorded for ${year}.`}</p>}
+          {!filtered.length && <p style={{ fontSize: 13, color: THEME.muted }}>{search ? t("con.noMatchStudent") : t("con.noneRecordedYear", { year })}</p>}
         </div>
       ) : (
       <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 680 }}>
-          <span style={{ flex: 1.8 }}>Name</span><span style={{ flex: 0.8 }}>Class</span>
-          <span style={{ flex: 1 }}>Months Paid</span><span style={{ flex: 0.7 }}>Ream(s)</span><span style={{ flex: 1 }}>Total Paid</span><span style={{ width: 110 }} />
+          <span style={{ flex: 1.8 }}>{t("con.name")}</span><span style={{ flex: 0.8 }}>{t("con.class")}</span>
+          <span style={{ flex: 1 }}>{t("con.monthsPaid")}</span><span style={{ flex: 0.7 }}>{t("con.ream")}</span><span style={{ flex: 1 }}>{t("con.totalPaid")}</span><span style={{ width: 110 }} />
         </div>
         {filtered.map((s, i) => (
           <div key={s.student_id} style={{ display: "flex", alignItems: "center", padding: "9px 16px", fontSize: 13, borderTop: i > 0 ? `1px solid ${THEME.border}` : "none", gap: 6, minWidth: 680 }}>
             <span style={{ flex: 1.8 }}>{[s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ")}</span>
             <span style={{ flex: 0.8 }}>{s.form}</span>
             <span style={{ flex: 1 }}>{s.months_paid}</span>
-            <span style={{ flex: 0.7, color: s.ream_contributed ? THEME.success : THEME.muted, fontWeight: s.ream_contributed ? 700 : 400 }}>{s.ream_contributed ? "Brought" : "-"}</span>
+            <span style={{ flex: 0.7, color: s.ream_contributed ? THEME.success : THEME.muted, fontWeight: s.ream_contributed ? 700 : 400 }}>{s.ream_contributed ? t("con.brought") : "-"}</span>
             <span style={{ flex: 1 }}>TZS {Number(s.total_paid).toLocaleString()}</span>
-            <span style={{ width: 110 }}><button onClick={() => setViewStudent(s)} style={btnRecord}>View History</button></span>
+            <span style={{ width: 110 }}><button onClick={() => setViewStudent(s)} style={btnRecord}>{t("con.viewHistory")}</button></span>
           </div>
         ))}
-        {!filtered.length && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{search ? "No matching student found." : `No contributions recorded for ${year}.`}</p>}
+        {!filtered.length && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{search ? t("con.noMatchStudent") : t("con.noneRecordedYear", { year })}</p>}
       </div>
       )}
       {viewStudent && <StudentPartTimeHistoryModal student={viewStudent} year={year} token={token} onClose={() => setViewStudent(null)} />}
@@ -465,6 +471,7 @@ function PartTimeStudentHistory({ token }) {
 // a given month gets that called out explicitly, instead of just showing
 // one lump total with no sign it was collected across multiple visits.
 function StudentPartTimeHistoryModal({ student, year, token, onClose }) {
+  const { t } = useLang();
   const [entries, setEntries] = useState([]);
   const [error, setError] = useState("");
 
@@ -480,7 +487,7 @@ function StudentPartTimeHistoryModal({ student, year, token, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 460, maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading }}>Contribution History - {name}</h3>
+          <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading }}>{t("con.histTitle", { name })}</h3>
           <button onClick={onClose} style={{ border: "none", background: "none", fontSize: 20, cursor: "pointer", color: THEME.muted, lineHeight: 1 }}>&times;</button>
         </div>
         {error && <ErrorBox msg={error} />}
@@ -490,32 +497,32 @@ function StudentPartTimeHistoryModal({ student, year, token, onClose }) {
               {e.source === "ream" ? (
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontWeight: 600 }}>Ream(s) ({year})</span>
-                    <span style={{ color: THEME.success, fontWeight: 600 }}>Brought</span>
+                    <span style={{ fontWeight: 600 }}>{t("con.reamYear", { year })}</span>
+                    <span style={{ color: THEME.success, fontWeight: 600 }}>{t("con.brought")}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: THEME.muted }}>
-                    <span>{e.recorded_by_name ? `Collected by ${e.recorded_by_name}` : ""}</span>
+                    <span>{e.recorded_by_name ? t("con.collectedByName", { name: e.recorded_by_name }) : ""}</span>
                     <span>{new Date(e.updated_at).toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" })}</span>
                   </div>
                 </>
               ) : (
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontWeight: 600 }}>{MONTHS[e.month - 1]} {year}</span>
-                    <span>TZS {Number(e.amount_paid).toLocaleString()} {e.completed ? "" : "(Partial)"}</span>
+                    <span style={{ fontWeight: 600 }}>{mName(e.month - 1)} {year}</span>
+                    <span>TZS {Number(e.amount_paid).toLocaleString()} {e.completed ? "" : t("con.partial")}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: THEME.muted }}>
-                    <span>{e.recorded_by_name ? `Collected by ${e.recorded_by_name}` : ""}</span>
+                    <span>{e.recorded_by_name ? t("con.collectedByName", { name: e.recorded_by_name }) : ""}</span>
                     <span>{new Date(e.updated_at).toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" })}</span>
                   </div>
                   {Number(e.installments) > 1 && (
-                    <div style={{ fontSize: 11, color: THEME.heading, fontWeight: 600 }}>Paid across {e.installments} separate installments this month</div>
+                    <div style={{ fontSize: 11, color: THEME.heading, fontWeight: 600 }}>{t("con.paidAcross", { n: e.installments })}</div>
                   )}
                 </>
               )}
             </div>
           ))}
-          {!entries.length && !error && <p style={{ fontSize: 13, color: THEME.muted }}>No entries found.</p>}
+          {!entries.length && !error && <p style={{ fontSize: 13, color: THEME.muted }}>{t("con.noEntries")}</p>}
         </div>
       </div>
     </div>
@@ -531,6 +538,7 @@ function StudentPartTimeHistoryModal({ student, year, token, onClose }) {
 // only ever seeing their own class) is enforced server-side already, same
 // as the on-screen list, so there's nothing to pick here for that.
 function DownloadOptionsModal({ year, downloading, onClose, onConfirm }) {
+  const { t } = useLang();
   const [scope, setScope] = useState("year"); // year | month | range
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [fromMonth, setFromMonth] = useState(1);
@@ -539,7 +547,7 @@ function DownloadOptionsModal({ year, downloading, onClose, onConfirm }) {
 
   const confirm = () => {
     if (scope === "range" && Number(fromMonth) > Number(toMonth)) {
-      setErr("The starting month must come before the ending month.");
+      setErr(t("con.rangeOrder"));
       return;
     }
     setErr("");
@@ -561,33 +569,33 @@ function DownloadOptionsModal({ year, downloading, onClose, onConfirm }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 210, padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 380 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading }}>Download Contributions Report</h3>
+          <h3 style={{ margin: 0, fontSize: 15.5, color: THEME.heading }}>{t("con.downloadTitle")}</h3>
           <button onClick={onClose} style={{ border: "none", background: "none", fontSize: 20, cursor: "pointer", color: THEME.muted, lineHeight: 1 }}>&times;</button>
         </div>
-        <p style={{ fontSize: 12.5, color: THEME.muted, marginTop: 0, marginBottom: 14 }}>Choose which part of {year} to include in the PDF.</p>
+        <p style={{ fontSize: 12.5, color: THEME.muted, marginTop: 0, marginBottom: 14 }}>{t("con.choosePart", { year })}</p>
         <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
-          {radioRow("year", `Whole Year (${year})`)}
-          {radioRow("month", "One Specific Month")}
-          {radioRow("range", "A Range of Months")}
+          {radioRow("year", t("con.wholeYear", { year }))}
+          {radioRow("month", t("con.oneMonth"))}
+          {radioRow("range", t("con.rangeMonths"))}
         </div>
         {scope === "month" && (
           <select value={month} onChange={(e) => setMonth(e.target.value)} style={{ ...selectStyle, width: "100%", marginBottom: 14 }}>
-            {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            {MONTHS.map((m, i) => <option key={m} value={i + 1}>{mName(i)}</option>)}
           </select>
         )}
         {scope === "range" && (
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
             <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} style={{ ...selectStyle, flex: 1 }}>
-              {MONTHS.map((m, i) => <option key={m} value={i + 1}>From: {m}</option>)}
+              {MONTHS.map((m, i) => <option key={m} value={i + 1}>{t("con.from")} {mName(i)}</option>)}
             </select>
             <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} style={{ ...selectStyle, flex: 1 }}>
-              {MONTHS.map((m, i) => <option key={m} value={i + 1}>To: {m}</option>)}
+              {MONTHS.map((m, i) => <option key={m} value={i + 1}>{t("con.to")} {mName(i)}</option>)}
             </select>
           </div>
         )}
         {err && <ErrorBox msg={err} />}
         <button onClick={confirm} disabled={downloading} style={{ ...btnRecord, width: "100%", display: "flex", justifyContent: "center", alignItems: "center", gap: 6, padding: "10px 12px" }}>
-          {downloading ? <SpinnerIcon size={13} /> : null}{downloading ? "Generating..." : "Download PDF"}
+          {downloading ? <SpinnerIcon size={13} /> : null}{downloading ? t("con.generating") : t("con.downloadPdf")}
         </button>
       </div>
     </div>
@@ -595,6 +603,7 @@ function DownloadOptionsModal({ year, downloading, onClose, onConfirm }) {
 }
 
 function ReamOversight({ token }) {
+  const { t } = useLang();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
   const [summary, setSummary] = useState([]);
@@ -608,17 +617,17 @@ function ReamOversight({ token }) {
   return (
     <div>
       {error && <ErrorBox msg={error} />}
-      <h3 style={{ fontSize: 14, marginBottom: 10 }}>Ream(s) - by Class</h3>
+      <h3 style={{ fontSize: 14, marginBottom: 10 }}>{t("con.reamByClass")}</h3>
       <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
         {summary.map((r) => (
           <div key={r.form} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "14px 18px", minWidth: 130, flex: isCompact ? "1 1 130px" : "0 0 auto" }}>
             <div style={{ fontSize: 12, color: THEME.muted }}>{r.form}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: THEME.heading }}>{r.students_brought}</div>
-            <div style={{ fontSize: 11, color: THEME.muted }}>students brought Ream(s)</div>
+            <div style={{ fontSize: 11, color: THEME.muted }}>{t("con.studentsBroughtReam")}</div>
           </div>
         ))}
       </div>
-      <h3 style={{ fontSize: 14, marginBottom: 10 }}>Recent Entries</h3>
+      <h3 style={{ fontSize: 14, marginBottom: 10 }}>{t("con.recentEntries")}</h3>
       {isCompact ? (
         <div style={cardList}>
           {list.slice(0, 30).map((r) => (
@@ -628,14 +637,14 @@ function ReamOversight({ token }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{ fontSize: 12, color: THEME.muted, fontWeight: 600 }}>{r.form}</span>
                   <ActionMenu>
-                    <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/charge/${r.id}`, token).catch((e) => showError("Receipt", e.message))}>Receipt (PDF)</MenuItem>
+                    <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/charge/${r.id}`, token).catch((e) => showError(t("con.receipt"), e.message))}>{t("con.receiptPdf")}</MenuItem>
                   </ActionMenu>
                 </div>
               </div>
-              <div style={cardField}><span style={cardFieldLabel}>Date</span><span style={cardFieldValue}>{r.charge_date?.slice?.(0, 10) || r.charge_date}</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.date")}</span><span style={cardFieldValue}>{r.charge_date?.slice?.(0, 10) || r.charge_date}</span></div>
             </div>
           ))}
-          {!list.length && <p style={{ fontSize: 13, color: THEME.muted }}>No Ream(s) entries yet.</p>}
+          {!list.length && <p style={{ fontSize: 13, color: THEME.muted }}>{t("con.noReamEntries")}</p>}
         </div>
       ) : (
       <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
@@ -647,13 +656,13 @@ function ReamOversight({ token }) {
               <span style={{ flex: 1 }}>{r.charge_date?.slice?.(0, 10) || r.charge_date}</span>
               <span style={{ width: 44, textAlign: "right" }}>
                 <ActionMenu>
-                  <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/charge/${r.id}`, token).catch((e) => showError("Receipt", e.message))}>Receipt (PDF)</MenuItem>
+                  <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/charge/${r.id}`, token).catch((e) => showError(t("con.receipt"), e.message))}>{t("con.receiptPdf")}</MenuItem>
                 </ActionMenu>
               </span>
             </div>
           ))}
         </div>
-        {!list.length && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>No Ream(s) entries yet.</p>}
+        {!list.length && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{t("con.noReamEntries")}</p>}
       </div>
       )}
     </div>
@@ -661,6 +670,7 @@ function ReamOversight({ token }) {
 }
 
 function OtherExpensesOversight({ token }) {
+  const { t } = useLang();
   const { user } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
@@ -679,8 +689,8 @@ function OtherExpensesOversight({ token }) {
 
   const actions = (r) => (
     <ActionMenu>
-      <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/charge/${r.id}`, token).catch((e) => showError("Receipt", e.message))}>Receipt (PDF)</MenuItem>
-      {canEdit && !r.locked && <MenuItem icon={EditIcon} onClick={() => setEditing(r)}>Edit Amount...</MenuItem>}
+      <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/charge/${r.id}`, token).catch((e) => showError(t("con.receipt"), e.message))}>{t("con.receiptPdf")}</MenuItem>
+      {canEdit && !r.locked && <MenuItem icon={EditIcon} onClick={() => setEditing(r)}>{t("con.editAmount")}</MenuItem>}
     </ActionMenu>
   );
 
@@ -698,16 +708,16 @@ function OtherExpensesOversight({ token }) {
                   {actions(r)}
                 </div>
               </div>
-              <div style={cardField}><span style={cardFieldLabel}>Amount</span><span style={cardFieldValue}>TZS {Number(r.amount || 0).toLocaleString()}</span></div>
-              <div style={cardField}><span style={cardFieldLabel}>Date</span><span style={cardFieldValue}>{r.charge_date?.slice?.(0, 10) || r.charge_date}</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.amount")}</span><span style={cardFieldValue}>TZS {Number(r.amount || 0).toLocaleString()}</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.date")}</span><span style={cardFieldValue}>{r.charge_date?.slice?.(0, 10) || r.charge_date}</span></div>
             </div>
           ))}
-          {!list.length && <p style={{ fontSize: 13, color: THEME.muted }}>No entries yet.</p>}
+          {!list.length && <p style={{ fontSize: 13, color: THEME.muted }}>{t("con.noEntriesYet")}</p>}
         </div>
       ) : (
       <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 520 }}>
-          <span style={{ flex: 2 }}>Name</span><span style={{ flex: 1 }}>Class</span><span style={{ flex: 1 }}>Amount</span><span style={{ flex: 1 }}>Date</span><span style={{ width: 44 }} />
+          <span style={{ flex: 2 }}>{t("con.name")}</span><span style={{ flex: 1 }}>{t("con.class")}</span><span style={{ flex: 1 }}>{t("con.amount")}</span><span style={{ flex: 1 }}>{t("con.date")}</span><span style={{ width: 44 }} />
         </div>
         {list.map((r, i) => (
           <div key={r.id} style={{ display: "flex", alignItems: "center", padding: "9px 16px", fontSize: 13, borderTop: i > 0 ? `1px solid ${THEME.border}` : "none", minWidth: 520 }}>
@@ -718,7 +728,7 @@ function OtherExpensesOversight({ token }) {
             <span style={{ width: 44, textAlign: "right" }}>{actions(r)}</span>
           </div>
         ))}
-        {!list.length && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>No entries yet.</p>}
+        {!list.length && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{t("con.noEntriesYet")}</p>}
       </div>
       )}
       {editing && (
@@ -730,6 +740,7 @@ function OtherExpensesOversight({ token }) {
 }
 
 function EditChargeModal({ charge, token, onClose, onDone }) {
+  const { t } = useLang();
   const [amount, setAmount] = useState(String(charge.amount ?? ""));
   const [note, setNote] = useState(charge.note || "");
   const [saving, setSaving] = useState(false);
@@ -737,27 +748,27 @@ function EditChargeModal({ charge, token, onClose, onDone }) {
 
   const submit = async () => {
     const n = Number(amount);
-    if (!amount || Number.isNaN(n) || n < 0) { showError("Invalid Amount", "Enter a valid, non-negative amount."); return; }
+    if (!amount || Number.isNaN(n) || n < 0) { showError(t("con.invalidAmount"), t("con.enterValidAmount")); return; }
     setSaving(true);
     try {
       await apiFetch(`/contributions/charge/${charge.id}`, { method: "PUT", body: JSON.stringify({ amount: n, note }) }, token);
-      showSuccess("Updated", `Payment for ${name} was updated successfully.`);
+      showSuccess(t("con.updated"), t("con.paymentUpdated", { name }));
       onDone();
-    } catch (err) { showError("Could Not Update Payment", err.message); } finally { setSaving(false); }
+    } catch (err) { showError(t("con.couldNotUpdate"), err.message); } finally { setSaving(false); }
   };
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
       <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 360 }}>
-        <h3 style={{ margin: "0 0 4px", fontSize: 15, color: THEME.heading }}>Edit Payment - {name}</h3>
+        <h3 style={{ margin: "0 0 4px", fontSize: 15, color: THEME.heading }}>{t("con.editPayment", { name })}</h3>
         <p style={{ margin: "0 0 16px", fontSize: 12.5, color: THEME.muted }}>{charge.charge_type} · {charge.charge_date?.slice?.(0, 10) || charge.charge_date}</p>
-        <label style={{ fontSize: 12, color: THEME.muted, display: "block", marginBottom: 4 }}>Amount (TZS)</label>
+        <label style={{ fontSize: 12, color: THEME.muted, display: "block", marginBottom: 4 }}>{t("con.amountTzs")}</label>
         <input type="number" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} style={{ ...selectStyle, width: "100%", marginBottom: 12, boxSizing: "border-box" }} autoFocus />
-        <label style={{ fontSize: 12, color: THEME.muted, display: "block", marginBottom: 4 }}>Note (optional)</label>
+        <label style={{ fontSize: 12, color: THEME.muted, display: "block", marginBottom: 4 }}>{t("con.noteOptional")}</label>
         <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} style={{ ...selectStyle, width: "100%", marginBottom: 18, boxSizing: "border-box", resize: "vertical" }} />
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <button onClick={onClose} disabled={saving} style={btnSecondary}>Cancel</button>
-          <button onClick={submit} disabled={saving} style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 6 }}>{saving ? <SpinnerIcon size={13} /> : null}{saving ? "Saving..." : "Save"}</button>
+          <button onClick={onClose} disabled={saving} style={btnSecondary}>{t("common.cancel")}</button>
+          <button onClick={submit} disabled={saving} style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 6 }}>{saving ? <SpinnerIcon size={13} /> : null}{saving ? t("common.saving") : t("common.save")}</button>
         </div>
       </div>
     </div>
@@ -765,15 +776,16 @@ function EditChargeModal({ charge, token, onClose, onDone }) {
 }
 
 function ClassTeacherView() {
+  const { t } = useLang();
   const { token } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
   const [subTab, setSubTab] = useState("parttime");
   const tabs = [
-    ["parttime", "Part-Time Teachers", CoinsIcon],
-    ["daily", "Daily Collections", CalendarIcon],
-    ["ream", "Ream(s)", ReamIcon],
-    ["students", "Student History", UserHistoryIcon],
+    ["parttime", t("con.tab.parttime"), CoinsIcon],
+    ["daily", t("con.tab.daily"), CalendarIcon],
+    ["ream", t("con.tab.ream"), ReamIcon],
+    ["students", t("con.tab.students"), UserHistoryIcon],
   ];
   return (
     <div style={{ padding: isMobile ? "16px 12px" : isTablet ? "24px 20px" : 32 }}>
@@ -791,6 +803,7 @@ function ClassTeacherView() {
 // to one class) - a date picker defaulting to today, showing exactly who
 // paid Part-time Teachers contribution that day and the day's total.
 function DailyCollections({ showClassFilter }) {
+  const { t } = useLang();
   const { token } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
@@ -818,19 +831,19 @@ function DailyCollections({ showClassFilter }) {
 
   return (
     <div>
-      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : 20, marginBottom: 4 }}>Daily Collections</h2>
-      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>Pick a day to see exactly who paid the Part-Time Teachers contribution that day, and the day's total.</p>
+      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : 20, marginBottom: 4 }}>{t("con.daily.title")}</h2>
+      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>{t("con.daily.subtitle")}</p>
 
       <div style={{ display: "flex", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
-        <StatCard label={`Students Paid (${date})`} value={studentsPaid} color={THEME.success} />
-        <StatCard label={`Total Collected (${date})`} value={`TZS ${totalCollected.toLocaleString()}`} color={THEME.link} />
+        <StatCard label={t("con.studentsPaidDate", { date })} value={studentsPaid} color={THEME.success} />
+        <StatCard label={t("con.totalCollectedDate", { date })} value={`TZS ${totalCollected.toLocaleString()}`} color={THEME.link} />
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ ...selectStyle, ...(isMobile ? { flex: 1, minWidth: 150 } : {}) }} />
         {showClassFilter && (
           <select value={form} onChange={(e) => setForm(e.target.value)} style={{ ...selectStyle, ...(isMobile ? { flex: 1, minWidth: 130 } : {}) }}>
-            <option value="">All Classes</option>
+            <option value="">{t("con.allClasses")}</option>
             {FORMS.map((f) => <option key={f}>{f}</option>)}
           </select>
         )}
@@ -847,32 +860,32 @@ function DailyCollections({ showClassFilter }) {
                 <span style={{ ...cardTitle, color: THEME.text }}>{[r.first_name, r.middle_name, r.last_name].filter(Boolean).join(" ")}</span>
                 <span style={{ fontSize: 12, color: THEME.muted, fontWeight: 600 }}>{r.form}</span>
               </div>
-              <div style={cardField}><span style={cardFieldLabel}>Month Paid For</span><span style={cardFieldValue}>{MONTHS[r.month - 1]} {r.year}</span></div>
-              <div style={cardField}><span style={cardFieldLabel}>Amount</span><span style={cardFieldValue}>TZS {Number(r.amount).toLocaleString()}</span></div>
-              <div style={cardField}><span style={cardFieldLabel}>Collected By</span><span style={{ ...cardFieldValue, fontWeight: 400 }}>{r.recorded_by_name || "-"}</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.monthPaidFor")}</span><span style={cardFieldValue}>{mName(r.month - 1)} {r.year}</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.amount")}</span><span style={cardFieldValue}>TZS {Number(r.amount).toLocaleString()}</span></div>
+              <div style={cardField}><span style={cardFieldLabel}>{t("con.collectedBy")}</span><span style={{ ...cardFieldValue, fontWeight: 400 }}>{r.recorded_by_name || "-"}</span></div>
             </div>
           ))}
-          {!rows.length && !noClass && <p style={{ fontSize: 13, color: THEME.muted }}>No payments were collected on {date}.</p>}
+          {!rows.length && !noClass && <p style={{ fontSize: 13, color: THEME.muted }}>{t("con.noPaymentsOn", { date })}</p>}
         </div>
       ) : (
       <div className="table-scroll" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 520 }}>
-          <span style={{ flex: 2 }}>Name</span>
-          <span style={{ flex: 0.8 }}>Class</span>
-          <span style={{ flex: 1 }}>Month Paid For</span>
-          <span style={{ flex: 1 }}>Amount</span>
-          <span style={{ flex: 1.2 }}>Collected By</span>
+          <span style={{ flex: 2 }}>{t("con.name")}</span>
+          <span style={{ flex: 0.8 }}>{t("con.class")}</span>
+          <span style={{ flex: 1 }}>{t("con.monthPaidFor")}</span>
+          <span style={{ flex: 1 }}>{t("con.amount")}</span>
+          <span style={{ flex: 1.2 }}>{t("con.collectedBy")}</span>
         </div>
         {rows.map((r, i) => (
           <div key={r.id} style={{ display: "flex", padding: "9px 16px", fontSize: 13, borderTop: i > 0 ? `1px solid ${THEME.border}` : "none", minWidth: 520 }}>
             <span style={{ flex: 2 }}>{[r.first_name, r.middle_name, r.last_name].filter(Boolean).join(" ")}</span>
             <span style={{ flex: 0.8 }}>{r.form}</span>
-            <span style={{ flex: 1 }}>{MONTHS[r.month - 1]} {r.year}</span>
+            <span style={{ flex: 1 }}>{mName(r.month - 1)} {r.year}</span>
             <span style={{ flex: 1 }}>TZS {Number(r.amount).toLocaleString()}</span>
             <span style={{ flex: 1.2, fontSize: 12, color: THEME.muted }}>{r.recorded_by_name || "-"}</span>
           </div>
         ))}
-        {!rows.length && !noClass && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>No payments were collected on {date}.</p>}
+        {!rows.length && !noClass && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{t("con.noPaymentsOn", { date })}</p>}
       </div>
       )}
     </div>
@@ -884,6 +897,7 @@ function DailyCollections({ showClassFilter }) {
 // earlier months keep whatever amount applied then, so old receipts and
 // history stay correct. Shows the history of past changes.
 function EditPartTimeFeeModal({ token, onClose, onDone }) {
+  const { t } = useLang();
   const now = new Date();
   const [amount, setAmount] = useState("");
   const [year, setYear] = useState(now.getFullYear());
@@ -903,15 +917,15 @@ function EditPartTimeFeeModal({ token, onClose, onDone }) {
     e.preventDefault();
     const n = Number(amount);
     if (!Number.isInteger(n) || n < (info?.min || 100) || n > (info?.max || 1000000)) {
-      setError(`Amount must be a whole number from TZS ${(info?.min || 100).toLocaleString()} to TZS ${(info?.max || 1000000).toLocaleString()}.`);
+      setError(t("con.amountRange", { min: (info?.min || 100).toLocaleString(), max: (info?.max || 1000000).toLocaleString() }));
       return;
     }
     setError("");
-    confirm(`Set the Part-Time Teachers monthly amount to TZS ${n.toLocaleString()}, starting ${MONTHS[month - 1]} ${year}? Earlier months keep their old amount.`, async () => {
+    confirm(t("con.feeConfirm", { amount: n.toLocaleString(), month: mName(month - 1), year }), async () => {
       setBusy(true);
       try {
         await apiFetch("/contributions/parttime/fee", { method: "POST", body: JSON.stringify({ amount: n, year, month }) }, token);
-        showSuccess("Monthly amount", "The new monthly amount has been saved.");
+        showSuccess(t("con.monthlyAmountTitle"), t("con.monthlyAmountSaved"));
         onDone();
       } catch (err) { setError(err.message); setBusy(false); }
     });
@@ -920,33 +934,33 @@ function EditPartTimeFeeModal({ token, onClose, onDone }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ background: THEME.surface, borderRadius: 6, padding: 22, width: "100%", maxWidth: 440, maxHeight: "90vh", overflowY: "auto" }}>
-        <h3 style={{ marginTop: 0, marginBottom: 4, color: THEME.heading, fontSize: 16.5 }}>Part-Time Teachers Monthly Amount</h3>
+        <h3 style={{ marginTop: 0, marginBottom: 4, color: THEME.heading, fontSize: 16.5 }}>{t("con.feeHeading")}</h3>
         <p style={{ fontSize: 12.5, color: THEME.muted, marginBottom: 16, lineHeight: 1.5 }}>
-          The amount each student pays per month. The new amount starts from the month you choose; months before it keep the old amount, so past records stay correct.
+          {t("con.feeIntro")}
         </p>
         {error && <ErrorBox msg={error} />}
         <form onSubmit={submit} style={{ display: "grid", gap: 12 }}>
-          <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: THEME.text }}>New amount (TZS)
+          <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: THEME.text }}>{t("con.newAmountTzs")}
             <input type="number" min={info?.min || 100} max={info?.max || 1000000} value={amount} onChange={(e) => setAmount(e.target.value)} style={{ ...selectStyle, width: "100%", boxSizing: "border-box" }} autoFocus /></label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: THEME.text }}>Starting month
-              <select value={month} onChange={(e) => setMonth(Number(e.target.value))} style={{ ...selectStyle, width: "100%" }}>{MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select></label>
-            <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: THEME.text }}>Year
+            <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: THEME.text }}>{t("con.startingMonth")}
+              <select value={month} onChange={(e) => setMonth(Number(e.target.value))} style={{ ...selectStyle, width: "100%" }}>{MONTHS.map((m, i) => <option key={m} value={i + 1}>{mName(i)}</option>)}</select></label>
+            <label style={{ display: "grid", gap: 5, fontSize: 12.5, fontWeight: 600, color: THEME.text }}>{t("con.year")}
               <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={{ ...selectStyle, width: "100%" }}>{[now.getFullYear(), now.getFullYear() + 1].map((y) => <option key={y} value={y}>{y}</option>)}</select></label>
           </div>
           {info?.rates?.length > 1 && (
             <div style={{ fontSize: 11.5, color: THEME.muted, background: THEME.bg, borderRadius: 4, padding: "8px 11px" }}>
-              <div style={{ fontWeight: 700, marginBottom: 4 }}>Past amounts</div>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>{t("con.pastAmounts")}</div>
               {info.rates.slice(0, 5).map((r) => (
                 <div key={r.id} style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>From {MONTHS[r.month - 1]} {r.year}</span><span>TZS {Number(r.amount).toLocaleString()}</span>
+                  <span>{t("con.fromMonthYear", { month: mName(r.month - 1), year: r.year })}</span><span>TZS {Number(r.amount).toLocaleString()}</span>
                 </div>
               ))}
             </div>
           )}
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
-            <button type="button" onClick={onClose} style={btnSecondary}>Cancel</button>
-            <button type="submit" disabled={busy} style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 6 }}>{busy && <SpinnerIcon size={13} />}Save</button>
+            <button type="button" onClick={onClose} style={btnSecondary}>{t("common.cancel")}</button>
+            <button type="submit" disabled={busy} style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 6 }}>{busy && <SpinnerIcon size={13} />}{t("common.save")}</button>
           </div>
         </form>
         {ConfirmDialogPortal}
@@ -956,6 +970,7 @@ function EditPartTimeFeeModal({ token, onClose, onDone }) {
 }
 
 function ClassTeacherPartTime() {
+  const { t } = useLang();
   const { token, user } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
@@ -990,7 +1005,7 @@ function ClassTeacherPartTime() {
   const pay = async (studentId, amount, studentName) => {
     try {
       await apiFetch(`/contributions/parttime/${studentId}`, { method: "POST", body: JSON.stringify({ year, month, amount }) }, token);
-      showSuccess("Payment", `Payment Successfully Recorded${studentName ? ` for ${studentName}` : ""}.`);
+      showSuccess(t("con.payment"), studentName ? t("con.paymentRecordedFor", { name: studentName }) : t("con.paymentRecordedPlain"));
       load();
     } catch (err) { setError(err.message); }
   };
@@ -998,39 +1013,39 @@ function ClassTeacherPartTime() {
   const payFull = (s) => {
     const already = Number(s.amount_paid || 0);
     const amount = Math.max(fee - already, 0) || fee;
-    confirm(`Record TZS ${amount.toLocaleString()} as fully paid for ${[s.first_name, s.last_name].join(" ")} for ${MONTHS[month - 1]} ${year}?`, () => pay(s.student_id, fee, [s.first_name, s.last_name].join(" ")));
+    confirm(t("con.payFullConfirm", { amount: amount.toLocaleString(), name: [s.first_name, s.last_name].join(" "), month: mName(month - 1), year }), () => pay(s.student_id, fee, [s.first_name, s.last_name].join(" ")));
   };
 
   return (
     <div>
-      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : 20, marginBottom: 4 }}>Part-Time Teachers Contributions - My Class</h2>
-      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>Collect the TZS {fee.toLocaleString()}/month contribution from your own class only.</p>
+      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : 20, marginBottom: 4 }}>{t("con.ptMyClassTitle")}</h2>
+      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>{t("con.collectThe", { fee: fee.toLocaleString() })}</p>
 
       <div style={{ display: "flex", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
-        <StatCard label="Students Paid" value={`${paidCount} / ${rows.length}`} color={THEME.success} />
-        <StatCard label={`Total Collected (${MONTHS[month - 1]})`} value={`TZS ${totalCollected.toLocaleString()}`} color={THEME.link} />
+        <StatCard label={t("con.studentsPaid")} value={`${paidCount} / ${rows.length}`} color={THEME.success} />
+        <StatCard label={t("con.totalCollectedMonth", { month: mName(month - 1) })} value={`TZS ${totalCollected.toLocaleString()}`} color={THEME.link} />
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <select value={month} onChange={(e) => setMonth(Number(e.target.value))} style={{ ...selectStyle, ...(isMobile ? { flex: 1, minWidth: 130 } : {}) }}>
-          {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+          {MONTHS.map((m, i) => <option key={m} value={i + 1}>{mName(i)}</option>)}
         </select>
         <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={{ ...selectStyle, ...(isMobile ? { flex: 1, minWidth: 90 } : {}) }}>
           {[year - 1, year, year + 1].map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
-        <input placeholder="Search student name..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...selectStyle, flex: 1, minWidth: 200 }} />
+        <input placeholder={t("con.searchPh")} value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...selectStyle, flex: 1, minWidth: 200 }} />
       </div>
 
       {error && <ErrorBox msg={error} />}
       {noClass && <ErrorBox msg="You have no class assigned yet - ask the Head Master to assign your class." />}
-      {isHoliday && <p style={{ fontSize: 13.5, color: THEME.muted, marginBottom: 12 }}>No contribution is billed in {MONTHS[month - 1]} (school holiday).</p>}
+      {isHoliday && <p style={{ fontSize: 13.5, color: THEME.muted, marginBottom: 12 }}>{t("con.noBilled", { month: mName(month - 1) })}</p>}
 
       {!isHoliday && (
         <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4 }}>
           {!isCompact && (
             <div className="table-scroll">
               <div style={{ display: "flex", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 420 }}>
-                <span style={{ flex: 2 }}>Name</span><span style={{ flex: 1 }}>Status</span><span style={{ width: 90 }} />
+                <span style={{ flex: 2 }}>{t("con.name")}</span><span style={{ flex: 1 }}>{t("con.status")}</span><span style={{ width: 90 }} />
               </div>
             </div>
           )}
@@ -1040,32 +1055,32 @@ function ClassTeacherPartTime() {
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                   <span style={{ fontSize: 13, flex: 1 }}>{[s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ")}</span>
                   <ActionMenu>
-                    {!s.completed && <MenuItem icon={CheckCircleIcon} onClick={() => payFull(s)}>Mark Paid (Full)</MenuItem>}
-                    {!s.completed && <MenuItem icon={LayersIcon} onClick={() => setInstallmentFor(s)}>Pay in Installments...</MenuItem>}
-                    {!s.completed && <MenuItem icon={CalendarPlusIcon} onClick={() => setAdvanceFor(s)}>Pay Months Ahead...</MenuItem>}
-                    {s.contribution_id && <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/parttime/${s.contribution_id}`, token).catch((e) => showError("Receipt", e.message))}>Receipt (PDF)</MenuItem>}
+                    {!s.completed && <MenuItem icon={CheckCircleIcon} onClick={() => payFull(s)}>{t("con.markPaidFull")}</MenuItem>}
+                    {!s.completed && <MenuItem icon={LayersIcon} onClick={() => setInstallmentFor(s)}>{t("con.payInstallments")}</MenuItem>}
+                    {!s.completed && <MenuItem icon={CalendarPlusIcon} onClick={() => setAdvanceFor(s)}>{t("con.payMonthsAhead")}</MenuItem>}
+                    {s.contribution_id && <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/parttime/${s.contribution_id}`, token).catch((e) => showError(t("con.receipt"), e.message))}>{t("con.receiptPdf")}</MenuItem>}
                   </ActionMenu>
                 </div>
                 <div style={{ marginTop: 6 }}>
-                  <StatusPill ok={s.completed}>{s.completed ? "Completed" : s.amount_paid > 0 ? `Partial (TZS ${Number(s.amount_paid).toLocaleString()})` : "Not Paid"}</StatusPill>
+                  <StatusPill ok={s.completed}>{s.completed ? t("con.status.completed") : s.amount_paid > 0 ? t("con.statusPartialTzs", { amount: Number(s.amount_paid).toLocaleString() }) : t("con.status.notPaid")}</StatusPill>
                 </div>
               </div>
             ) : (
               <div key={s.student_id} style={{ display: "flex", alignItems: "center", padding: "9px 16px", fontSize: 13, borderTop: i > 0 ? `1px solid ${THEME.border}` : "none" }}>
                 <span style={{ flex: 2 }}>{[s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ")}</span>
-                <StatusPill ok={s.completed} style={{ flex: 1 }}>{s.completed ? "Completed" : s.amount_paid > 0 ? `Partial (TZS ${Number(s.amount_paid).toLocaleString()})` : "Not Paid"}</StatusPill>
+                <StatusPill ok={s.completed} style={{ flex: 1 }}>{s.completed ? t("con.status.completed") : s.amount_paid > 0 ? t("con.statusPartialTzs", { amount: Number(s.amount_paid).toLocaleString() }) : t("con.status.notPaid")}</StatusPill>
                 <span style={{ width: 90 }}>
                   <ActionMenu>
-                    {!s.completed && <MenuItem icon={CheckCircleIcon} onClick={() => payFull(s)}>Mark Paid (Full)</MenuItem>}
-                    {!s.completed && <MenuItem icon={LayersIcon} onClick={() => setInstallmentFor(s)}>Pay in Installments...</MenuItem>}
-                    {!s.completed && <MenuItem icon={CalendarPlusIcon} onClick={() => setAdvanceFor(s)}>Pay Months Ahead...</MenuItem>}
-                    {s.contribution_id && <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/parttime/${s.contribution_id}`, token).catch((e) => showError("Receipt", e.message))}>Receipt (PDF)</MenuItem>}
+                    {!s.completed && <MenuItem icon={CheckCircleIcon} onClick={() => payFull(s)}>{t("con.markPaidFull")}</MenuItem>}
+                    {!s.completed && <MenuItem icon={LayersIcon} onClick={() => setInstallmentFor(s)}>{t("con.payInstallments")}</MenuItem>}
+                    {!s.completed && <MenuItem icon={CalendarPlusIcon} onClick={() => setAdvanceFor(s)}>{t("con.payMonthsAhead")}</MenuItem>}
+                    {s.contribution_id && <MenuItem icon={ReceiptIcon} onClick={() => openDownload(`/contributions/receipt/parttime/${s.contribution_id}`, token).catch((e) => showError(t("con.receipt"), e.message))}>{t("con.receiptPdf")}</MenuItem>}
                   </ActionMenu>
                 </span>
               </div>
             )
           ))}
-          {!filtered.length && !noClass && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{search ? "No matching student found - they may not be registered." : "No students found for your class."}</p>}
+          {!filtered.length && !noClass && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{search ? t("con.noMatchNotRegistered") : t("con.noStudentsYourClass")}</p>}
         </div>
       )}
       {ConfirmDialogPortal}
@@ -1089,6 +1104,7 @@ function ClassTeacherPartTime() {
 // "Mark Paid (Full)" from then on, with nothing here ever showing
 // "installment X of 4" anywhere.
 function InstallmentPaymentModal({ student, year, month, token, monthlyFee = MONTHLY_FEE, onClose, onDone }) {
+  const { t } = useLang();
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1101,32 +1117,32 @@ function InstallmentPaymentModal({ student, year, month, token, monthlyFee = MON
     setBusy(true); setError("");
     try {
       await apiFetch(`/contributions/parttime/${student.student_id}`, { method: "POST", body: JSON.stringify({ year, month, amount: Number(amount) }) }, token);
-      showSuccess("Payment", `Payment Successfully Recorded for ${name}.`);
+      showSuccess(t("con.payment"), t("con.paymentRecordedFor", { name }));
       onDone();
     } catch (err) { setError(err.message); setBusy(false); }
   };
 
   const submit = () => {
     const n = Number(amount);
-    if (!amount || isNaN(n) || n <= 0) { setError("Enter a valid amount greater than zero."); return; }
-    if (n > remaining) { setError(`This student only has TZS ${remaining.toLocaleString()} remaining for ${MONTHS[month - 1]}.`); return; }
+    if (!amount || isNaN(n) || n <= 0) { setError(t("con.enterValidGtZero")); return; }
+    if (n > remaining) { setError(t("con.onlyRemaining", { amount: remaining.toLocaleString(), month: mName(month - 1) })); return; }
     setError("");
-    confirm(`Are you sure you want to record TZS ${n.toLocaleString()} for ${name} (${MONTHS[month - 1]} ${year})?`, doSubmit);
+    confirm(t("con.recordConfirm", { amount: n.toLocaleString(), name, month: mName(month - 1), year }), doSubmit);
   };
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
       <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 400 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>Pay in Installments</h3>
-        <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 4 }}>{name} - {MONTHS[month - 1]} {year}</p>
-        <p style={{ fontSize: 12, color: THEME.muted, marginBottom: 14 }}>Already paid TZS {already.toLocaleString()} of {monthlyFee.toLocaleString()}. Remaining: TZS {remaining.toLocaleString()}.</p>
+        <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>{t("con.payInstallmentsTitle")}</h3>
+        <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 4 }}>{name} - {mName(month - 1)} {year}</p>
+        <p style={{ fontSize: 12, color: THEME.muted, marginBottom: 14 }}>{t("con.alreadyPaidOf", { paid: already.toLocaleString(), total: monthlyFee.toLocaleString(), remaining: remaining.toLocaleString() })}</p>
         {error && <ErrorBox msg={error} />}
-        <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Amount being paid now (TZS)</label>
+        <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{t("con.amountNow")}</label>
         <input type="number" min="1" max={remaining} value={amount} onChange={(e) => setAmount(e.target.value)}
           placeholder="e.g. 500" style={{ ...selectStyle, width: "100%", marginBottom: 18, boxSizing: "border-box" }} autoFocus />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={btnSecondary}>Cancel</button>
-          <button onClick={submit} disabled={busy} style={{ ...btnPrimary, opacity: busy ? 0.7 : 1, display: "inline-flex", alignItems: "center", gap: 6 }}>{busy ? <SpinnerIcon size={13} /> : null}{busy ? "Saving..." : "Submit"}</button>
+          <button onClick={onClose} style={btnSecondary}>{t("common.cancel")}</button>
+          <button onClick={submit} disabled={busy} style={{ ...btnPrimary, opacity: busy ? 0.7 : 1, display: "inline-flex", alignItems: "center", gap: 6 }}>{busy ? <SpinnerIcon size={13} /> : null}{busy ? t("common.saving") : t("con.submit")}</button>
         </div>
       </div>
       {ConfirmDialogPortal}
@@ -1138,6 +1154,7 @@ function InstallmentPaymentModal({ student, year, month, token, monthlyFee = MON
 // as having brought it, confirms "Are you sure?", and it's then permanent
 // (the checkbox becomes a locked tick - there is no edit/undo route at all).
 function ClassTeacherReam() {
+  const { t } = useLang();
   const { token } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isCompact = isMobile || isTablet;
@@ -1167,30 +1184,30 @@ function ClassTeacherReam() {
     setBusyId(studentId);
     try {
       const data = await apiFetch(`/contributions/ream/${studentId}`, { method: "POST", body: JSON.stringify({ year }) }, token);
-      showSuccess("Ream(s)", data.message || `Submitted successfully - ${name} recorded as having brought Ream(s).`);
+      showSuccess(t("con.ream"), data.message || t("con.reamFallback", { name }));
       load();
     } catch (err) { setError(err.message); } finally { setBusyId(null); }
   };
 
   const onCheck = (s) => {
     const name = [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ");
-    confirm(`Are you sure ${name} has brought Ream(s) for ${year}? This cannot be edited once submitted.`, () => doMark(s.student_id, name), { danger: false });
+    confirm(t("con.reamConfirm", { name, year }), () => doMark(s.student_id, name), { danger: false });
   };
 
   return (
     <div>
-      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : 20, marginBottom: 4 }}>Ream(s) - My Class</h2>
-      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>Tick a student once they've brought Ream(s) for the year. This is once-a-year and cannot be edited after you confirm.</p>
+      <h2 style={{ color: THEME.heading, fontSize: isMobile ? 16 : 20, marginBottom: 4 }}>{t("con.reamMyClassTitle")}</h2>
+      <p style={{ color: THEME.muted, fontSize: 13.5, marginBottom: 18 }}>{t("con.reamMyClassIntro")}</p>
 
       <div style={{ display: "flex", gap: 14, marginBottom: 18, flexWrap: "wrap" }}>
-        <StatCard label={`Brought Ream(s) (${year})`} value={`${broughtCount} / ${rows.length}`} color={THEME.success} />
+        <StatCard label={t("con.broughtReamYear", { year })} value={`${broughtCount} / ${rows.length}`} color={THEME.success} />
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={{ ...selectStyle, ...(isMobile ? { flex: 1, minWidth: 90 } : {}) }}>
           {[year - 1, year, year + 1].map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
-        <input placeholder="Search student name..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...selectStyle, flex: 1, minWidth: 200 }} />
+        <input placeholder={t("con.searchPh")} value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...selectStyle, flex: 1, minWidth: 200 }} />
       </div>
 
       {error && <ErrorBox msg={error} />}
@@ -1203,7 +1220,7 @@ function ClassTeacherReam() {
               <span style={{ fontSize: 13.5 }}>{[s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ")}</span>
               <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: THEME.muted, flexShrink: 0 }}>
                 {busyId === s.student_id && <SpinnerIcon size={13} />}
-                {s.ream_charge_id ? "Brought" : "Mark"}
+                {s.ream_charge_id ? t("con.brought") : t("con.mark")}
                 <input
                   type="checkbox"
                   checked={!!s.ream_charge_id}
@@ -1214,12 +1231,12 @@ function ClassTeacherReam() {
               </label>
             </div>
           ))}
-          {!filtered.length && !noClass && <p style={{ fontSize: 13, color: THEME.muted }}>{search ? "No matching student found." : "No students found for your class."}</p>}
+          {!filtered.length && !noClass && <p style={{ fontSize: 13, color: THEME.muted }}>{search ? t("con.noMatchStudent") : t("con.noStudentsYourClass")}</p>}
         </div>
       ) : (
       <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4 }} className="table-scroll">
         <div style={{ display: "flex", alignItems: "center", padding: "9px 16px", fontSize: 11.5, fontWeight: 700, color: THEME.muted, background: THEME.bg, minWidth: 340 }}>
-          <span style={{ flex: 2 }}>Name</span><span style={{ width: 130, textAlign: "center" }}>Brought Ream(s)?</span>
+          <span style={{ flex: 2 }}>{t("con.name")}</span><span style={{ width: 130, textAlign: "center" }}>{t("con.broughtReamQ")}</span>
         </div>
         {filtered.map((s, i) => (
           <div key={s.student_id} style={{ display: "flex", alignItems: "center", padding: "9px 16px", fontSize: 13, borderTop: i > 0 ? `1px solid ${THEME.border}` : "none", minWidth: 340 }}>
@@ -1236,7 +1253,7 @@ function ClassTeacherReam() {
             </span>
           </div>
         ))}
-        {!filtered.length && !noClass && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{search ? "No matching student found." : "No students found for your class."}</p>}
+        {!filtered.length && !noClass && <p style={{ padding: 16, fontSize: 13, color: THEME.muted }}>{search ? t("con.noMatchStudent") : t("con.noStudentsYourClass")}</p>}
       </div>
       )}
       {ConfirmDialogPortal}
@@ -1245,13 +1262,14 @@ function ClassTeacherReam() {
 }
 
 function AdvancePaymentModal({ student, year, currentMonth, token, monthlyFee = MONTHLY_FEE, onClose, onDone }) {
+  const { t, tn } = useLang();
   const [months, setMonths] = useState([]);
   const [error, setError] = useState("");
   const toggle = (m) => setMonths((p) => p.includes(m) ? p.filter((x) => x !== m) : [...p, m]);
   const futureMonths = MONTHS.map((_, i) => i + 1).filter((m) => m >= currentMonth && !HOLIDAY_MONTHS.includes(m));
 
   const submit = async () => {
-    if (!months.length) { setError("Select at least one month."); return; }
+    if (!months.length) { setError(t("con.selectMonth")); return; }
     try {
       const res = await apiFetch(`/contributions/parttime/${student.student_id}/advance`, { method: "POST", body: JSON.stringify({ year, months }) }, token);
       // The server silently skips any month that's already fully paid, so
@@ -1260,9 +1278,9 @@ function AdvancePaymentModal({ student, year, currentMonth, token, monthlyFee = 
       // than assuming every selected month went through.
       const recordedCount = res.data?.length ?? months.length;
       if (recordedCount < months.length) {
-        showSuccess("Payment", `Payment Recorded for ${recordedCount} of ${months.length} month(s) - the rest were already fully paid and were skipped.`);
+        showSuccess(t("con.payment"), t("con.paymentRecordedPartial", { done: recordedCount, total: months.length }));
       } else {
-        showSuccess("Payment", `Payment Successfully Recorded for ${recordedCount} month${recordedCount > 1 ? "s" : ""}.`);
+        showSuccess(t("con.payment"), tn("con.paymentRecordedMonths", recordedCount));
       }
       onDone();
     } catch (err) { setError(err.message); }
@@ -1271,8 +1289,8 @@ function AdvancePaymentModal({ student, year, currentMonth, token, monthlyFee = 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9000, padding: 16 }}>
       <div style={{ background: THEME.surface, borderRadius: 4, padding: 22, width: "100%", maxWidth: 420, maxHeight: "90vh", overflowY: "auto" }}>
-        <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>Pay Months Ahead</h3>
-        <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 14 }}>{[student.first_name, student.last_name].join(" ")} - select every month being paid for now (about TZS {monthlyFee.toLocaleString()} each).</p>
+        <h3 style={{ marginTop: 0, marginBottom: 6, color: THEME.heading, fontSize: 16 }}>{t("con.payMonthsAheadTitle")}</h3>
+        <p style={{ fontSize: 13, color: THEME.muted, marginBottom: 14 }}>{t("con.selectEveryMonth", { name: [student.first_name, student.last_name].join(" "), fee: monthlyFee.toLocaleString() })}</p>
         {error && <ErrorBox msg={error} />}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
           {futureMonths.map((m) => (
@@ -1280,13 +1298,13 @@ function AdvancePaymentModal({ student, year, currentMonth, token, monthlyFee = 
               padding: "6px 10px", borderRadius: 4, cursor: "pointer", fontSize: 12.5,
               border: `1px solid ${months.includes(m) ? THEME.navy : THEME.border}`,
               background: months.includes(m) ? THEME.navy : THEME.surface, color: months.includes(m) ? "#fff" : THEME.text,
-            }}>{MONTHS[m - 1]}</div>
+            }}>{mName(m - 1)}</div>
           ))}
         </div>
-        <p style={{ fontSize: 12.5, color: THEME.muted, marginBottom: 14 }}>About TZS {(months.length * monthlyFee).toLocaleString()} for {months.length} month(s)</p>
+        <p style={{ fontSize: 12.5, color: THEME.muted, marginBottom: 14 }}>{t("con.aboutTzsFor", { total: (months.length * monthlyFee).toLocaleString(), n: months.length })}</p>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={btnSecondary}>Cancel</button>
-          <button onClick={submit} style={btnPrimary}>Confirm Payment</button>
+          <button onClick={onClose} style={btnSecondary}>{t("common.cancel")}</button>
+          <button onClick={submit} style={btnPrimary}>{t("con.confirmPayment")}</button>
         </div>
       </div>
     </div>
