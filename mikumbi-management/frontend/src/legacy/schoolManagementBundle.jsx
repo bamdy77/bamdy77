@@ -1648,9 +1648,9 @@ function PromoteStudentsModal({ token, onClose, onDone }) {
   const toggleAll = () => setChecked(checked.size === roster.length ? new Set() : new Set(roster.map(s => s.id)));
 
   const doPromote = () => {
-    if (!checked.size) { setError("No students selected - nothing to promote."); return; }
+    if (!checked.size) { setError(tr("lg.noStudentsSelected")); return; }
     confirm(
-      `Are you sure you want to move ${checked.size} student(s) from ${selForm} to ${destination}? This cannot be undone.`,
+      tr("lg.promoteConfirm", { count: checked.size, from: selForm, to: destination }),
       async () => {
         setBusy(true); setError("");
         try {
@@ -1662,10 +1662,9 @@ function PromoteStudentsModal({ token, onClose, onDone }) {
   };
 
   return (
-    <Modal title="Promote Students" onClose={onClose} wide>
+    <Modal title={tr("lg.promoteStudents")} onClose={onClose} wide>
       <p style={{fontSize:13,color:C.muted,marginBottom:14}}>
-        Pick a class below. Every student is checked by default - un-check anyone who should NOT move up
-        (e.g. repeating the year), then confirm. {selForm} → <b>{destination}</b>.
+        {tr("lg.promoteIntro")} {selForm} → <b>{destination}</b>.
       </p>
       <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
         {FORMS.map(f => (
@@ -1673,11 +1672,11 @@ function PromoteStudentsModal({ token, onClose, onDone }) {
         ))}
       </div>
       {error && <p style={{color:C.danger,fontSize:13,marginBottom:10}}>{error}</p>}
-      {loading ? <p style={{color:C.muted,fontSize:13,display:"flex",alignItems:"center",gap:7}}><SpinnerIcon size={14} />Loading...</p> : (
+      {loading ? <p style={{color:C.muted,fontSize:13,display:"flex",alignItems:"center",gap:7}}><SpinnerIcon size={14} />{tr("lg.loading")}</p> : (
         <div style={{border:`1px solid ${C.border}`,borderRadius:4,maxHeight:360,overflowY:"auto"}}>
           <div style={{display:"flex",alignItems:"center",gap:10,padding:"9px 14px",background:C.bg,borderBottom:`1px solid ${C.border}`,fontWeight:700,fontSize:12.5}}>
             <input type="checkbox" checked={roster.length>0 && checked.size===roster.length} onChange={toggleAll} />
-            <span>{selForm} - {roster.length} student(s), {checked.size} will be promoted</span>
+            <span>{tr("lg.promoteCount", { form: selForm, total: roster.length, sel: checked.size })}</span>
           </div>
           {roster.map(s => (
             <label key={s.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 14px",borderBottom:`1px solid ${C.border}`,fontSize:13,cursor:"pointer"}}>
@@ -1686,12 +1685,12 @@ function PromoteStudentsModal({ token, onClose, onDone }) {
               <span style={{marginLeft:"auto",color:C.muted,fontSize:11.5}}>{s.reg_no||""}</span>
             </label>
           ))}
-          {!roster.length && <p style={{padding:14,fontSize:13,color:C.muted}}>No active students in {selForm}.</p>}
+          {!roster.length && <p style={{padding:14,fontSize:13,color:C.muted}}>{tr("lg.noActiveIn", { form: selForm })}</p>}
         </div>
       )}
       <div style={{display:"flex",justifyContent:"flex-end",gap:10,marginTop:18}}>
         <Btn variant="cancel" onClick={onClose}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("common.close")}</span></Btn>
-        <Btn onClick={doPromote} loading={busy} disabled={!roster.length}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>Confirm Promotion</span></Btn>
+        <Btn onClick={doPromote} loading={busy} disabled={!roster.length}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>{tr("lg.confirmPromotion")}</span></Btn>
       </div>
       {ConfirmDialogPortal}
     </Modal>
@@ -1750,7 +1749,7 @@ function ImportStudentsModal({ token, onClose, onDone }) {
       });
       const isJson = res.headers.get("content-type")?.includes("application/json");
       const data = isJson ? await res.json() : null;
-      if (!res.ok || !data) throw new Error(data?.message || "Could not read this file. Please check the format and try again.");
+      if (!res.ok || !data) throw new Error(data?.message || tr("lg.couldNotReadFile"));
       setRows(data.rows);
       // Pre-check every VALID row; invalid/duplicate rows start unchecked
       // (the Head Master/Second Master can still tick one on after fixing
@@ -1772,7 +1771,7 @@ function ImportStudentsModal({ token, onClose, onDone }) {
   const startOver = () => { setStep("pick"); setRows([]); setChecked(new Set()); setError(""); setResult(null); setFileName(""); };
 
   const doImport = async () => {
-    if (!checked.size) { setError("No rows selected - tick at least one student to import."); return; }
+    if (!checked.size) { setError(tr("lg.noRowsSelected")); return; }
     setImporting(true); setError("");
     try {
       const selected = [...checked].map((i) => rows[i].parsed);
@@ -1786,20 +1785,17 @@ function ImportStudentsModal({ token, onClose, onDone }) {
   const validCount = rows.filter((r) => r.valid).length;
 
   return (
-    <Modal title="Import Students from CSV/Excel" onClose={onClose} wide>
+    <Modal title={tr("lg.importTitle")} onClose={onClose} wide>
       {error && <Alert type="error" message={error} onClose={() => setError("")} />}
 
       {step === "pick" && (
         <div>
           <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 14 }}>
-            Upload a CSV or Excel (.xlsx/.xls) file with one student per row. The first row must be
-            column headings - <b>First Name</b>, <b>Last Name</b>, <b>Gender</b>, and <b>Form</b> are
-            required; Middle Name, Date of Birth, District, Admission Date, Parent Name, Parent Phone,
-            Village, and Ward are optional. Nothing is saved yet - you'll review every row first.
+            {tr("lg.importIntro")}
           </p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
-            <Btn onClick={pickFile} loading={parsing}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon.UploadCloud size={14} />Choose File</span></Btn>
-            <Btn variant="secondary" onClick={downloadImportTemplate}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><DownloadIcon size={14} />Download Template</span></Btn>
+            <Btn onClick={pickFile} loading={parsing}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon.UploadCloud size={14} />{tr("lg.chooseFile")}</span></Btn>
+            <Btn variant="secondary" onClick={downloadImportTemplate}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><DownloadIcon size={14} />{tr("lg.downloadTemplate")}</span></Btn>
           </div>
           {fileName && !parsing && <p style={{ fontSize: 12.5, color: C.muted, marginTop: 4 }}>{fileName}</p>}
           <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style={{ display: "none" }} onChange={onFileChosen} />
@@ -1809,23 +1805,23 @@ function ImportStudentsModal({ token, onClose, onDone }) {
       {step === "preview" && (
         <div>
           <p style={{ fontSize: 13, color: C.muted, marginBottom: 12 }}>
-            <b>{rows.length}</b> row(s) found · <b style={{ color: C.success }}>{validCount}</b> look ready to import
-            {rows.length - validCount > 0 && <> · <b style={{ color: C.danger }}>{rows.length - validCount}</b> need attention (unchecked below)</>}.
-            Un-tick anything you don't want to import, then confirm.
+            <b>{rows.length}</b> {tr("lg.rowsFound")} · <b style={{ color: C.success }}>{validCount}</b> {tr("lg.lookReady")}
+            {rows.length - validCount > 0 && <> · <b style={{ color: C.danger }}>{rows.length - validCount}</b> {tr("lg.needAttention")}</>}.
+            {tr("lg.untickConfirm")}
           </p>
           <div style={{ border: `1px solid ${C.border}`, borderRadius: 4, maxHeight: 380, overflowY: "auto" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", background: C.bg, borderBottom: `1px solid ${C.border}`, fontWeight: 700, fontSize: 12.5, position: "sticky", top: 0, flexWrap: "wrap" }}>
               <input type="checkbox" checked={validCount > 0 && rows.every((r, i) => !r.valid || checked.has(i))} onChange={toggleAllValid} />
-              <span>Select all valid rows</span>
-              <span style={{ marginLeft: "auto", color: C.muted, fontWeight: 500 }}>{checked.size} selected</span>
+              <span>{tr("lg.selectAllValid")}</span>
+              <span style={{ marginLeft: "auto", color: C.muted, fontWeight: 500 }}>{tr("lg.selectedN", { n: checked.size })}</span>
             </div>
             {rows.map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 14px", borderBottom: `1px solid ${C.border}`, fontSize: 13 }}>
                 <input type="checkbox" checked={checked.has(i)} onChange={() => toggleRow(i)} style={{ marginTop: 3 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "baseline" }}>
-                    <span style={{ fontWeight: 600 }}>{[r.parsed.first_name, r.parsed.middle_name, r.parsed.last_name].filter(Boolean).join(" ") || `Row ${r.row}`}</span>
-                    <span style={{ color: C.muted, fontSize: 11.5 }}>Row {r.row}</span>
+                    <span style={{ fontWeight: 600 }}>{[r.parsed.first_name, r.parsed.middle_name, r.parsed.last_name].filter(Boolean).join(" ") || tr("lg.rowN", { n: r.row })}</span>
+                    <span style={{ color: C.muted, fontSize: 11.5 }}>{tr("lg.rowN", { n: r.row })}</span>
                     {r.parsed.gender && <span>{r.parsed.gender}</span>}
                     {r.parsed.form && <Badge>{r.parsed.form}</Badge>}
                   </div>
@@ -1835,8 +1831,8 @@ function ImportStudentsModal({ token, onClose, onDone }) {
             ))}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
-            <Btn variant="cancel" onClick={startOver}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon.ArrowLeft size={13} />Choose a Different File</span></Btn>
-            <Btn onClick={doImport} loading={importing} disabled={!checked.size}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><CheckIcon size={13} />Import {checked.size} Student(s)</span></Btn>
+            <Btn variant="cancel" onClick={startOver}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon.ArrowLeft size={13} />{tr("lg.chooseDifferentFile")}</span></Btn>
+            <Btn onClick={doImport} loading={importing} disabled={!checked.size}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><CheckIcon size={13} />{tr("lg.importN", { n: checked.size })}</span></Btn>
           </div>
         </div>
       )}
@@ -1845,22 +1841,22 @@ function ImportStudentsModal({ token, onClose, onDone }) {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 14, borderRadius: 4, background: C.successLight, color: C.success, marginBottom: 14 }}>
             <CheckIcon size={16} />
-            <span style={{ fontSize: 14, fontWeight: 600 }}>{result.created} student(s) imported successfully.</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{tr("lg.importedOk", { n: result.created })}</span>
           </div>
           {result.failed.length > 0 && (
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>{result.failed.length} row(s) were skipped:</p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>{tr("lg.rowsSkipped", { n: result.failed.length })}</p>
               <div style={{ border: `1px solid ${C.border}`, borderRadius: 4, maxHeight: 240, overflowY: "auto" }}>
                 {result.failed.map((f, i) => (
                   <div key={i} style={{ padding: "8px 14px", borderBottom: `1px solid ${C.border}`, fontSize: 12.5 }}>
-                    <b>{f.name}</b> (row {f.row}) - <span style={{ color: C.danger }}>{f.reason}</span>
+                    <b>{f.name}</b> ({tr("lg.rowLower", { n: f.row })}) - <span style={{ color: C.danger }}>{f.reason}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
-            <Btn onClick={onDone}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><CheckIcon size={13} />Done</span></Btn>
+            <Btn onClick={onDone}><span style={{ display: "flex", alignItems: "center", gap: 6 }}><CheckIcon size={13} />{tr("common.done")}</span></Btn>
           </div>
         </div>
       )}
