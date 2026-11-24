@@ -217,13 +217,13 @@ export function AuthProvider({ children }) {
         <div role="alertdialog" aria-modal="true" aria-labelledby="idle-title"
           style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#fff", borderRadius: 6, padding: "22px 22px 18px", maxWidth: 380, width: "100%", boxShadow: "0 12px 40px rgba(0,0,0,0.25)", textAlign: "center" }}>
-            <div id="idle-title" style={{ fontSize: 17, fontWeight: 800, color: "#007aff", marginBottom: 8 }}>{t("idle.title")}</div>
+            <div id="idle-title" style={{ fontSize: 17, fontWeight: 800, color: "#16356f", marginBottom: 8 }}>{t("idle.title")}</div>
             <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, margin: "0 0 16px" }}>
               {t("idle.text1")} <b>{Math.floor(warnLeft / 60)}:{String(warnLeft % 60).padStart(2, "0")}</b> {t("idle.text2")}
             </p>
             <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
               <button type="button" onClick={() => logout("session.signedOut")} style={{ padding: "9px 16px", borderRadius: 4, border: "1px solid #cbd5e1", background: "#fff", color: "#334155", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>{t("idle.signOut")}</button>
-              <button type="button" autoFocus onClick={stayIn} style={{ padding: "9px 18px", borderRadius: 4, border: "none", background: "#007aff", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>{t("idle.stay")}</button>
+              <button type="button" autoFocus onClick={stayIn} style={{ padding: "9px 18px", borderRadius: 4, border: "none", background: "#16356f", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>{t("idle.stay")}</button>
             </div>
           </div>
         </div>,

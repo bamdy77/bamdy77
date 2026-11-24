@@ -240,7 +240,7 @@ const LESSON_PERIODS = PERIODS.filter(p => !p.isBreak);
 const C = {
   bg:"var(--mk-bg, #F8FAFC)", surface:"var(--mk-surface, #FFFFFF)", border:"var(--mk-border, #E2E8F0)",
   text:"var(--mk-text, #0F172A)", muted:"var(--mk-muted, #64748B)",
-  accent:"var(--mk-navy, #007aff)", accentLight:"var(--mk-accent-light, #EEF1FA)", accentText:"var(--mk-link, #007aff)",
+  accent:"var(--mk-navy, #16356f)", accentLight:"var(--mk-accent-light, #EEF1FA)", accentText:"var(--mk-link, #16356f)",
   dangerSolid:"var(--mk-danger-solid, #DC2626)", successSolid:"var(--mk-success-solid, #16A34A)", warningSolid:"var(--mk-warning-solid, #D97706)",
   danger:"var(--mk-danger, #DC2626)", dangerLight:"var(--mk-danger-light, #FEF2F2)",
   success:"var(--mk-success, #15803D)", successLight:"var(--mk-success-light, #F0FDF4)",

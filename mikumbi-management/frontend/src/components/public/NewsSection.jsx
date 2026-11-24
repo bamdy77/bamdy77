@@ -4,7 +4,7 @@ import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { MegaphoneIcon, CloseIcon, CalendarIcon, ChevronRightIcon } from "../icons";
 import { useLang } from "../../i18n";
 
-const NAVY = "#007aff";
+const NAVY = "#16356f";
 const ORANGE = "#E3A51A"; // gold accent (matches the About band)
 const TZ = "Africa/Dar_es_Salaam";
 
@@ -65,7 +65,7 @@ export default function NewsSection() {
             borderRadius: 4, overflow: "hidden", border: "1px solid #e2e8f0", marginBottom: rest.length ? 24 : 0,
           }}>
             <div style={{
-              background: `linear-gradient(150deg, ${NAVY}, #3395ff)`, color: "#fff", padding: isMobile ? "20px" : "28px 24px",
+              background: `linear-gradient(150deg, ${NAVY}, #2e4f8f)`, color: "#fff", padding: isMobile ? "20px" : "28px 24px",
               display: "flex", flexDirection: isMobile || isTablet ? "row" : "column", alignItems: isMobile || isTablet ? "center" : "flex-start",
               justifyContent: "space-between", gap: 12,
             }}>

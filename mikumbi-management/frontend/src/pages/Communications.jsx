@@ -366,7 +366,11 @@ function SmsTab({ isMobile, isTablet }) {
       if (category === "selected_individuals") setSelectedIndividualIds([]);
       loadHistory();
     } catch (err) {
-      setStatus({ ok: false, text: err.message });
+      // Show the real gateway reason (err.details) when the server sent one,
+      // so a failed send says WHY (bad credentials, sender not allowed, no
+      // balance, IP not whitelisted...) instead of just "failed".
+      const detail = err.details == null ? "" : (typeof err.details === "string" ? err.details : JSON.stringify(err.details));
+      setStatus({ ok: false, text: detail ? `${err.message} — ${detail}` : err.message });
     } finally { setBusy(false); }
   };
 

@@ -63,7 +63,7 @@ const MODULE_GROUPS = [
   { key: "system",    labelKey: "menu.group.system" },
 ];
 
-// The module sidebar/drawer uses the brand blue (#007aff via --mk-navy).
+// The module sidebar/drawer uses the brand blue (#16356f via --mk-navy).
 const SIDEBAR_BG = THEME.navy;
 
 // Account-header avatar for the logged-in account (e.g. Teacher, Head

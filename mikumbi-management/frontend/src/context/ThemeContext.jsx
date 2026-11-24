@@ -7,7 +7,7 @@ const VALID = ["default", "dark", "nocturne"];
 const LEGACY_ALIASES = { slate: "nocturne", onyx: "nocturne" };
 
 export const THEME_OPTIONS = [
-  { value: "default", label: "System Default", swatch: "#007aff" },
+  { value: "default", label: "System Default", swatch: "#16356f" },
   { value: "dark", label: "Dark", swatch: "#141B2D" },
   { value: "nocturne", label: "Nocturne", swatch: "#0A1A2E" },
 ];

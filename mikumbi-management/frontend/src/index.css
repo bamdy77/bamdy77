@@ -136,19 +136,19 @@ img, svg {
    theme switch only ever changes the background/surface/text tokens
    below it — never navy. */
 /* Brand blue for the parents' and staff portals: a clean, professional blue
-   (#007aff) that replaces the old harsher one. This single override cascades
+   (#16356f) that replaces the old harsher one. This single override cascades
    to every THEME.navy / C.accent / link across the whole app. */
 :root {
-  --mk-navy: #007aff;
-  --mk-navy-dark: #0062cc;
-  --mk-navy-light: #3395ff;
-  --mk-link: #007aff;
+  --mk-navy: #16356f;
+  --mk-navy-dark: #0f2550;
+  --mk-navy-light: #2e4f8f;
+  --mk-link: #16356f;
 }
 
 [data-theme="dark"] {
-  --mk-navy: #0a84ff;
-  --mk-navy-dark: #0062cc;
-  --mk-navy-light: #409cff;
+  --mk-navy: #4a6bb5;
+  --mk-navy-dark: #0f2550;
+  --mk-navy-light: #6d8acb;
   --mk-heading: #7FB2DE;
   --mk-gold: #E3B23C;
   --mk-bg: #0B1220;
@@ -179,9 +179,9 @@ img, svg {
    views, same brand navy sidebar/accents as every other theme.
    Text/surface tokens are tuned for contrast against that dark backdrop. */
 [data-theme="nocturne"] {
-  --mk-navy: #0a84ff;
-  --mk-navy-dark: #0062cc;
-  --mk-navy-light: #409cff;
+  --mk-navy: #4a6bb5;
+  --mk-navy-dark: #0f2550;
+  --mk-navy-light: #6d8acb;
   --mk-heading: #7FB2DE;
   --mk-gold: #D9A82C;
   --mk-bg: #0A1A2E;
@@ -391,8 +391,8 @@ body, button, input, select, textarea {
   transform: scale(0.94);
 }
 .mk-actionmenu-btn[data-open="true"] {
-  background: var(--mk-navy, #007aff);
-  border-color: var(--mk-navy, #007aff);
+  background: var(--mk-navy, #16356f);
+  border-color: var(--mk-navy, #16356f);
   color: #fff;
 }
 .mk-actionmenu-panel {

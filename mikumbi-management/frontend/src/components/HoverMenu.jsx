@@ -39,12 +39,12 @@ export default function HoverMenu({ label, icon: LabelIcon, items, variant = "li
 
   const isNavy = variant === "navy";
   const panelStyle = isNavy
-    ? { background: "#007aff", borderRadius: 4, boxShadow: "0 10px 30px rgba(0,0,0,0.25)", minWidth: 190 }
+    ? { background: "#16356f", borderRadius: 4, boxShadow: "0 10px 30px rgba(0,0,0,0.25)", minWidth: 190 }
     : { background: "#fff", borderRadius: 4, boxShadow: "0 12px 32px rgba(26,80,199,0.22)", minWidth: 230, border: "1px solid #e2e8f0" };
 
   const itemBase = isNavy
     ? { color: "#fff", fontSize: 12.5, fontWeight: 700, letterSpacing: "0.03em", textTransform: "uppercase", borderBottom: "1px solid rgba(255,255,255,0.08)" }
-    : { color: "#007aff", fontSize: 13.5, fontWeight: 700, borderBottom: "1px solid #eef2f7" };
+    : { color: "#16356f", fontSize: 13.5, fontWeight: 700, borderBottom: "1px solid #eef2f7" };
 
   const closeAfter = (fn) => (e) => { setOpen(false); if (fn) fn(e); };
 
@@ -112,7 +112,7 @@ export default function HoverMenu({ label, icon: LabelIcon, items, variant = "li
                 ? <span aria-hidden="true" style={{ width: 14, flexShrink: 0, fontWeight: 800 }}>{it.selected ? "✓" : ""}</span>
                 : Ico
                 ? <Ico size={13} />
-                : <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", border: "2px solid #007aff", flexShrink: 0 }} />;
+                : <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", border: "2px solid #16356f", flexShrink: 0 }} />;
               if (it.href) {
                 const external = /^https?:/i.test(it.href);
                 return (

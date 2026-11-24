@@ -53,7 +53,7 @@ export default function FontChooser({ value, onChange, labels, renderTrigger, no
           <div role="dialog" aria-modal="true" aria-labelledby="mk-font-title" onKeyDown={onKeyDown}
             style={{ width: "100%", maxWidth: 420, maxHeight: "90vh", overflowY: "auto", background: "#fff", color: "#0F172A", borderRadius: 4, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", padding: 18 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
-              <h2 id="mk-font-title" style={{ fontSize: 17, fontWeight: 800, color: "#007aff", margin: 0 }}>{labels.title}</h2>
+              <h2 id="mk-font-title" style={{ fontSize: 17, fontWeight: 800, color: "#16356f", margin: 0 }}>{labels.title}</h2>
               <button type="button" onClick={close} aria-label={labels.close}
                 style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, lineHeight: 1, color: "#475569", padding: 4 }}>×</button>
             </div>
@@ -69,14 +69,14 @@ export default function FontChooser({ value, onChange, labels, renderTrigger, no
                     onFocus={() => setActive(i)}
                     style={{
                       display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", marginBottom: 6, cursor: "pointer",
-                      border: `${selected ? 2 : 1}px solid ${selected ? "#007aff" : "#E2E8F0"}`, borderRadius: 4,
+                      border: `${selected ? 2 : 1}px solid ${selected ? "#16356f" : "#E2E8F0"}`, borderRadius: 4,
                       background: selected ? "#EEF4FA" : "#fff", outlineOffset: 2,
                     }}>
                     <div style={{ flex: 1, minWidth: 0, fontFamily: FONT_STACKS[opt.value] }}>
                       <div style={{ fontSize: 15.5, fontWeight: 700 }}>{opt.value === DEFAULT_FONT ? labels.defaultName : opt.label}</div>
                       <div style={{ fontSize: 13, color: "#475569", overflowWrap: "anywhere" }}>Aa Bb 123 - {labels.sample || ""}</div>
                     </div>
-                    <span aria-hidden="true" style={{ width: 20, flexShrink: 0, color: "#007aff", fontWeight: 800, fontSize: 16 }}>{selected ? "✓" : ""}</span>
+                    <span aria-hidden="true" style={{ width: 20, flexShrink: 0, color: "#16356f", fontWeight: 800, fontSize: 16 }}>{selected ? "✓" : ""}</span>
                   </div>
                 );
               })}
@@ -84,11 +84,11 @@ export default function FontChooser({ value, onChange, labels, renderTrigger, no
             {note && <p role="status" style={{ fontSize: 12.5, color: "#B45309", margin: "6px 0 0" }}>{note}</p>}
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
               <button type="button" onClick={() => { onChange(DEFAULT_FONT); setActive(0); optionRefs.current[0]?.focus(); }} disabled={value === DEFAULT_FONT}
-                style={{ padding: "9px 14px", borderRadius: 4, border: "1px solid #CBD5E1", background: "#fff", color: "#007aff", fontWeight: 700, fontSize: 13.5, cursor: value === DEFAULT_FONT ? "default" : "pointer", opacity: value === DEFAULT_FONT ? 0.55 : 1 }}>
+                style={{ padding: "9px 14px", borderRadius: 4, border: "1px solid #CBD5E1", background: "#fff", color: "#16356f", fontWeight: 700, fontSize: 13.5, cursor: value === DEFAULT_FONT ? "default" : "pointer", opacity: value === DEFAULT_FONT ? 0.55 : 1 }}>
                 {labels.reset}
               </button>
               <button type="button" onClick={close}
-                style={{ padding: "9px 18px", borderRadius: 4, border: "none", background: "#007aff", color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}>
+                style={{ padding: "9px 18px", borderRadius: 4, border: "none", background: "#16356f", color: "#fff", fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}>
                 {labels.done}
               </button>
             </div>

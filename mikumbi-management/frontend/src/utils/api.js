@@ -40,7 +40,12 @@ export async function apiFetch(path, options = {}, token) {
       window.dispatchEvent(new CustomEvent("mikumbi:session-ended", { detail: data.message }));
     }
     const message = (data && (data.message || data.error)) || `Request failed (${res.status})`;
-    throw new Error(message);
+    const err = new Error(message);
+    err.status = res.status;
+    // Pass through any extra server-provided detail (e.g. the real SMS gateway
+    // error) so callers can show WHY something failed, not just a generic line.
+    if (data && data.details !== undefined && data.details !== null) err.details = data.details;
+    throw err;
   }
   return data;
 }
