@@ -1,0 +1,12 @@
+# Cloudflare Pages response headers (mirrors the rules in vercel.json so the
+# site behaves the same on Cloudflare). Vercel ignores this file.
+/assets/*
+  Cache-Control: public, max-age=86400
+
+/fonts/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: font/woff2
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

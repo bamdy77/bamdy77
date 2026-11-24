@@ -1,0 +1,5 @@
+# Cloudflare Pages SPA fallback: serve index.html for any path that is not a
+# real file (so React Router client routes like /results work on reload).
+# Real files (assets, fonts, sw.js...) are served first; only unmatched paths
+# fall through to index.html. Vercel ignores this file (it uses vercel.json).
+/*    /index.html   200
