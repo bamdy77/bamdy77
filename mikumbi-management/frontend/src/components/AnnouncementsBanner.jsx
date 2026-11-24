@@ -10,7 +10,7 @@ import { formatDate } from "../i18n/display";
 // "/communications/announcements/staff" (needs the login `token`; returns only
 // notices addressed to Staff or to Both). The public website has its own
 // NewsSection and never uses this banner.
-export default function AnnouncementsBanner({ endpoint = "/communications/announcements/public", token = null }) {
+export default function AnnouncementsBanner({ endpoint = "/communications/announcements/public", token = null, badgeKey = "ann.notice" }) {
   const { t } = useLang();
   const [announcements, setAnnouncements] = useState([]);
   const [open, setOpen] = useState(false);
@@ -36,9 +36,9 @@ export default function AnnouncementsBanner({ endpoint = "/communications/announ
   const marqueeDuration = isMobile ? "30s" : isTablet ? "25s" : "20s";
 
   return (
-    <div style={{ background: "#F54927", borderBottom: "1px solid #C43A1F" }}>
+    <div style={{ background: "#E3A51A", borderBottom: "1px solid #c6900f" }}>
       <style>{`
-        @keyframes mikumbi-notice-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+        @keyframes mikumbi-burst-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.86); opacity: 0.72; } }
         @keyframes mikumbi-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .mikumbi-marquee-track { animation-name: mikumbi-marquee; animation-timing-function: linear; animation-iteration-count: infinite; }
         .mikumbi-marquee-wrap:hover .mikumbi-marquee-track { animation-play-state: paused; }
@@ -48,23 +48,17 @@ export default function AnnouncementsBanner({ endpoint = "/communications/announ
         padding: isMobile ? "5px 14px" : isTablet ? "5px 18px" : "6px 24px",
         display: "flex", alignItems: "center", gap: isMobile ? 8 : 12,
       }}>
-        <span style={{
-          flexShrink: 0, display: "flex", alignItems: "center", gap: 5, background: THEME.dangerSolid, color: "#fff",
-          fontSize: isMobile ? 9.5 : 10, fontWeight: 700, letterSpacing: "0.05em", padding: isMobile ? "2.5px 7px" : "3px 8px", borderRadius: 4,
-          animation: "mikumbi-notice-pulse 1.6s ease-in-out infinite",
-        }}>
-          <MegaphoneIcon color="#fff" /> {isMobile ? "" : t("ann.notice")}
-        </span>
+        <BadgeBurst label={t(badgeKey)} isMobile={isMobile} />
 
         <div className="mikumbi-marquee-wrap" style={{ flex: 1, overflow: "hidden", whiteSpace: "nowrap", minWidth: 0 }}>
           <div className="mikumbi-marquee-track" style={{ display: "inline-block", animationDuration: marqueeDuration }}>
-            <span style={{ fontSize: isMobile ? 11.5 : 12, color: "#fff", paddingRight: 40 }}>{marqueeText}</span>
-            <span style={{ fontSize: isMobile ? 11.5 : 12, color: "#fff", paddingRight: 40 }}>{marqueeText}</span>
+            <span style={{ fontSize: isMobile ? 11.5 : 12, color: "#16356f", fontWeight: 600, paddingRight: 40 }}>{marqueeText}</span>
+            <span style={{ fontSize: isMobile ? 11.5 : 12, color: "#16356f", fontWeight: 600, paddingRight: 40 }}>{marqueeText}</span>
           </div>
         </div>
 
         <button onClick={() => setOpen(true)} style={{
-          flexShrink: 0, background: "rgba(255,255,255,0.92)", color: "#F54927", border: "none", borderRadius: 4,
+          flexShrink: 0, background: THEME.navy, color: "#fff", border: "none", borderRadius: 4,
           padding: isMobile ? "4px 10px" : "5px 12px", fontSize: isMobile ? 10.5 : 11.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
         }}>{t("ann.readMore")}</button>
       </div>
@@ -102,6 +96,33 @@ function AnnouncementsModal({ announcements, onClose }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// Comic-style spiky "starburst" badge (like a POW! bubble) holding the word
+// NOTICE (staff) or News (parents). Red, no "!" mark - the whole bubble and
+// its word pulse together via the mikumbi-burst-pulse keyframe.
+function BadgeBurst({ label, isMobile }) {
+  const cx = 60, cy = 26, spikes = 12;
+  const Rx = 58, Ry = 24, rx = 46, ry = 17;
+  const pts = [];
+  for (let i = 0; i < spikes * 2; i++) {
+    const ang = (Math.PI * i) / spikes - Math.PI / 2;
+    const ox = i % 2 === 0 ? Rx : rx;
+    const oy = i % 2 === 0 ? Ry : ry;
+    pts.push(`${(cx + ox * Math.cos(ang)).toFixed(1)},${(cy + oy * Math.sin(ang)).toFixed(1)}`);
+  }
+  const long = (label || "").length > 5;
+  const w = isMobile ? (long ? 60 : 50) : (long ? 76 : 62);
+  const h = isMobile ? 28 : 34;
+  return (
+    <svg
+      viewBox="0 0 120 52" width={w} height={h} aria-hidden="true"
+      style={{ flexShrink: 0, display: "block", transformOrigin: "center", animation: "mikumbi-burst-pulse 1.15s ease-in-out infinite" }}
+    >
+      <polygon points={pts.join(" ")} fill="#dc2626" stroke="#9f0f12" strokeWidth="2.5" strokeLinejoin="round" />
+      <text x="60" y="27" textAnchor="middle" dominantBaseline="middle" fontSize="18" fontWeight="800" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" letterSpacing="0.5">{label}</text>
+    </svg>
   );
 }
 

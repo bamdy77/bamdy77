@@ -38,7 +38,7 @@ export function ActionMenu({ children }) {
   const toggle = () => {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      const menuWidth = 170;
+      const menuWidth = 230;
       const menuHeight = itemCount * 38 + 8;
       const spaceBelow = window.innerHeight - r.bottom;
       const openUpward = spaceBelow < menuHeight + 10 && r.top > menuHeight + 10;
@@ -61,7 +61,7 @@ export function ActionMenu({ children }) {
       {open && createPortal(
         <div data-usermenu-portal style={{
           position: "fixed", top: pos.top, left: pos.left, background: THEME.surface, border: `1px solid ${THEME.border}`,
-          borderRadius: 4, boxShadow: "0 6px 18px rgba(0,0,0,0.12)", zIndex: 9600, minWidth: 160, overflow: "hidden",
+          borderRadius: 4, boxShadow: "0 6px 18px rgba(0,0,0,0.12)", zIndex: 9600, minWidth: 160, maxWidth: "calc(100vw - 16px)", overflow: "hidden",
         }} onClick={() => setOpen(false)}>
           {children}
         </div>,
@@ -75,7 +75,7 @@ export function MenuItem({ onClick, danger, icon, children }) {
     <button onClick={onClick} style={{
       display: "flex", alignItems: "center", gap: 9, width: "100%", textAlign: "left", padding: "9px 14px", fontSize: 12.5,
       background: THEME.surface, border: "none", borderTop: `1px solid ${THEME.border}`, cursor: "pointer",
-      color: danger ? THEME.danger : THEME.text,
+      color: danger ? THEME.danger : THEME.text, whiteSpace: "normal", wordBreak: "break-word",
     }}>
       {icon && <span style={{ display: "flex", flexShrink: 0, opacity: 0.85 }}>{icon}</span>}
       {children}

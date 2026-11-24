@@ -4,6 +4,7 @@ import { SCHOOL } from "../../styles/theme";
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { siteConfig, toTelHref } from "../../config/siteConfig";
 import HoverMenu from "../HoverMenu";
+import AnnouncementsBanner from "../AnnouncementsBanner";
 import { useLang, LangToggle } from "../../i18n";
 import FontChooser from "../FontChooser";
 import { useFont } from "../../context/FontContext";
@@ -40,6 +41,7 @@ export default function PublicLayout({ children }) {
       `}</style>
       <IdentityBanner />
       <NavBar />
+      <AnnouncementsBanner badgeKey="ann.news" />
       <main style={{ flex: 1 }}>{children}</main>
       <Footer />
     </div>
@@ -298,8 +300,11 @@ function Footer() {
               <PhoneSvg /><a className="pub-flink" href={toTelHref(p)} style={fl}>{p}</a>
             </div>
           ))}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, fontSize: 12.5 }}>
-            <MailSvg /><a className="pub-flink" href={`mailto:${siteConfig.email}`} style={{ ...fl, minWidth: 0, overflowWrap: "anywhere" }} title={siteConfig.email}>{siteConfig.email}</a>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 6, fontSize: 12.5 }}>
+            <span style={{ flexShrink: 0, marginTop: 2 }}><MailSvg /></span>
+            <a className="pub-flink" href={`mailto:${siteConfig.email}`} style={{ ...fl, minWidth: 0, wordBreak: "normal", overflowWrap: "normal", lineHeight: 1.4 }} title={siteConfig.email}>
+              {siteConfig.email.split("@")[0]}@<wbr />{siteConfig.email.split("@")[1] || ""}
+            </a>
           </div>
           {siteConfig.social.length > 0 && (
             <div style={{ marginTop: 18 }}>

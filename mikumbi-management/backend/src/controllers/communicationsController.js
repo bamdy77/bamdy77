@@ -125,6 +125,33 @@ const listStaffAnnouncements = async (req, res, next) => {
   }
 };
 
+// PUT /api/communications/announcements/:id — edit an existing announcement
+// (title, message, audience, expiry). Same validation as create.
+const updateAnnouncement = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const title = typeof req.body.title === "string" ? req.body.title.trim() : "";
+    const message = typeof req.body.message === "string" ? req.body.message.trim() : "";
+    const audience = typeof req.body.audience === "string" ? req.body.audience.trim().toLowerCase() : "";
+    if (!title || !message)
+      return res.status(400).json({ success: false, message: "Title and message are required." });
+    if (title.length > 200)
+      return res.status(400).json({ success: false, message: "Title is too long (maximum 200 characters)." });
+    if (!AUDIENCES.includes(audience))
+      return res.status(400).json({ success: false, message: "Please choose who this announcement is for: Staff, Parents & public, or Both." });
+    const expiry = resolveExpiry(req.body);
+    if (!expiry.ok) return res.status(400).json({ success: false, message: expiry.message });
+    const result = await query(
+      `UPDATE announcements SET title=$1, message=$2, audience=$3, expires_at=$4 WHERE id=$5 RETURNING *`,
+      [title, message, audience, expiry.value, id]
+    );
+    if (!result.rows.length) return res.status(404).json({ success: false, message: "Announcement not found." });
+    res.json({ success: true, announcement: result.rows[0] });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // DELETE /api/communications/announcements/:id — can be deleted anytime, per spec
 const deleteAnnouncement = async (req, res, next) => {
   try {
@@ -304,7 +331,27 @@ const deleteFailedSms = async (req, res, next) => {
   }
 };
 
+// DELETE /api/communications/sms/history/all — clears the WHOLE message history.
+const deleteAllSms = async (req, res, next) => {
+  try {
+    const result = await query("DELETE FROM sms_log");
+    res.json({ success: true, message: `${result.rowCount} message(s) removed.`, count: result.rowCount });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /api/communications/sms/history/:id — remove one message from history.
+const deleteSmsEntry = async (req, res, next) => {
+  try {
+    await query("DELETE FROM sms_log WHERE id = $1", [req.params.id]);
+    res.json({ success: true, message: "Message removed." });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
-  createAnnouncement, listAnnouncements, listPublicAnnouncements, listStaffAnnouncements, deleteAnnouncement,
-  listContacts, addContact, deleteContact, sendSms, smsHistory, deleteFailedSms,
+  createAnnouncement, updateAnnouncement, listAnnouncements, listPublicAnnouncements, listStaffAnnouncements, deleteAnnouncement,
+  listContacts, addContact, deleteContact, sendSms, smsHistory, deleteFailedSms, deleteAllSms, deleteSmsEntry,
 };

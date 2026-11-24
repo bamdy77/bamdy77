@@ -8,7 +8,8 @@ import { useConfirm } from "../components/ConfirmDialog";
 import { showSuccess } from "../components/SuccessModal";
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import ParentVideosTab from "./ParentVideosTab";
-import { ChevronDownIcon, MegaphoneIcon, MessageIcon, SendIcon, PlusCircleIcon, TrashIcon, CheckIcon, CloseIcon, SpinnerIcon } from "../components/icons";
+import { ActionMenu, MenuItem } from "../components/ActionMenu";
+import { ChevronDownIcon, MegaphoneIcon, MessageIcon, SendIcon, PlusCircleIcon, TrashIcon, CheckIcon, CloseIcon, SpinnerIcon, EditIcon } from "../components/icons";
 
 export default function Communications() {
   const { user } = useAuth();
@@ -62,7 +63,17 @@ function AnnouncementsTab({ isMobile }) {
   const [endDate, setEndDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [editId, setEditId] = useState(null); // null = creating; otherwise editing this announcement
   const { confirm, ConfirmDialogPortal } = useConfirm();
+
+  const resetForm = () => { setEditId(null); setTitle(""); setMsg(""); setAudience(""); setDuration("3"); setEndDate(""); setLoadError(""); };
+  const startEdit = (a) => {
+    setEditId(a.id); setTitle(a.title || ""); setMsg(a.message || ""); setAudience(a.audience || "");
+    if (!a.expires_at) { setDuration("never"); setEndDate(""); }
+    else { setDuration("date"); setEndDate(String(a.expires_at).slice(0, 10)); }
+    setLoadError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const load = () => apiFetch("/communications/announcements", {}, token)
     .then((d) => { setList(d.announcements || []); setLoadError(""); })
@@ -79,9 +90,14 @@ function AnnouncementsTab({ isMobile }) {
       : { expiry_type: "days", expiry_days: Number(duration) };
     setBusy(true);
     try {
-      await apiFetch("/communications/announcements", { method: "POST", body: JSON.stringify({ title, message: msg, audience, ...expiry }) }, token);
-      showSuccess(t("comm.ann"), t("comm.posted"));
-      setTitle(""); setMsg(""); setAudience(""); setDuration("3"); setEndDate(""); setLoadError("");
+      if (editId) {
+        await apiFetch(`/communications/announcements/${editId}`, { method: "PUT", body: JSON.stringify({ title, message: msg, audience, ...expiry }) }, token);
+        showSuccess(t("comm.ann"), t("comm.updated"));
+      } else {
+        await apiFetch("/communications/announcements", { method: "POST", body: JSON.stringify({ title, message: msg, audience, ...expiry }) }, token);
+        showSuccess(t("comm.ann"), t("comm.posted"));
+      }
+      resetForm();
       load();
     } catch (err) {
       setLoadError(err.message);
@@ -138,7 +154,10 @@ function AnnouncementsTab({ isMobile }) {
           </p>
         </div>
 
-        <button disabled={busy} style={{ ...btnStyle, display: "inline-flex", alignItems: "center", gap: 7 }}>{busy ? <SpinnerIcon size={14} /> : <MegaphoneIcon size={14} />}{busy ? t("pw.sending") : t("comm.post")}</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <button disabled={busy} style={{ ...btnStyle, display: "inline-flex", alignItems: "center", gap: 7 }}>{busy ? <SpinnerIcon size={14} /> : (editId ? <EditIcon size={14} /> : <MegaphoneIcon size={14} />)}{busy ? t("pw.sending") : (editId ? t("comm.updateBtn") : t("comm.post"))}</button>
+          {editId && <button type="button" onClick={resetForm} style={{ background: "none", border: `1px solid ${THEME.border}`, color: THEME.text, borderRadius: 4, padding: "9px 14px", fontSize: 13, cursor: "pointer" }}>{t("common.cancel")}</button>}
+        </div>
         <p style={{ fontSize: 11.5, color: THEME.muted, marginTop: 8 }}>{t("comm.shownOnly")}</p>
       </form>
 
@@ -156,7 +175,10 @@ function AnnouncementsTab({ isMobile }) {
                 <b style={{ fontSize: 14, overflowWrap: "anywhere" }}>{a.title}</b>
                 <AudienceBadge audience={a.audience} />
               </span>
-              <button onClick={() => remove(a.id)} style={{ background: "none", border: "none", color: THEME.danger, cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 4 }}><TrashIcon size={12} />{t("common.delete")}</button>
+              <ActionMenu>
+                <MenuItem onClick={() => startEdit(a)} icon={<EditIcon size={13} />}>{t("lg.edit")}</MenuItem>
+                <MenuItem danger onClick={() => remove(a.id)} icon={<TrashIcon size={13} />}>{t("common.delete")}</MenuItem>
+              </ActionMenu>
             </div>
             <p style={{ fontSize: 13, color: THEME.text, margin: "6px 0", overflowWrap: "anywhere" }}>{a.message}</p>
             <div style={{ fontSize: 11, color: THEME.muted }}>
@@ -336,6 +358,8 @@ function SmsTab({ isMobile, isTablet }) {
   const toggleParent = (id) => setSelectedParentIds((ids) => ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
   const toggleIndividual = (id) => setSelectedIndividualIds((ids) => ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
 
+  const { confirm, ConfirmDialogPortal } = useConfirm();
+
   const clearFailed = async () => {
     setClearingFailed(true);
     try {
@@ -346,6 +370,21 @@ function SmsTab({ isMobile, isTablet }) {
       setHistoryError(err.message || t("comm.failedRemoveErr"));
     } finally { setClearingFailed(false); }
   };
+
+  const clearAllHistory = () => confirm(t("comm.clearAllConfirm"), async () => {
+    try {
+      const data = await apiFetch("/communications/sms/history/all", { method: "DELETE" }, token);
+      showSuccess(t("comm.history"), data.message || t("comm.cleared"));
+      loadHistory();
+    } catch (err) { setHistoryError(err.message); }
+  }, { danger: true });
+
+  const deleteOneMessage = (id) => confirm(t("comm.deleteMsgConfirm"), async () => {
+    try {
+      await apiFetch(`/communications/sms/history/${id}`, { method: "DELETE" }, token);
+      loadHistory();
+    } catch (err) { setHistoryError(err.message); }
+  }, { danger: true });
 
   const send = async (e) => {
     e.preventDefault();
@@ -458,11 +497,18 @@ function SmsTab({ isMobile, isTablet }) {
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, gap: 8, flexWrap: "wrap" }}>
         <h3 style={{ fontSize: 14, margin: 0 }}>{t("comm.history")}</h3>
-        {history.some((h) => h.status === "failed") && (
-          <button type="button" onClick={clearFailed} disabled={clearingFailed} style={{ ...linkBtnStyle, color: THEME.danger, opacity: clearingFailed ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: 5 }}>
-            <TrashIcon size={12} />{clearingFailed ? t("acct.removing") : t("comm.deleteFailed")}
-          </button>
-        )}
+        <span style={{ display: "inline-flex", gap: 14, flexWrap: "wrap" }}>
+          {history.some((h) => h.status === "failed") && (
+            <button type="button" onClick={clearFailed} disabled={clearingFailed} style={{ ...linkBtnStyle, color: THEME.danger, opacity: clearingFailed ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <TrashIcon size={12} />{clearingFailed ? t("acct.removing") : t("comm.deleteFailed")}
+            </button>
+          )}
+          {history.length > 0 && (
+            <button type="button" onClick={clearAllHistory} style={{ ...linkBtnStyle, color: THEME.danger, display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <TrashIcon size={12} />{t("comm.clearAll")}
+            </button>
+          )}
+        </span>
       </div>
       {historyError && (
         <div style={{ marginBottom: 10, padding: 12, borderRadius: 4, fontSize: 13.5, background: THEME.dangerLight, color: THEME.danger, maxWidth: isMobile ? "100%" : 640 }}>⚠ {historyError}</div>
@@ -472,7 +518,10 @@ function SmsTab({ isMobile, isTablet }) {
           <div key={h.id} style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: "10px 14px", fontSize: 12.5 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
               <b>{h.recipients}</b>
-              <span style={{ color: h.status === "sent" ? THEME.success : h.status === "partial" ? THEME.warning : THEME.danger, fontWeight: 600 }}>{STRINGS[`comm.status.${h.status}`] ? t(`comm.status.${h.status}`) : h.status}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                <span style={{ color: h.status === "sent" ? THEME.success : h.status === "partial" ? THEME.warning : THEME.danger, fontWeight: 600 }}>{STRINGS[`comm.status.${h.status}`] ? t(`comm.status.${h.status}`) : h.status}</span>
+                <button type="button" onClick={() => deleteOneMessage(h.id)} aria-label={t("common.delete")} title={t("common.delete")} style={{ background: "none", border: "none", cursor: "pointer", color: THEME.muted, padding: 0, display: "inline-flex" }}><TrashIcon size={12} /></button>
+              </span>
             </div>
             <div style={{ color: THEME.muted, marginTop: 2, overflowWrap: "anywhere" }}>{h.message}</div>
             {h.recipient_numbers && (
@@ -484,6 +533,7 @@ function SmsTab({ isMobile, isTablet }) {
           </div>
         ))}
       </div>
+      {ConfirmDialogPortal}
     </div>
   );
 }

@@ -23,7 +23,7 @@ function bandColor(metric, v) {
 // color of the line/dots (green trending the right way, red the wrong way)
 // - it never changes what's plotted.
 export default function TrendChart({
-  points, height = 220, higherIsBetter = true, valueSuffix = "", valueFormatter, color, emptyText, metric,
+  points, height = 236, higherIsBetter = true, valueSuffix = "", valueFormatter, color, emptyText, metric, yLabel, xLabel,
 }) {
   const { t } = useLang();
   const usable = points.filter((p) => p.value != null);
@@ -39,9 +39,12 @@ export default function TrendChart({
   }
 
   const width = 640;
-  const padL = 44, padR = 16, padT = 18, padB = 34;
+  // Extra left/bottom room when an axis title is supplied, so the rotated
+  // Y title and the X title sit clear of the value labels.
+  const padL = yLabel ? 62 : 46, padR = 16, padT = 18, padB = xLabel ? 50 : 34;
   const plotW = width - padL - padR;
   const plotH = height - padT - padB;
+  const axisX = padL, axisY = padT + plotH;
 
   const vals = usable.map((p) => p.value);
   let min = Math.min(...vals), max = Math.max(...vals);
@@ -90,6 +93,17 @@ export default function TrendChart({
           </g>
         ))}
 
+        {/* Solid X and Y axis lines so the plot reads as a real chart, with a
+            tick-value scale on the left telling you what each height means. */}
+        <line x1={axisX} y1={padT} x2={axisX} y2={axisY} stroke={THEME.muted} strokeWidth="1.5" />
+        <line x1={axisX} y1={axisY} x2={width - padR} y2={axisY} stroke={THEME.muted} strokeWidth="1.5" />
+        {yLabel && (
+          <text transform={`translate(14 ${padT + plotH / 2}) rotate(-90)`} fontSize="11" fontWeight="700" fill={THEME.heading} textAnchor="middle">{yLabel}</text>
+        )}
+        {xLabel && (
+          <text x={padL + plotW / 2} y={height - 6} fontSize="11" fontWeight="700" fill={THEME.heading} textAnchor="middle">{xLabel}</text>
+        )}
+
         {segments.map((seg, si) => (
           <g key={si}>
             {seg.length > 1 && (
@@ -117,7 +131,7 @@ export default function TrendChart({
         ))}
 
         {points.map((p, i) => (
-          <text key={i} x={xFor(i)} y={height - 10} fontSize="9.5" fill={THEME.muted} textAnchor="middle">
+          <text key={i} x={xFor(i)} y={axisY + 16} fontSize="9.5" fill={THEME.muted} textAnchor="middle">
             {p.label.length > 10 ? `${p.label.slice(0, 9)}…` : p.label}
           </text>
         ))}

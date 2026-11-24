@@ -115,16 +115,24 @@ export default function VisitorStats({ isCompact }) {
 
           <div style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: 4, padding: 14, marginBottom: 14 }}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: THEME.text, marginBottom: 10 }}>{t("visits.dailyRange", { from: formatDate(lang, data.range.from), to: formatDate(lang, data.range.to) })}</div>
-            <div role="img" aria-label={t("visits.daily")} style={{ display: "flex", alignItems: "flex-end", gap: isCompact ? 2 : 4, height: 130 }}>
-              {data.daily.map((d) => (
-                <div key={String(d.day)} title={`${formatDate(lang, d.day)}: ${d.visitors}`}
-                  style={{ flex: 1, minWidth: 0, height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center", gap: 2 }}>
-                  {d.visitors > 0 && <span style={{ fontSize: isCompact ? 8.5 : 10, fontWeight: 700, color: THEME.heading, lineHeight: 1 }}>{d.visitors}</span>}
-                  <div style={{ width: "100%", height: `${Math.max(2, (d.visitors / max) * 88)}%`, background: d.visitors ? THEME.navy : THEME.border, borderRadius: "2px 2px 0 0" }} />
-                </div>
-              ))}
+            {/* Y axis: a value scale (max / half / 0) + solid axis lines so the
+                height of each bar can be read as a real number of visitors. */}
+            <div style={{ display: "flex", alignItems: "stretch", gap: 6 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: THEME.muted, writingMode: "vertical-rl", transform: "rotate(180deg)", textAlign: "center", paddingBottom: 4 }}>{t("visits.axVisitors")}</div>
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: 130, fontSize: 9.5, color: THEME.muted, textAlign: "right", minWidth: 16 }}>
+                <span>{max}</span><span>{Math.round(max / 2)}</span><span>0</span>
+              </div>
+              <div role="img" aria-label={t("visits.daily")} style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: isCompact ? 2 : 4, height: 130, borderLeft: `1.5px solid ${THEME.muted}`, borderBottom: `1.5px solid ${THEME.muted}`, paddingLeft: 4 }}>
+                {data.daily.map((d) => (
+                  <div key={String(d.day)} title={`${formatDate(lang, d.day)}: ${d.visitors}`}
+                    style={{ flex: 1, minWidth: 0, height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center", gap: 2 }}>
+                    {d.visitors > 0 && <span style={{ fontSize: isCompact ? 8.5 : 10, fontWeight: 700, color: THEME.heading, lineHeight: 1 }}>{d.visitors}</span>}
+                    <div style={{ width: "100%", height: `${Math.max(2, (d.visitors / max) * 88)}%`, background: d.visitors ? THEME.navy : THEME.border, borderRadius: "2px 2px 0 0" }} />
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: THEME.muted, marginTop: 6 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: THEME.muted, marginTop: 6, paddingLeft: 28 }}>
               <span>{formatDate(lang, data.daily[0]?.day)}</span><span>{formatDate(lang, data.daily[data.daily.length - 1]?.day)}</span>
             </div>
           </div>

@@ -11,6 +11,7 @@ router.get("/announcements",         auth(["admin", "second_master"]), c.listAnn
 router.get("/announcements/public",  c.listPublicAnnouncements); // PUBLIC website (audience public/both), no login
 router.get("/announcements/staff",   auth(), c.listStaffAnnouncements); // staff dashboard banner (audience staff/both), any logged-in role
 router.post("/announcements",        auth(["admin", "second_master"]), c.createAnnouncement);
+router.put("/announcements/:id",     auth(["admin", "second_master"]), c.updateAnnouncement);
 router.delete("/announcements/:id",  auth(["admin", "second_master"]), c.deleteAnnouncement);
 
 // ── SMS Service — Admin (Head Master) only, per module visibility rules ──
@@ -20,5 +21,7 @@ router.delete("/sms/contacts/:type/:id", auth(["admin", "second_master"]), c.del
 router.post("/sms/send",                auth(["admin", "second_master"]), require("../utils/smsLimiter"), c.sendSms);
 router.get("/sms/history",              auth(["admin", "second_master"]), c.smsHistory);
 router.delete("/sms/history/failed",    auth(["admin", "second_master"]), c.deleteFailedSms);
+router.delete("/sms/history/all",       auth(["admin", "second_master"]), c.deleteAllSms);
+router.delete("/sms/history/:id",       auth(["admin", "second_master"]), c.deleteSmsEntry);
 
 module.exports = router;
