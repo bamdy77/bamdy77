@@ -153,7 +153,7 @@ function ResultsTrendSection({ isCompact }) {
           >
             <TrendChart
               points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.pass_pct }))}
-              valueSuffix="%" higherIsBetter
+              valueSuffix="%" higherIsBetter metric="pct"
               emptyText={t("an.noPass")}
             />
           </ChartCard>
@@ -166,7 +166,7 @@ function ResultsTrendSection({ isCompact }) {
           >
             <TrendChart
               points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.school_gpa }))}
-              higherIsBetter={false}
+              higherIsBetter={false} metric="gpa"
               emptyText={t("an.noGpa")}
             />
           </ChartCard>
@@ -181,7 +181,7 @@ function ResultsTrendSection({ isCompact }) {
               >
                 <TrendChart
                   points={(data.subjectTrend || []).map((r) => ({ label: periodLabel(r), value: r.pass_pct }))}
-                  valueSuffix="%" higherIsBetter
+                  valueSuffix="%" higherIsBetter metric="pct"
                   emptyText={t("an.noSubjFormHistory", { subject: data.subjectMeta.name, form: formLabel(lang, form) })}
                 />
               </ChartCard>
@@ -193,7 +193,7 @@ function ResultsTrendSection({ isCompact }) {
               >
                 <TrendChart
                   points={(data.subjectTrend || []).map((r) => ({ label: periodLabel(r), value: r.gpa }))}
-                  higherIsBetter={false}
+                  higherIsBetter={false} metric="gpa"
                   emptyText={t("an.noSubjFormHistory", { subject: data.subjectMeta.name, form: formLabel(lang, form) })}
                 />
               </ChartCard>
@@ -251,7 +251,7 @@ function AttendanceTrendSection() {
           >
             <TrendChart
               points={(data.months || []).map((m) => ({ label: m.month, value: m.presentPct }))}
-              valueSuffix="%" higherIsBetter
+              valueSuffix="%" higherIsBetter metric="pct"
               emptyText={t("an.noAtt")}
             />
           </ChartCard>
@@ -419,7 +419,7 @@ function StudentTrendSection() {
           >
             <TrendChart
               points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.division_rank }))}
-              higherIsBetter={false}
+              higherIsBetter={false} metric="division"
               valueFormatter={(v) => DIVISION_LABELS[Math.round(v)] || v}
               emptyText={t("an.noDiv")}
             />
@@ -433,7 +433,7 @@ function StudentTrendSection() {
           >
             <TrendChart
               points={(data.overallTrend || []).map((r) => ({ label: periodLabel(r), value: r.gpa }))}
-              higherIsBetter={false}
+              higherIsBetter={false} metric="gpa"
               emptyText={t("an.noStuHistory")}
             />
           </ChartCard>
@@ -484,7 +484,7 @@ function StudentTrendSection() {
             >
               <TrendChart
                 points={(data.subjectTrend || []).map((r) => ({ label: periodLabel(r), value: r.marks }))}
-                higherIsBetter
+                higherIsBetter metric="marks"
                 emptyText={t("an.noSubjHistory", { subject: data.subjectMeta.name })}
               />
             </ChartCard>

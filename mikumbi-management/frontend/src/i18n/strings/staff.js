@@ -1596,7 +1596,7 @@ const STAFF_STRINGS = {
   "tt.schoolTimetable": { en: "School Timetable", sw: "Ratiba ya Shule" },
   "tt.stopShare": { en: "Stop Sharing", sw: "Acha Ku-share" },
   "tt.shareToTeachers": { en: "Share to Teachers", sw: "Share kwa Walimu" },
-  "tt.generateNewDraft": { en: "Generate New Draft ({remaining} left)", sw: "Tengeneza Draft Mpya ({remaining} zimebaki)" },
+  "tt.generateNewDraft": { en: "Generate New Draft", sw: "Tengeneza Draft Mpya" },
   "tt.exitEditMode": { en: "Exit Edit Mode", sw: "Toka Hali ya Kuhariri" },
   "tt.editCells": { en: "Edit Cells", sw: "Hariri Visanduku" },
   "tt.backToSetup": { en: "Back to Setup", sw: "Rudi kwenye Usanidi" },

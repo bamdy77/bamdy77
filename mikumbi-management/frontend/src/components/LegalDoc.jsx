@@ -9,7 +9,7 @@ import { useBreakpoint } from "../hooks/useBreakpoint";
 //  - a contact box at the end.
 // Content is passed in as data, so the parents' site (Kiswahili/English)
 // and the staff site (English) share one look.
-const NAVY = "#1a50c7";
+const NAVY = "#007aff";
 
 export default function LegalDoc({ tabs, title, updated, summary, sections = [], faqs, contact, labels }) {
   const { isMobile } = useBreakpoint();

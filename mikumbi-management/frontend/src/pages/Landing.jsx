@@ -119,7 +119,7 @@ export default function Landing() {
       {/* Nav (+ mobile/tablet dropdown menu, kept in one sticky wrapper so both move together) */}
       <div style={{ position: "sticky", top: 0, zIndex: 50 }}>
         <nav style={{
-          background: "#1a50c7", color: "#fff", padding: isMobile ? "10px 14px" : isTablet ? "11px 18px" : "13px 28px",
+          background: "#007aff", color: "#fff", padding: isMobile ? "10px 14px" : isTablet ? "11px 18px" : "13px 28px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, opacity: 0.92 }}>
@@ -154,7 +154,7 @@ export default function Landing() {
 
         {/* Mobile / tablet dropdown menu */}
         {isCompact && menuOpen && (
-          <div style={{ background: "#1a50c7", borderTop: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 24px rgba(0,0,0,0.2)" }}>
+          <div style={{ background: "#007aff", borderTop: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 24px rgba(0,0,0,0.2)" }}>
             <a href="#home" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><HomeIcon size={15} />{t("land.home")}</a>
             <a href="#features" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><StarIcon size={15} />{t("land.features")}</a>
             <a href="#about" onClick={() => setMenuOpen(false)} style={{ ...mobileMenuLink, display: "flex", alignItems: "center", gap: 10 }}><InfoIcon size={15} />{t("land.about")}</a>
@@ -270,7 +270,7 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer style={{ background: "#1a50c7", color: "#f0f7fc", padding: isMobile ? "22px 20px" : "28px 24px", textAlign: "center", fontSize: isMobile ? 11.5 : 12.5 }}>
+      <footer style={{ background: "#007aff", color: "#f0f7fc", padding: isMobile ? "22px 20px" : "28px 24px", textAlign: "center", fontSize: isMobile ? 11.5 : 12.5 }}>
         <div>© {new Date().getFullYear()} {SCHOOL.name}. {t("footer.rights")}</div>
         <div style={{ marginTop: 8, display: "flex", justifyContent: "center", gap: isMobile ? 12 : 18, flexWrap: "wrap" }}>
           <Link to="/privacy" style={{ color: "#cbd5e1" }}>{t("footer.privacy")}</Link>

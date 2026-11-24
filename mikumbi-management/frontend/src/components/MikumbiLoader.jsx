@@ -9,7 +9,7 @@ import { THEME } from "../styles/theme";
 // wait" moments, submit buttons, etc.
 //
 // Colors, exactly as requested:
-//   - navy   (brand navy, THEME.navy / #1a50c7)
+//   - navy   (brand navy, THEME.navy / #007aff)
 //   - coral  #FF7F50
 //   - teal   #008B8B
 // Two rings, spinning in opposite directions. Pure CSS (conic-gradient
@@ -53,7 +53,7 @@ export default function MikumbiLoader({
             position: "absolute",
             inset: 0,
             borderRadius: "50%",
-            background: "conic-gradient(from 0deg, transparent 0deg, #1a50c7 65deg, #FF7F50 205deg, transparent 330deg, transparent 360deg)",
+            background: "conic-gradient(from 0deg, transparent 0deg, #007aff 65deg, #FF7F50 205deg, transparent 330deg, transparent 360deg)",
             WebkitMask: `radial-gradient(farthest-side, transparent calc(100% - ${outerThickness}px), #000 calc(100% - ${outerThickness}px))`,
             mask: `radial-gradient(farthest-side, transparent calc(100% - ${outerThickness}px), #000 calc(100% - ${outerThickness}px))`,
             animation: "mikumbi-loader-cw 1.25s linear infinite",
@@ -95,7 +95,7 @@ export default function MikumbiLoader({
             style={{
               fontWeight: 800,
               letterSpacing: "0.01em",
-              color: "#1a50c7",
+              color: "#007aff",
               fontSize,
               whiteSpace: "nowrap",
               textAlign: "center",

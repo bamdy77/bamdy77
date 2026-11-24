@@ -240,7 +240,7 @@ const LESSON_PERIODS = PERIODS.filter(p => !p.isBreak);
 const C = {
   bg:"var(--mk-bg, #F8FAFC)", surface:"var(--mk-surface, #FFFFFF)", border:"var(--mk-border, #E2E8F0)",
   text:"var(--mk-text, #0F172A)", muted:"var(--mk-muted, #64748B)",
-  accent:"var(--mk-navy, #1a50c7)", accentLight:"var(--mk-accent-light, #EEF1FA)", accentText:"var(--mk-link, #1a50c7)",
+  accent:"var(--mk-navy, #007aff)", accentLight:"var(--mk-accent-light, #EEF1FA)", accentText:"var(--mk-link, #007aff)",
   dangerSolid:"var(--mk-danger-solid, #DC2626)", successSolid:"var(--mk-success-solid, #16A34A)", warningSolid:"var(--mk-warning-solid, #D97706)",
   danger:"var(--mk-danger, #DC2626)", dangerLight:"var(--mk-danger-light, #FEF2F2)",
   success:"var(--mk-success, #15803D)", successLight:"var(--mk-success-light, #F0FDF4)",
@@ -2279,65 +2279,103 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
   // On mobile/tablet the tables scroll sideways - keep the leading column (Period/Class)
   // pinned in view so people always know which row they're looking at while they swipe.
 
-  const CellView = ({ cls, day, period, compact=false }) => {
-    if (period.isBreak) return <div style={{textAlign:"center",color:C.muted,fontSize:compact?9:11,fontStyle:"italic",padding:"4px 0"}}>{period.label}</div>;
-    const cell = ttMap[cls]?.[day]?.[period.label];
-    if (!cell) return (
-      <div onClick={()=>openEditCell(cls,day,period)} style={{height:compact?28:40,display:"flex",alignItems:"center",justifyContent:"center",color:editMode?"#94A3B8":"#E2E8F0",fontSize:compact?9:18,cursor:editMode?"pointer":"default",borderRadius:4,border:editMode?"1px dashed #CBD5E1":"none"}}>
-        {editMode?"+":"-"}
-      </div>
-    );
-    if (cell.is_event) return (
-      <div onClick={()=>openEditCell(cls,day,period)} style={{background:"#FEF3C7",border:"1px solid #FCD34D",borderRadius:4,padding:compact?"3px 5px":"6px 8px",cursor:editMode?"pointer":"default"}}>
-        <div style={{fontWeight:700,color:"#92400E",fontSize:compact?9:11,lineHeight:1.2}}>{cell.event_name}</div>
-      </div>
-    );
-    const sc = SUBJ_COLORS[cell?.subject]||C.accentText;
-    return (
-      <div onClick={()=>openEditCell(cls,day,period)} style={{background:`color-mix(in srgb, ${sc} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${sc} 25%, transparent)`,borderRadius:4,padding:compact?"3px 5px":"6px 8px",cursor:editMode?"pointer":"default"}}>
-        <div style={{fontWeight:700,color:sc,fontSize:compact?9:11,lineHeight:1.2}}>{cell.subject}</div>
-        <div style={{fontSize:compact?8:10,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cell.teacher_name}</div>
-      </div>
-    );
+  // Turn two period time ranges into one "start – end" for a merged event
+  // (e.g. P9 "12:50–13:30" + P12 "14:50–15:30" → "12:50 – 15:30").
+  const evTimeRange = (fromP, toP) => {
+    const s = String(fromP.time||"").split(/[–—-]/)[0].trim();
+    const ep = String(toP.time||"").split(/[–—-]/);
+    const e = ep[ep.length-1].trim();
+    return s && e ? `${s} – ${e}` : (fromP.time||"");
   };
 
-  // ── Unified weekly grid: FIVE separate tables, one per Day (Monday…Friday),
-  // Period (P1…P12) running ACROSS as columns of each table - like the
-  // person's own handwritten layout: one table per Day, Period columns with
-  // their time ranges on top, one data row underneath. Used identically by
-  // Per Class, Per Teacher AND General View so every timetable on screen
-  // reads the same way.
-  const WeekGrid = ({ renderCell }) => {
+  // Normalized cell data for ONE class / ONE teacher, used by WeekGrid.
+  //   {kind:"break"} | {kind:"event",name} | {kind:"lesson",subject,teacher,color} | {kind:"empty"}
+  const classCellData = (cls) => (d,p) => {
+    if (p.isBreak) return { kind:"break" };
+    const c = ttMap[cls]?.[d]?.[p.label];
+    if (!c) return { kind:"empty" };
+    if (c.is_event) return { kind:"event", name:c.event_name };
+    return { kind:"lesson", subject:c.subject, teacher:c.teacher_name, color: SUBJ_COLORS[c.subject]||C.accentText };
+  };
+  const teacherCellData = (teacher) => (d,p) => {
+    if (p.isBreak) return { kind:"break" };
+    let found=null;
+    classList.forEach(cl=>{const c=ttMap[cl]?.[d]?.[p.label]; if(c&&c.teacher_name===teacher)found={...c,cls:cl};});
+    if (!found) return { kind:"empty" };
+    if (found.is_event) return { kind:"event", name:found.event_name };
+    return { kind:"lesson", subject:found.subject, teacher:found.cls, color: SUBJ_COLORS[found.subject]||C.accentText };
+  };
+
+  // ── Weekly grid: ONE table. Days run DOWN as rows; Periods ACROSS as
+  // columns (the header shown once). Break/Lunch become a single tall cell
+  // spanning EVERY day, with the time on top and the word written vertically.
+  // An event covering two or more consecutive periods in a day is ONE merged
+  // cell, its name shown once (never repeated per period). `cls` (when given)
+  // makes lesson/empty cells editable in edit mode.
+  const WeekGrid = ({ cellData, cls = null }) => {
     const compact = isMobile||isTablet;
+    const canEdit = cls != null;
+    const brkCell = (p) => (
+      <td key={p.label} rowSpan={DAYS.length}
+        style={{border:`1px solid ${C.border}`,background:C.bg,textAlign:"center",verticalAlign:"middle",padding:compact?"6px 2px":"8px 3px",minWidth:compact?40:52}}>
+        <div style={{fontSize:compact?7.5:9,color:C.muted,fontWeight:600,marginBottom:6,whiteSpace:"nowrap"}}>{p.time}</div>
+        <div style={{writingMode:"vertical-rl",transform:"rotate(180deg)",margin:"0 auto",fontWeight:800,fontSize:compact?12:15,letterSpacing:compact?1.5:2.5,color:C.muted}}>{p.label}</div>
+      </td>
+    );
+    const evCell = (d, fromP, toP, span, name) => (
+      <td key={fromP.label} colSpan={span} onClick={canEdit&&editMode?()=>openEditCell(cls,d,fromP):undefined}
+        style={{border:"1px solid #FCD34D",background:"#FEF3C7",textAlign:"center",verticalAlign:"middle",padding:compact?"5px 6px":"8px 10px",cursor:canEdit&&editMode?"pointer":"default"}}>
+        <div style={{fontWeight:800,color:"#8a5a12",fontSize:compact?11:13,lineHeight:1.2}}>{name}</div>
+        <div style={{fontSize:compact?8:9,color:"#8a5a12",opacity:0.75,marginTop:2}}>{evTimeRange(fromP,toP)}</div>
+      </td>
+    );
+    const lessonCell = (d, p, data) => (
+      <td key={p.label} onClick={canEdit&&editMode?()=>openEditCell(cls,d,p):undefined}
+        style={{border:`1px solid ${C.border}`,textAlign:"center",verticalAlign:"middle",padding:compact?"4px 5px":"6px 8px",cursor:canEdit&&editMode?"pointer":"default",minWidth:compact?62:78}}>
+        {data.kind==="lesson"
+          ? <><div style={{fontWeight:700,color:data.color,fontSize:compact?9.5:11,lineHeight:1.2}}>{data.subject}</div>
+              <div style={{fontSize:compact?8:9.5,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{data.teacher}</div></>
+          : <div style={{color:editMode?"#94A3B8":"#CBD5E1",fontSize:compact?10:15}}>{editMode&&canEdit?"+":"–"}</div>}
+      </td>
+    );
+    const renderDay = (d, di) => {
+      const out=[]; let i=0;
+      while (i < periods.length) {
+        const p = periods[i];
+        if (p.isBreak) { if (di===0) out.push(brkCell(p)); i++; continue; }
+        const data = cellData(d,p);
+        if (data.kind==="event" && data.name) {
+          let span=1;
+          while (i+span<periods.length && !periods[i+span].isBreak) {
+            const nd = cellData(d,periods[i+span]);
+            if (nd.kind==="event" && nd.name===data.name) span++; else break;
+          }
+          out.push(evCell(d,p,periods[i+span-1],span,data.name)); i+=span; continue;
+        }
+        out.push(lessonCell(d,p,data)); i++;
+      }
+      return out;
+    };
     return (
-      <div style={{display:"flex",flexDirection:"column",gap:compact?14:18}}>
-        {DAYS.map(d=>(
-          <div key={d}>
-            <div style={{fontWeight:800,fontSize:compact?12.5:13.5,color:C.accentText,padding:compact?"0 12px 6px":"0 16px 7px",textTransform:"uppercase",letterSpacing:"0.03em"}}>{d}</div>
-            <div style={{overflowX:"auto"}}>
-              <table style={{width:"100%",borderCollapse:"collapse",fontSize:compact?12:13,minWidth:compact?680:900}}>
-                <thead>
-                  <tr style={{background:C.bg}}>
-                    {periods.map(p=><th key={p.label} style={{...TH,fontSize:compact?9.5:11,textAlign:"center",minWidth:compact?58:74,color:p.isBreak?C.muted:C.text}}>
-                      {p.label}<br/><span style={{fontWeight:400,fontSize:compact?8:9.5,color:C.muted}}>{p.time}</span>
-                    </th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {periods.map(p=>(
-                      <td key={p.label} style={{...TD,padding:compact?"5px 6px":TD.padding,textAlign:"center",...(p.isBreak?{background:C.bg}:{})}}>
-                        {p.isBreak
-                          ? <span style={{color:C.muted,fontSize:compact?9:10,fontStyle:"italic"}}>{p.label}</span>
-                          : renderCell(d,p)}
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ))}
+      <div style={{overflowX:"auto"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:compact?12:13,minWidth:compact?760:980}}>
+          <thead>
+            <tr style={{background:C.bg}}>
+              <th style={{...TH,fontSize:compact?9.5:11,textAlign:"center",minWidth:compact?48:60}}>{tr("tt.day")}</th>
+              {periods.map(p=><th key={p.label} style={{...TH,fontSize:compact?9.5:11,textAlign:"center",minWidth:compact?58:74,color:p.isBreak?C.muted:C.text}}>
+                {p.label}<br/><span style={{fontWeight:400,fontSize:compact?8:9.5,color:C.muted}}>{p.time}</span>
+              </th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {DAYS.map((d,di)=>(
+              <tr key={d}>
+                <td style={{border:`1px solid ${C.border}`,background:C.bg,color:C.accentText,fontWeight:800,fontSize:compact?10:12,textTransform:"uppercase",letterSpacing:"0.03em",textAlign:"center",whiteSpace:"nowrap",padding:compact?"6px 6px":"8px 10px"}}>{compact?d.slice(0,3):d}</td>
+                {renderDay(d,di)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   };
@@ -2364,18 +2402,52 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map(cls=>(
-                    <tr key={cls}>
-                      <td style={{...TD,fontWeight:700,fontSize:compact?10.5:12,whiteSpace:"nowrap",padding:compact?"6px 8px":TD.padding}}>{cls}</td>
-                      {periods.map(p=>(
-                        <td key={p.label} style={{...TD,padding:compact?"5px 6px":TD.padding,textAlign:"center",...(p.isBreak?{background:C.bg}:{})}}>
-                          {p.isBreak
-                            ? <span style={{color:C.muted,fontSize:compact?9:10,fontStyle:"italic"}}>{p.label}</span>
-                            : <CellView cls={cls} day={d} period={p} compact/>}
+                  {rows.map((cls,ri)=>{
+                    const dataFor = classCellData(cls);
+                    const out=[]; let i=0;
+                    while (i < periods.length) {
+                      const p = periods[i];
+                      if (p.isBreak) {
+                        if (ri===0) out.push(
+                          <td key={p.label} rowSpan={rows.length} style={{...TD,background:C.bg,textAlign:"center",verticalAlign:"middle",padding:compact?"6px 2px":"8px 3px",minWidth:compact?40:52}}>
+                            <div style={{fontSize:compact?7.5:9,color:C.muted,fontWeight:600,marginBottom:6,whiteSpace:"nowrap"}}>{p.time}</div>
+                            <div style={{writingMode:"vertical-rl",transform:"rotate(180deg)",margin:"0 auto",fontWeight:800,fontSize:compact?12:15,letterSpacing:compact?1.5:2.5,color:C.muted}}>{p.label}</div>
+                          </td>
+                        );
+                        i++; continue;
+                      }
+                      const data = dataFor(d,p);
+                      if (data.kind==="event" && data.name) {
+                        let span=1;
+                        while (i+span<periods.length && !periods[i+span].isBreak) {
+                          const nd = dataFor(d,periods[i+span]);
+                          if (nd.kind==="event" && nd.name===data.name) span++; else break;
+                        }
+                        const toP = periods[i+span-1];
+                        out.push(
+                          <td key={p.label} colSpan={span} style={{...TD,border:"1px solid #FCD34D",background:"#FEF3C7",textAlign:"center",verticalAlign:"middle",padding:compact?"5px 6px":"8px 10px"}}>
+                            <div style={{fontWeight:800,color:"#8a5a12",fontSize:compact?10.5:12.5,lineHeight:1.2}}>{data.name}</div>
+                            <div style={{fontSize:compact?8:9,color:"#8a5a12",opacity:0.75,marginTop:2}}>{evTimeRange(p,toP)}</div>
+                          </td>
+                        );
+                        i+=span; continue;
+                      }
+                      out.push(
+                        <td key={p.label} style={{...TD,padding:compact?"5px 6px":TD.padding,textAlign:"center"}}>
+                          {data.kind==="lesson"
+                            ? <><div style={{fontWeight:700,color:data.color,fontSize:compact?9.5:11,lineHeight:1.2}}>{data.subject}</div><div style={{fontSize:compact?8:9.5,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{data.teacher}</div></>
+                            : <span style={{color:"#CBD5E1",fontSize:compact?10:15}}>–</span>}
                         </td>
-                      ))}
-                    </tr>
-                  ))}
+                      );
+                      i++;
+                    }
+                    return (
+                      <tr key={cls}>
+                        <td style={{...TD,fontWeight:700,fontSize:compact?10.5:12,whiteSpace:"nowrap",padding:compact?"6px 8px":TD.padding}}>{cls}</td>
+                        {out}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -2439,7 +2511,6 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
           <h2 style={{margin:0,fontSize:isMobile?18:22,fontWeight:800,color:C.text}}>{tr("tt.timetableGenerator")}</h2>
           <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:14,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
             <span>{tr("tt.stepOf", { n: wizardStep })} - {wizardStep===1 ? tr("tt.step1Name") : tr("tt.step2Name")}</span>
-            <Badge color={genStatus.remaining>0?"green":"red"}>{tr("tt.generatedToday", { used: genStatus.used, max: genStatus.max })}</Badge>
           </p>
         </div>
         <div style={{display:"flex",flexDirection:isMobile?"column":"row",gap:isMobile?8:10,flexWrap:"wrap",alignItems:isMobile?"stretch":"center"}}>
@@ -2576,7 +2647,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
             <SLabel style={{marginBottom:0}}>{tr("tt.classesForEvent", { n: evForm.classes.length })}</SLabel>
             <div style={{display:"flex",gap:8}}>
-              <Btn size="sm" variant="ghost" onClick={()=>setEvForm(p=>({...p,classes:assignedClassList}))}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>{tr("tt.selectAll")}</span></Btn>
+              <Btn size="sm" variant="ghost" onClick={()=>setEvForm(p=>({...p,classes:(assignedClassList.length ? assignedClassList : classList)}))}><span style={{display:"flex",alignItems:"center",gap:6}}><CheckIcon size={13}/>{tr("tt.selectAll")}</span></Btn>
               <Btn size="sm" variant="ghost" onClick={()=>setEvForm(p=>({...p,classes:[]}))}><span style={{display:"flex",alignItems:"center",gap:6}}><CloseIcon size={13}/>{tr("tt.clear")}</span></Btn>
             </div>
           </div>
@@ -2626,8 +2697,8 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
 
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <Btn variant="secondary" onClick={()=>setWizardStep(1)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.ArrowLeft size={13}/>{tr("tt.back")}</span></Btn>
-          <Btn variant="success" onClick={generate} loading={generating} disabled={!genClasses.length || genStatus.remaining<=0}>
-            {genStatus.remaining<=0 ? tr("tt.dailyLimit", { max: genStatus.max }) : tr("tt.generateWithLeft", { remaining: genStatus.remaining, max: genStatus.max })}
+          <Btn variant="success" onClick={generate} loading={generating} disabled={!genClasses.length}>
+            {tr("tt.generateTimetable")}
           </Btn>
         </div>
       </>}
@@ -2710,7 +2781,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
       <div style={{display:"flex",flexDirection:isMobile?"column":"row",justifyContent:"space-between",alignItems:isMobile?"stretch":"flex-start",flexWrap:"wrap",gap:12}}>
         <div>
           <h2 style={{margin:0,fontSize:isMobile?18:22,fontWeight:800,color:C.text}}>{tr("tt.schoolTimetable")}</h2>
-          <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:14}}>{ttYear} · {ttTerm}{canGenerate && <> · <Badge color={genStatus.remaining>0?"green":"red"}>{tr("tt.generatedToday", { used: genStatus.used, max: genStatus.max })}</Badge></>}</p>
+          <p style={{margin:"4px 0 0",color:C.muted,fontSize:isMobile?12.5:14}}>{ttYear} · {ttTerm}</p>
         </div>
         <div style={{display:"flex",flexDirection:isMobile?"column":"row",gap:8,flexWrap:"wrap",alignItems:isMobile?"stretch":"center"}}>
           <div style={{display:"flex",gap:8}}>
@@ -2727,11 +2798,11 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                 ? (sharedInfo?.shared && sharedInfo?.draft_label===selectedDraft
                     ? <Btn variant="warning" onClick={unshareTimetable} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.EyeOff size={13}/>{tr("tt.stopShare")}</span></Btn>
                     : <Btn variant="primary" onClick={openSharePicker} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UploadCloud size={13}/>{tr("tt.shareToTeachers")}</span></Btn>)
-                : <Btn variant="ghost" onClick={()=>{setView("setup");setWizardStep(2);}} disabled={genStatus.remaining<=0} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.RefreshCw size={13}/>{tr("tt.generateNewDraft", { remaining: genStatus.remaining })}</span></Btn>
+                : <Btn variant="ghost" onClick={()=>{setView("setup");setWizardStep(2);}} style={{flex:1,justifyContent:"center"}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.RefreshCw size={13}/>{tr("tt.generateNewDraft")}</span></Btn>
               }
               <MoreMenu items={[
                 { label: editMode?tr("tt.exitEditMode"):tr("tt.editCells"), onClick: ()=>setEditMode(p=>!p) },
-                { label: tr("tt.generateNewDraft", { remaining: genStatus.remaining }), onClick: ()=>{setView("setup");setWizardStep(2);}, disabled: genStatus.remaining<=0 },
+                { label: tr("tt.generateNewDraft"), onClick: ()=>{setView("setup");setWizardStep(2);} },
                 { label: tr("tt.backToSetup"), onClick: ()=>{setView("setup");setWizardStep(2);setEditMode(false);} },
                 ...(selectedDraft ? [{ label: tr("tt.deleteThisDraft"), onClick: deleteSelectedDraft, variant: "danger" }] : []),
               ]}/>
@@ -2741,7 +2812,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
             <Btn variant={editMode?"warning":"ghost"} onClick={()=>setEditMode(p=>!p)}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.Edit size={13}/>{editMode?tr("tt.exitEdit"):tr("lg.edit")}</span></Btn>
             <Btn variant="secondary" onClick={()=>{setView("setup");setWizardStep(2);setEditMode(false);}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.ArrowLeft size={13}/>{tr("tt.backToSetup")}</span></Btn>
           </div>
-          <Btn variant="ghost" onClick={()=>{setView("setup");setWizardStep(2);}} disabled={genStatus.remaining<=0}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.RefreshCw size={13}/>{tr("tt.generateNewDraft", { remaining: genStatus.remaining })}</span></Btn>
+          <Btn variant="ghost" onClick={()=>{setView("setup");setWizardStep(2);}}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.RefreshCw size={13}/>{tr("tt.generateNewDraft")}</span></Btn>
           {selectedDraft && (sharedInfo?.shared && sharedInfo?.draft_label===selectedDraft
             ? <Btn variant="warning" onClick={unshareTimetable}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.EyeOff size={13}/>{tr("tt.stopShare")}</span></Btn>
             : <Btn variant="secondary" onClick={openSharePicker}><span style={{display:"flex",alignItems:"center",gap:6}}><Icon.UploadCloud size={13}/>{tr("tt.shareToTeachers")}</span></Btn>
@@ -2797,7 +2868,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
               <span style={{fontWeight:700,fontSize:isMobile?13.5:15}}>{tr("tt.weeklyTimetable", { name: viewClass })}</span>
               <span style={{fontSize:12,color:C.muted}}>{ttMonth} {ttYear}</span>
             </div>
-            <WeekGrid renderCell={(d,p)=><CellView cls={viewClass} day={d} period={p} compact={isMobile||isTablet}/>}/>
+            <WeekGrid cellData={classCellData(viewClass)} cls={viewClass}/>
           </Card>
           <TimetableFooterNote/>
         </>
@@ -2863,15 +2934,7 @@ function TimetableModule({ token, canGenerate = true, restrictedForms = null, my
                   <span style={{fontSize:12,color:C.muted}}>{ttMonth} {ttYear}</span>
                 </span>
               </div>
-                <WeekGrid renderCell={(d,p)=>{
-                let found=null;
-                classList.forEach(cls=>{const c=ttMap[cls]?.[d]?.[p.label];if(c&&c.teacher_name===viewTeacher)found={...c,cls};});
-                const sc=found?SUBJ_COLORS[found.subject]||C.accentText:null;
-                const compact=isMobile||isTablet;
-                return found
-                  ?<div style={{background:`color-mix(in srgb, ${sc} 8%, transparent)`,border:`1px solid color-mix(in srgb, ${sc} 25%, transparent)`,borderRadius:4,padding:compact?"3px 5px":"6px 8px"}}><div style={{fontWeight:700,color:sc,fontSize:compact?9.5:11}}>{found.subject}</div><div style={{fontSize:compact?8.5:10,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{found.cls}</div></div>
-                  :<div style={{height:compact?28:38,display:"flex",alignItems:"center",justifyContent:"center",color:"#E2E8F0",fontSize:compact?9.5:11}}>-</div>;
-              }}/>
+                <WeekGrid cellData={teacherCellData(viewTeacher)}/>
             </Card>
           )}
           {viewTeacher && <TimetableFooterNote/>}

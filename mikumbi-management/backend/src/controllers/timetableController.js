@@ -405,23 +405,18 @@ const generateTimetable = async (req, res, next) => {
     const { academic_year = String(new Date().getFullYear()), term = "Term 1" } = req.body;
     const classes = (req.body.classes && req.body.classes.length) ? req.body.classes : ALL_CLASSES;
 
-    // 1) Enforce max 4 generations per Tanzania calendar day (1st Draft .. 4th Draft) -
-    //    all 4 stay saved under their own draft_label so the school can go back and
-    //    pick whichever of the 4 they want to actually use.
+    // 1) Count today's generations only to label this draft (1st Draft, 2nd
+    //    Draft, ...). There is NO daily cap: each generation stays saved under
+    //    its own draft_label so the school can go back and pick whichever draft
+    //    they want to use.
     const today = tzToday();
     const usedRes = await query(`
       SELECT COUNT(*) AS used FROM timetable_generations
       WHERE academic_year = $1 AND term = $2 AND generation_date = $3
     `, [academic_year, term, today]);
     const used = parseInt(usedRes.rows[0].used);
-    if (used >= MAX_GENERATIONS_PER_DAY) {
-      return res.status(429).json({
-        success: false,
-        message: `You've already generated all ${MAX_GENERATIONS_PER_DAY} drafts today. Try again tomorrow.`,
-      });
-    }
     const attemptNumber = used + 1;
-    const draftLabel = DRAFT_LABELS[attemptNumber - 1];
+    const draftLabel = DRAFT_LABELS[attemptNumber - 1] || `Draft ${attemptNumber}`;
 
     // 2) Active periods.
     const periodsRes = await query(`SELECT label, is_break FROM timetable_periods WHERE is_active = true ORDER BY sort_order`);
@@ -538,12 +533,11 @@ const generateTimetable = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: `${draftLabel} generated (${attemptNumber} of ${MAX_GENERATIONS_PER_DAY} today).`,
+      message: `${draftLabel} generated.`,
       data: saved.rows,
       selected_classes: classes,
       attempt_number: attemptNumber,
       draft_label: draftLabel,
-      remaining_today: MAX_GENERATIONS_PER_DAY - attemptNumber,
       unplaced: solverOut.unplaced || [],
     });
   } catch (err) { next(err); }

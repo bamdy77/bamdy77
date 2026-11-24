@@ -5,12 +5,25 @@
 import { THEME } from "../styles/theme";
 import { useLang } from "../i18n";
 
+// Colour a single value by how good/poor it is, mirroring the feel of the
+// Results Management grades (green = good, amber = average, red = poor/worst).
+// `metric` tells us the scale: "pct"/"marks" are 0–100 (higher is better),
+// "gpa" is 1 (best) → 5 (worst), "division" is 1 (Div I) → 5 (Div 0).
+const AMBER = "#D97706";
+function bandColor(metric, v) {
+  if (v == null || !metric) return null;
+  if (metric === "pct" || metric === "marks") return v >= 65 ? THEME.success : v >= 40 ? AMBER : THEME.danger;
+  if (metric === "gpa") return v <= 2 ? THEME.success : v <= 3.5 ? AMBER : THEME.danger;
+  if (metric === "division") return v <= 2 ? THEME.success : v <= 3 ? AMBER : THEME.danger;
+  return null;
+}
+
 // points: [{ label, value }]  - value may be null (gap in the data, e.g. a
 // term the school didn't run this exam). `higherIsBetter` only affects the
 // color of the line/dots (green trending the right way, red the wrong way)
 // - it never changes what's plotted.
 export default function TrendChart({
-  points, height = 220, higherIsBetter = true, valueSuffix = "", valueFormatter, color, emptyText,
+  points, height = 220, higherIsBetter = true, valueSuffix = "", valueFormatter, color, emptyText, metric,
 }) {
   const { t } = useLang();
   const usable = points.filter((p) => p.value != null);
@@ -57,7 +70,10 @@ export default function TrendChart({
 
   const trendUp = usable[usable.length - 1].value >= usable[0].value;
   const good = higherIsBetter ? trendUp : !trendUp;
-  const lineColor = color || (good ? THEME.success : THEME.danger);
+  // With a per-value metric, the line stays a neutral grey so the good/poor
+  // colour of each point (dot + its number) is what stands out; otherwise the
+  // whole line is coloured by the trend direction, as before.
+  const lineColor = color || (metric ? THEME.muted : (good ? THEME.success : THEME.danger));
 
   const fmt = (v) => (valueFormatter ? valueFormatter(v) : `${v}${valueSuffix}`);
 
@@ -82,12 +98,21 @@ export default function TrendChart({
                 points={seg.map(([x, y]) => `${x},${y}`).join(" ")}
               />
             )}
-            {seg.map(([x, y, p], i) => (
+            {seg.map(([x, y, p], i) => {
+              // Colour the dot and its number by how good/poor the value is
+              // (red = poor, like Results Management) when a metric is given.
+              const dotColor = bandColor(metric, p.value) || lineColor;
+              return (
               <g key={i}>
-                <circle cx={x} cy={y} r="3.5" fill={lineColor} />
+                <circle cx={x} cy={y} r="4" fill={dotColor} />
+                {/* Print the actual value on each point so the chart shows
+                    real data, not just a shape. Sits above the dot, or just
+                    below it when the point is near the top edge. */}
+                <text x={x} y={y - 8 < padT + 4 ? y + 14 : y - 8} fontSize="10" fontWeight="700" fill={dotColor} textAnchor="middle">{fmt(p.value)}</text>
                 <title>{`${p.label}: ${fmt(p.value)}`}</title>
               </g>
-            ))}
+              );
+            })}
           </g>
         ))}
 

@@ -72,7 +72,7 @@ export default function ProtectedView({ watermark, children, labels }) {
       <div aria-hidden={hidden} style={{ filter: hidden ? "blur(16px)" : "none", transition: "filter .1s" }}>{children}</div>
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", backgroundImage: `url("data:image/svg+xml,${tile}")`, backgroundRepeat: "repeat" }} />
       {hidden && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center", fontWeight: 700, color: "#1a50c7", fontSize: 16 }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center", fontWeight: 700, color: "#007aff", fontSize: 16 }}>
           {labels.hidden}
         </div>
       )}

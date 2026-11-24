@@ -7,7 +7,7 @@ import { SectionTitle } from "./NewsSection";
 // "Ujumbe kwa Mzazi/Mlezi" on the parents' home page: training videos uploaded by
 // the school (Communications → Parent Videos). Watch in place or download.
 // The whole section is hidden while there are no videos.
-const NAVY = "#1a50c7";
+const NAVY = "#007aff";
 
 export default function VideosSection() {
   const { t } = useLang();

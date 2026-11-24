@@ -14,7 +14,7 @@ import {
   LocationPinIcon, ChevronRightIcon, CloseIcon, ChevronLeftIcon, TrophyIcon,
 } from "../../components/icons";
 
-const NAVY = "#1a50c7";
+const NAVY = "#007aff";
 const ORANGE = "#E3A51A"; // gold accent (matches the About band)
 const GOLD = "#E3A51A"; // About section - warm gold band (UDOM-style), with navy text
 
@@ -51,7 +51,7 @@ function Hero() {
       // A light, bottom-weighted shade keeps the school photo clearly
       // visible (it used to sit under a ~90% navy wash) while the text on
       // top stays readable.
-      backgroundImage: "linear-gradient(180deg, rgba(5,30,52,0.55) 0%, rgba(5,30,52,0.66) 55%, rgba(5,30,52,0.88) 100%), url(/assets/hero.jpg), url(/assets/picha.png), linear-gradient(160deg, #1a50c7 0%, #10358f 100%)",
+      backgroundImage: "linear-gradient(180deg, rgba(5,30,52,0.55) 0%, rgba(5,30,52,0.66) 55%, rgba(5,30,52,0.88) 100%), url(/assets/hero.jpg), url(/assets/picha.png), linear-gradient(160deg, #007aff 0%, #0062cc 100%)",
       backgroundSize: "cover", backgroundPosition: isMobile ? "center 25%" : "center 30%",
       textShadow: "0 2px 12px rgba(0,0,0,0.45)",
       padding: isMobile ? "70px 20px 96px" : isTablet ? "110px 28px 120px" : "150px 28px 150px",
@@ -187,7 +187,7 @@ function Boarding() {
             <article key={title} className="pub-lift" style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 4, overflow: "hidden" }}>
               <Slideshow
                 srcs={imgs} alt={title}
-                wrapStyle={{ height: 190, background: `linear-gradient(150deg, ${NAVY}, #4674e0)` }}
+                wrapStyle={{ height: 190, background: `linear-gradient(150deg, ${NAVY}, #3395ff)` }}
                 fallback={<div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.85)" }}><Icon size={48} /></div>}
               />
               <div style={{ padding: "16px 18px 20px" }}>

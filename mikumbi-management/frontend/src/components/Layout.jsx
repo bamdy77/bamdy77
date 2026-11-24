@@ -63,6 +63,9 @@ const MODULE_GROUPS = [
   { key: "system",    labelKey: "menu.group.system" },
 ];
 
+// The module sidebar/drawer uses the brand blue (#007aff via --mk-navy).
+const SIDEBAR_BG = THEME.navy;
+
 // Account-header avatar for the logged-in account (e.g. Teacher, Head
 // Master) - shows their uploaded profile photo if they have one, otherwise
 // a circular badge with their initials (gold-on-navy, matching the school's
@@ -409,8 +412,8 @@ export default function Layout() {
     cursor: "pointer",
   });
   const groupHeaderStyle = {
-    padding: "15px 20px 6px", fontSize: 10.5, fontWeight: 600, letterSpacing: 1,
-    textTransform: "uppercase", color: "rgba(255,255,255,0.4)",
+    padding: "15px 20px 6px", fontSize: 11, fontWeight: 800, letterSpacing: 0.8,
+    textTransform: "uppercase", color: "rgba(255,255,255,0.82)",
   };
 
   const navLinks = (
@@ -450,7 +453,7 @@ export default function Layout() {
     <div style={{ minHeight: "100vh", display: "flex", background: THEME.bg }}>
       {isDesktop ? (
         // ── DESKTOP: sidebar always visible, fixed width ──
-        <aside style={{ width: 230, background: THEME.navy, color: "#fff", padding: "20px 0", flexShrink: 0 }}>
+        <aside style={{ width: 230, background: SIDEBAR_BG, color: "#fff", padding: "20px 0", flexShrink: 0, position: "sticky", top: 0, alignSelf: "flex-start", height: "100vh", overflowY: "auto" }}>
           <div style={{
             padding: "0 16px 16px 20px", borderBottom: "1px solid rgba(255,255,255,0.15)", marginBottom: 12,
             display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8,
@@ -476,7 +479,7 @@ export default function Layout() {
         // ── TABLET / MOBILE: sidebar becomes a slide-in drawer, triggered by a top bar ──
         <>
           <div style={{
-            position: "fixed", top: 0, left: 0, right: 0, height: 60, background: THEME.navy, color: "#fff",
+            position: "fixed", top: 0, left: 0, right: 0, height: 60, background: SIDEBAR_BG, color: "#fff",
             display: "flex", alignItems: "center", gap: 8, padding: "0 10px 0 4px", zIndex: 60,
           }}>
             <button onClick={() => setDrawerOpen(true)} aria-label={t("menu.open")} style={{
@@ -499,7 +502,7 @@ export default function Layout() {
             <div onClick={() => setDrawerOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", zIndex: 70 }} />
           )}
           <aside style={{
-            position: "fixed", top: 0, left: 0, bottom: 0, width: "min(78vw, 280px)", background: THEME.navy, color: "#fff",
+            position: "fixed", top: 0, left: 0, bottom: 0, width: "min(78vw, 280px)", background: SIDEBAR_BG, color: "#fff",
             padding: "20px 0", zIndex: 80, overflowY: "auto",
             transform: drawerOpen ? "translateX(0)" : "translateX(-100%)",
             transition: "transform 0.22s ease",
