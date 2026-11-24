@@ -21,8 +21,6 @@
 // change — nothing else in this file assumes the exact path.
 const axios = require("axios");
 
-const GATEWAY_MESSAGE_PATH = "/message";
-
 function getAuthHeader(config) {
   const encoded = Buffer.from(`${config.username}:${config.password}`).toString("base64");
   return `Basic ${encoded}`;
@@ -39,9 +37,22 @@ function formatPhone(phone) {
   return "+" + p;
 }
 
+// Work out the exact "send a message" endpoint from whatever the school
+// typed as the URL, supporting both ways the app can run:
+//   • Cloud server  — the app's hosted relay. URL is api.sms-gate.app; the
+//     send endpoint is /3rdparty/v1/message. (A cloud-hosted backend like
+//     ours can ONLY reach the phone this way; a phone on home Wi-Fi is not
+//     reachable from the internet.)
+//   • Local server  — the phone exposes its own address (http://192.168..:8080);
+//     the send endpoint is /message.
+// If the school already pasted a full endpoint (ending in /message or
+// /messages), it's used as-is.
 function buildUrl(config) {
-  const base = String(config.url || "").replace(/\/+$/, "");
-  return base + GATEWAY_MESSAGE_PATH;
+  const base = String(config.url || "").trim().replace(/\/+$/, "");
+  if (/\/messages?$/i.test(base)) return base;                       // full endpoint pasted
+  if (/(^|\/\/)([a-z0-9-]+\.)?sms-gate\.app/i.test(base))            // cloud server
+    return base.replace(/\/3rdparty.*$/i, "") + "/3rdparty/v1/message";
+  return base + "/message";                                         // local server base
 }
 
 function assertConfigured(config) {

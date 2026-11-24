@@ -90,6 +90,20 @@ function SmsGatewaySection({ token, confirm }) {
 
   return (
     <div>
+      <details open style={{ marginBottom: 18, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 6, padding: "10px 14px" }}>
+        <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: 13, color: THEME.heading }}>{t("smsgw.guideTitle")}</summary>
+        <p style={{ fontSize: 12.5, color: THEME.muted, margin: "10px 0", lineHeight: 1.55 }}>{t("smsgw.guideIntro")}</p>
+        <ol style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 8, fontSize: 12.5, color: THEME.text, lineHeight: 1.5 }}>
+          <li>{t("smsgw.step1")} <a href="https://sms-gate.app" target="_blank" rel="noopener noreferrer" style={{ color: THEME.navy, fontWeight: 700 }}>{t("smsgw.step1Link")}</a></li>
+          <li>{t("smsgw.step2")}</li>
+          <li>{t("smsgw.step3")}</li>
+          <li>{t("smsgw.step4")}</li>
+          <li>{t("smsgw.step5")}</li>
+          <li>{t("smsgw.step6")}</li>
+        </ol>
+        <p style={{ fontSize: 11.5, color: THEME.muted, margin: "10px 0 0", lineHeight: 1.5 }}>{t("smsgw.guideNote")}</p>
+      </details>
+
       <label style={smsLabelStyle}>{t("smsgw.provider")}</label>
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         {[["nextsms", "NEXTSMS"], ["android_gateway", "Android SMS Gateway"]].map(([val, label]) => (
